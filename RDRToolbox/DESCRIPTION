@@ -1,0 +1,20 @@
+Package: RDRToolbox
+Type: Package
+Title: A package for nonlinear dimension reduction with Isomap and LLE.
+Version: 1.27.0
+Date: 2014-03-26
+Author: Christoph Bartenhagen
+Maintainer: Christoph Bartenhagen <christoph.bartenhagen@ukmuenster.de>
+Description: A package for nonlinear dimension reduction using the
+        Isomap and LLE algorithm. It also includes a routine for
+        computing the Davis-Bouldin-Index for cluster validation, a
+        plotting tool and a data generator for microarray gene
+        expression data and for the Swiss Roll dataset.
+License: GPL (>= 2)
+LazyLoad: yes
+Depends: R (>= 2.9.0)
+Imports: graphics, grDevices, methods, stats, MASS
+Suggests: golubEsets
+biocViews: DimensionReduction, FeatureExtraction,
+        Visualization, Clustering, Microarray
+RoxygenNote: 6.0.1

@@ -1,0 +1,287 @@
+---
+title: "Zeisel"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(autodep=TRUE, cache.comments=TRUE)
+```
+
+Gene expression data EDA
+===
+
+We analyze the Zeisel dataset to familiarize ourselves with single-cell data. It comes with
+two matrices, a data frame containing information about the 3005 cells. The head of this file 
+is shown below.
+
+```{r, echo = F}
+load("../experiment/statements_tmp.RData")
+dat <- read.csv("../experiment/Zeisel_cell_info.txt", sep = "\t")
+head(dat)
+```
+
+Specifically, under `level1class`, there are 7 classes that we are given.
+
+```{r, echo = F}
+unique(dat$level1class)
+```
+
+The expression matrix (a matrix with 3005 cells (rows) and 19,972 genes (columns)).
+Each of the values in the matrix are nonnegative integers. Below is a plot of the
+number of instances each value appears in the matrix. The y-axis shows the log
+of the number of instances. We see that the vast majority of the values are numbers below
+100, but there are certain values that exceed 5000.
+
+```{r, echo = F, eval = F}
+statements[[1]]
+```
+
+```{r, echo = F}
+plot(log(statements[[2]]), ylab = "Log number of instances", xlab = "Value")
+lines(rep(100, 2), c(-100,1000000), col = "red", lwd = 2)
+```
+
+We also note that the counts for each row vary dramatically. Below we plot the 
+empirical distribution of the total count for each row.
+
+```{r}
+plot(sort(statements[[16]]), pch = 16, xlab = "Order of cell", ylab = "Total count over genes")
+```
+
+
+We can do an SVD decomposition of this matrix (using the `base::svd()` function, so the
+numerical accuracy of this function is debatable for high dimensions). The following plot
+shows the singular values. We see there is an eigen gap between the first 5 leading
+singular values and the remaining singular values. All the singular values are (of course,
+by definition) positive.
+
+```{r, echo = F}
+plot(statements[[3]], pch = 16, col = rgb(0,0,0,0.5), xlab = "Singular value position", ylab = "Value")
+```
+
+### Analysis of the cells
+
+We can now do an EDA of the cells' latent variables (the $U$ matrix in the SVD). This matrix is 
+3005 by 3005. We can plot the 3005 cells by their leading two column vectors in $U$.
+We see that there is no clear differentiation among the 7 cell types with exception
+of oligodendrocytes. 
+
+```{r, echo = F, fig.height = 7}
+dat <- read.csv("../experiment/Zeisel_cell_info.txt", sep = "\t")
+vec <- factor(dat$level1class)
+level_vec <- levels(vec)
+
+par(mfrow = c(3,3))
+xrange <- range(statements[[4]][,1])
+yrange <- range(statements[[4]][,2])
+for(i in 1:7){
+  idx <- which(vec == level_vec[i])
+  plot(statements[[4]][idx,1], statements[[4]][idx,2], pch = 16, main = level_vec[i],
+       xlim = xrange, ylim = yrange, xlab = "U[,1]", ylab = "U[,2]")
+  lines(c(-10,10), c(0,0), col = "red", lwd = 2)
+  lines(c(0,0), c(-10,10), col = "red", lwd = 2)
+  
+  points(statements[[4]][idx,1], statements[[4]][idx,2], pch = 16)
+}
+```
+
+Alternatively, we can use the a nonlinear dimension reduction method (Isomap)
+using the leading 6 columns of $U$. The specific implementation of this is from
+`RDRToolbox::Isomap()`. In addition to oligodendrocytes, endothelial-mural and interneurons
+seem to also differentiate themselves now.
+
+```{r, echo = F, fig.height = 7}
+par(mfrow = c(3,3))
+xrange <- range(statements[[7]][,1])
+yrange <- range(statements[[7]][,2])
+for(i in 1:7){
+  idx <- which(vec == level_vec[i])
+  plot(statements[[7]][idx,1], statements[[7]][idx,2], pch = 16, main = level_vec[i],
+       xlim = xrange, ylim = yrange, xlab = "Isomap dimension 1", ylab = "Isomap dimension 2")
+  lines(c(-10,10), c(0,0), col = "red", lwd = 2)
+  lines(c(0,0), c(-10,10), col = "red", lwd = 2)
+  
+  points(statements[[7]][idx,1], statements[[7]][idx,2], pch = 16)
+}
+```
+
+### Analysis of the genes
+
+We now turn to analyzing the genes' latent variables (the $V$ matrix in the SVD). We
+plot each of the 19,972 genes by their leading 2 column vectors in $V$. 
+Specifically, there are two genes that dramatically distort the range of the remaining
+genes' latent variables. The left plot shows the entire space, but the right plot
+zooms in on the bulk of the genes. The genes seem to "fan out" between two rays starting at the
+origin.
+
+```{r, echo = F}
+par(mfrow = c(1,2))
+plot(statements[[5]][,1], statements[[5]][,2], pch = 16, asp = T, xlab = "V[,1]", ylab = "V[,2]")
+lines(rep(0,2), c(-5,5), col = "red", lwd = 2)
+lines(c(-5,5), rep(0,2), col = "red", lwd = 2)
+
+zz <- statements[[5]]
+zz <- zz[-c(which(zz[,1] < -.6), which(zz[,2] > 0.4)), ]
+plot(zz[,1], zz[,2], pch = 16, xlab = "V[,1]", ylab = "V[,2]")
+lines(rep(0,2), c(-5,5), col = "red", lwd = 2)
+lines(c(-5,5), rep(0,2), col = "red", lwd = 2)
+```
+
+### Modeling 
+
+We use the leading 6 singular values $d$, columns in $U$ and columns in $V$. 
+As EDA, we model the value for cell $i$ and gene $j$ as $X_{ij} \sim \text{Poisson}(U_iDV_j^T)$.
+However, to assess if the model, we plot the residual (i.e., observed data minus
+the predicted mean) verses the predicted mean. If the Poisson model is appropriate, we should see
+a larger variance as the predicted mean increases. Since we cannot plot
+all `3005 * 19972 = 60015860` values quickly, we subsample and plot only 10,000 of the entries
+in our expression matrix. The diagonal dotted red lines represent hypothetical area where the
+data should be lie within (they are calculated by 2 times the standard deviation of a Poisson).
+
+```{r, echo = F}
+set.seed(10)
+plot(statements[[6]][,1], statements[[6]][,2], pch = 16, xlab = "Predicted mean",
+     ylab = "Residual")
+lines(c(-1e6, 1e6), c(0,0), col = "red", lwd = 2)
+lines(c(0,0), c(-1e6, 1e6), col = "red", lwd = 2)
+
+lines(c(0,1e6), c(0, 2*sqrt(1e6)), col = "red", lwd = 2, lty = 2)
+lines(c(0,1e6), c(0, -2*sqrt(1e6)), col = "red", lwd = 2, lty = 2)
+```
+
+Since it seems like the Poisson model is not appropriate (i.e., the residuals for smaller predicted
+means are larger, and those the larger predicted means are smaller), we try taking the 
+log of the gene expression data and re-doing the above analysis.
+
+Log transformation
+===
+
+We do SVD decomposition on the log of the gene expression matrix and
+plot the resulting singular values. There seems to be quite an gap after the first two
+singular values.
+
+
+```{r, echo = F}
+plot(statements[[8]], pch = 16, col = rgb(0,0,0,0.5), xlab = "Singular value position", ylab = "Value")
+```
+
+### Analysis of the cells
+
+Like before, we can now do an EDA of the cells' latent variables (the $U$ matrix in the SVD). We can plot the 3005 cells by their leading two column vectors in $U$.
+The different cell types are a bit more differeniated now, but arguably not by much
+compared to the previous version.
+
+```{r, echo = F, fig.height = 7}
+par(mfrow = c(3,3))
+xrange <- range(statements[[9]][,1])
+yrange <- range(statements[[9]][,2])
+for(i in 1:7){
+  idx <- which(vec == level_vec[i])
+  plot(statements[[9]][idx,1], statements[[9]][idx,2], pch = 16, main = level_vec[i],
+       xlim = xrange, ylim = yrange, xlab = "U[,1]", ylab = "U[,2]")
+  lines(c(-10,10), c(0,0), col = "red", lwd = 2)
+  lines(rep(-0.02, 2), c(-10,10), col = "red", lwd = 2)
+}
+```
+
+### Analysis of the genes
+
+We now turn to analyzing the genes' latent variables (the $V$ matrix in the SVD). We
+plot each of the 19,972 genes by their leading 2 column vectors in $V$. Similar to before,
+the genes display a "fanning-out" property.
+
+```{r, echo = F}
+plot(statements[[10]][,1], statements[[10]][,2], pch = 16, xlab = "V[,1]", ylab = "V[,2]")
+lines(rep(0,2), c(-10,10), col = "red", lwd = 2)
+lines(c(-10,10), rep(0,2), col = "red", lwd = 2)
+```
+
+### Modeling
+
+Similar to before, we now want to see if the model $\log(X_{ij}) \sim \text{Poisson}(U_iDV_j^T)$ is appropriate by seeing if the predicted mean
+and residual scale linearly. Like before, only 10,000 entries of the matrix are shown.
+Unfortunately, according to this diagnostic, it does not.
+
+```{r, echo = F}
+set.seed(10)
+plot(statements[[11]][,1], statements[[11]][,2], pch = 16, xlab = "mean",
+     ylab = "residual")
+lines(c(-1e6, 1e6), c(0,0), col = "red", lwd = 2)
+lines(c(0,0), c(-1e6, 1e6), col = "red", lwd = 2)
+
+
+lines(c(0,1e6), c(0, 2*sqrt(1e6)), col = "red", lwd = 2, lty = 2)
+lines(c(0,1e6), c(0, -2*sqrt(1e6)), col = "red", lwd = 2, lty = 2)
+```
+
+
+Log transformation of selected genes
+===
+
+We can also to an analysis similar to those before, but only for a selected subset of genes.
+When plotting the singular values, we see 2 singular values that stand out.
+
+```{r, echo = F}
+load("../../SOUP/data/zeisel.rda")
+idx <- which(colnames(zeisel$counts) %in% zeisel$select.genes)
+mat <- zeisel$counts[,idx]
+mat <- log(mat+1)
+res <- svd(mat)
+
+plot(res$d, pch = 16, col = rgb(0,0,0,0.5), xlab = "Singular value position", ylab = "Value")
+```
+
+### Analysis of the cells
+
+We can now do an EDA of the cells' latent variables (the $U$ matrix in the SVD) like before. We start to see a more substantial differentiation between the 7 cell types.
+
+```{r, echo = F, fig.height = 7}
+par(mfrow = c(3,3))
+xrange <- range(res$u[,1])
+yrange <- range(res$u[,2])
+for(i in 1:7){
+  idx <- which(vec == level_vec[i])
+  plot(res$u[idx,1], res$u[idx,2], pch = 16, main = level_vec[i],
+       xlim = xrange, ylim = yrange, xlab = "U[,1]", ylab = "U[,2]")
+  lines(c(-10,10), c(0,0), col = "red", lwd = 2)
+  lines(rep(0, 2), c(-10,10), col = "red", lwd = 2)
+}
+```
+
+
+
+### Analysis of the genes
+
+We now turn to analyzing the genes' latent variables (the $V$ matrix in the SVD) like before.
+
+```{r, echo = F}
+plot(res$v[,1], res$v[,2], pch = 16, xlab = "V[,1]", ylab = "V[,2]")
+lines(rep(0,2), c(-10,10), col = "red", lwd = 2)
+lines(c(-10,10), rep(0,2), col = "red", lwd = 2)
+```
+
+### Modeling
+
+Similar to before, we now want to see if the model $\log(X_{ij}) \sim \text{Poisson}(U_iDV_j^T)$ is appropriate by seeing if the predicted mean
+and residual scale linearly. Like before, only 10,000 entries of the matrix are shown.
+The residuals behave strangely like before in the other log transformation analysis.
+
+```{r, echo = F}
+set.seed(10)
+idx <- sample(1:prod(dim(mat)), 1e6)
+
+mat_approx <- res$u[,1:2] %*% diag(res$d[1:2]) %*% t(res$v[,1:2])
+residual <- mat - mat_approx
+
+set.seed(10)
+plot(as.vector(mat_approx)[idx], as.vector(residual)[idx], pch = 16, xlab = "mean",
+     ylab = "residual")
+lines(c(-1e6, 1e6), c(0,0), col = "red", lwd = 2)
+lines(c(0,0), c(-1e6, 1e6), col = "red", lwd = 2)
+
+
+lines(c(0,1e6), c(0, 2*sqrt(1e6)), col = "red", lwd = 2, lty = 2)
+lines(c(0,1e6), c(0, -2*sqrt(1e6)), col = "red", lwd = 2, lty = 2)
+```
