@@ -14,5 +14,9 @@ results/*.RData
 simulation/*.RData
 experiment/*.RData
 data/*.RData
-markdown/Zeisel_files
-markdown/Zeisel_cache
+markdown/Zeisel_*_cache
+markdown/Zeisel_*_files
+*cache*
+cache
+_files
+*_files*

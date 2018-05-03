@@ -6,7 +6,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(autodep=TRUE, cache.comments=TRUE)
+knitr::opts_chunk$set(cache=TRUE,autodep=TRUE, cache.comments=TRUE)
 ```
 
 Gene expression data EDA
@@ -58,7 +58,9 @@ singular values and the remaining singular values. All the singular values are (
 by definition) positive.
 
 ```{r, echo = F}
+par(mfrow = c(1,2))
 plot(statements[[3]], pch = 16, col = rgb(0,0,0,0.5), xlab = "Singular value position", ylab = "Value")
+plot(statements[[3]], pch = 16, col = rgb(0,0,0,0.5), xlab = "Singular value position", ylab = "Value", xlim = c(1,20))
 ```
 
 ### Analysis of the cells
@@ -142,7 +144,8 @@ data should be lie within (they are calculated by 2 times the standard deviation
 
 ```{r, echo = F}
 set.seed(10)
-plot(statements[[6]][,1], statements[[6]][,2], pch = 16, xlab = "Predicted mean",
+idx <- sample(1:nrow(statements[[6]]), 50000)
+plot(statements[[6]][idx,1], statements[[6]][idx,2], pch = 16, xlab = "Predicted mean",
      ylab = "Residual")
 lines(c(-1e6, 1e6), c(0,0), col = "red", lwd = 2)
 lines(c(0,0), c(-1e6, 1e6), col = "red", lwd = 2)
@@ -193,7 +196,7 @@ plot each of the 19,972 genes by their leading 2 column vectors in $V$. Similar 
 the genes display a "fanning-out" property.
 
 ```{r, echo = F}
-plot(statements[[10]][,1], statements[[10]][,2], pch = 16, xlab = "V[,1]", ylab = "V[,2]")
+plot(statements[[10]][,1], statements[[10]][,2], pch = 16, xlab = "V[,1]", ylab = "V[,2]", col = rgb(0,0,0,0.1))
 lines(rep(0,2), c(-10,10), col = "red", lwd = 2)
 lines(c(-10,10), rep(0,2), col = "red", lwd = 2)
 ```
@@ -206,8 +209,9 @@ Unfortunately, according to this diagnostic, it does not.
 
 ```{r, echo = F}
 set.seed(10)
-plot(statements[[11]][,1], statements[[11]][,2], pch = 16, xlab = "mean",
-     ylab = "residual")
+idx <- sample(1:nrow(statements[[6]]), 50000)
+plot(statements[[11]][idx,1], statements[[11]][idx,2], pch = 16, xlab = "mean",
+     ylab = "residual", col = rgb(0,0,0,0.1))
 lines(c(-1e6, 1e6), c(0,0), col = "red", lwd = 2)
 lines(c(0,0), c(-1e6, 1e6), col = "red", lwd = 2)
 
@@ -246,7 +250,7 @@ for(i in 1:7){
   plot(res$u[idx,1], res$u[idx,2], pch = 16, main = level_vec[i],
        xlim = xrange, ylim = yrange, xlab = "U[,1]", ylab = "U[,2]")
   lines(c(-10,10), c(0,0), col = "red", lwd = 2)
-  lines(rep(0, 2), c(-10,10), col = "red", lwd = 2)
+  lines(rep(-.02, 2), c(-10,10), col = "red", lwd = 2)
 }
 ```
 
@@ -257,7 +261,7 @@ for(i in 1:7){
 We now turn to analyzing the genes' latent variables (the $V$ matrix in the SVD) like before.
 
 ```{r, echo = F}
-plot(res$v[,1], res$v[,2], pch = 16, xlab = "V[,1]", ylab = "V[,2]")
+plot(res$v[,1], res$v[,2], pch = 16, xlab = "V[,1]", ylab = "V[,2]", col = rgb(0,0,0,0.1))
 lines(rep(0,2), c(-10,10), col = "red", lwd = 2)
 lines(c(-10,10), rep(0,2), col = "red", lwd = 2)
 ```
@@ -270,14 +274,14 @@ The residuals behave strangely like before in the other log transformation analy
 
 ```{r, echo = F}
 set.seed(10)
-idx <- sample(1:prod(dim(mat)), 1e6)
+idx <- sample(1:prod(dim(mat)), 50000)
 
 mat_approx <- res$u[,1:2] %*% diag(res$d[1:2]) %*% t(res$v[,1:2])
 residual <- mat - mat_approx
 
 set.seed(10)
 plot(as.vector(mat_approx)[idx], as.vector(residual)[idx], pch = 16, xlab = "mean",
-     ylab = "residual")
+     ylab = "residual", col = rgb(0,0,0,0.1))
 lines(c(-1e6, 1e6), c(0,0), col = "red", lwd = 2)
 lines(c(0,0), c(-1e6, 1e6), col = "red", lwd = 2)
 
