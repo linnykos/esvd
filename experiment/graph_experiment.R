@@ -72,4 +72,33 @@ plot(res_svd$u[,1], res_svd$u[,2], pch = 16, col = col_vec,
 #############################
 set.seed(10)
 l <- igraph::layout.auto(g)
-igraph::plot.igraph(g, vertex.label = NA, main = "", vertex.size = 1, layout = l)
+l <- apply(l, 2, function(x){2*(x-min(x))/(max(x)-min(x))-1})
+igraph::plot.igraph(g, vertex.label = NA, main = "", vertex.size = 1, layout = l,
+                    axes = T)
+
+######
+
+# find one cluster
+idx <- intersect(intersect(which(l[,2] <= 0.75), which(l[,2] >= 0.25)),
+                 intersect(which(l[,1] >= -0.75), which(l[,1] <= -0.25)))
+idx <- c(idx, which(l[,2] >= 0.75))
+
+col_vec <- rep(rgb(0,0,0,0.1), n)
+col_vec[idx] <- rgb(1,0,0,0)
+plot(res_svd$u[,1], res_svd$u[,2], pch = 16, col = col_vec,
+     xlim = range(c(res_svd$u[,1], 0)), ylim = range(c(res_svd$u[,2], 0)))
+
+idx <- intersect(intersect(which(l[,2] <= 0.25), which(l[,2] >= -0.25)),
+                 intersect(which(l[,1] >= 0), which(l[,1] <= 0.5)))
+
+col_vec <- rep(rgb(0,0,0,0.1), n)
+col_vec[idx] <- rgb(1,0,0,1)
+
+plot(res_svd$u[,1], res_svd$u[,2], pch = 16, col = col_vec,
+     xlim = range(c(res_svd$u[,1], 0)), ylim = range(c(res_svd$u[,2], 0)))
+
+vertex_size <- rep(1, n)
+vertex_size[idx] <- 5
+igraph::plot.igraph(g, vertex.label = NA, main = "", vertex.size = vertex_size, layout = l,
+                    axes = T)
+
