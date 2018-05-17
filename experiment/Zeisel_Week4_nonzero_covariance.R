@@ -75,7 +75,8 @@ combn_mat <- cbind(combn_mat, rbind(1:d, 1:d))
 
 doMC::registerDoMC(cores = 10)
 
-cor_vec <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:nrow(combn_mat), nonzero_covariance(i))))
+i <- 1
+cor_vec <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:nrow(combn_mat)), nonzero_covariance(i)))
 
 save.image("../experiment/Week4_nonzero_covariance.RData")
 
@@ -93,7 +94,7 @@ row_idx <- c(0, row_idx)
 for(i in 1:6){
   dat_tmp <- dat2[(row_idx[idx]+1):row_idx[idx+1],]
 
-  cor_vec_list[[i]] <- unlist(foreach::"%dopar"(foreach::foreach(i = 1:nrow(combn_mat), nonzero_covariance(i))))
+  cor_vec_list[[i]] <- unlist(foreach::"%dopar"(foreach::foreach(i = 1:nrow(combn_mat)), nonzero_covariance(i)))
 }
 
 save.image("../experiment/Week4_nonzero_covariance.RData")
