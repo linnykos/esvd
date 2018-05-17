@@ -92,9 +92,9 @@ row_idx <- sapply(1:6, function(x){
 row_idx <- c(0, row_idx)
 
 for(i in 1:6){
-  dat_tmp <- dat2[(row_idx[idx]+1):row_idx[idx+1],]
+  dat_tmp <- dat2[(row_idx[i]+1):row_idx[i+1],]
 
-  cor_vec_list[[i]] <- unlist(foreach::"%dopar"(foreach::foreach(i = 1:nrow(combn_mat)), nonzero_covariance(i)))
+  cor_vec_list[[i]] <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:nrow(combn_mat)), nonzero_covariance(i)))
 }
 
 save.image("../experiment/Week4_nonzero_covariance.RData")
