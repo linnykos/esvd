@@ -1,4 +1,8 @@
 rm(list=ls())
+
+library(foreach)
+library(doMC)
+
 load("../../SOUP/data/zeisel.rda")
 
 dat <- zeisel$counts
