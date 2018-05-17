@@ -91,10 +91,10 @@ row_idx <- sapply(1:6, function(x){
 })
 row_idx <- c(0, row_idx)
 
-for(i in 1:6){
-  dat_tmp <- dat2[(row_idx[i]+1):row_idx[i+1],]
+for(j in 1:6){
+  dat_tmp <- dat2[(row_idx[j]+1):row_idx[j+1],]
 
-  cor_vec_list[[i]] <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:ncol(combn_mat)), nonzero_covariance(i)))
+  cor_vec_list[[j]] <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:ncol(combn_mat)), nonzero_covariance(i)))
 }
 
 save(cor_vec_list, file = "../experiment/Week4_nonzero_covariance_gene.RData")
