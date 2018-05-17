@@ -54,12 +54,10 @@ dat2 <- dat
 
 # compute the non-zero correlation matrix
 d <- ncol(dat2)
-cor_mat <- matrix(1, d, d)
-
 dat_tmp <- dat2
 
 nonzero_covariance <- function(i){
-  if(i %% floor(ncol(combn_mat)/10) == 0) print('*')
+  print(i)
 
   mat <- dat_tmp[,combn_mat[,i]]
 
