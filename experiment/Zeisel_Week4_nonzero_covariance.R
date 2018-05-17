@@ -75,7 +75,7 @@ combn_mat <- cbind(combn_mat, rbind(1:d, 1:d))
 
 doMC::registerDoMC(cores = 10)
 
-cor_vec <- unlist(foreach::"%dopar"(foreach::foreach(i = 1:nrow(combn_mat), nonzero_covariance(i))))
+cor_vec <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:nrow(combn_mat), nonzero_covariance(i))))
 
 save.image("../experiment/Week4_nonzero_covariance.RData")
 
