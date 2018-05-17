@@ -24,10 +24,10 @@ res_svd <- svd(dat)
 u_mat <- res_svd$u[,1:8] %*% diag(res_svd$d[1:8])
 v_mat <- res_svd$v[,1:8] %*% diag(res_svd$d[1:8])
 
+.l2norm <- function(x){sqrt(sum(x^2))}
+
 u_mat_spherical <- t(apply(u_mat, 1, function(x){x/.l2norm(x)}))
 v_mat_spherical <- t(apply(v_mat, 1, function(x){x/.l2norm(x)}))
-
-.l2norm <- function(x){sqrt(sum(x^2))}
 
 set.seed(10)
 u_clust <- kmeans(u_mat_spherical, centers = 6, iter.max = 100, nstart = 10)
