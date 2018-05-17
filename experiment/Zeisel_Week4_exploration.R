@@ -486,8 +486,38 @@ for(i in 1:nrow(pair_mat)){
 ##########################
 
 # visualize correlation between two genes
+# for each gene cluster, find the 4 gene pairs that are most correlated and plot those
 
+png(paste0("../figure/experiment/4_example_correlation.png"), height = 1200, width = 2400, res = 300, units = "px")
+par(mfrow = c(2,3))
+for(i in 1:5){
+  cell_idx <- pair_mat[i,1]
+  gene_idx <- pair_mat[i,2]
 
+  cov_block <- stats::cor(dat2[(row_idx[cell_idx]+1):row_idx[cell_idx+1],
+                               (col_idx[gene_idx]+1):col_idx[gene_idx+1]])
+  max_val <- max(cov_block[cov_block != 1])
+  idx <- unique(as.numeric(which(cov_block == max_val, arr.ind = T)))
+  idx <- c((col_idx[gene_idx]+1):col_idx[gene_idx+1])[idx]
 
+  stopifnot(length(idx) == 2)
 
+  plot(dat[,idx[1]], dat[,idx[2]], pch = 16, col = rgb(0,0,0,0.5))
+}
+graphics.off()
 
+##############################
+
+# what if we clustered by removing 0's?
+d <- ncol(dat2)
+cor_mat <- matrix(1, d, d)
+for(i in 1:(d-1)){
+  for(j in (i+1):d){
+    mat <- dat2[,c(i,j)]
+    bool <- apply(mat, 1, function(x){(x[1] == 0 & x[2] != 0) || (x[1] != 0 & x[2] == 0)})
+    if(all(bool)) {cor_mat[i,j] <- 0; cor_mat[j,i] <- 0; next()}
+
+    mat <- mat[-which(bool),, drop = F]
+    cor_mat[i,j] <- cor(mat[,1], mat[,2]); cor_mat[j,i] <- cor(mat[,1], mat[,2])
+  }
+}
