@@ -58,7 +58,7 @@ n <- nrow(dat2)
 
 doMC::registerDoMC(cores = 14)
 
-nonzero_covariance_gene <- function(i, row = F){
+nonzero_covariance <- function(i, row = F){
   print(i)
   if(row) mat <- t(dat2[combn_mat[,i],]) else mat <- dat2[,combn_mat[,i]]
 
