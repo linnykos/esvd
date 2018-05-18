@@ -62,7 +62,8 @@ nonzero_covariance <- function(i, row = F){
   print(i)
   if(row) mat <- t(dat2[combn_mat[,i],]) else mat <- dat2[,combn_mat[,i]]
 
-  bool <- apply(mat, 1, function(x){(x[1] == 0 & x[2] != 0) || (x[1] != 0 & x[2] == 0)})
+  # bool <- apply(mat, 1, function(x){(x[1] == 0 & x[2] != 0) || (x[1] != 0 & x[2] == 0)})
+  bool <- apply(mat, 1, function(x){any(x == 0)})
   if(all(bool)) return(0)
 
   if(any(bool)) mat <- mat[-which(bool),, drop = F]
@@ -71,13 +72,13 @@ nonzero_covariance <- function(i, row = F){
   cov(mat[,1], mat[,2])
 }
 
-# combn_mat <- combn(n, 2)
-# combn_mat <- cbind(combn_mat, rbind(1:n, 1:n))
-#
-# i <- 1
-# cov_vec_cell <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:ncol(combn_mat)), nonzero_covariance(i, T)))
-#
-# save(cov_vec_cell, file = "../experiment/Week4_nonzero_covariance_cell.RData")
+combn_mat <- combn(n, 2)
+combn_mat <- cbind(combn_mat, rbind(1:n, 1:n))
+
+i <- 1
+cov_vec_cell <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:ncol(combn_mat)), nonzero_covariance(i, T)))
+
+save(cov_vec_cell, file = "../experiment/Week4_nonzero_covariance_cell.RData")
 
 ################
 
