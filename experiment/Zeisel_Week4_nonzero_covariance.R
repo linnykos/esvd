@@ -54,46 +54,36 @@ dat2 <- dat
 
 # compute the non-zero correlation matrix
 d <- ncol(dat2)
-dat_tmp <- dat2
+n <- nrow(dat2)
 
-nonzero_covariance <- function(i){
+doMC::registerDoMC(cores = 14)
+
+nonzero_covariance_gene <- function(i, row = F){
   print(i)
-
-  mat <- dat_tmp[,combn_mat[,i]]
+  if(row) mat <- t(dat2[combn_mat[,i],]) else mat <- dat2[,combn_mat[,i]]
 
   bool <- apply(mat, 1, function(x){(x[1] == 0 & x[2] != 0) || (x[1] != 0 & x[2] == 0)})
   if(all(bool)) return(0)
 
   mat <- mat[-which(bool),, drop = F]
-  cor(mat[,1], mat[,2])
+  if(any(colSums(abs(mat)) == 0)) return(0)
+
+  cov(mat[,1], mat[,2])
 }
+
+combn_mat <- combn(n, 2)
+combn_mat <- cbind(combn_mat, rbind(1:n, 1:n))
+
+i <- 1
+cov_vec_cell <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:ncol(combn_mat)), nonzero_covariance(i, T)))
+
+save(cov_vec_cell, file = "../experiment/Week4_nonzero_covariance_cell.RData")
+
+################
 
 combn_mat <- combn(d, 2)
 combn_mat <- cbind(combn_mat, rbind(1:d, 1:d))
 
-doMC::registerDoMC(cores = 10)
+cov_vec_gene <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:ncol(combn_mat)), nonzero_covariance(i, F)))
 
-i <- 1
-cor_vec <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:ncol(combn_mat)), nonzero_covariance(i)))
-
-save(cor_vec, file = "../experiment/Week4_nonzero_covariance.RData")
-
-########################
-
-# do cell-type specific ones
-
-cor_vec_list <- vector("list", 6)
-
-row_idx <- sapply(1:6, function(x){
-  length(which(u_clust$cluster <= x))
-})
-row_idx <- c(0, row_idx)
-
-for(j in 1:6){
-  dat_tmp <- dat2[(row_idx[j]+1):row_idx[j+1],]
-
-  cor_vec_list[[j]] <- unlist(foreach::"%dopar%"(foreach::foreach(i = 1:ncol(combn_mat)), nonzero_covariance(i)))
-}
-
-save(cor_vec_list, file = "../experiment/Week4_nonzero_covariance_gene.RData")
-
+save(cov_vec_gene, file = "../experiment/Week4_nonzero_covariance_gene.RData")
