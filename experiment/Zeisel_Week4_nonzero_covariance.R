@@ -65,7 +65,7 @@ nonzero_covariance <- function(i, row = F){
   bool <- apply(mat, 1, function(x){(x[1] == 0 & x[2] != 0) || (x[1] != 0 & x[2] == 0)})
   if(all(bool)) return(0)
 
-  mat <- mat[-which(bool),, drop = F]
+  if(any(bool)) mat <- mat[-which(bool),, drop = F]
   if(any(colSums(abs(mat)) == 0)) return(0)
 
   cov(mat[,1], mat[,2])
