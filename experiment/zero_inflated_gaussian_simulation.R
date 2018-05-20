@@ -266,3 +266,121 @@ v_clust <- kmeans(v_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
 
 table(u_label, u_clust$cluster)
 table(v_label, v_clust$cluster)
+
+#######
+
+# plot the mean_dat
+
+break_vec <- quantile(as.numeric(mean_dat), probs = seq(0, 1, length.out = 20))
+
+png("../figure/experiment/4_simulated_data_mean.png", height = 2400, width = 2400, res = 300, units = "px")
+image(.rotate(mean_dat), breaks = break_vec, col = col_vec2, asp = nrow(dat)/ncol(dat),
+      axes = F)
+
+#put lines
+row_idx <- 1-cumsum(u_num)[1:2]/n
+col_idx <- cumsum(v_num)[1:2]/d
+
+for(i in row_idx){
+  lines(c(0,1), rep(i, 2), lwd = 2, lty = 2)
+}
+for(i in col_idx){
+  lines(rep(i, 2), c(0,1), lwd = 2, lty = 2)
+}
+
+graphics.off()
+
+###########
+
+## "true" covariance matrices
+# plot both covariance matrices
+
+cov_d <- cov(mean_dat)
+
+col_idx <- cumsum(v_num)[1:2]/d
+
+col_vec2 <- colorRampPalette(c(rgb(0.584, 0.858, 0.564), rgb(0.803, 0.156, 0.211)))(19)
+break_vec <- quantile(as.numeric(cov_d), probs = seq(0, 1, length.out = 20))
+
+png(paste0("../figure/experiment/4_simulated_gene_mean_covariance.png"), height = 2400, width = 2400, res = 300, units = "px")
+image(.rotate(cov_d), breaks = break_vec, col = col_vec2, asp = T, axes = F)
+
+for(j in col_idx){
+  lines(c(0,1), rep(1-j, 2), lwd = 2, lty = 2)
+}
+for(j in col_idx){
+  lines(rep(j, 2), c(0,1), lwd = 2, lty = 2)
+}
+graphics.off()
+
+###
+
+cov_n <- cov(t(mean_dat))
+
+col_idx <- cumsum(u_num)[1:2]/n
+
+col_vec2 <- colorRampPalette(c(rgb(0.584, 0.858, 0.564), rgb(0.803, 0.156, 0.211)))(19)
+break_vec <- quantile(as.numeric(cov_d), probs = seq(0, 1, length.out = 20))
+
+png(paste0("../figure/experiment/4_simulated_cell_mean_covariance.png"), height = 2400, width = 2400, res = 300, units = "px")
+image(.rotate(cov_n), breaks = break_vec, col = col_vec2, asp = T, axes = F)
+
+for(j in col_idx){
+  lines(c(0,1), rep(1-j, 2), lwd = 2, lty = 2)
+}
+for(j in col_idx){
+  lines(rep(j, 2), c(0,1), lwd = 2, lty = 2)
+}
+graphics.off()
+
+###############
+
+# compare the gene covariance matrices, true, mean_dat, and dat, using real clustering
+u_idx <- lapply(1:max(u_label), function(x){
+  which(u_label == x)
+})
+v_idx <- lapply(1:max(v_label), function(x){
+  which(u_label == x)
+})
+
+true_cov <- t(v_center)%*%v_center
+
+tmp_cov <- v_dat %*% t(v_dat)
+mean_cov <- matrix(0, 3, 3)
+for(i in 1:3){
+  for(j in i:3){
+    mean_cov[i,j] <- mean(tmp_cov[v_idx[[i]], v_idx[[j]]])
+    mean_cov[j,i] <- mean_cov[i,j]
+  }
+}
+
+tmp_cov <- v_mat %*% t(v_mat)
+dat_cov <- matrix(0, 3, 3)
+for(i in 1:3){
+  for(j in i:3){
+    dat_cov[i,j] <- mean(tmp_cov[v_idx[[i]], v_idx[[j]]])
+    dat_cov[j,i] <- dat_cov[i,j]
+  }
+}
+
+##
+# do the same with cells
+true_cov <- t(u_center)%*%u_center
+
+tmp_cov <- u_dat %*% t(u_dat)
+mean_cov <- matrix(0, 3, 3)
+for(i in 1:3){
+  for(j in i:3){
+    mean_cov[i,j] <- mean(tmp_cov[v_idx[[i]], v_idx[[j]]])
+    mean_cov[j,i] <- mean_cov[i,j]
+  }
+}
+
+tmp_cov <- u_mat %*% t(u_mat)
+dat_cov <- matrix(0, 3, 3)
+for(i in 1:3){
+  for(j in i:3){
+    dat_cov[i,j] <- mean(tmp_cov[v_idx[[i]], v_idx[[j]]])
+    dat_cov[j,i] <- dat_cov[i,j]
+  }
+}
