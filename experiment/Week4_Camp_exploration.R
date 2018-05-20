@@ -37,21 +37,21 @@ plot(v_mat[,1], v_mat[,2], pch = 16, asp = T)
 u_mat_spherical <- t(apply(u_mat, 1, function(x){x/.l2norm(x)}))
 v_mat_spherical <- t(apply(v_mat, 1, function(x){x/.l2norm(x)}))
 
-# try many number of clusters
-k_vec <- 2:20
-u_clust_vec <- sapply(k_vec, function(x){
-  set.seed(10)
-  kmeans(u_mat_spherical, centers = x, iter.max = 100, nstart = 10)$tot.withinss
-})
-v_clust_vec <- sapply(k_vec, function(x){
-  set.seed(10)
-  kmeans(v_mat_spherical, centers = x, iter.max = 100, nstart = 10)$tot.withinss
-})
-
-par(mfrow = c(1,2))
-
-plot(k_vec, u_clust_vec,  pch = 16, xlab = "K", ylab = "Total within ss", main = "Clustering for cells")
-plot(k_vec, v_clust_vec,pch = 16, xlab = "K", ylab = "Total within ss", main = "Clustering for genes")
+# # try many number of clusters
+# k_vec <- 2:20
+# u_clust_vec <- sapply(k_vec, function(x){
+#   set.seed(10)
+#   kmeans(u_mat_spherical, centers = x, iter.max = 100, nstart = 10)$tot.withinss
+# })
+# v_clust_vec <- sapply(k_vec, function(x){
+#   set.seed(10)
+#   kmeans(v_mat_spherical, centers = x, iter.max = 100, nstart = 10)$tot.withinss
+# })
+#
+# par(mfrow = c(1,2))
+#
+# plot(k_vec, u_clust_vec,  pch = 16, xlab = "K", ylab = "Total within ss", main = "Clustering for cells")
+# plot(k_vec, v_clust_vec,pch = 16, xlab = "K", ylab = "Total within ss", main = "Clustering for genes")
 
 set.seed(10)
 u_clust <- kmeans(u_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
@@ -64,10 +64,10 @@ table(camp$cell.info[,2], u_clust$cluster)
 # plot the data
 
 #reshuffle dat
-row_idx <- unlist(lapply(1:6, function(x){
+row_idx <- unlist(lapply(1:max(u_clust$cluster), function(x){
   sort(which(u_clust$cluster == x))
 }))
-col_idx <- unlist(lapply(1:6, function(x){
+col_idx <- unlist(lapply(1:max(u_clust$cluster), function(x){
   sort(which(v_clust$cluster == x))
 }))
 
@@ -113,6 +113,47 @@ image(.rotate(dat2), breaks = break_vec, col = col_vec, asp = nrow(dat2)/ncol(da
 #put lines
 row_idx <- sapply(1:2, function(x){
   1-length(which(u_clust$cluster <= x))/length(u_clust$cluster)
+})
+col_idx <- sapply(1:2, function(x){
+  length(which(v_clust$cluster <= x))/length(v_clust$cluster)
+})
+
+for(i in row_idx){
+  lines(c(0,1), rep(i, 2), lwd = 2, lty = 2)
+}
+for(i in col_idx){
+  lines(rep(i, 2), c(0,1), lwd = 2, lty = 2)
+}
+
+graphics.off()
+
+##################
+
+# do this with the real clusters
+
+cell_type <- as.numeric(as.factor(camp$cell.info[,2]))
+row_idx <- unlist(lapply(1:max(cell_type), function(x){
+  which(cell_type == x)
+}))
+col_idx <- unlist(lapply(1:max(u_clust$cluster), function(x){
+  sort(which(v_clust$cluster == x))
+}))
+
+dat3 <- dat[row_idx, col_idx]
+
+tmp <- as.numeric(dat3)
+tmp <- tmp[tmp!=0]
+
+break_vec <- quantile(tmp, probs = seq(0, 1, length.out = 20))
+break_vec <- c(-5, break_vec)
+
+png("../figure/experiment/4_camp_data_sorted.png", height = 2400, width = 2400, res = 300, units = "px")
+image(.rotate(dat3), breaks = break_vec, col = col_vec, asp = nrow(dat3)/ncol(dat3),
+      axes = F)
+
+#put lines
+row_idx <- sapply(1:(max(cell_type)-1), function(x){
+  1-length(which(cell_type <= x))/length(cell_type)
 })
 col_idx <- sapply(1:2, function(x){
   length(which(v_clust$cluster <= x))/length(v_clust$cluster)

@@ -1,16 +1,15 @@
 rm(list=ls())
 
 # set up parameters
-u_mat <- matrix(0, 3, 3)
+tmp <- matrix(rnorm(9), 3, 3)
+tmp <- tmp + t(tmp)
+u_mat <- eigen(tmp)$vectors
+
+
 v_mat <- matrix(0, 3, 3)
-
-u_mat[,1] <- c(   0,  0, 0.5)
-u_mat[,2] <- c(  -1,  0, 0.5)
-u_mat[,3] <- c(   1,  1,   0)
-
-v_mat[,1] <- c(   1,  0,   0)
-v_mat[,2] <- c( 0.5,  0,   1)
-v_mat[,3] <- c(-0.5, 0.5,  0)
+v_mat[,1] <- solve(t(u_mat), c(-.2, -1.25, -1.5))
+v_mat[,2] <- solve(t(u_mat), c(-.1, -1.25, -1.5))
+v_mat[,3] <- solve(t(u_mat), c(-1, -.2, -.7))
 
 t(u_mat)%*%v_mat
 
@@ -97,4 +96,26 @@ for(i in col_idx){
   lines(rep(i, 2), c(0,1), lwd = 2, lty = 2)
 }
 
+graphics.off()
+
+################
+
+# plot both covariance matrices
+
+cov_d <- cov(dat)
+
+col_idx <- cumsum(v_num)[1:2]/d
+
+col_vec2 <- colorRampPalette(c(rgb(0.584, 0.858, 0.564), rgb(0.803, 0.156, 0.211)))(19)
+break_vec <- quantile(as.numeric(cov_d), probs = seq(0, 1, length.out = 20))
+
+png(paste0("../figure/experiment/4_simulated_gene_covariance.png"), height = 2400, width = 2400, res = 300, units = "px")
+image(.rotate(cov_d), breaks = break_vec, col = col_vec2, asp = T, axes = F)
+
+for(j in col_idx){
+  lines(c(0,1), rep(1-j, 2), lwd = 2, lty = 2)
+}
+for(j in col_idx){
+  lines(rep(j, 2), c(0,1), lwd = 2, lty = 2)
+}
 graphics.off()
