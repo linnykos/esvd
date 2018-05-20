@@ -5,12 +5,12 @@ set.seed(10)
 tmp <- matrix(rnorm(9), 3, 3)
 tmp <- tmp + t(tmp)
 v_center <- eigen(tmp)$vectors
-v_center <- diag(c(1.5, 1.5, 1.25))%*%v_center
+# v_center <- diag(c(1.5, 1.5, 1.25))%*%v_center
 
 u_center <- matrix(0, 3, 3)
-u_center[,1] <- solve(t(v_center), c(-.1, -.05, -0.75))
-u_center[,2] <- solve(t(v_center), c(-1.25, -1.25, -.1))
-u_center[,3] <- solve(t(v_center), c(-1.5, -1.5, -.8))
+u_center[,1] <- solve(t(v_center), c(-0.25, -.1, -0.5))
+u_center[,2] <- solve(t(v_center), c(-0.5, -.4, -0.25))
+u_center[,3] <- solve(t(v_center), c(-0.75, -.4, -.5))
 
 t(u_center)%*%v_center
 
@@ -21,12 +21,13 @@ v_label <- unlist(lapply(1:3, function(x){rep(x, v_num[x])}))
 
 # generate matrices
 set.seed(10)
-sig <- 0.1
+u_sig <- 0.05
 u_dat <- do.call(rbind, lapply(1:3, function(x){
-  MASS::mvrnorm(n = u_num[x], mu = u_center[,x], Sigma = sig*diag(3))
+  MASS::mvrnorm(n = u_num[x], mu = u_center[,x], Sigma = u_sig*diag(3))
 }))
+v_sig <- 0.1
 v_dat <- do.call(rbind, lapply(1:3, function(x){
-  MASS::mvrnorm(n = v_num[x], mu = v_center[,x], Sigma = sig*diag(3))
+  MASS::mvrnorm(n = v_num[x], mu = v_center[,x], Sigma = v_sig*diag(3))
 }))
 
 mean_dat <- u_dat %*% t(v_dat)
@@ -259,10 +260,10 @@ k <- 3
 u_mat <- res_svd$u[,1:k] %*% diag(res_svd$d[1:k])
 v_mat <- res_svd$v[,1:k] %*% diag(res_svd$d[1:k])
 
-# u_mat_spherical <- t(apply(u_mat, 1, function(x){x/.l2norm(x)}))
-# v_mat_spherical <- t(apply(v_mat, 1, function(x){x/.l2norm(x)}))
-u_mat_spherical <- u_mat
-v_mat_spherical <- v_mat
+u_mat_spherical <- t(apply(u_mat, 1, function(x){x/.l2norm(x)}))
+v_mat_spherical <- t(apply(v_mat, 1, function(x){x/.l2norm(x)}))
+# u_mat_spherical <- u_mat
+# v_mat_spherical <- v_mat
 
 u_clust <- kmeans(u_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
 v_clust <- kmeans(v_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
