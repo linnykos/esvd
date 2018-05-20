@@ -1,21 +1,14 @@
 rm(list=ls())
 
 # set up parameters
-set.seed(10)
-tmp <- matrix(rnorm(9), 3, 3)
-tmp <- tmp + t(tmp)
-tmp <- eigen(tmp)$vectors
-v_center <- matrix(0, 3, 3)
-v_center[,1] <- tmp %*% c(-.5, .5, 1)
-v_center[,2] <- tmp %*% c(1, 1, -.5)
-v_center[,3] <- tmp %*% c(0, -.5, .5)
+adj <- matrix(c(-.25,-.1,-.5,
+                -.5,-.4,-.25,
+                -.75,-.4,-.5), 3, 3, byrow = T)
+tmp <- svd(adj)
+u_center <- t(tmp$u %*% diag(sqrt(tmp$d)))
+v_center <- t(tmp$v %*% diag(sqrt(tmp$d)))
 
-u_center <- matrix(0, 3, 3)
-u_center[,1] <- solve(t(v_center), c(-0.25, -.1, -0.5))
-u_center[,2] <- solve(t(v_center), c(-0.5, -.4, -0.25))
-u_center[,3] <- solve(t(v_center), c(-0.75, -.4, -.5))
-
-t(u_center)%*%v_center
+t(u_center) %*% v_center
 
 u_num <- c(50, 80, 80)
 u_label <- unlist(lapply(1:3, function(x){rep(x, u_num[x])}))
@@ -155,8 +148,8 @@ res_svd <- svd(dat)
 plot(res_svd$d[1:50])
 
 k <- 3
-u_mat <- res_svd$u[,1:k] %*% diag(res_svd$d[1:k])
-v_mat <- res_svd$v[,1:k] %*% diag(res_svd$d[1:k])
+u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
+v_mat <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
 
 plot(u_mat[,1], u_mat[,2], pch = 16, asp = T)
 plot(v_mat[,1], v_mat[,2], pch = 16, asp = T)
@@ -260,8 +253,8 @@ graphics.off()
 
 res_svd <- svd(mean_dat)
 k <- 3
-u_mat <- res_svd$u[,1:k] %*% diag(res_svd$d[1:k])
-v_mat <- res_svd$v[,1:k] %*% diag(res_svd$d[1:k])
+u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
+v_mat <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
 
 u_mat_spherical <- t(apply(u_mat, 1, function(x){x/.l2norm(x)}))
 v_mat_spherical <- t(apply(v_mat, 1, function(x){x/.l2norm(x)}))
