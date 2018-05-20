@@ -69,8 +69,9 @@ for(i in 1:ncol(combn_mat)){
 eig <- eigen(cov_n)
 
 plot(eig$vectors[,1], eig$vectors[,2], pch = 16, col = rgb(0,0,0,0.2), asp = T)
+plot(eig$values[1:50])
 
-k <- 6
+k <- 5
 u_mat <- eig$vectors[,1:k] %*% diag(eig$values[1:k])
 u_mat_spherical <- t(apply(u_mat, 1, function(x){x/.l2norm(x)}))
 
