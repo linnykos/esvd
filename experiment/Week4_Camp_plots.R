@@ -22,8 +22,8 @@ dat <- dat[,idx]
 res_svd <- svd(dat)
 
 k <- 4
-u_mat <- res_svd$u[,1:k] %*% diag(res_svd$d[1:k])
-v_mat <- res_svd$v[,1:k] %*% diag(res_svd$d[1:k])
+u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
+v_mat <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
 
 u_mat_spherical <- t(apply(u_mat, 1, function(x){x/.l2norm(x)}))
 v_mat_spherical <- t(apply(v_mat, 1, function(x){x/.l2norm(x)}))

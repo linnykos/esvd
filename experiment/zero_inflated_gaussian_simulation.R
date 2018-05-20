@@ -1,9 +1,9 @@
 rm(list=ls())
 
 # set up parameters
-adj <- matrix(c(-.25,-.1,-.25,
-                -.25,-.5,-.5,
-                -1,-.4,-.1), 3, 3, byrow = T)
+adj <- matrix(c(-.1, 0, -.1,
+                0.15,-.25,-.25,
+                -.75,-.25,0), 3, 3, byrow = T)
 tmp <- svd(adj)
 u_center <- t(tmp$u %*% diag(sqrt(tmp$d)))
 v_center <- t(tmp$v %*% diag(sqrt(tmp$d)))
@@ -17,11 +17,11 @@ v_label <- unlist(lapply(1:3, function(x){rep(x, v_num[x])}))
 
 # generate matrices
 set.seed(10)
-u_sig <- 0.1
+u_sig <- 0.05
 u_dat <- do.call(rbind, lapply(1:3, function(x){
   MASS::mvrnorm(n = u_num[x], mu = u_center[,x], Sigma = u_sig*diag(3))
 }))
-v_sig <- 0.1
+v_sig <- 0.05
 v_dat <- do.call(rbind, lapply(1:3, function(x){
   MASS::mvrnorm(n = v_num[x], mu = v_center[,x], Sigma = v_sig*diag(3))
 }))
@@ -31,13 +31,14 @@ n <- nrow(mean_dat)
 d <- ncol(mean_dat)
 dat <- matrix(0, n, d)
 
+dropout = 1-0.3
 set.seed(10)
 for(i in 1:n){
   for(j in 1:d){
     if(mean_dat[i,j] <= 0) {
       dat[i,j] <- 0
     } else {
-      dat[i,j] <- rexp(1, rate = 1/mean_dat[i,j])
+      dat[i,j] <- rexp(1, rate = 1/mean_dat[i,j])*rbinom(1, size = 1, prob = dropout)
     }
   }
 }
@@ -261,6 +262,7 @@ v_mat_spherical <- t(apply(v_mat, 1, function(x){x/.l2norm(x)}))
 # u_mat_spherical <- u_mat
 # v_mat_spherical <- v_mat
 
+set.seed(10)
 u_clust <- kmeans(u_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
 v_clust <- kmeans(v_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
 
