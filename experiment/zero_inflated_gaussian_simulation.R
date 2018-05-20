@@ -1,18 +1,18 @@
 rm(list=ls())
 
 # set up parameters
-adj <- matrix(c(-.25,-.1,-.5,
-                -.5,-.4,-.25,
-                -.75,-.4,-.5), 3, 3, byrow = T)
+adj <- matrix(c(-.25,-.1,-.25,
+                -.25,-.5,-.5,
+                -1,-.4,-.1), 3, 3, byrow = T)
 tmp <- svd(adj)
 u_center <- t(tmp$u %*% diag(sqrt(tmp$d)))
 v_center <- t(tmp$v %*% diag(sqrt(tmp$d)))
 
 t(u_center) %*% v_center
 
-u_num <- c(50, 80, 80)
+u_num <- c(40, 20, 160)
 u_label <- unlist(lapply(1:3, function(x){rep(x, u_num[x])}))
-v_num <- c(80, 100, 200)
+v_num <- c(60, 80, 200)
 v_label <- unlist(lapply(1:3, function(x){rep(x, v_num[x])}))
 
 # generate matrices
@@ -363,6 +363,9 @@ for(i in 1:3){
   }
 }
 
+true_cov
+mean_cov
+dat_cov
 ##
 # do the same with cells
 true_cov <- t(u_center)%*%u_center
@@ -384,3 +387,7 @@ for(i in 1:3){
     dat_cov[j,i] <- dat_cov[i,j]
   }
 }
+
+true_cov
+mean_cov
+dat_cov

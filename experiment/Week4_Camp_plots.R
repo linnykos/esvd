@@ -232,7 +232,7 @@ cell_pair2 <- combn_mat[,tmp[which.max(abs(cov_vec_cell_nonzero[tmp] - cov_vec_c
 # make the plot now
 
 png(paste0("../figure/experiment/4_camp_scatterplot_final.png"), height = 1000, width = 3500, res = 300, units = "px")
-par(mfrow = c(1,4))
+par(mfrow = c(1,4), mar = c(5,5,4,1))
 
 plot(dat[cell_pair1[1],], dat[cell_pair1[2],], pch = 16, col = rgb(0,0,0,0.5),
      xlab = paste0("Cell ", cell_pair1[1]), ylab = paste0("Cell ", cell_pair1[2]),
