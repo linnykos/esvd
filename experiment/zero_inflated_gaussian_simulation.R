@@ -4,8 +4,11 @@ rm(list=ls())
 set.seed(10)
 tmp <- matrix(rnorm(9), 3, 3)
 tmp <- tmp + t(tmp)
-v_center <- eigen(tmp)$vectors
-# v_center <- diag(c(1.5, 1.5, 1.25))%*%v_center
+tmp <- eigen(tmp)$vectors
+v_center <- matrix(0, 3, 3)
+v_center[,1] <- tmp %*% c(-.5, .5, 1)
+v_center[,2] <- tmp %*% c(1, 1, -.5)
+v_center[,3] <- tmp %*% c(0, -.5, .5)
 
 u_center <- matrix(0, 3, 3)
 u_center[,1] <- solve(t(v_center), c(-0.25, -.1, -0.5))
@@ -21,7 +24,7 @@ v_label <- unlist(lapply(1:3, function(x){rep(x, v_num[x])}))
 
 # generate matrices
 set.seed(10)
-u_sig <- 0.05
+u_sig <- 0.1
 u_dat <- do.call(rbind, lapply(1:3, function(x){
   MASS::mvrnorm(n = u_num[x], mu = u_center[,x], Sigma = u_sig*diag(3))
 }))
