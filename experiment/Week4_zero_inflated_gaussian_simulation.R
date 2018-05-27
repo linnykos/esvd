@@ -618,7 +618,7 @@ y_tic <- seq(-.5, .5+num_row-1, by = 1)*1/(num_row-1)
 x_tic <- seq(-.5, .5+num_col-1, by = 1)*1/(num_col-1)
 image(.rotate(u_tab2), col = col_ramp, asp = num_row/num_col, axes = F,
       xlim = c(min(x_tic)-.05, max(x_tic)+.05),
-      ylim = c(min(y_tic)-.05, max(y_tic)+.05), main = "Cell confusion matrix\n(Based on X)")
+      ylim = c(min(y_tic)-.05, max(y_tic)+.05), main = "Cell confusion matrix\n(Based on M)")
 for(y in y_tic){
   lines(range(x_tic), rep(y, 2))
 }
@@ -649,7 +649,7 @@ y_tic <- seq(-.5, .5+num_row-1, by = 1)*1/(num_row-1)
 x_tic <- seq(-.5, .5+num_col-1, by = 1)*1/(num_col-1)
 image(.rotate(v_tab2), col = col_ramp, asp = num_row/num_col, axes = F,
       xlim = c(min(x_tic)-.05, max(x_tic)+.05),
-      ylim = c(min(y_tic)-.05, max(y_tic)+.05), main = "Gene confusion matrix\n(Based on X)")
+      ylim = c(min(y_tic)-.05, max(y_tic)+.05), main = "Gene confusion matrix\n(Based on M)")
 for(y in y_tic){
   lines(range(x_tic), rep(y, 2))
 }
