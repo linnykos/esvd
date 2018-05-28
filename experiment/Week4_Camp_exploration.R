@@ -357,3 +357,8 @@ for(i in 1:3){
     hist(tmp, breaks = 50, col = "gray")
   }
 }
+
+#######################
+
+#try nnfm
+
