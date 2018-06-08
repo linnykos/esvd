@@ -43,6 +43,29 @@ test_that(".subgradient_row gives a correct subgradient for one instance", {
   expect_true(all(bool_vec))
 })
 
+test_that(".subgradient_row for more settings", {
+  bool_vec <- sapply(1:200, function(x){
+    dat <- matrix(rnorm(200), 20, 10)
+    initial_vec <- rnorm(5)
+    latent_mat <- matrix(rnorm(50), 10, 5)
+
+    fixed_idx <- 7
+    index_in <- c(1,3,4,6)
+    index_out <- c(2,8,10)
+
+    res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+
+    y <- rnorm(5)
+
+    f1 <- .evaluate_objective_single(dat, y, latent_mat, fixed_idx, index_in, index_out)
+    f2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+
+    f1 >= f2 + res %*% (y-initial_vec)
+  })
+
+  expect_true(all(bool_vec))
+})
+
 ###########
 
 ## .evaluate_objective_single is correct

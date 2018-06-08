@@ -9,12 +9,8 @@ estimate_row <- function(dat, initial_vec, latent_mat, fixed_idx, index_in, inde
   stopifnot(length(intersect(index_in, index_out)) == 0)
 
   vec <- initial_vec %*% t(latent_mat[index_out,])
-  idx <- which(vec >= 0)
-  if(length(idx) == 0){
-    second_term <- (2*initial_vec %*% t(latent_mat[index_out[idx],])) %*% latent_mat[index_out[idx],]
-  } else {
-    second_term <- rep(0, ncol(latent_mat))
-  }
+  vec <- sapply(vec, function(x){max(0, x)})
+  second_term <- 2*vec%*% latent_mat[index_out,]
 
   -(dat[fixed_idx,index_in] - initial_vec %*% t(latent_mat[index_in,])) %*% latent_mat[index_in,]/length(index_in) +
     second_term/length(index_out)
