@@ -66,6 +66,29 @@ test_that(".subgradient_row for more settings", {
   expect_true(all(bool_vec))
 })
 
+test_that(".subgradient_row for more settings for row = F", {
+  bool_vec <- sapply(1:200, function(x){
+    dat <- matrix(rnorm(200), 20, 10)
+    initial_vec <- rnorm(5)
+    latent_mat <- matrix(rnorm(50), 20, 5)
+
+    fixed_idx <- 7
+    index_in <- c(1,3,4,6)
+    index_out <- c(2,8,20)
+
+    res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, row = F)
+
+    y <- rnorm(5)
+
+    f1 <- .evaluate_objective_single(dat, y, latent_mat, fixed_idx, index_in, index_out, row = F)
+    f2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, row = F)
+
+    f1 >= f2 + res %*% (y-initial_vec)
+  })
+
+  expect_true(all(bool_vec))
+})
+
 ###########
 
 ## .evaluate_objective_single is correct
@@ -109,6 +132,33 @@ test_that(".evaluate_objective_single evaluates correctly", {
   res2 <- first_term/(2*length(index_in)) + second_term/(2*length(index_out))
 
   res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+
+  expect_true(abs(res - res2) <= 1e-6)
+})
+
+test_that(".evaluate_objective_single evaluates correctly for row = F", {
+  set.seed(20)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 20, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1,3,4,6)
+  index_out <- c(2,8,20)
+
+  # manual calculation
+  first_term <- 0
+  for(j in index_in){
+    first_term <- first_term + (dat[j, fixed_idx] - latent_mat[j,]%*%initial_vec)^2
+  }
+  second_term <- 0
+  for(j in index_out){
+    second_term <- second_term + max(0, initial_vec %*% latent_mat[j,])^2
+  }
+  res2 <- first_term/(2*length(index_in)) + second_term/(2*length(index_out))
+
+  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out,
+                                    row = F)
 
   expect_true(abs(res - res2) <= 1e-6)
 })
@@ -172,7 +222,27 @@ test_that(".estimate_matrix works", {
   expect_true(all(dim(res) == dim(initial_mat)))
 })
 
-test_that(".estimate_matrix decreases the objective value", {
+test_that(".estimate_matrix works with v_mat, aka: row = F", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_mat <- matrix(rnorm(50), 10, 5)
+  latent_mat <- matrix(rnorm(50), 20, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[sample(1:200, 100)] <- 1
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
+
+  res <- .estimate_matrix(dat, initial_mat, latent_mat, index_in_vec, index_out_vec,
+                          max_iter = 50, row = F)
+
+  expect_true(is.matrix(res))
+  expect_true(is.numeric(res))
+  expect_true(all(dim(res) == dim(initial_mat)))
+})
+
+
+test_that(".estimate_matrix decreases the objective value in 1 iteration", {
   set.seed(20)
   dat <- matrix(rnorm(200), 20, 10)
   u_mat <- matrix(rnorm(50), 20, 5)
@@ -191,6 +261,55 @@ test_that(".estimate_matrix decreases the objective value", {
   val2 <- .evaluate_objective_full(dat, new_u_mat, v_mat, index_in_vec, index_out_vec)
 
   expect_true(val2 < val1)
+})
+
+test_that(".estimate_matrix decreases the objective value in 1 iteration for row = F", {
+  set.seed(30)
+  dat <- matrix(rnorm(200), 20, 10)
+  u_mat <- matrix(rnorm(50), 20, 5)
+  v_mat <- matrix(rnorm(50), 10, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[sample(1:200, 100)] <- 1
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
+
+  val1 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
+
+  new_v_mat <- .estimate_matrix(dat, v_mat, u_mat, index_in_vec, index_out_vec,
+                                max_iter = 50)
+
+  val2 <- .evaluate_objective_full(dat, u_mat, new_v_mat, index_in_vec, index_out_vec)
+
+  expect_true(val2 < val1)
+})
+
+
+test_that(".estimate_matrix decreases the objective value in 2 iterations", {
+  set.seed(20)
+  dat <- matrix(rnorm(200), 20, 10)
+  u_mat <- matrix(rnorm(50), 20, 5)
+  v_mat <- matrix(rnorm(50), 10, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[sample(1:200, 100)] <- 1
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
+
+  val1 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
+
+  new_u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_vec,
+                                max_iter = 50, row = T)
+
+  val2 <- .evaluate_objective_full(dat, new_u_mat, v_mat, index_in_vec, index_out_vec)
+
+  new_v_mat <- .estimate_matrix(dat, v_mat, new_u_mat, index_in_vec, index_out_vec,
+                                max_iter = 50, row = F)
+
+  val3 <- .evaluate_objective_full(dat, new_u_mat, new_v_mat, index_in_vec, index_out_vec)
+
+  expect_true(val2 < val1)
+  expect_true(val3 < val2)
 })
 
 #######################
