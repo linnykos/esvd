@@ -161,8 +161,8 @@ test_that(".estimate_matrix works", {
 
   pattern <- matrix(0, 20, 10)
   pattern[sample(1:200, 100)] <- 1
-  index_in_mat <- which(pattern == 1, arr.ind = T)
-  index_out_mat <- which(pattern == 0, arr.ind = T)
+  index_in_mat <- which(pattern == 1)
+  index_out_mat <- which(pattern == 0)
 
   res <- .estimate_matrix(dat, initial_mat, latent_mat, index_in_mat, index_out_mat,
                           max_iter = 50)

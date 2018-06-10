@@ -1,10 +1,15 @@
-.estimate_matrix <- function(dat, initial_mat, latent_mat, index_in_mat, index_out_mat,
+.estimate_matrix <- function(dat, initial_mat, latent_mat, index_in_vec, index_out_vec,
                              tol = 1e-5, max_iter = 500, row = T, cores = 1){
   stopifnot(((nrow(dat) == nrow(initial_mat) & ncol(dat) == nrow(latent_mat)) |
                (ncol(dat) == nrow(initial_mat) & nrow(dat) == nrow(latent_mat))))
   stopifnot(ncol(initial_mat) == ncol(latent_mat))
+  stopifnot(all(index_in_vec <= prod(dim(dat))),
+            all(index_out_vec <= prod(dim(dat))))
 
   doMC::registerDoMC(cores = cores)
+
+  index_in_mat <- .convert_index_to_position(index_in_vec, nrow(dat), ncol(dat))
+  index_out_mat <- .convert_index_to_position(index_out_vec, nrow(dat), ncol(dat))
 
   if(row) z = 1 else z = 2
   func <- function(x){
