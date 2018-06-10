@@ -161,10 +161,10 @@ test_that(".estimate_matrix works", {
 
   pattern <- matrix(0, 20, 10)
   pattern[sample(1:200, 100)] <- 1
-  index_in_mat <- which(pattern == 1)
-  index_out_mat <- which(pattern == 0)
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
 
-  res <- .estimate_matrix(dat, initial_mat, latent_mat, index_in_mat, index_out_mat,
+  res <- .estimate_matrix(dat, initial_mat, latent_mat, index_in_vec, index_out_vec,
                           max_iter = 50)
 
   expect_true(is.matrix(res))
@@ -205,4 +205,53 @@ test_that(".convert_index_to_position gives the same indices as which", {
   res2 <- res2[order(res2[,1]),]
 
   expect_true(all(res == res2))
+})
+
+###################
+
+## .evaluate_objective_full is correct
+
+test_that(".evaluate_objective_full works", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+
+  u_mat <- matrix(rnorm(50), 20, 5)
+  v_mat <- matrix(rnorm(50), 10, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[sample(1:200, 100)] <- 1
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
+
+  res <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
+
+  expect_true(is.numeric(res))
+  expect_true(res >= 0)
+  expect_true(length(res) == 1)
+})
+
+test_that(".evaluate_objective_full computes the number correctly", {
+  set.seed(20)
+  dat <- matrix(rnorm(200), 20, 10)
+
+  u_mat <- matrix(rnorm(50), 20, 5)
+  v_mat <- matrix(rnorm(50), 10, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[sample(1:200, 100)] <- 1
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
+
+  res <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
+
+  pred_mat <- u_mat %*% t(v_mat)
+  sum1 <- sum(sapply(index_in_vec, function(x){
+    (dat[x] - pred_mat[x])^2
+  }))
+  sum2 <- sum(sapply(index_out_vec, function(x){
+    max(0,pred_mat[x])^2
+  }))
+  res2 <- sum1/length(index_in_vec) + sum2/length(index_out_vec)
+
+  expect_true(abs(res - res2) <= 1e-6)
 })

@@ -92,5 +92,6 @@
 
 .evaluate_objective_full <- function(dat, u_mat, v_mat, index_in, index_out){
   pred_mat <- u_mat %*% t(v_mat)
-
+  sum((dat[index_in] - pred_mat[index_in])^2)/length(index_in) +
+    sum(pmax(0, pred_mat[index_out])^2)/length(index_out)
 }
