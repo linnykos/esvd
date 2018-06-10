@@ -37,11 +37,12 @@
 # verbose only for debugging purposes only
 .estimate_row <- function(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out,
                           tol = 1e-5, max_iter = 500, row = T, verbose = F){
-  k <- 1
   vec <- initial_vec
   obj_old <- .evaluate_objective_single(dat, vec, latent_mat, fixed_idx, index_in, index_out, row)
 
   if(verbose) {obj_vec <- rep(NA, max_iter+1); obj_vec[1] <- obj_old}
+  subgrad <- .subgradient_vec(dat, vec, latent_mat, fixed_idx, index_in, index_out, row)
+  k <- .initialize_k(dat, vec, latent_mat, fixed_idx, index_in, index_out, row, subgrad, obj_old)
 
   while(TRUE){
     subgrad <- .subgradient_vec(dat, vec, latent_mat, fixed_idx, index_in, index_out, row)
@@ -69,7 +70,7 @@
 
   vec <- initial_vec %*% t(latent_mat[index_out,])
   vec <- sapply(vec, function(x){max(0, x)})
-  second_term <- 2*vec%*% latent_mat[index_out,]
+  second_term <- vec%*% latent_mat[index_out,]
 
   if(row) tmp <- dat[fixed_idx,index_in] else tmp <- dat[index_in,fixed_idx]
   -(tmp - initial_vec %*% t(latent_mat[index_in,])) %*% latent_mat[index_in,]/length(index_in) +
@@ -97,4 +98,21 @@
   pred_mat <- u_mat %*% t(v_mat)
   sum((dat[index_in] - pred_mat[index_in])^2)/length(index_in) +
     sum(pmax(0, pred_mat[index_out])^2)/length(index_out)
+}
+
+.initialize_k <- function(dat, vec, latent_mat, fixed_idx, index_in, index_out, row, subgrad, obj_old){
+  k <- 1
+
+  seq_vec <- seq(1, 1000, by = 10)
+
+  while(TRUE){
+    vec2 <- vec - 1/seq_vec[k]*subgrad
+    obj_new <- .evaluate_objective_single(dat, vec2, latent_mat, fixed_idx, index_in, index_out, row)
+    if(obj_new < obj_old) break()
+    if(k > length(seq_vec)) stop("Cannot initialize k")
+
+    k <- k+1
+  }
+
+  seq_vec[k]
 }

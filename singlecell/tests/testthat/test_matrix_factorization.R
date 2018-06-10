@@ -44,7 +44,8 @@ test_that(".subgradient_row gives a correct subgradient for one instance", {
 })
 
 test_that(".subgradient_row for more settings", {
-  bool_vec <- sapply(1:200, function(x){
+  bool_vec <- sapply(1:1000, function(x){
+    set.seed(10*x)
     dat <- matrix(rnorm(200), 20, 10)
     initial_vec <- rnorm(5)
     latent_mat <- matrix(rnorm(50), 10, 5)
@@ -67,7 +68,8 @@ test_that(".subgradient_row for more settings", {
 })
 
 test_that(".subgradient_row for more settings for row = F", {
-  bool_vec <- sapply(1:200, function(x){
+  bool_vec <- sapply(1:1000, function(x){
+    set.seed(10*x)
     dat <- matrix(rnorm(200), 20, 10)
     initial_vec <- rnorm(5)
     latent_mat <- matrix(rnorm(50), 20, 5)
@@ -277,7 +279,7 @@ test_that(".estimate_matrix decreases the objective value in 1 iteration for row
   val1 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
 
   new_v_mat <- .estimate_matrix(dat, v_mat, u_mat, index_in_vec, index_out_vec,
-                                max_iter = 50)
+                                max_iter = 50, row = F)
 
   val2 <- .evaluate_objective_full(dat, u_mat, new_v_mat, index_in_vec, index_out_vec)
 
@@ -298,15 +300,15 @@ test_that(".estimate_matrix decreases the objective value in 2 iterations", {
 
   val1 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
 
-  new_u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_vec,
+  u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_vec,
                                 max_iter = 50, row = T)
 
-  val2 <- .evaluate_objective_full(dat, new_u_mat, v_mat, index_in_vec, index_out_vec)
+  val2 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
 
-  new_v_mat <- .estimate_matrix(dat, v_mat, new_u_mat, index_in_vec, index_out_vec,
+  v_mat <- .estimate_matrix(dat, v_mat, u_mat, index_in_vec, index_out_vec,
                                 max_iter = 50, row = F)
 
-  val3 <- .evaluate_objective_full(dat, new_u_mat, new_v_mat, index_in_vec, index_out_vec)
+  val3 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
 
   expect_true(val2 < val1)
   expect_true(val3 < val2)
