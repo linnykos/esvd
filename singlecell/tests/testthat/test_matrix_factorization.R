@@ -172,6 +172,27 @@ test_that(".estimate_matrix works", {
   expect_true(all(dim(res) == dim(initial_mat)))
 })
 
+test_that(".estimate_matrix decreases the objective value", {
+  set.seed(20)
+  dat <- matrix(rnorm(200), 20, 10)
+  u_mat <- matrix(rnorm(50), 20, 5)
+  v_mat <- matrix(rnorm(50), 10, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[sample(1:200, 100)] <- 1
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
+
+  val1 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
+
+  new_u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_vec,
+                          max_iter = 50)
+
+  val2 <- .evaluate_objective_full(dat, new_u_mat, v_mat, index_in_vec, index_out_vec)
+
+  expect_true(val2 < val1)
+})
+
 #######################
 
 ## .convert_index_to_position is correct
