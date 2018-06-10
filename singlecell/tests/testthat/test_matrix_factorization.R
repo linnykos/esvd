@@ -112,3 +112,97 @@ test_that(".evaluate_objective_single evaluates correctly", {
 
   expect_true(abs(res - res2) <= 1e-6)
 })
+
+#################
+
+test_that(".evaluate_objective_single works", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1,3,4,6)
+  index_out <- c(2,8,10)
+
+  res <- .estimate_row(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+
+  expect_true(length(res) == 5)
+  expect_true(is.numeric(res))
+})
+
+test_that(".evaluate_objective_single works with verbose", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1,3,4,6)
+  index_out <- c(2,8,10)
+
+  res <- .estimate_row(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out,
+                       max_iter = 100, verbose = T)
+
+  expect_true(is.list(res))
+  expect_true(length(res$obj_vec) == 101)
+  expect_true(res$obj_vec[1] > res$obj_vec[101])
+})
+
+################
+
+## .estimate_matrix is correct
+
+test_that(".estimate_matrix works", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_mat <- matrix(rnorm(50), 20, 5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[sample(1:200, 100)] <- 1
+  index_in_mat <- which(pattern == 1, arr.ind = T)
+  index_out_mat <- which(pattern == 0, arr.ind = T)
+
+  res <- .estimate_matrix(dat, initial_mat, latent_mat, index_in_mat, index_out_mat,
+                          max_iter = 50)
+
+  expect_true(is.matrix(res))
+  expect_true(is.numeric(res))
+  expect_true(all(dim(res) == dim(initial_mat)))
+})
+
+#######################
+
+## .convert_index_to_position is correct
+
+test_that(".convert_index_to_position works", {
+  vec <- 1:50
+  num_row <- 10
+  num_col <- 10
+
+  res <- .convert_index_to_position(vec, num_row, num_col)
+
+  expect_true(is.matrix(res))
+  expect_true(is.numeric(res))
+  expect_true(all(dim(res) == c(length(vec), 2)))
+  expect_true(all(res[,1] <= num_row))
+  expect_true(all(res[,2] <= num_col))
+})
+
+test_that(".convert_index_to_position gives the same indices as which", {
+  set.seed(10)
+  mat <- matrix(0, 20, 10)
+  mat[sample(1:200, 100)] <- 1
+
+  vec1 <- which(mat == 1)
+  res <- .convert_index_to_position(vec1, 20, 10)
+
+  res2 <- which(mat == 1, arr.ind = T)
+
+  #reshuffle
+  res <- res[order(res[,1]),]
+  res2 <- res2[order(res2[,1]),]
+
+  expect_true(all(res == res2))
+})
