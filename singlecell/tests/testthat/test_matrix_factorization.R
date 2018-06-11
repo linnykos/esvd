@@ -12,10 +12,33 @@ test_that(".subgradient_row works", {
   index_in <- c(1,3,4,6)
   index_out <- c(2,8,10)
 
-  res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+  res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
   expect_true(is.numeric(res))
   expect_true(length(res) == 5)
+})
+
+test_that(".subgradient_row works for no indices", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1,3,4,6)
+  index_out <- c(2,8,10)
+
+  res1 <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, numeric(0), 5, 5)
+  res2 <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, numeric(0), index_out, 5, 5)
+  res3 <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, numeric(0), numeric(0), 5, 5)
+
+  expect_true(is.numeric(res1))
+  expect_true(length(res1) == 5)
+  expect_true(is.numeric(res2))
+  expect_true(length(res2) == 5)
+  expect_true(is.numeric(res3))
+  expect_true(length(res3) == 5)
+  expect_true(all(res3 == 0))
 })
 
 test_that(".subgradient_row works for singleton sets", {
@@ -28,7 +51,7 @@ test_that(".subgradient_row works for singleton sets", {
   index_in <- c(1)
   index_out <- c(2)
 
-  res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+  res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
   expect_true(is.numeric(res))
   expect_true(length(res) == 5)
@@ -44,14 +67,14 @@ test_that(".subgradient_row gives a correct subgradient for one instance", {
   index_in <- c(1,3,4,6)
   index_out <- c(2,8,10)
 
-  res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+  res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
   bool_vec <- sapply(1:100, function(x){
     set.seed(11*x)
     y <- rnorm(5)
 
-    f1 <- .evaluate_objective_single(dat, y, latent_mat, fixed_idx, index_in, index_out)
-    f2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+    f1 <- .evaluate_objective_single(dat, y, latent_mat, fixed_idx, index_in, index_out, 5, 5)
+    f2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
     f1 >= f2 + res %*% (y-initial_vec)
   })
@@ -70,12 +93,12 @@ test_that(".subgradient_row for more settings", {
     index_in <- c(1,3,4,6)
     index_out <- c(2,8,10)
 
-    res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+    res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
     y <- rnorm(5)
 
-    f1 <- .evaluate_objective_single(dat, y, latent_mat, fixed_idx, index_in, index_out)
-    f2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+    f1 <- .evaluate_objective_single(dat, y, latent_mat, fixed_idx, index_in, index_out, 5, 5)
+    f2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
     f1 >= f2 + res %*% (y-initial_vec)
   })
@@ -94,12 +117,12 @@ test_that(".subgradient_row for more settings for row = F", {
     index_in <- c(1,3,4,6)
     index_out <- c(2,8,20)
 
-    res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, row = F)
+    res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5, row = F)
 
     y <- rnorm(5)
 
-    f1 <- .evaluate_objective_single(dat, y, latent_mat, fixed_idx, index_in, index_out, row = F)
-    f2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, row = F)
+    f1 <- .evaluate_objective_single(dat, y, latent_mat, fixed_idx, index_in, index_out, 5, 5, row = F)
+    f2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5, row = F)
 
     f1 >= f2 + res %*% (y-initial_vec)
   })
@@ -121,12 +144,38 @@ test_that(".evaluate_objective_single works", {
   index_in <- c(1,3,4,6)
   index_out <- c(2,8,10)
 
-  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
   expect_true(length(res) == 1)
   expect_true(is.numeric(res))
   expect_true(res >= 0)
 })
+
+test_that(".evaluate_objective_single works for no indicies", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1,3,4,6)
+  index_out <- c(2,8,10)
+
+  res1 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, numeric(0), 5, 5)
+  res2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, numeric(0), index_out, 5, 5)
+  res3 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, numeric(0), numeric(0), 5, 5)
+
+  expect_true(length(res1) == 1)
+  expect_true(is.numeric(res1))
+  expect_true(res1 >= 0)
+  expect_true(length(res2) == 1)
+  expect_true(is.numeric(res2))
+  expect_true(res2 >= 0)
+  expect_true(length(res3) == 1)
+  expect_true(is.numeric(res3))
+  expect_true(res3 == 0)
+})
+
 
 test_that(".evaluate_objective_single works for singleton sets", {
   set.seed(10)
@@ -138,7 +187,7 @@ test_that(".evaluate_objective_single works for singleton sets", {
   index_in <- c(1)
   index_out <- c(2)
 
-  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
   expect_true(length(res) == 1)
   expect_true(is.numeric(res))
@@ -165,9 +214,9 @@ test_that(".evaluate_objective_single evaluates correctly", {
   for(j in index_out){
     second_term <- second_term + max(0, initial_vec %*% latent_mat[j,])^2
   }
-  res2 <- first_term/(2*length(index_in)) + second_term/(2*length(index_out))
+  res2 <- first_term/(2*5) + second_term/(2*5)
 
-  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
   expect_true(abs(res - res2) <= 1e-6)
 })
@@ -191,9 +240,9 @@ test_that(".evaluate_objective_single evaluates correctly for row = F", {
   for(j in index_out){
     second_term <- second_term + max(0, initial_vec %*% latent_mat[j,])^2
   }
-  res2 <- first_term/(2*length(index_in)) + second_term/(2*length(index_out))
+  res2 <- first_term/(2*5) + second_term/(2*5)
 
-  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out,
+  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5,
                                     row = F)
 
   expect_true(abs(res - res2) <= 1e-6)
@@ -211,7 +260,7 @@ test_that(".evaluate_objective_single works", {
   index_in <- c(1,3,4,6)
   index_out <- c(2,8,10)
 
-  res <- .estimate_row(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+  res <- .estimate_row(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5)
 
   expect_true(length(res) == 5)
   expect_true(is.numeric(res))
@@ -227,7 +276,7 @@ test_that(".evaluate_objective_single works with verbose", {
   index_in <- c(1,3,4,6)
   index_out <- c(2,8,10)
 
-  res <- .estimate_row(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out,
+  res <- .estimate_row(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5,
                        max_iter = 100, verbose = T)
 
   expect_true(is.list(res))
@@ -293,6 +342,29 @@ test_that(".estimate_matrix decreases the objective value in 1 iteration", {
 
   new_u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_vec,
                           max_iter = 50)
+
+  val2 <- .evaluate_objective_full(dat, new_u_mat, v_mat, index_in_vec, index_out_vec)
+
+  expect_true(val2 < val1)
+})
+
+test_that(".estimate_matrix decreases the objective value in 1 iteration for an unbalanced setting", {
+  set.seed(20)
+  dat <- matrix(rnorm(200), 20, 10)
+  u_mat <- matrix(rnorm(50), 20, 5)
+  v_mat <- matrix(rnorm(50), 10, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[1:5,] <- 1
+  pattern[6:10,2:10] <- 1
+  pattern[11:15,1] <- 1
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
+
+  val1 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
+
+  new_u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_vec,
+                                max_iter = 50)
 
   val2 <- .evaluate_objective_full(dat, new_u_mat, v_mat, index_in_vec, index_out_vec)
 
@@ -480,6 +552,11 @@ test_that("estimate_latent works", {
     }
   }
 
-  # res <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.5)
+  res <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.5)
 
+  expect_true(is.list(res))
+  expect_true(length(res) == 2)
+  expect_true(all(names(res) == c("u_mat", "v_mat")))
+  expect_true(all(sapply(res, ncol) == 2))
+  expect_true(all(sapply(res, nrow) == c(10, 16)))
 })
