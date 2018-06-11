@@ -18,6 +18,22 @@ test_that(".subgradient_row works", {
   expect_true(length(res) == 5)
 })
 
+test_that(".subgradient_row works for singleton sets", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1)
+  index_out <- c(2)
+
+  res <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+
+  expect_true(is.numeric(res))
+  expect_true(length(res) == 5)
+})
+
 test_that(".subgradient_row gives a correct subgradient for one instance", {
   set.seed(10)
   dat <- matrix(rnorm(200), 20, 10)
@@ -111,6 +127,24 @@ test_that(".evaluate_objective_single works", {
   expect_true(is.numeric(res))
   expect_true(res >= 0)
 })
+
+test_that(".evaluate_objective_single works for singleton sets", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1)
+  index_out <- c(2)
+
+  res <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out)
+
+  expect_true(length(res) == 1)
+  expect_true(is.numeric(res))
+  expect_true(res >= 0)
+})
+
 
 test_that(".evaluate_objective_single evaluates correctly", {
   set.seed(20)
@@ -396,4 +430,56 @@ test_that(".evaluate_objective_full computes the number correctly", {
   res2 <- sum1/length(index_in_vec) + sum2/length(index_out_vec)
 
   expect_true(abs(res - res2) <= 1e-6)
+})
+
+##################
+
+## estimate_latent is correct
+
+test_that("estimate_latent works", {
+  adj <- matrix(c(.1,.5,
+                  -.25,0), 2, 2, byrow = T)
+  tmp <- svd(adj)
+  u_center <- t(tmp$u %*% diag(sqrt(tmp$d)))
+  v_center <- t(tmp$v %*% diag(sqrt(tmp$d)))
+
+  u_num <- c(5, 5)
+  v_num <- c(8, 8)
+
+  # generate matrices
+  set.seed(10)
+  u_sig <- 0.1
+  u_dat <- do.call(rbind, lapply(1:2, function(x){
+    MASS::mvrnorm(n = u_num[x], mu = u_center[,x], Sigma = u_sig*diag(2))
+  }))
+  v_sig <- 0.1
+  v_dat <- do.call(rbind, lapply(1:2, function(x){
+    MASS::mvrnorm(n = v_num[x], mu = v_center[,x], Sigma = v_sig*diag(2))
+  }))
+
+  mean_dat <- u_dat %*% t(v_dat)
+  n <- nrow(mean_dat)
+  d <- ncol(mean_dat)
+  dat <- matrix(0, n, d)
+
+  dropout_create <- function(a, b){
+    function(x){ 1/(1+exp(-(a+b*x))) }
+  }
+  dropout_func <- dropout_create(.7,1)
+
+  set.seed(10)
+  for(i in 1:n){
+    for(j in 1:d){
+      if(mean_dat[i,j] <= 0) {
+        dat[i,j] <- 0
+      } else {
+        val <- rexp(1, rate = 1/mean_dat[i,j])
+        bool <- rbinom(1, 1, prob = dropout_func(val))
+        dat[i,j] <- bool*val
+      }
+    }
+  }
+
+  # res <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.5)
+
 })
