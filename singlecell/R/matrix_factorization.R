@@ -1,4 +1,7 @@
-estimate_latent <- function(dat, k, dropout_func, threshold, tol = 1e-5, max_iter = 500, cores = 1){
+estimate_latent <- function(dat, k, dropout_func, threshold,
+                            tol = 1e-5, max_iter = 500, max_outer_iter = 10, cores = 1,
+                            verbose = F){
+  if(verbose) print("Starting")
   res_svd <- svd(dat)
   u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
   v_mat <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
@@ -7,9 +10,13 @@ estimate_latent <- function(dat, k, dropout_func, threshold, tol = 1e-5, max_ite
   index_in_vec <- which(dat != 0)
   index_zero <- which(dat == 0)
   index_out_old <- .predict_true_zero(u_mat %*% t(v_mat), dropout_func, threshold, index_zero)
+  if(length(index_out_old) == 0) stop("Threshold is too low")
+  counter <- 1
 
   while(TRUE){
     obj_old <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_old)
+
+    if(verbose) print(paste0("Starting round ", counter, " with objective value of: ", obj_old))
 
     while(TRUE){
       u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_old,
@@ -19,11 +26,15 @@ estimate_latent <- function(dat, k, dropout_func, threshold, tol = 1e-5, max_ite
       obj_new <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_old)
       if(abs(obj_old - obj_new) <= tol) break()
 
+      if(verbose) print(obj_new)
+
       obj_old <- obj_new
     }
 
     index_out_new <- .predict_true_zero(u_mat %*% t(v_mat), dropout_func, threshold, index_zero)
     if(length(index_out_old) == length(index_out_new) && all(sort(index_out_old) == sort(index_out_new))) break()
+    counter <- counter + 1
+    if(counter > max_outer_iter) break()
   }
 
   pred_mat <- u_mat %*% t(v_mat)
@@ -35,7 +46,7 @@ estimate_latent <- function(dat, k, dropout_func, threshold, tol = 1e-5, max_ite
 
 .predict_true_zero <- function(pred_dat, dropout_func, threshold, index_vec){
   prob_vec <- sapply(pred_dat[index_vec], dropout_func)
-  index_vec[which(prob_vec >= threshold)]
+  index_vec[which(prob_vec <= threshold)]
 }
 
 .estimate_matrix <- function(dat, initial_mat, latent_mat, index_in_vec, index_out_vec,

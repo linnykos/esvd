@@ -534,10 +534,7 @@ test_that("estimate_latent works", {
   d <- ncol(mean_dat)
   dat <- matrix(0, n, d)
 
-  dropout_create <- function(a, b){
-    function(x){ 1/(1+exp(-(a+b*x))) }
-  }
-  dropout_func <- dropout_create(.7,1)
+  dropout_func <- dropout_create(-1,10)
 
   set.seed(10)
   for(i in 1:n){
@@ -552,11 +549,70 @@ test_that("estimate_latent works", {
     }
   }
 
-  res <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.5)
+  res <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.8)
 
   expect_true(is.list(res))
   expect_true(length(res) == 2)
   expect_true(all(names(res) == c("u_mat", "v_mat")))
   expect_true(all(sapply(res, ncol) == 2))
   expect_true(all(sapply(res, nrow) == c(10, 16)))
+})
+
+test_that("estimate_latent gives a good objective value", {
+  adj <- matrix(c(.1,.5,
+                  -.25,0), 2, 2, byrow = T)
+  tmp <- svd(adj)
+  u_center <- t(tmp$u %*% diag(sqrt(tmp$d)))
+  v_center <- t(tmp$v %*% diag(sqrt(tmp$d)))
+
+  u_num <- c(5, 5)
+  v_num <- c(8, 8)
+
+  # generate matrices
+  set.seed(10)
+  u_sig <- 0.1
+  u_dat <- do.call(rbind, lapply(1:2, function(x){
+    MASS::mvrnorm(n = u_num[x], mu = u_center[,x], Sigma = u_sig*diag(2))
+  }))
+  v_sig <- 0.1
+  v_dat <- do.call(rbind, lapply(1:2, function(x){
+    MASS::mvrnorm(n = v_num[x], mu = v_center[,x], Sigma = v_sig*diag(2))
+  }))
+
+  mean_dat <- u_dat %*% t(v_dat)
+  n <- nrow(mean_dat)
+  d <- ncol(mean_dat)
+  dat <- matrix(0, n, d)
+
+  dropout_func <- dropout_create(-1,10)
+
+  set.seed(10)
+  for(i in 1:n){
+    for(j in 1:d){
+      if(mean_dat[i,j] <= 0) {
+        dat[i,j] <- 0
+      } else {
+        val <- rexp(1, rate = 1/mean_dat[i,j])
+        bool <- rbinom(1, 1, prob = dropout_func(val))
+        dat[i,j] <- bool*val
+      }
+    }
+  }
+
+  res <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.8)
+
+  index_in_vec <- which(dat != 0)
+  index_zero <- which(dat == 0)
+  index_out_vec <- .predict_true_zero(res$u_mat %*% t(res$v_mat), dropout_func, 0.8, index_zero)
+  val1 <- .evaluate_objective_full(dat, res$u_mat, res$v_mat, index_in_vec, index_out_vec)
+
+  res_svd <- svd(dat)
+  u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
+  v_mat <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
+  val2 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec)
+
+  val3 <- .evaluate_objective_full(dat, u_dat, v_dat, index_in_vec, index_out_vec)
+
+  expect_true(val1 < val2)
+  expect_true(val1 < val3)
 })
