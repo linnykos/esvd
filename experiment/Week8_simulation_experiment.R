@@ -124,7 +124,8 @@ graphics.off()
 
 ######################
 
-res <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.4, verbose = T)
+res <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.4, verbose = T,
+                       initialization = "Funk")
 res_svd <- svd(dat)
 k <- 3
 u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))

@@ -241,4 +241,6 @@ graphics.off()
 
 # see if number of zeros is correlated with PCA
 # let's do genes
-
+res_pca <- eigen(cov(dat))
+vec1 <- -res_pca$vectors[,1]
+vec2 <- sapply(1:ncol(dat), function(x){length(which(dat[,x] == 0))})

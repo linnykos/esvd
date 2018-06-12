@@ -1,10 +1,21 @@
 estimate_latent <- function(dat, k, dropout_func, threshold,
                             tol = 1e-5, max_iter = 500, max_outer_iter = 10, cores = 1,
-                            verbose = F){
+                            lambda = 0.01, initialization = "SVD", verbose = F){
   if(verbose) print("Starting")
-  res_svd <- svd(dat)
-  u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
-  v_mat <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
+
+  if(initialization == "SVD"){
+    res_svd <- svd(dat)
+    u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
+    v_mat <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
+  } else if(initialization == "Funk"){
+    dat2 <- dat
+    dat2[dat2 == 0] <- NA
+    dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat2))
+
+    funk_svd <- recommenderlab::funkSVD(dat2, k = k, lambda = lambda)
+    u_mat <- funk_svd$U
+    v_mat <- funk_svd$V
+  }
 
   #determine indices
   index_in_vec <- which(dat != 0)
