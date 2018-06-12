@@ -18,6 +18,23 @@ test_that(".subgradient_row works", {
   expect_true(length(res) == 5)
 })
 
+test_that(".subgradient_row works with alpha > 1", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1,3,4,6)
+  index_out <- c(2,8,10)
+
+  res1 <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5, alpha = 1)
+  res2 <- .subgradient_vec(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5, alpha = 2)
+
+  expect_true(sum(abs(res1 - res2)) > 0)
+})
+
+
 test_that(".subgradient_row works for no indices", {
   set.seed(10)
   dat <- matrix(rnorm(200), 20, 10)
@@ -151,6 +168,22 @@ test_that(".evaluate_objective_single works", {
   expect_true(res >= 0)
 })
 
+test_that(".evaluate_objective_single works with alpha > 1", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1,3,4,6)
+  index_out <- c(2,8,10)
+
+  res1 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5, alpha = 1)
+  res2 <- .evaluate_objective_single(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5, alpha = 2)
+
+  expect_true(res1 != res2)
+})
+
 test_that(".evaluate_objective_single works for no indicies", {
   set.seed(10)
   dat <- matrix(rnorm(200), 20, 10)
@@ -250,7 +283,7 @@ test_that(".evaluate_objective_single evaluates correctly for row = F", {
 
 #################
 
-test_that(".evaluate_objective_single works", {
+test_that(".estimate_row works", {
   set.seed(10)
   dat <- matrix(rnorm(200), 20, 10)
   initial_vec <- rnorm(5)
@@ -266,7 +299,23 @@ test_that(".evaluate_objective_single works", {
   expect_true(is.numeric(res))
 })
 
-test_that(".evaluate_objective_single works with verbose", {
+test_that(".estimate_row works with alpha > 1", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_vec <- rnorm(5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  fixed_idx <- 7
+  index_in <- c(1,3,4,6)
+  index_out <- c(2,8,10)
+
+  res1 <- .estimate_row(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5, alpha = 1)
+  res2 <- .estimate_row(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, 5, 5, alpha = 2)
+
+  expect_true(sum(abs(res1 - res2)) > 0)
+})
+
+test_that(".estimate_row works with verbose", {
   set.seed(10)
   dat <- matrix(rnorm(200), 20, 10)
   initial_vec <- rnorm(5)
@@ -305,6 +354,25 @@ test_that(".estimate_matrix works", {
   expect_true(is.matrix(res))
   expect_true(is.numeric(res))
   expect_true(all(dim(res) == dim(initial_mat)))
+})
+
+test_that(".estimate_matrix gives a different result with alpha > 1", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+  initial_mat <- matrix(rnorm(50), 20, 5)
+  latent_mat <- matrix(rnorm(50), 10, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[sample(1:200, 100)] <- 1
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
+
+  res1 <- .estimate_matrix(dat, initial_mat, latent_mat, index_in_vec, index_out_vec,
+                          max_iter = 50, alpha = 1)
+  res2 <- .estimate_matrix(dat, initial_mat, latent_mat, index_in_vec, index_out_vec,
+                           max_iter = 50, alpha = 2)
+
+  expect_true(sum(abs(res1 - res2)) > 0)
 })
 
 test_that(".estimate_matrix works with v_mat, aka: row = F", {
@@ -478,6 +546,26 @@ test_that(".evaluate_objective_full works", {
   expect_true(length(res) == 1)
 })
 
+
+test_that(".evaluate_objective_full works with alpha > 1", {
+  set.seed(10)
+  dat <- matrix(rnorm(200), 20, 10)
+
+  u_mat <- matrix(rnorm(50), 20, 5)
+  v_mat <- matrix(rnorm(50), 10, 5)
+
+  pattern <- matrix(0, 20, 10)
+  pattern[sample(1:200, 100)] <- 1
+  index_in_vec <- which(pattern == 1)
+  index_out_vec <- which(pattern == 0)
+
+  res1 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec, alpha = 1)
+  res2 <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec, alpha = 2)
+
+  expect_true(res1 != res2)
+})
+
+
 test_that(".evaluate_objective_full computes the number correctly", {
   set.seed(20)
   dat <- matrix(rnorm(200), 20, 10)
@@ -507,48 +595,47 @@ test_that(".evaluate_objective_full computes the number correctly", {
 ##################
 
 ## estimate_latent is correct
+adj <- matrix(c(.1,.5,
+                -.25,0), 2, 2, byrow = T)
+tmp <- svd(adj)
+u_center <- t(tmp$u %*% diag(sqrt(tmp$d)))
+v_center <- t(tmp$v %*% diag(sqrt(tmp$d)))
 
-test_that("estimate_latent works", {
-  adj <- matrix(c(.1,.5,
-                  -.25,0), 2, 2, byrow = T)
-  tmp <- svd(adj)
-  u_center <- t(tmp$u %*% diag(sqrt(tmp$d)))
-  v_center <- t(tmp$v %*% diag(sqrt(tmp$d)))
+u_num <- c(5, 5)
+v_num <- c(8, 8)
 
-  u_num <- c(5, 5)
-  v_num <- c(8, 8)
+# generate matrices
+set.seed(10)
+u_sig <- 0.1
+u_dat <- do.call(rbind, lapply(1:2, function(x){
+  MASS::mvrnorm(n = u_num[x], mu = u_center[,x], Sigma = u_sig*diag(2))
+}))
+v_sig <- 0.1
+v_dat <- do.call(rbind, lapply(1:2, function(x){
+  MASS::mvrnorm(n = v_num[x], mu = v_center[,x], Sigma = v_sig*diag(2))
+}))
 
-  # generate matrices
-  set.seed(10)
-  u_sig <- 0.1
-  u_dat <- do.call(rbind, lapply(1:2, function(x){
-    MASS::mvrnorm(n = u_num[x], mu = u_center[,x], Sigma = u_sig*diag(2))
-  }))
-  v_sig <- 0.1
-  v_dat <- do.call(rbind, lapply(1:2, function(x){
-    MASS::mvrnorm(n = v_num[x], mu = v_center[,x], Sigma = v_sig*diag(2))
-  }))
+mean_dat <- u_dat %*% t(v_dat)
+n <- nrow(mean_dat)
+d <- ncol(mean_dat)
+dat <- matrix(0, n, d)
 
-  mean_dat <- u_dat %*% t(v_dat)
-  n <- nrow(mean_dat)
-  d <- ncol(mean_dat)
-  dat <- matrix(0, n, d)
+dropout_func <- dropout_create(-1,10)
 
-  dropout_func <- dropout_create(-1,10)
-
-  set.seed(10)
-  for(i in 1:n){
-    for(j in 1:d){
-      if(mean_dat[i,j] <= 0) {
-        dat[i,j] <- 0
-      } else {
-        val <- rexp(1, rate = 1/mean_dat[i,j])
-        bool <- rbinom(1, 1, prob = dropout_func(val))
-        dat[i,j] <- bool*val
-      }
+set.seed(10)
+for(i in 1:n){
+  for(j in 1:d){
+    if(mean_dat[i,j] <= 0) {
+      dat[i,j] <- 0
+    } else {
+      val <- rexp(1, rate = 1/mean_dat[i,j])
+      bool <- rbinom(1, 1, prob = dropout_func(val))
+      dat[i,j] <- bool*val
     }
   }
+}
 
+test_that("estimate_latent works", {
   res <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.8)
 
   expect_true(is.list(res))
@@ -558,47 +645,28 @@ test_that("estimate_latent works", {
   expect_true(all(sapply(res, nrow) == c(10, 16)))
 })
 
+test_that("estimate_latent works with Funk initialization and alpha > 1", {
+  res <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.8, initialization = "Funk",
+                         alpha = 2)
+
+  expect_true(is.list(res))
+  expect_true(length(res) == 2)
+  expect_true(all(names(res) == c("u_mat", "v_mat")))
+  expect_true(all(sapply(res, ncol) == 2))
+  expect_true(all(sapply(res, nrow) == c(10, 16)))
+})
+
+test_that("estimate_latent gives a different objective when alpha > 1", {
+  res1 <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.8,
+                          alpha = 1)
+  res2 <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.8,
+                         alpha = 2)
+
+  expect_true(!all(res1$u_mat == res2$u_mat))
+})
+
+
 test_that("estimate_latent gives a good objective value", {
-  adj <- matrix(c(.1,.5,
-                  -.25,0), 2, 2, byrow = T)
-  tmp <- svd(adj)
-  u_center <- t(tmp$u %*% diag(sqrt(tmp$d)))
-  v_center <- t(tmp$v %*% diag(sqrt(tmp$d)))
-
-  u_num <- c(5, 5)
-  v_num <- c(8, 8)
-
-  # generate matrices
-  set.seed(10)
-  u_sig <- 0.1
-  u_dat <- do.call(rbind, lapply(1:2, function(x){
-    MASS::mvrnorm(n = u_num[x], mu = u_center[,x], Sigma = u_sig*diag(2))
-  }))
-  v_sig <- 0.1
-  v_dat <- do.call(rbind, lapply(1:2, function(x){
-    MASS::mvrnorm(n = v_num[x], mu = v_center[,x], Sigma = v_sig*diag(2))
-  }))
-
-  mean_dat <- u_dat %*% t(v_dat)
-  n <- nrow(mean_dat)
-  d <- ncol(mean_dat)
-  dat <- matrix(0, n, d)
-
-  dropout_func <- dropout_create(-1,10)
-
-  set.seed(10)
-  for(i in 1:n){
-    for(j in 1:d){
-      if(mean_dat[i,j] <= 0) {
-        dat[i,j] <- 0
-      } else {
-        val <- rexp(1, rate = 1/mean_dat[i,j])
-        bool <- rbinom(1, 1, prob = dropout_func(val))
-        dat[i,j] <- bool*val
-      }
-    }
-  }
-
   res <- estimate_latent(dat, k = 2, dropout_func, threshold = 0.8)
 
   index_in_vec <- which(dat != 0)
@@ -606,6 +674,7 @@ test_that("estimate_latent gives a good objective value", {
   index_out_vec <- .predict_true_zero(res$u_mat %*% t(res$v_mat), dropout_func, 0.8, index_zero)
   val1 <- .evaluate_objective_full(dat, res$u_mat, res$v_mat, index_in_vec, index_out_vec)
 
+  k <- 2
   res_svd <- svd(dat)
   u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
   v_mat <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))

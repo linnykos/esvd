@@ -1,4 +1,4 @@
-estimate_latent <- function(dat, k, dropout_func, threshold,
+estimate_latent <- function(dat, k, dropout_func, threshold, alpha = 1,
                             tol = 1e-5, max_iter = 500, max_outer_iter = 10, cores = 1,
                             lambda = 0.01, initialization = "SVD", verbose = F){
   if(verbose) print("Starting")
@@ -25,16 +25,16 @@ estimate_latent <- function(dat, k, dropout_func, threshold,
   counter <- 1
 
   while(TRUE){
-    obj_old <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_old)
+    obj_old <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_old, alpha)
 
     if(verbose) print(paste0("Starting round ", counter, " with objective value of: ", obj_old))
 
     while(TRUE){
-      u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_old,
+      u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_old, alpha,
                                 tol, max_iter, row = T, cores)
-      v_mat <- .estimate_matrix(dat, v_mat, u_mat, index_in_vec, index_out_old,
+      v_mat <- .estimate_matrix(dat, v_mat, u_mat, index_in_vec, index_out_old, alpha,
                                 tol, max_iter, row = F, cores)
-      obj_new <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_old)
+      obj_new <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_old, alpha)
       if(abs(obj_old - obj_new) <= tol) break()
 
       if(verbose) print(obj_new)
@@ -60,7 +60,7 @@ estimate_latent <- function(dat, k, dropout_func, threshold,
   index_vec[which(prob_vec <= threshold)]
 }
 
-.estimate_matrix <- function(dat, initial_mat, latent_mat, index_in_vec, index_out_vec,
+.estimate_matrix <- function(dat, initial_mat, latent_mat, index_in_vec, index_out_vec, alpha = 1,
                              tol = 1e-5, max_iter = 500, row = T, cores = 1){
   stopifnot(((row & nrow(dat) == nrow(initial_mat) & ncol(dat) == nrow(latent_mat)) |
                (!row & ncol(dat) == nrow(initial_mat) & nrow(dat) == nrow(latent_mat))))
@@ -79,7 +79,7 @@ estimate_latent <- function(dat, k, dropout_func, threshold,
     index_in <- index_in_mat[which(index_in_mat[,z] == x), -z+3]
     index_out <- index_out_mat[which(index_out_mat[,z] == x), -z+3]
 
-    .estimate_row(dat, initial_mat[x,], latent_mat, x, index_in, index_out, n_in, n_out,
+    .estimate_row(dat, initial_mat[x,], latent_mat, x, index_in, index_out, n_in, n_out, alpha,
                   tol, max_iter, row, verbose = F)
   }
 
@@ -99,18 +99,18 @@ estimate_latent <- function(dat, k, dropout_func, threshold,
 
 # verbose only for debugging purposes only
 .estimate_row <- function(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out,
-                          n_in, n_out, tol = 1e-5, max_iter = 500, row = T, verbose = F){
+                          n_in, n_out, alpha = 1, tol = 1e-5, max_iter = 500, row = T, verbose = F){
   vec <- initial_vec
-  obj_old <- .evaluate_objective_single(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, row)
+  obj_old <- .evaluate_objective_single(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, alpha, row)
 
   if(verbose) {obj_vec <- rep(NA, max_iter+1); obj_vec[1] <- obj_old}
-  subgrad <- .subgradient_vec(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, row)
-  k <- .initialize_k(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, row, subgrad, obj_old)
+  subgrad <- .subgradient_vec(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, alpha, row)
+  k <- .initialize_k(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, alpha, row, subgrad, obj_old)
 
   while(TRUE){
-    subgrad <- .subgradient_vec(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, row)
+    subgrad <- .subgradient_vec(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, alpha, row)
     vec <- vec - 1/k*subgrad
-    obj_new <- .evaluate_objective_single(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, row)
+    obj_new <- .evaluate_objective_single(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, alpha, row)
 
     if(abs(obj_old - obj_new) < tol) break()
     if(k > max_iter) break()
@@ -124,7 +124,7 @@ estimate_latent <- function(dat, k, dropout_func, threshold,
   if(verbose) list(vec = vec, obj_vec = obj_vec) else vec
 }
 
-.subgradient_vec <- function(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, row = T){
+.subgradient_vec <- function(dat, initial_vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, alpha = 1, row = T){
   stopifnot(ncol(latent_mat) == length(initial_vec), (ncol(dat) == nrow(latent_mat) |
                                                         nrow(dat) == nrow(latent_mat)))
   stopifnot((row & fixed_idx <= nrow(dat)) | (!row & fixed_idx <= ncol(dat)))
@@ -143,11 +143,11 @@ estimate_latent <- function(dat, k, dropout_func, threshold,
     first_term <- -(tmp - initial_vec %*% t(latent_mat[index_in,,drop = F])) %*% latent_mat[index_in,,drop = F]
   } else first_term <- rep(0, length(initial_vec))
 
-  as.numeric(first_term/n_in + second_term/n_out)
+  as.numeric(first_term/n_in + alpha * second_term/n_out)
 }
 
 .evaluate_objective_single <- function(dat, initial_vec, latent_mat, fixed_idx, index_in,
-                                       index_out, n_in, n_out, row = T){
+                                       index_out, n_in, n_out, alpha = 1, row = T){
   stopifnot(ncol(latent_mat) == length(initial_vec))
   stopifnot((row & ncol(dat) == nrow(latent_mat)) | (!row & nrow(dat) == nrow(latent_mat)))
   stopifnot(length(fixed_idx) <= nrow(dat))
@@ -166,23 +166,24 @@ estimate_latent <- function(dat, k, dropout_func, threshold,
     first_term <- sum((tmp - initial_vec %*% t(latent_mat[index_in,,drop = F]))^2)
   } else first_term <- 0
 
-  as.numeric(first_term/(2*n_in) + second_term/(2*n_out))
+  as.numeric(first_term/(2*n_in) + alpha * second_term/(2*n_out))
 }
 
-.evaluate_objective_full <- function(dat, u_mat, v_mat, index_in, index_out){
+.evaluate_objective_full <- function(dat, u_mat, v_mat, index_in, index_out, alpha = 1){
   pred_mat <- u_mat %*% t(v_mat)
   as.numeric(sum((dat[index_in] - pred_mat[index_in])^2)/length(index_in) +
-    sum(pmax(0, pred_mat[index_out])^2)/length(index_out))
+    alpha*sum(pmax(0, pred_mat[index_out])^2)/length(index_out))
 }
 
-.initialize_k <- function(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, row, subgrad, obj_old){
+.initialize_k <- function(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out,
+                          alpha = 1, row, subgrad, obj_old){
   k <- 1
 
   seq_vec <- seq(1, 1000, by = 10)
 
   while(TRUE){
     vec2 <- vec - 1/seq_vec[k]*subgrad
-    obj_new <- .evaluate_objective_single(dat, vec2, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, row)
+    obj_new <- .evaluate_objective_single(dat, vec2, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, alpha, row)
     if(obj_new < obj_old) break()
 
     if(k >= length(seq_vec)) break()

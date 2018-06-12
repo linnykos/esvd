@@ -124,7 +124,9 @@ graphics.off()
 
 ######################
 
-res <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.4, verbose = T,
+res2 <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.3, verbose = T,
+                       initialization = "SVD")
+res <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.3, verbose = T,
                        initialization = "Funk")
 res_svd <- svd(dat)
 k <- 3
