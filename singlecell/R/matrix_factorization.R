@@ -1,5 +1,5 @@
 estimate_latent <- function(dat, k, dropout_func, threshold, alpha = 1,
-                            tol = 5e-5, max_iter = 500, max_outer_iter = 10, cores = 1,
+                            tol = 1e-4, max_iter = 500, max_outer_iter = 10, cores = 1,
                             lambda = 0.01, initialization = "SVD", verbose = F){
   if(verbose) print("Starting")
 
@@ -72,7 +72,7 @@ estimate_latent <- function(dat, k, dropout_func, threshold, alpha = 1,
 
   index_in_mat <- .convert_index_to_position(index_in_vec, nrow(dat), ncol(dat))
   index_out_mat <- .convert_index_to_position(index_out_vec, nrow(dat), ncol(dat))
-  n_in <- length(index_in_vec); n_out <- length(index_out_vec)
+  n_in <- prod(dim(dat)); n_out <- prod(dim(dat))
 
   if(row) z = 1 else z = 2
   func <- function(x){
@@ -171,8 +171,8 @@ estimate_latent <- function(dat, k, dropout_func, threshold, alpha = 1,
 
 .evaluate_objective_full <- function(dat, u_mat, v_mat, index_in, index_out, alpha = 1){
   pred_mat <- u_mat %*% t(v_mat)
-  as.numeric(sum((dat[index_in] - pred_mat[index_in])^2)/length(index_in) +
-    alpha*sum(pmax(0, pred_mat[index_out])^2)/length(index_out))
+  as.numeric(sum((dat[index_in] - pred_mat[index_in])^2)/prod(dim(dat)) +
+    alpha*sum(pmax(0, pred_mat[index_out])^2)/prod(dim(dat)))
 }
 
 .initialize_k <- function(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out,
