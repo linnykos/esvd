@@ -177,6 +177,7 @@ par(mfrow = c(1,3))
 val <- max(abs(gene_cor - weighted_gene_cor))
 idx <- which(abs(gene_cor - weighted_gene_cor) == val, arr.ind = T)
 vec <- color_correlation_func(dat[,idx[1]], dat[,idx[2]], c(-2,30))
+weighted_correlation_paired(dat[,idx[1]], dat[,idx[2]], c(-2,30))
 col_vec <- sapply(vec, function(x){col_vec2[which.min(abs(break_vec - x))]})
 plot(dat[,idx[1]], dat[,idx[2]], pch = 16, col = col_vec, cex = 1.5,
      xlab = paste0("Gene ", idx[1]), ylab = paste0("Gene ", idx[2]),
@@ -187,6 +188,7 @@ tmp <- which(gene_cor < 0)
 val <- max(abs(gene_cor[tmp] - weighted_gene_cor[tmp]))
 idx <- which(abs(gene_cor - weighted_gene_cor) == val, arr.ind = T)
 vec <- color_correlation_func(dat[,idx[1]], dat[,idx[2]], c(-2,30))
+weighted_correlation_paired(dat[,idx[1]], dat[,idx[2]], c(-2,30))
 col_vec <- sapply(vec, function(x){col_vec2[which.min(abs(break_vec - x))]})
 plot(dat[,idx[1]], dat[,idx[2]], pch = 16, col = col_vec, cex = 1.5,
      xlab = paste0("Gene ", idx[1]), ylab = paste0("Gene ", idx[2]),
@@ -212,28 +214,44 @@ fit_coef <- estimate_dropout(dat, threshold_quant_degree = 1, threshold_quant_lo
 fit_coef
 est_dropout_func <- dropout_create(fit_coef[1], fit_coef[2])
 
+# naive fit
+res_svd <- svd(dat)
+k <- 3
+pred_dat <- res_svd$u[,1:k] %*% diag(res_svd$d[1:k]) %*% t(res_svd$v[,1:k])
+zero_factor <- as.factor(as.numeric(dat != 0))
+vec <- as.numeric(pred_dat)
+naive_fit <- glm(zero_factor ~ vec, family=binomial(link='logit'))
+naive_coef <- coef(naive_fit)
+naive_dropout <- dropout_create(naive_coef[1], naive_coef[2])
+
 png(paste0("../figure/experiment/8_dropout_function.png"), height = 1200, width = 2400, res = 300, units = "px")
 par(mfrow = c(1,2))
 
 x_vec <- seq(0, max(dat), length.out = 100)
 val1 <- sapply(x_vec, dropout_function)
 val2 <- sapply(x_vec, est_dropout_func)
-plot(x_vec, val1, pch = 16, xlab = "Observed value", ylab = "Probability of no dropout")
+val3 <- sapply(x_vec, naive_dropout)
+plot(x_vec, val1, pch = 16, xlab = "Observed value", ylab = "Probability of no dropout",
+     ylim = range(c(val1, val2, val3)))
 points(x_vec, val2, col = rgb(0.803, 0.156, 0.211), pch = 16)
+points(x_vec, val3, col = rgb(0.584, 0.858, 0.564), pch = 16)
 
-legend("bottomright", c("True", "Estimated"),
-       bty="n", fill=c("black", rgb(0.803, 0.156, 0.211)))
+legend("bottomright", c("True", "Estimate", "Naive estimate"),
+       bty="n", fill=c("black", rgb(0.803, 0.156, 0.211), rgb(0.584, 0.858, 0.564)))
 
 quant_vec <- seq(0, 1, length.out = 100)
 idx <- which(dat != 0)
 x_vec <- sapply(quant_vec, function(x){quantile(dat[idx], probs = x)})
 val1 <- sapply(x_vec, dropout_function)
 val2 <- sapply(x_vec, est_dropout_func)
-plot(quant_vec, val1, pch = 16, xlab = "Quantile of observed value", ylab = "Probability of no dropout")
+val3 <- sapply(x_vec, naive_dropout)
+plot(quant_vec, val1, pch = 16, xlab = "Quantile of observed value", ylab = "Probability of no dropout",
+     ylim = range(c(val1, val2, val3)))
 points(quant_vec, val2, col = rgb(0.803, 0.156, 0.211), pch = 16)
+points(quant_vec, val3, col = rgb(0.584, 0.858, 0.564), pch = 16)
 
-legend("topleft", c("True", "Estimated"),
-       bty="n", fill=c("black", rgb(0.803, 0.156, 0.211)))
+legend("topleft", c("True", "Estimated", "Naive estimate"),
+       bty="n", fill=c("black", rgb(0.803, 0.156, 0.211), rgb(0.584, 0.858, 0.564)))
 
 graphics.off()
 

@@ -1,5 +1,5 @@
 estimate_latent <- function(dat, k, dropout_func, threshold, alpha = 1,
-                            tol = 1e-5, max_iter = 500, max_outer_iter = 10, cores = 1,
+                            tol = 5e-5, max_iter = 500, max_outer_iter = 10, cores = 1,
                             lambda = 0.01, initialization = "SVD", verbose = F){
   if(verbose) print("Starting")
 
@@ -35,7 +35,7 @@ estimate_latent <- function(dat, k, dropout_func, threshold, alpha = 1,
       v_mat <- .estimate_matrix(dat, v_mat, u_mat, index_in_vec, index_out_old, alpha,
                                 tol, max_iter, row = F, cores)
       obj_new <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_old, alpha)
-      if(abs(obj_old - obj_new) <= tol) break()
+      if(abs(obj_old - obj_new)/obj_old <= tol) break()
 
       if(verbose) print(obj_new)
 
@@ -112,7 +112,7 @@ estimate_latent <- function(dat, k, dropout_func, threshold, alpha = 1,
     vec <- vec - 1/k*subgrad
     obj_new <- .evaluate_objective_single(dat, vec, latent_mat, fixed_idx, index_in, index_out, n_in, n_out, alpha, row)
 
-    if(abs(obj_old - obj_new) < tol) break()
+    if(abs(obj_old - obj_new)/obj_old < tol) break()
     if(k > max_iter) break()
 
     if(verbose) obj_vec[k+1] <- obj_new

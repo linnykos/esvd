@@ -58,17 +58,7 @@ for(i in 1:n){
 
 length(which(setting == 1))/length(which(setting >= 1))
 
-idx <- which(dat != 0)
-quant_vec <- seq(0, 1, length.out = 100)
-x_vec <- sapply(quant_vec, function(x){
-  quantile(dat[idx], probs = x)
-})
-prob_vec <- sapply(x_vec, dropout_function)
-plot(x_vec, prob_vec)
-plot(quant_vec, prob_vec)
-
-
-#############
+##########
 
 .rotate <- function(mat){t(mat)[,nrow(mat):1]}
 
@@ -124,81 +114,3 @@ for(i in col_idx){
 }
 
 graphics.off()
-
-######################
-
-# res2 <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.3, verbose = T,
-#                        initialization = "SVD")
-res <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.3, verbose = T,
-                       initialization = "SVD", alpha = 1000)
-res_svd <- svd(dat)
-k <- 3
-u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
-v_mat <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
-
-tmp <- u_dat %*% t(v_dat)
-res_svd <- svd(tmp)
-u_dat_rescaled <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
-v_dat_rescaled <- res_svd$v[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
-
-plot(u_dat_rescaled[,1], u_dat_rescaled[,2])
-plot(res$u_mat[,1], res$u_mat[,2])
-plot(u_mat[,1], u_mat[,2])
-
-par(mfrow = c(1,2))
-plot(u_dat_rescaled[,1], res$u_mat[,1], asp = T)
-lines(c(-5,5), c(-5,5), col = "red", lwd = 2)
-plot(u_dat_rescaled[,1], -u_mat[,1], asp = T)
-lines(c(-5,5), c(-5,5), col = "red", lwd = 2)
-
-par(mfrow = c(1,2))
-plot(u_dat_rescaled[,2], res$u_mat[,2], asp = T)
-lines(c(-5,5), c(-5,5), col = "red", lwd = 2)
-plot(u_dat_rescaled[,2], -u_mat[,2], asp = T)
-lines(c(-5,5), c(-5,5), col = "red", lwd = 2)
-
-plot(v_dat_rescaled[,1], v_dat_rescaled[,2])
-plot(res$v_mat[,1], res$v_mat[,2])
-plot(v_mat[,1], v_mat[,2])
-
-par(mfrow = c(1,2))
-plot(v_dat_rescaled[,1], res$v_mat[,1], asp = T)
-lines(c(-5,5), c(-5,5), col = "red", lwd = 2)
-plot(v_dat_rescaled[,1], -v_mat[,1], asp = T)
-lines(c(-5,5), c(-5,5), col = "red", lwd = 2)
-
-par(mfrow = c(1,2))
-plot(v_dat_rescaled[,2], res$v_mat[,2], asp = T)
-lines(c(-5,5), c(-5,5), col = "red", lwd = 2)
-plot(v_dat_rescaled[,2], -v_mat[,2], asp = T)
-lines(c(-5,5), c(-5,5), col = "red", lwd = 2)
-
-
-##################
-
-res_pred <- res$u_mat %*% t(res$v_mat)
-res_pred_naive <- u_mat %*% t(v_mat)
-
-plot(as.numeric(mean_dat), as.numeric(res_pred_naive))
-lines(c(-100,100), rep(0,2), col = "red", lwd = 2)
-plot(as.numeric(mean_dat), as.numeric(res_pred))
-lines(c(-100,100), rep(0,2), col = "red", lwd = 2)
-plot(as.numeric(mean_dat), as.numeric(dat))
-
-plot(as.numeric(res_pred_naive),  as.numeric(res_pred), col = rgb(0,0,0,0.1), pch = 16,
-     asp = T)
-lines(c(-5,5), c(-5,5), col = "red", lwd = 2)
-lines(rep(0,2), c(-5,5), col = "red", lwd = 2, lty = 2)
-lines(c(-5,5), rep(0,2), col = "red", lwd = 2, lty = 2)
-
-# index_in_vec <- which(dat != 0)
-# index_zero <- which(dat == 0)
-# index_out_vec <- .predict_true_zero(res$u_mat %*% t(res$v_mat), dropout_function, threshold = 0.3, index_zero)
-# .evaluate_objective_full(dat, res$u_mat, res$v_mat, index_in_vec, index_out_vec, 1000)
-
-############
-
-# understand the lowest possible objective value when alpha is too large
-idx <- which(dat != 0)
-sum(dat[idx]^2)/length(idx)
-
