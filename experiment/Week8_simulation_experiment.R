@@ -129,8 +129,8 @@ graphics.off()
 
 # res2 <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.3, verbose = T,
 #                        initialization = "SVD")
-res <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.3, verbose = T,
-                       initialization = "SVD", alpha = 1000)
+res <- estimate_latent(dat, k = 3, dropout_function, threshold = 0.4, verbose = T,
+                       initialization = "Funk", alpha = 1000)
 res_svd <- svd(dat)
 k <- 3
 u_mat <- res_svd$u[,1:k] %*% diag(sqrt(res_svd$d[1:k]))
@@ -201,4 +201,30 @@ lines(c(-5,5), rep(0,2), col = "red", lwd = 2, lty = 2)
 # understand the lowest possible objective value when alpha is too large
 idx <- which(dat != 0)
 sum(dat[idx]^2)/length(idx)
+
+################
+
+# clustering
+.l2norm <- function(x){sqrt(sum(x^2))}
+u_mat_spherical <- t(apply(res$u_mat, 1, function(x){x/.l2norm(x)}))
+v_mat_spherical <- t(apply(res$v_mat, 1, function(x){x/.l2norm(x)}))
+
+set.seed(10)
+u_clust <- kmeans(u_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
+v_clust <- kmeans(v_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
+table(u_label, u_clust$cluster)
+table(v_label, v_clust$cluster)
+
+##
+
+u_mat_spherical <- t(apply(u_mat, 1, function(x){x/.l2norm(x)}))
+v_mat_spherical <- t(apply(v_mat, 1, function(x){x/.l2norm(x)}))
+
+set.seed(10)
+u_clust <- kmeans(u_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
+v_clust <- kmeans(v_mat_spherical, centers = 3, iter.max = 100, nstart = 10)
+table(u_label, u_clust$cluster)
+table(v_label, v_clust$cluster)
+
+
 

@@ -20,32 +20,27 @@ estimate_latent <- function(dat, k, dropout_func, threshold, alpha = 1,
   #determine indices
   index_in_vec <- which(dat != 0)
   index_zero <- which(dat == 0)
-  index_out_old <- .predict_true_zero(u_mat %*% t(v_mat), dropout_func, threshold, index_zero)
-  if(length(index_out_old) == 0) stop("Threshold is too low")
+  index_out_vec <- .predict_true_zero(u_mat %*% t(v_mat), dropout_func, threshold, index_zero)
+  if(length(index_out_vec) == 0) stop("Threshold is too low")
   counter <- 1
 
   while(TRUE){
-    obj_old <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_old, alpha)
+    obj_old <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec, alpha)
 
-    if(verbose) print(paste0("Starting round ", counter, " with objective value of: ", obj_old))
+    #if(verbose) print(paste0("Starting round ", counter, " with objective value of: ", obj_old))
 
-    while(TRUE){
-      u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_old, alpha,
-                                tol, max_iter, row = T, cores)
-      v_mat <- .estimate_matrix(dat, v_mat, u_mat, index_in_vec, index_out_old, alpha,
-                                tol, max_iter, row = F, cores)
-      obj_new <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_old, alpha)
-      if(abs(obj_old - obj_new)/obj_old <= tol) break()
+    u_mat <- .estimate_matrix(dat, u_mat, v_mat, index_in_vec, index_out_vec, alpha,
+                              tol, max_iter, row = T, cores)
+    v_mat <- .estimate_matrix(dat, v_mat, u_mat, index_in_vec, index_out_vec, alpha,
+                              tol, max_iter, row = F, cores)
 
-      if(verbose) print(obj_new)
+    index_out_vec <- .predict_true_zero(u_mat %*% t(v_mat), dropout_func, threshold, index_zero)
 
-      obj_old <- obj_new
-    }
+    obj_new <- .evaluate_objective_full(dat, u_mat, v_mat, index_in_vec, index_out_vec, alpha)
+    if(abs(obj_old - obj_new)/obj_old <= tol) break()
 
-    index_out_new <- .predict_true_zero(u_mat %*% t(v_mat), dropout_func, threshold, index_zero)
-    if(length(index_out_old) == length(index_out_new) && all(sort(index_out_old) == sort(index_out_new))) break()
-    counter <- counter + 1
-    if(counter > max_outer_iter) break()
+    if(verbose) print(obj_new)
+    obj_old <- obj_new
   }
 
   pred_mat <- u_mat %*% t(v_mat)
