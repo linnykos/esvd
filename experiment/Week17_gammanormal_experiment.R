@@ -25,3 +25,16 @@ x <- generate_data(1000, 1, .5, 0.5, 4, 1)
 res_original <- get_mix(x)
 res_trunc <- .get_mix(x)
 
+
+###################
+
+vec1 = rnorm(100); vec1 = vec1[vec1 > 0]
+vec2 = rnorm(100); vec2 = vec2[vec2 > 0]
+vec3 = rnorm(100, mean = 4); vec3 = vec3[vec3 > 0]
+
+res1 = .estimate_cdf(vec1)
+res2 = .estimate_cdf(vec2)
+res3 = .estimate_cdf(vec3)
+
+.ks_distance(res1, res2)
+.ks_distance(res1, res3)
