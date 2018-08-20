@@ -1,31 +1,34 @@
-estimate_truncated_normal <- function(vec, breaks = 100, iterations = 5, window = 0.3){
-  mean_val <- mean(vec); var_val <- var(vec)
+estimate_truncated_normal <- function(vec, weight = rep(1, length(vec)),
+                                      breaks = 100, iterations = 5, window = 0.3){
+  mean_val <- sum(weight * vec)/sum(weight)
+  var_val <- sum(weight * (vec - mean_val)^2)/sum(weight)
 
-  m_range <- c(-1,1)*max(abs(vec))
+  m_range <- c(0, max(vec))
   v_range <- c(0.1, 2*diff(range(vec)))
   m_est <- mean_val; v_est <- var_val
   window_size <- ceiling(window * breaks)
 
   for(i in 1:iterations){
-    diff_vec <- compute_difference_vector(vec, m_range, breaks, mean_val,
+    m_vec <- seq(m_range[1], m_range[2], length.out = breaks)
+    diff_vec <- compute_difference_vector(m_vec, breaks, mean_val,
                                           var_val, sigma = sqrt(v_est))
     idx <- which.min(diff_vec)
-    m_est <- m_idx[idx]
-    m_range <- m_idx[c(max(idx-window_size, 1), min(idx+window_size, breaks))]
+    m_est <- m_vec[idx]
+    m_range <- m_vec[c(max(idx-window_size, 1), min(idx+window_size, breaks))]
 
-    diff_vec <- compute_difference_vector(vec, m_range, breaks, mean_val,
+    v_vec <- seq(v_range[1], v_range[2], length.out = breaks)
+    diff_vec <- compute_difference_vector(v_vec, breaks, mean_val,
                                           var_val, mu = m_est)
     idx <- which.min(diff_vec)
-    v_est <- v_idx[idx]
-    v_range <- v_idx[c(max(idx-window_size, 1), min(idx+window_size, breaks))]
+    v_est <- v_vec[idx]
+    v_range <- v_vec[c(max(idx-window_size, 1), min(idx+window_size, breaks))]
   }
 
   list(mean = m_est, var = v_est)
 }
 
-compute_difference_vector <- function(vec, range_vec, breaks, mean_val, var_val,
+compute_difference_vector <- function(val_vec, breaks, mean_val, var_val,
                                       ...){
-  val_vec <- seq(range_vec[1], range_vec[2], length.out = breaks)
   mean_tmp <- sapply(val_vec, compute_mean, ...)
   var_tmp <- sapply(val_vec, compute_var, ...)
 

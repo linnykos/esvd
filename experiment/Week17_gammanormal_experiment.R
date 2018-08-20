@@ -1,4 +1,6 @@
 source("../experiment/em_gamma_normal.R")
+source("../experiment/em_gamma_truncatednormal.R")
+source("../experiment/truncated_normal_estimation.R")
 
 generate_data <- function(n, shape = 1, rate, mean, sd, prop = 0.5,
                           positive = T, min_val = log10(1.01)){
@@ -18,5 +20,8 @@ generate_data <- function(n, shape = 1, rate, mean, sd, prop = 0.5,
   x
 }
 
-x <- generate_data(1000, 1, .5, 4, 1, 0.5)
-res <- get_mix(x)
+set.seed(10)
+x <- generate_data(1000, 1, .5, 0.5, 4, 1)
+res_original <- get_mix(x)
+res_trunc <- .get_mix(x)
+
