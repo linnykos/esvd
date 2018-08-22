@@ -27,7 +27,7 @@ estimate_truncated_normal <- function(vec, weight = rep(1, length(vec)),
 
     v_vec <- seq(v_range[1], v_range[2], length.out = breaks)
     diff_vec <- sapply(v_vec, function(x){
-      tmp <- stats::rnorm(multiplier*n, mean = m_est, sd = x)
+      tmp <- stats::rnorm(multiplier*n, mean = m_est, sd = sqrt(x))
       tmp <- tmp[tmp > min_val]
       tmp_lis <- .estimate_cdf(tmp)
       .ks_distance(obs_lis, tmp_lis)
@@ -45,10 +45,9 @@ estimate_truncated_normal <- function(vec, weight = rep(1, length(vec)),
   idx <- order(vec)
   vec <- vec[idx]; weight <- weight[idx]
 
-  uniq_val <- sort(unique(vec))
   cdf_vec <- cumsum(weight)/sum(weight)
 
-  list(x = uniq_val, y = cdf_vec)
+  list(x = vec, y = cdf_vec)
 }
 
 .ks_distance <- function(lis1, lis2){

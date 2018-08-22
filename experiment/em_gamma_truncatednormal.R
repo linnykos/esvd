@@ -26,11 +26,17 @@
 }
 
 ### estimate parameters in the mixture distribution
-.get_mix = function(xdata, point = log10(1.01)){
+.get_mix = function(xdata, point = log10(1.01), prop_init = NA,
+                    MoM = F){
   #initialize the five parameters
   inits = rep(0, 5)
-  inits[1] = sum(xdata == point)/length(xdata)
-  if (inits[1] == 0) {inits[1] = 0.01}
+  if(!is.na(prop_init)){
+    inits[1] = prop_init
+  } else {
+    inits[1] = sum(xdata == point)/length(xdata)
+    if (inits[1] == 0) {inits[1] = 0.01}
+  }
+
   inits[2:3] = c(0.5, 1)
   xdata_rm = xdata[xdata > point]
   inits[4:5] = c(mean(xdata_rm), sd(xdata_rm))
@@ -46,7 +52,11 @@
 
     #M-step
     paramt[1] = sum(wt[, 1])/nrow(wt)
-    res <- estimate_truncated_normal(xdata, wt[,2])
+    if(MoM){
+      res <- estimate_truncated_normal_mom(xdata, wt[,2])
+    } else {
+      res <- estimate_truncated_normal(xdata, wt[,2])
+    }
     paramt[4] = res$mean
     paramt[5] = sqrt(res$var)
     paramt[2:3] = .update_gmm_pars(x=xdata, wt=wt[,1])
@@ -64,12 +74,12 @@
 
 .dmix <- function (x, pars) {
   pars[1] * stats::dgamma(x, shape = pars[2], rate = pars[3]) +
-    (1 - pars[1]) * stats::dnorm(x, mean = pars[4], sd = pars[5])/(1-stats::pnorm(0))
+    (1 - pars[1]) * stats::dnorm(x, mean = pars[4], sd = pars[5])/(1-stats::pnorm(0, mean = pars[4], sd = pars[5]))
 }
 
 .calculate_weight <- function (x, paramt) {
   pz1 = paramt[1] * stats::dgamma(x, shape = paramt[2], rate = paramt[3])
-  pz2 = (1 - paramt[1]) * stats::dnorm(x, mean = paramt[4], sd = paramt[5])/(1-stats::pnorm(0))
+  pz2 = (1 - paramt[1]) * stats::dnorm(x, mean = paramt[4], sd = paramt[5])/(1-stats::pnorm(0, mean = paramt[4], sd = paramt[5]))
   pz = pz1/(pz1 + pz2)
   pz[pz1 == 0] = 0
   return(cbind(pz, 1 - pz))

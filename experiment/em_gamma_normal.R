@@ -26,11 +26,16 @@ update_gmm_pars = function(x, wt) {
 }
 
 ### estimate parameters in the mixture distribution
-get_mix = function(xdata, point = log10(1.01)){
+get_mix = function(xdata, point = log10(1.01), prop_init = NA){
   #initialize the five parameters
   inits = rep(0, 5)
-  inits[1] = sum(xdata == point)/length(xdata)
-  if (inits[1] == 0) {inits[1] = 0.01}
+  if(!is.na(prop_init)){
+    inits[1] = prop_init
+  } else {
+    inits[1] = sum(xdata == point)/length(xdata)
+    if (inits[1] == 0) {inits[1] = 0.01}
+  }
+
   inits[2:3] = c(0.5, 1)
   xdata_rm = xdata[xdata > point]
   inits[4:5] = c(mean(xdata_rm), sd(xdata_rm))
