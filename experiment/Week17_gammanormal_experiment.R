@@ -1,3 +1,4 @@
+rm(list=ls())
 source("../experiment/em_gamma_normal.R")
 source("../experiment/em_gamma_truncatednormal.R")
 source("../experiment/truncated_normal_estimation.R")
@@ -62,7 +63,7 @@ compute_error <- function(vec1, vec2, interval = 0.01){
   norm_dist2 <- (1-vec2[1]) * sapply(x_seq, stats::dnorm, mean = vec2[4], sd = vec2[5])
   norm_dist2 <- norm_dist2 / (1 - stats::pnorm(0, mean = vec2[4], sd = vec2[5]))
 
-  res <- c(sum(interval * (norm_dist1 - norm_dist2)^2), max(norm_dist1 - norm_dist2),
+  res <- c(sum(interval * (norm_dist1 - norm_dist2)^2), max(abs(norm_dist1 - norm_dist2)),
            abs(vec1[4] - vec2[4]))
   names(res) <- c("l2", "l0", "mean")
 
@@ -114,7 +115,27 @@ visualize_table <- function(data, vec, ...){
   invisible()
 }
 
+hist_augment <- function(x, breaks = 50, min_val = log10(1.01), ...){
+  break_vec <- seq(min_val, max(x), length.out = breaks)
 
+  min_nonzero <- min(x[x != min_val])
+  interval <- diff(break_vec)[1]
+
+  if(interval + min_val > min_nonzero){
+    interval <- min_nonzero - min_val
+  }
+
+  break_vec <- break_vec + interval/2
+  break_vec <- c(break_vec[1] - diff(break_vec)[1], break_vec)
+
+  zz <- hist(x, breaks = break_vec, ...)
+  len <- length(which(x == min_val))
+  if(len != 0){
+    rect(zz$breaks[1], 0, zz$breaks[2], len, col = rgb(0.803, 0.156, 0.211))
+  }
+
+  invisible()
+}
 
 ###
 
@@ -218,10 +239,10 @@ graphics.off()
 ###
 
 set.seed(10)
-res_pop <- c(.1, 1, 1, 1.5, 1)
+res_pop <- c(.8, 1, 10, 1.5, 1)
 x <- generate_univariate_data(1000, res_pop)
-res_original <- get_mix(x, prop_init = .3)
-res_trunc <- .get_mix(x, prop_init = .3)
+res_original <- get_mix(x, prop_init = 0.9)
+res_trunc <- .get_mix(x, prop_init = 0.9)
 # res_trunc_MoM <- .get_mix(x, MoM = T, prop_init = .3)
 
 err_original <- compute_error(res_pop, res_original)
@@ -281,3 +302,51 @@ visualize_table(new_x, res_original, main = "Estimated parameters\n(original)")
 visualize_table(new_x, res_trunc, main = "Estimated parameters\n(truncated)")
 graphics.off()
 
+###
+
+set.seed(10)
+res_pop <- c(.85, .5, 10, .5, 2)
+x <- generate_univariate_data(1000, res_pop)
+x[sample(floor(length(x))*.4)] <- log10(1.01)
+res_original <- get_mix(x)
+res_trunc <- .get_mix(x)
+# res_trunc_MoM <- .get_mix(x, MoM = T, prop_init = .3)
+
+err_original <- compute_error(res_pop, res_original)
+err_trunc <- compute_error(res_pop, res_trunc)
+
+png("../figure/experiment/17_experiment_density_realistic.png", height = 1200, width = 2400, res = 300, units = "px")
+par(mfrow = c(1,2))
+draw_curve(list(res_pop, res_original), lwd = 3, ymax = .2, max_val = 7,
+           main = paste0("Original: Error = (", paste0(round(err_original, 2),
+                                                       collapse = ", "), ")"),
+           xlab = "Value", ylab = "Density")
+draw_curve(list(res_pop, res_trunc), lwd = 3, ymax = .2, max_val = 7,
+           main = paste0("Truncated: Error = (", paste0(round(err_trunc, 2),
+                                                        collapse = ", "), ")"),
+           xlab = "Value", ylab = "Density")
+graphics.off()
+
+set.seed(10)
+new_x <- generate_univariate_data(1000, res_pop, return_assignment = T)
+png("../figure/experiment/17_experiment_density_realistic_table.png", height = 800, width = 1800, res = 300, units = "px")
+par(mfrow = c(1,3))
+visualize_table(new_x, res_pop, main = "True parameters")
+visualize_table(new_x, res_original, main = "Estimated parameters\n(original)")
+visualize_table(new_x, res_trunc, main = "Estimated parameters\n(truncated)")
+graphics.off()
+
+png("../figure/experiment/17_experiment_density_realistic_histogram.png", height = 1000, width = 2000, res = 300, units = "px")
+hist_augment(x, main = "Histogram of synthetic data", xlab = "Value", ylab = "Count")
+graphics.off()
+
+###
+
+set.seed(10)
+res_pop <- c(.9, .5, 10, .5, 2)
+res <- generate_univariate_data(1000, res_pop, return_assignment = T)
+x <- res$x
+x[res$assign_vec == 1] <- log10(1.01)
+res_original <- get_mix(x)
+res_trunc <- .get_mix(x)
+# res_trunc_MoM <- .get_mix(x, MoM = T, prop_init = .3)
