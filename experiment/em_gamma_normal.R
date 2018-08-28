@@ -36,14 +36,21 @@ get_mix = function(xdata, point = log10(1.01), prop_init = NA){
     if (inits[1] == 0) {inits[1] = 0.01}
   }
 
-  inits[2:3] = c(0.5, 1)
-  xdata_rm = xdata[xdata > point]
-  inits[4:5] = c(mean(xdata_rm), sd(xdata_rm))
-  if (is.na(inits[5])) {inits[5] = 0}
+  # inits[2:3] = c(0.5, 1)
+  inits[2:3] = c(20, 4500)
+
+  init_weight <- sapply(xdata, dgamma, 20, 4500)
+  init_weight <- 1 - (init_weight - min(init_weight))/(max(init_weight) - min(init_weight))
+  inits[4] <- sum(xdata * init_weight)/sum(init_weight)
+  inits[5] <- sqrt(sum(init_weight*(xdata - inits[4])^2)/sum(init_weight))
+  # xdata_rm = xdata[xdata > point]
+  # inits[4:5] = c(mean(xdata_rm), sd(xdata_rm))
+  # if (is.na(inits[5])) {inits[5] = 0}
   paramt = inits
   eps = 10
   iter = 0
   loglik_old = 0
+  idx <- which(xdata == point)
 
   while(eps > 0.5) {
     #E-step
@@ -54,6 +61,7 @@ get_mix = function(xdata, point = log10(1.01), prop_init = NA){
     paramt[4] = sum(wt[, 2] * xdata)/sum(wt[, 2])
     paramt[5] = sqrt(sum(wt[, 2] * (xdata - paramt[4])^2)/sum(wt[, 2]))
     paramt[2:3] = update_gmm_pars(x=xdata, wt=wt[,1])
+    paramt[5] = max(paramt[5], 1e-6)
 
     #see if converged
     loglik = sum(log10(dmix(xdata, paramt)))
