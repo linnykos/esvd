@@ -148,6 +148,15 @@ table(class1, class2)
 #enumerate over all genes and see if there is EVER a instance where
 # log10(1.01) is classified as "true"
 
+param_list <- lapply(1:ncol(dat_subset), function(x){
+  print(x)
+
+  vec <- dat_subset[,x]
+  if(length(vec[vec > log10(1.01)]) < 5) return(NA)
+
+  get_mix_switch(vec, truncated = T)
+})
+
 cutoff_vec <- sapply(1:ncol(dat_subset), function(x){
   if(x %% floor(ncol(dat_subset)/10) == 0) cat('*')
 

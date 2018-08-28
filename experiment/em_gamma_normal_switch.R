@@ -1,5 +1,6 @@
 source("../experiment/em_gamma_normal.R")
 source("../experiment/em_gamma_truncatednormal.R")
+source("../experiment/truncated_normal_estimation.R")
 
 ### estimate parameters in the mixture distribution
 get_mix_switch = function(xdata, point = log10(1.01), prop_init = NA,

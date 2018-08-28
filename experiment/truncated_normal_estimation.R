@@ -1,6 +1,6 @@
 estimate_truncated_normal <- function(vec, weight = rep(1, length(vec)),
-                                      min_val = log10(1.01), multiplier = 5,
-                                      breaks = 100, iterations = 5, window = 0.3){
+                                      min_val = log10(1.01), multiplier = 2,
+                                      breaks = 100, iterations = 2, window = 0.3){
   n <- length(vec)
   mean_val <- sum(weight * vec)/sum(weight)
   var_val <- sum(weight * (vec - mean_val)^2)/sum(weight)

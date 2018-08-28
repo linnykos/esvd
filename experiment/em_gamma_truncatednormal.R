@@ -66,7 +66,7 @@
     eps = (loglik - loglik_old)^2
     loglik_old = loglik
     iter = iter + 1
-    if (iter > 100)
+    if (iter > 10)
       break
   }
   return(paramt)
