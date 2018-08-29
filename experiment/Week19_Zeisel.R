@@ -238,7 +238,7 @@ vec <- dat_subset[,17]
 res <- get_mix_switch(vec)
 table(compute_dropout(vec, res))
 png("../figure/experiment/19_zeisel_hist1.png", height = 1200, width = 1500, res = 300, units = "px")
-hist_augment(vec, breaks = 100, param = res, lwd = 3, multiplier = 5,
+hist_augment(vec, breaks = 100, param = res, lwd = 3, multiplier = 0.05,
              xlab = "Value", ylab = "Frequency", main = "")
 graphics.off()
 
@@ -266,20 +266,24 @@ hist_augment(vec, breaks = 100, param = res2,lwd = 3, multiplier = 1,
 graphics.off()
 
 
-#
-# cutoff_vec2 <- cutoff_vec[intersect(which(!is.na(cutoff_vec)),
-#                                     which(!is.infinite(cutoff_vec)))]
+#####################
 
+source("../experiment/em_gamma_truncatednormal.R")
+vec <- dat_subset[,1900]
+res <- get_mix_switch(vec, truncated = T)
+table(compute_dropout(vec, res))
+hist_augment(vec, breaks = 100, param = res, lwd = 3, multiplier = 1,
+             xlab = "Value", ylab = "Frequency", main = "")
 
-##############################
+vec <- dat_subset[,340]
+res <- get_mix_switch(vec, truncated = T)
+table(compute_dropout(vec, res))
+hist_augment(vec, breaks = 100, param = res, lwd = 3, multiplier = 1,
+             xlab = "Value", ylab = "Frequency", main = "")
 
-# using truncated gaussian
+vec <- dat_subset[,17]
+res <- get_mix_switch(vec, truncated = T)
+table(compute_dropout(vec, res))
+hist_augment(vec, breaks = 100, param = res, lwd = 3, multiplier = 1,
+             xlab = "Value", ylab = "Frequency", main = "l")
 
-param_list <- lapply(1:ncol(dat_subset), function(x){
-  print(x)
-
-  vec <- dat_subset[,x]
-  if(length(vec[vec > log10(1.01)]) < 5) return(NA)
-
-  get_mix_switch(vec, truncated = T)
-})

@@ -1,5 +1,3 @@
-# https://github.com/cran/tmvtnorm/blob/master/R/tmvnorm-estimation.R
-
 # estimation methods for the parameters of the truncated multivariate normal distribution
 #
 # Literatur:
@@ -113,17 +111,42 @@ inv_vech=function(v)
 # @param lower.bounds lower bounds for method "L-BFGS-B"
 # @param upper.bounds upper bounds for method "L-BFGS-B"
 mle.tmvnorm <- function(X, weights = rep(1, length(X)),
-                        lower=0,
-                        upper=+Inf,
-                        start=list(mu=mean(X), sigma=sd(X)),
-                        fixed=list(), method="L-BFGS-B",
+                        lower=rep(-Inf, length = ncol(X)),
+                        upper=rep(+Inf, length = ncol(X)),
+                        start=list(mu=rep(0,ncol(X)), sigma=diag(ncol(X))),
+                        fixed=list(), method="BFGS",
                         cholesky=FALSE,
-                        lower.bounds=c(0, 1e-5),
-                        upper.bounds=c(+Inf, +Inf),
+                        lower.bounds=-Inf,
+                        upper.bounds=+Inf,
                         ...)
 {
+  # check of standard tmvtnorm arguments
+  cargs <- tmvtnorm:::checkTmvArgs(start$mu, start$sigma, lower, upper)
+  start$mu    <- cargs$mean
+  start$sigma <- cargs$sigma
+  lower       <- cargs$lower
+  upper       <- cargs$upper
+
+  # check if we have at least one sample
+  if (!is.matrix(X) || nrow(X) == 0) {
+    stop("Data matrix X with at least one row required.")
+  }
+
   # verify dimensions of x and lower/upper match
-  n <- length(X)
+  n <- length(lower)
+  if (NCOL(X) != n) {
+    stop("data matrix X has a non-conforming size. Must have ",length(lower)," columns.")
+  }
+
+  # check if lower <= X <= upper for all rows
+  ind <- logical(nrow(X))
+  for (i in 1:nrow(X))
+  {
+    ind[i] = all(X[i,] >= lower & X[i,] <= upper)
+  }
+  if (!all(ind)) {
+    stop("some of the data points are not in the region lower <= X <= upper")
+  }
 
   if ((length(lower.bounds) > 1L || length(upper.bounds) > 1L || lower.bounds[1L] !=
        -Inf || upper.bounds[1L] != Inf) && method != "L-BFGS-B") {
@@ -131,14 +154,30 @@ mle.tmvnorm <- function(X, weights = rep(1, length(X)),
     method <- "L-BFGS-B"
   }
 
-  theta <- c(start$mu, start$sigma)
-
+  # parameter vector theta = mu_1,...,mu_n,vech(sigma)
+  if (cholesky) {
+    # if cholesky == TRUE use Cholesky decomposition of sigma
+    # t(chol(sigma)) returns a lower triangular matrix which can be vectorized using vech()
+    theta <- c(start$mu, vech2(t(chol(start$sigma))))
+  } else {
+    theta <- c(start$mu, vech2(start$sigma))
+  }
   # names for mean vector elements : mu_i
-  nmmu     <- "mu_1"
+  nmmu     <- paste("mu_",1:n,sep="")
   # names for sigma elements : sigma_ij
-  nmsigma  <- "sigma_1"
+  nmsigma  <- paste("sigma_",vech2(outer(1:n,1:n, paste, sep=".")),sep="")
   names(theta) <- c(nmmu, nmsigma)
 
+  # negative log-likelihood-Funktion dynamisch definiert mit den formals(),
+  # damit mle() damit arbeiten kann
+  #
+  # Eigentlich wollen wir eine Funktion negloglik(theta) mit einem einzigen Parametersvektor theta.
+  # Die Methode mle() braucht aber eine "named list" der Parameter (z.B. mu_1=0, mu_2=0, sigma_1=2,...) und entsprechend eine
+  # Funktion negloglik(mu1, mu2, sigma1,...)
+  # Da wir nicht vorher wissen, wie viele Parameter zu schätzen sind, definieren wir die formals()
+  # dynamisch um
+  #
+  # @param x dummy/placeholder argument, will be overwritten by formals() with list of skalar parameters
   negloglik <- function(x)
   {
     nf <- names(formals())
@@ -148,15 +187,34 @@ mle.tmvnorm <- function(X, weights = rep(1, length(X)),
     theta <- sapply(nf, function(x) {eval(parse(text=x))})
 
     # mean vector herholen
-    mean <- theta[1]
+    mean <- theta[1:n]
 
     # Matrix für sigma bauen
-    sigma <- theta[-1]
+    if (cholesky) {
+      L <- inv_vech(theta[-(1:n)])
+      L[lower.tri(L, diag=FALSE)] <- 0  # L entspricht jetzt chol(sigma), obere Dreiecksmatrix
+      sigma <- t(L) %*% L
+    } else {
+      sigma <- inv_vech(theta[-(1:n)])
+    }
+
+    # if sigma is not positive definite, return MAXVALUE
+    if (det(sigma) <= 0 || any(diag(sigma) < 0)) {
+      return(.Machine$integer.max)
+    }
 
     # Log-Likelihood
     # Wieso hier nur dmvnorm() : Wegen Dichte = Conditional density
-    f <- -(sum(weights*dnorm(X, mean, sigma, log=TRUE)) - length(X) *
-             log(pnorm(upper, mean=mean, sd=sigma) - pnorm(lower, mean=mean, sd=sigma)))
+    f <- -(sum(weights*dmvnorm(X, mean, sigma, log=TRUE)) - nrow(X) * log(pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)))
+
+    if (is.infinite(f) || is.na(f)) {
+      # cat("negloglik=",f," for parameter vector ",theta,"\n")
+      # "L-BFGS-B" requires a finite function value, other methods can handle infinte values like +Inf
+      # return a high finite value, e.g. integer.max, so optimize knows this is the wrong place to be
+      # TODO: check whether to return +Inf or .Machine$integer.max, certain algorithms may prefer +Inf, others a finite value
+      #return(+Inf)
+      return(.Machine$integer.max)
+    }
 
     f
   }
@@ -166,13 +224,19 @@ mle.tmvnorm <- function(X, weights = rep(1, length(X)),
   # under names "lower" and "upper"
   if ((length(lower.bounds) > 1L || length(upper.bounds) > 1L || lower.bounds[1L] !=
        -Inf || upper.bounds[1L] != Inf) && method == "L-BFGS-B") {
-    print(lower.bounds)
-    mle.fit <- eval.parent(substitute(mle(negloglik, start=as.list(theta), fixed=fixed,
-                                          method = method, lower=lower.bounds, upper=upper.bounds, ...)))
+    mle.fit <- eval.parent(substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, lower=lower.bounds, upper=upper.bounds, ...)))
 
+    #mle.call <- substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, lower=lower.bounds, upper=upper.bounds, ...))
+    #mle.fit <- mle(negloglik, start=as.list(theta), fixed=fixed, method = method, lower=lower.bounds, upper=upper.bounds, ...)
+    #mle.fit@call <- mle.call
+    return (mle.fit)
+  } else {
+    # we need evaluated arguments in the call for profile(mle.fit)
+    mle.fit <- eval.parent(substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, ...)))
 
+    #mle.call <- substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, ...))
+    #mle.fit <- mle(negloglik, start=as.list(theta), fixed=fixed, method = method, ...)
+    #mle.fit@call <- mle.call
     return (mle.fit)
   }
-
-  return(NA)
 }
