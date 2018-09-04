@@ -1,20 +1,20 @@
-.calculate_weight <- function (x, param_list) {
-  pz1 <- param_list[["proportion"]] * likelihood(param_list[["class1"]], x)
-  pz2 <- (1 - param_list[["proportion"]]) * likelihood(param_list[["class2"]], x)
+.calculate_weight <- function (x, param) {
+  pz1 <- param[["proportion"]] * likelihood(param[["class1"]], x)
+  pz2 <- (1 - param[["proportion"]]) * likelihood(param[["class2"]], x)
   pz <- pz1/(pz1 + pz2)
   pz[pz1 == 0] <- 0
 
   cbind(pz, 1 - pz)
 }
 
-.log_likelihood <- function(x, param_list){
-  sum(log10(param_list[["proportion"]] * likelihood(param_list[["class1"]], x) +
-              (1-param_list[["proportion"]]) * likelihood(param_list[["class2"]], x)))
+.log_likelihood <- function(x, param){
+  sum(log10(param[["proportion"]] * likelihood(param[["class1"]], x) +
+              (1-param[["proportion"]]) * likelihood(param[["class2"]], x)))
 }
 
 .em_mixture = function(x, mixture = "gamma.tgaussian",
                        min_val = 0, max_iter = 100){
-  param_list <- .initialize_mixture(x, mixture, min_val)
+  param <- .initialize_mixture(x, mixture, min_val)
 
   x2 <- .jitter_zeros(x)
   eps <- 10
@@ -23,23 +23,23 @@
 
   while(eps > 0.5) {
     #E-step
-    wt <- .calculate_weight(x2, param_list)
+    wt <- .calculate_weight(x2, param)
 
     #M-step
-    param_list["proportion"] <- max(sum(wt[, 1])/nrow(wt), 0.1)
-    param_list[["class1"]] <- estimate_parameter(param_list[["class1"]], x2, wt[,1])
-    param_list[["class2"]] <- estimate_parameter(param_list[["class2"]], x, wt[,2],
-                                                 min_mean = max(0, compute_mean(param_list[["class1"]])))
+    param["proportion"] <- max(sum(wt[, 1])/nrow(wt), 0.1)
+    param[["class1"]] <- estimate_parameter(param[["class1"]], x2, wt[,1])
+    param[["class2"]] <- estimate_parameter(param[["class2"]], x, wt[,2],
+                                                 min_mean = max(0, compute_mean(param[["class1"]])))
 
     #see if converged
-    loglik <- .log_likelihood(x2, param_list)
+    loglik <- .log_likelihood(x2, param)
     eps <- (loglik - loglik_old)^2
     loglik_old <- loglik
     iter <- iter + 1
     if (iter > max_iter) break()
   }
 
-  param_list
+  param
 }
 
 .initialize_mixture <- function(x, mixture, min_val){
@@ -57,7 +57,7 @@
   if(length(idx) == 0) return(x)
 
   dif <- min(x[x > min_val]) - min_val
-  x[idx] <- x[idx] + stats::rexp(length(idx), rate = 2/dif)
+  x[idx] <- x[idx] + stats::rexp(length(idx), rate = 10/dif)
 
   stopifnot(length(x == min_val) > 0)
 

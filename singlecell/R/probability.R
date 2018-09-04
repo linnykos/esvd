@@ -43,14 +43,14 @@ compute_mean.tgaussian <- function(obj){
 #########
 
 initialize.exponential <- function(x){
-  structure(c(rate = 20000), class = "exponential")
+  structure(c(rate = 200), class = "exponential")
 }
 
 initialize.gamma <- function(x){
-  structure(c(shape = 1, rate = 20000), class = "gamma")
+  structure(c(shape = 1, rate = 200), class = "gamma")
 }
 
-initialize.gaussian <- function(x, min_val = log10(1.01)){
+initialize.gaussian <- function(x, min_val = 0){
   structure(c(mean = mean(x[x > min_val]), sd = stats::sd(x[x > min_val])), class = "gaussian")
 }
 
@@ -113,7 +113,7 @@ estimate_parameter.tgaussian <- function(obj, x, weight = rep(1, length(x)),
 
   min_sd <- 2*stats::sd(x[x > min_val])
 
-  res <- stats::optim(par = c(mean(x[x > min_val]), stats::sd(x[x > min_val])),
+  res <- stats::optim(par = c(mean(x[x > min_val]), 2*stats::sd(x[x > min_val])),
                fn = func, method = "L-BFGS-B", lower = c(min_mean, min_sd))$par
 
   structure(c(mean = res[1], sd = res[2]), class = "tgaussian")
