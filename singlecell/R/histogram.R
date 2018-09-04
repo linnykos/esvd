@@ -1,4 +1,4 @@
-.hist_augment <- function(x, breaks = 50, min_val = log10(1.01),
+.hist_augment <- function(x, breaks = 50, min_val = 0,
                          multiplier = 1, param_list = NA, lwd = 1, ...){
   break_vec <- seq(min_val, max(x), length.out = breaks)
 

@@ -2,7 +2,7 @@ likelihood <- function(vec, x){
   UseMethod("likelihood")
 }
 
-likelihood.exponential <- function(vec, x, min_val = log10(1.01)){
+likelihood.exponential <- function(vec, x, min_val = 0){
   stats::dexp(x - min_val, rate = vec["rate"])
 }
 
@@ -47,14 +47,14 @@ initialize.exponential <- function(x){
 }
 
 initialize.gamma <- function(x){
-  structure(c(shape = 20, rate = 4500), class = "gamma")
+  structure(c(shape = 1, rate = 20000), class = "gamma")
 }
 
 initialize.gaussian <- function(x, min_val = log10(1.01)){
   structure(c(mean = mean(x[x > min_val]), sd = stats::sd(x[x > min_val])), class = "gaussian")
 }
 
-initialize.tgaussian <- function(x, min_val = log10(1.01)){
+initialize.tgaussian <- function(x, min_val = 0){
   structure(c(mean = mean(x[x > min_val]), sd = stats::sd(x[x > min_val])), class = "tgaussian")
 }
 
@@ -65,7 +65,7 @@ estimate_parameter <- function(obj, x, weight = rep(1, length(x)), ...){
 }
 
 estimate_parameter.exponential <- function(obj, x, weight = rep(1, length(x)),
-                                           min_val = log10(1.01), ...){
+                                           min_val = 0, ...){
   mean_val <- sum(weight * (x - min_val))/sum(weight)
   structure(c(rate = 1/mean_val), class = "exponential")
 }
@@ -102,7 +102,7 @@ estimate_parameter.gaussian <- function(obj, x, weight = rep(1, length(x)), ...)
 
 
 estimate_parameter.tgaussian <- function(obj, x, weight = rep(1, length(x)),
-                                         min_val = log10(1.01),
+                                         min_val = 0,
                                          min_mean = 0){
   func <- function(vec){
     -(sum(weight * stats::dnorm(x, vec[1], vec[2], log = TRUE)) -
