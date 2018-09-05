@@ -48,8 +48,8 @@
 
 
 .compute_dropout <- function(param, x){
-  like1 <- likelihood(param[["class1"]], x)
-  like2 <- likelihood(param[["class2"]], x)
+  like1 <- param[["proportion"]] * likelihood(param[["class1"]], x)
+  like2 <- (1-param[["proportion"]]) * likelihood(param[["class2"]], x)
 
   estimated <- rep(2, length(x))
   estimated[like1 > like2] <- 1

@@ -20,8 +20,9 @@ png("../figure/experiment/20_zeisel.png", height = 2000, width = 2500, res = 300
 par(mfrow = c(2,2), mar = c(4,3,3,0.5))
 x <- dat_subset[,17]
 zz <- .em_mixture(x)
-count <- 100*length(which(.compute_dropout(zz, x) == 1))/length(x)
-.hist_augment(x, param_list = list(zz), multiplier = 15, lwd = 3, xlab = "Value",
+x2 <- .jitter_zeros(x)
+count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
+.hist_augment(x, param_list = list(zz), multiplier = 10, lwd = 3, xlab = "Value",
               ylab = "Count", main = paste0("Gene 17, (", round(count, 1), "% dropped)"))
 legend("topright", c("T. Gaussian distribution","Gamma distribution"),
        bty="n", fill=c(rgb(0.584, 0.858, 0.564), rgb(0.803, 0.156, 0.211)));
@@ -30,8 +31,9 @@ legend("topright", c("T. Gaussian distribution","Gamma distribution"),
 
 x <- dat_subset[,340]
 zz <- .em_mixture(x)
-count <- 100*length(which(.compute_dropout(zz, x) == 1))/length(x)
-.hist_augment(x, param_list = list(zz), multiplier = 1000, lwd = 3, xlab = "Value",
+x2 <- .jitter_zeros(x)
+count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
+.hist_augment(x, param_list = list(zz), multiplier = 100, lwd = 3, xlab = "Value",
               ylab = "Count", main = paste0("Gene 340, (", round(count, 1), "% dropped)"))
 # zz <- .em_mixture(x, mixture = "exponential.tgaussian")
 # .hist_augment(x, param_list = list(zz), multiplier = 1, lwd = 3)
@@ -39,13 +41,14 @@ count <- 100*length(which(.compute_dropout(zz, x) == 1))/length(x)
 x <- dat_subset[,1249]
 zz <- .em_mixture(x)
 count <- 100*length(which(.compute_dropout(zz, x) == 1))/length(x)
-.hist_augment(x, param_list = list(zz), multiplier = 50, lwd = 3, xlab = "Value",
+.hist_augment(x, param_list = list(zz), multiplier = 100, lwd = 3, xlab = "Value",
               ylab = "Count", main = paste0("Gene 1249, (", round(count, 1), "% dropped)"))
 
 x <- dat_subset[,1900]
 zz <- .em_mixture(x)
-count <- 100*length(which(.compute_dropout(zz, x) == 1))/length(x)
-.hist_augment(x, param_list = list(zz), multiplier = 50, lwd = 3, xlab = "Value",
+x2 <- .jitter_zeros(x)
+count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
+.hist_augment(x, param_list = list(zz), multiplier = 25, lwd = 3, xlab = "Value",
               ylab = "Count", main = paste0("Gene 1900, (", round(count, 1), "% dropped)"))
 # zz <- .em_mixture(x, mixture = "exponential.tgaussian")
 # .hist_augment(x, param_list = list(zz), multiplier = 0.1, lwd = 3)
@@ -84,9 +87,41 @@ cutoff_vec <- sapply(1:ncol(dat_subset), function(i){
   } else if (length(dropout_idx[[i]]) == nrow(dat_subset)){
     NA
   } else {
-    min(x[-dropout_idx[[i]]])
+    idx1 <- which(x > 0)
+    if(length(idx1) == 0) return(NA)
+    idx2 <- c(1:nrow(dat_subset))[-dropout_idx[[i]]]
+    if(length(intersect(idx1, idx2)) == 0) return(min(x[idx1]))
+    min(x[intersect(idx1, idx2)])
   }
 })
+
+min(cutoff_vec, na.rm = T)
+zz <- cbind(cutoff_vec, 1:ncol(dat_subset), apply(dat_subset, 2, function(x){length(x[x>0])}))
+zz[order(zz[,1], decreasing = F)[1:100],]
+
+
+png("../figure/experiment/20_zeisel_2.png", height = 1000, width = 2500, res = 300, units = "px")
+par(mfrow = c(1,2), mar = c(4,3,3,0.5))
+set.seed(10)
+x <- dat_subset[,566]
+zz <- .em_mixture(x)
+x2 <- .jitter_zeros(x)
+count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
+.hist_augment(x, param_list = list(zz), multiplier = 10, lwd = 3, xlab = "Value",
+              ylab = "Count", main = paste0("Gene 675, (", round(count, 1), "% dropped)"))
+legend("topright", c("T. Gaussian distribution","Gamma distribution"),
+       bty="n", fill=c(rgb(0.584, 0.858, 0.564), rgb(0.803, 0.156, 0.211)));
+
+set.seed(10)
+x <- dat_subset[,1302]
+zz <- .em_mixture(x)
+x2 <- .jitter_zeros(x)
+count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
+.hist_augment(x, param_list = list(zz), multiplier = 10, lwd = 3, xlab = "Value",
+              ylab = "Count", main = paste0("Gene 1695, (", round(count, 1), "% dropped)"))
+graphics.off()
+
+
 
 count_vec <- sapply(dropout_idx, function(x){
   if(all(is.na(x))){
@@ -97,4 +132,26 @@ count_vec <- sapply(dropout_idx, function(x){
 })
 
 quantile(count_vec, na.rm = T)
-which.min(count_vec)
+order(count_vec, decreasing = F)[1:2]
+
+png("../figure/experiment/20_zeisel_3.png", height = 1000, width = 2500, res = 300, units = "px")
+par(mfrow = c(1,2), mar = c(4,3,3,0.5))
+set.seed(10)
+x <- dat_subset[,1043]
+zz <- .em_mixture(x)
+x2 <- .jitter_zeros(x)
+count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
+.hist_augment(x, param_list = list(zz), multiplier = 10, lwd = 3, xlab = "Value",
+              ylab = "Count", main = paste0("Gene 1043, (", round(count, 1), "% dropped)"))
+legend("topright", c("T. Gaussian distribution","Gamma distribution"),
+       bty="n", fill=c(rgb(0.584, 0.858, 0.564), rgb(0.803, 0.156, 0.211)));
+
+set.seed(10)
+x <- dat_subset[,1175]
+zz <- .em_mixture(x)
+x2 <- .jitter_zeros(x)
+count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
+.hist_augment(x, param_list = list(zz), multiplier = 10, lwd = 3, xlab = "Value",
+              ylab = "Count", main = paste0("Gene 1175, (", round(count, 1), "% dropped)"))
+graphics.off()
+

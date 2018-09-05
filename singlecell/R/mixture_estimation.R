@@ -12,9 +12,10 @@
               (1-param[["proportion"]]) * likelihood(param[["class2"]], x)))
 }
 
-.em_mixture = function(x, mixture = "gamma.tgaussian",
+.em_mixture <- function(x, mixture = "gamma.tgaussian",
                        min_val = 0, max_iter = 100){
   param <- .initialize_mixture(x, mixture, min_val)
+  max_prop <- param[["proportion"]]
 
   x2 <- .jitter_zeros(x)
   eps <- 10
@@ -26,7 +27,7 @@
     wt <- .calculate_weight(x2, param)
 
     #M-step
-    param["proportion"] <- max(sum(wt[, 1])/nrow(wt), 0.1)
+    param["proportion"] <- min(sum(wt[, 1])/nrow(wt), max_prop)
     param[["class1"]] <- estimate_parameter(param[["class1"]], x2, wt[,1])
     param[["class2"]] <- estimate_parameter(param[["class2"]], x, wt[,2],
                                                  min_mean = max(0, compute_mean(param[["class1"]])))
@@ -53,13 +54,14 @@
 }
 
 .jitter_zeros <- function(x, min_val = 0){
-  idx <- which(x == min_val)
+  idx <- which(x <= min_val)
   if(length(idx) == 0) return(x)
+  if(length(idx) == length(x)) return(x)
 
-  dif <- min(x[x > min_val]) - min_val
-  x[idx] <- x[idx] + stats::rexp(length(idx), rate = 10/dif)
+  dif <- min(x[-idx]) - min_val
+  x[idx] <- x[idx] + stats::rexp(length(idx), rate = 2/dif)
 
-  stopifnot(length(x == min_val) > 0)
+  stopifnot(length(which(x == min_val)) == 0)
 
   x
 }
