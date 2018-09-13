@@ -44,7 +44,7 @@
 }
 
 .initialize_mixture <- function(x, mixture, min_val){
-  proportion <- length(which(x == min_val))/length(x)
+  proportion <- max(length(which(x == min_val))/length(x), 0.05)
   class_vec <- strsplit(mixture, split = "\\.")[[1]]
   lis <- lapply(class_vec, function(y){
     eval(parse(text = paste0("initialize.", y, "(x)")))
