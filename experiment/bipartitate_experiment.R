@@ -41,9 +41,29 @@ res_svd$d[1:10]
 res_eig <- eigen(all_gram)
 res_eig$values[1:10]
 
+#########################
+
+dim(u_dat)
+zz = svd(u_dat)
+plot(zz$u[,1])
+yy = svd(mean_dat)
+points(yy$u[,1], col = "red")
+
+#####
+
+xx = svd(v_dat)
+new_v_dat <- xx$u %*% diag(xx$d) %*% t(zz$v)
+new_mean_dat <- u_dat %*% t(new_v_dat)
+dim(u_dat)
+zz = svd(u_dat)
+plot(zz$u[,1])
+yy = svd(new_mean_dat)
+points(yy$u[,1], col = "red")
+
 ############################
 
-mat = matrix(1:8, ncol = 4, nrow = 2)
+mat = matrix(rnorm(8), ncol = 2, nrow = 4)
+mat2 = matrix(rnorm(6), ncol = 2, nrow = 3)
 res = svd(mat)
 mat = res$u %*% diag(2:1) %*% t(res$v)
 mat2 = matrix(0, 6, 6)
@@ -57,3 +77,14 @@ svd(mat)
 
 svd(mat %*% t(mat))
 
+set.seed(10)
+mat = matrix(rnorm(8), ncol = 2, nrow = 4)
+mat2 = matrix(rnorm(6), ncol = 2, nrow = 3)
+res1 = svd(mat)
+res2 = svd(mat2)
+all_mat = matrix(NA, 7, 7)
+all_mat[1:4,1:4] = mat%*%t(mat)
+all_mat[1:4,5:7] = mat%*%t(mat2)
+all_mat[5:7,1:4] = mat2%*%t(mat)
+all_mat[5:7,5:7] = mat2%*%t(mat2)
+res12 = svd(all_mat)

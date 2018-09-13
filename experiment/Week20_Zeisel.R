@@ -108,7 +108,7 @@ zz <- .em_mixture(x)
 x2 <- .jitter_zeros(x)
 count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
 .hist_augment(x, param_list = list(zz), multiplier = 10, lwd = 3, xlab = "Value",
-              ylab = "Count", main = paste0("Gene 675, (", round(count, 1), "% dropped)"))
+              ylab = "Count", main = paste0("Gene ,566, (", round(count, 1), "% dropped)"))
 legend("topright", c("T. Gaussian distribution","Gamma distribution"),
        bty="n", fill=c(rgb(0.584, 0.858, 0.564), rgb(0.803, 0.156, 0.211)));
 
@@ -118,7 +118,7 @@ zz <- .em_mixture(x)
 x2 <- .jitter_zeros(x)
 count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
 .hist_augment(x, param_list = list(zz), multiplier = 10, lwd = 3, xlab = "Value",
-              ylab = "Count", main = paste0("Gene 1695, (", round(count, 1), "% dropped)"))
+              ylab = "Count", main = paste0("Gene 1302, (", round(count, 1), "% dropped)"))
 graphics.off()
 
 
@@ -155,3 +155,80 @@ count <- 100*length(which(.compute_dropout(zz, x2) == 1))/length(x)
               ylab = "Count", main = paste0("Gene 1175, (", round(count, 1), "% dropped)"))
 graphics.off()
 
+#####################################
+
+colorRamp_custom <- function(vec1, vec2, length){
+  mat <- matrix(0, nrow = length, ncol = 3)
+  for(i in 1:3){
+    mat[,i] <- seq(vec1[i], vec2[i], length.out = length)
+  }
+
+  luminosity_vec <- apply(mat, 1, function(x){
+    0.2126*x[1] + 0.7152*x[2] + 0.0722*x[3]
+  })
+
+  target_luminosity <- mean(c(luminosity_vec[1], luminosity_vec[length]))
+
+  mat <- t(sapply(1:nrow(mat), function(x){
+    factor <- min(c(target_luminosity/luminosity_vec[x], 1/mat[x,]))
+    mat[x,] * factor
+  }))
+
+  apply(mat, 1, function(x){
+    rgb(x[1], x[2], x[3])
+  })
+}
+
+col_vec <- colorRamp_custom(c(0.584, 0.858, 0.564), c(0.803, 0.156, 0.211), 19)
+col_vec <- c("white", col_vec)
+
+.rotate <- function(mat){t(mat)[,nrow(mat):1]}
+
+tmp <- as.numeric(dat_subset)
+tmp <- tmp[tmp!=0]
+
+break_vec <- quantile(tmp, probs = seq(0, 1, length.out = 20))
+break_vec <- c(-5, break_vec)
+
+png("../figure/experiment/20_zeisel_data.png", height = 800, width = 2400, res = 300, units = "px")
+par(mar = rep(0.5,4))
+image(.rotate(dat_subset), breaks = break_vec, col = col_vec, asp = nrow(dat_subset)/ncol(dat_subset),
+      axes = F)
+graphics.off()
+
+dropout_mat <- matrix(0, ncol = ncol(dat_subset), nrow = nrow(dat_subset))
+for(i in 1:ncol(dat_subset)){
+  dropout_mat[dropout_idx[[i]],i] <- 1
+}
+
+png("../figure/experiment/20_zeisel_dropout.png", height = 800, width = 2400, res = 300, units = "px")
+par(mar = rep(0.5,4))
+image(.rotate(dropout_mat), breaks = c(-0.5,0.5,1.5), col = c("gold", "blue3"), asp = nrow(dropout_mat)/ncol(dropout_mat),
+      axes = F)
+graphics.off()
+
+# side-by-side comparison
+dat_vec <- as.vector(dat_subset)
+dropout_vec <- as.vector(dropout_mat)
+
+x_seq <- seq(min(dat_vec[dat_vec > 0]), max(dat_vec), length.out = 50)
+tmp <- diff(x_seq[1:2])/2
+x_seq <- x_seq - tmp
+x_seq <- c(-tmp, x_seq, x_seq+tmp)
+zz <- hist(dat_vec[dropout_vec == 0], breaks = x_seq, plot = F)
+zz$density <- log(zz$density + 1)
+yy <- hist(dat_vec[dropout_vec == 1], breaks = x_seq, plot = F)
+yy$density <- log(yy$density + 1)
+
+png("../figure/experiment/20_zeisel_dropout_hist.png", height = 1000, width = 2500, res = 300, units = "px")
+par(mfrow = c(1,2), mar = c(4,4,3,0.5))
+plot(zz, col = "gold", ylim = c(0, max(yy$density)), xlim = c(-.1,2),
+     ylab = "Logged density", xlab = "Value", main = "Zoomed in X-axis")
+plot(yy, col = rgb(0,0,205/255,0.5), add = T)
+legend("topright", c("Dropped out","Kept"),
+       bty="n", fill=c("blue3", "gold"));
+
+plot(zz, col = "gold", ylim = c(0, 0.04), xlim = c(0,5),
+     ylab = "Logged density", xlab = "Value", main = "Zoomed in Y-axis")
+plot(yy, col = rgb(0,0,205/255,0.5), add = T)
+graphics.off()
