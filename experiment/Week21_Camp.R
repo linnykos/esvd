@@ -247,6 +247,21 @@ neighbor_list <- lapply(1:nrow(dropout_mat), function(x){
   .find_neighbor(dropout_mat, x)
 })
 
+.find_neighbor_value <- function(mat, i){
+  row_vec <- c(1:nrow(mat))[-i]
+  idx_me <- which(mat[i,] == 1)
+  vec <- sapply(row_vec, function(x){
+    idx_other <- which(mat[x,] == 1)
+    length(intersect(idx_me, idx_other))/length(unique(c(idx_me, idx_other)))
+  })
+
+  sort(vec, decreasing = T)[25]
+}
+
+quantile(sapply(1:nrow(dropout_mat), function(x){
+  .find_neighbor_value(dropout_mat, x)
+}))
+
 # determine which entries should be zero
 zero_mat <- dropout_mat
 for(i in 1:nrow(zero_mat)){
