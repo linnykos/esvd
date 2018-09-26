@@ -25,9 +25,9 @@
             ncol(u_mat) == ncol(v_mat))
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
-  pred_mat[pred_mat < 0] <- tol
+  pred_mat[pred_mat > 0] <- -tol
 
-  sum(-log(pred_mat[idx]) - dat[idx] * pred_mat[idx])
+  sum(-log(-pred_mat[idx]) - dat[idx] * pred_mat[idx])
 }
 
 .evaluate_objective_single <- function(dat_vec, current_vec, other_mat,
@@ -37,9 +37,9 @@
 
   pred_vec <- other_mat %*% current_vec
   idx <- which(!is.na(dat_vec))
-  pred_vec[pred_vec < 0] <- tol
+  pred_vec[pred_vec > 0] <- -tol
 
-  sum(-log(pred_vec[idx]) - dat_vec[idx] * pred_vec[idx])
+  sum(-log(-pred_vec[idx]) - dat_vec[idx] * pred_vec[idx])
 }
 
 ########
@@ -85,16 +85,15 @@
 
   non_na_idx <- which(!is.na(dat_vec))
   tmp <- sapply(non_na_idx, function(j){
-    -other_mat[j,]/as.numeric(current_vec %*% other_mat[j,]) - dat_vec[j] * other_mat[j,]
+    other_mat[j,]/as.numeric(current_vec %*% other_mat[j,]) - dat_vec[j] * other_mat[j,]
   })
 
   rowSums(tmp)
 }
 
-.backtrack_linesearch <- function(dat_vec, current_vec, other_mat,
-                                  grad_vec,
-                                  t_init = 1, beta = .5, alpha = .5){
-  t_current <- t_init
+.backtrack_linesearch <- function(dat_vec, current_vec, other_mat, grad_vec,
+                                  beta = .5, alpha = .5){
+  t_current <- min(as.numeric(other_mat %*% current_vec)/as.numeric(other_mat %*% grad_vec))
 
   while(TRUE){
     obj1 <- .evaluate_objective_single(current_vec - t_current*grad_vec)
