@@ -19,29 +19,33 @@
   return(u_mat = u_mat, v_mat = v_mat)
 }
 
-.evaluate_objective <- function(dat, u_mat, v_mat){
+.evaluate_objective <- function(dat, u_mat, v_mat,
+                                tol = 1e-6){
   stopifnot(nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
             ncol(u_mat) == ncol(v_mat))
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
+  pred_mat[pred_mat < 0] <- tol
 
   sum(-log(pred_mat[idx]) - dat[idx] * pred_mat[idx])
 }
 
-.evaluate_objective_single <- function(dat_vec, current_vec, other_mat){
+.evaluate_objective_single <- function(dat_vec, current_vec, other_mat,
+                                       tol = 1e-6){
   stopifnot(length(current_vec) == ncol(other_mat))
   stopifnot(length(dat_vec) == nrow(other_mat))
 
   pred_vec <- other_mat %*% current_vec
   idx <- which(!is.na(dat_vec))
+  pred_vec[pred_vec < 0] <- tol
 
   sum(-log(pred_vec[idx]) - dat_vec[idx] * pred_vec[idx])
 }
 
 ########
 
-.initialization <- function(dat, k, lambda = 0.01){
-  dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat2))
+.initialization <- function(dat, k = 2, lambda = 0.01){
+  dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat))
 
   funk_svd <- recommenderlab::funkSVD(dat2, k = k, lambda = lambda)
   u_mat <- funk_svd$U
@@ -81,7 +85,7 @@
 
   non_na_idx <- which(!is.na(dat_vec))
   tmp <- sapply(non_na_idx, function(j){
-    -other_mat[j,]/(current_vec %*% other_mat[j,]) - dat_vec[j] * other_mat[j,]
+    -other_mat[j,]/as.numeric(current_vec %*% other_mat[j,]) - dat_vec[j] * other_mat[j,]
   })
 
   rowSums(tmp)
