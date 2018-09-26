@@ -1,18 +1,19 @@
-.fit_exponential_factorization <- function(dat, max_iter = 100){
+.fit_exponential_factorization <- function(dat, k = 2, lambda = 0.01,
+                                           max_iter = 100){
   init <- .initialization(dat)
   u_mat <- init$u_mat; v_mat <- init$v_mat
 
   current_obj <- .evaluate_objective(dat, u_mat, v_mat)
   next_obj <- Inf
-  counter <- 1
+  iter <- 1
 
-  while(abs(current_obj - next_obj) < 1e-6){
+  while(abs(current_obj - next_obj) > 1e-6 | iter < max_iter){
     u_mat <- .update_mat(dat, u_mat, v_mat, left = T)
     v_mat <- .update_mat(dat, v_mat, u_mat, left = T)
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
 
-    counter <- counter + 1
+    iter <- iter + 1
   }
 
   return(u_mat = u_mat, v_mat = v_mat)
@@ -39,8 +40,18 @@
 
 ########
 
-.initialization <- function(dat){
+.initialization <- function(dat, k, lambda = 0.01){
+  dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat2))
 
+  funk_svd <- recommenderlab::funkSVD(dat2, k = k, lambda = lambda)
+  u_mat <- funk_svd$U
+  v_mat <- funk_svd$V
+
+  prod_mat <- u_mat %*% t(v_mat)
+  svd_res <- svd(prod_mat)
+
+  list(u_mat = svd_res$u %*% diag(sqrt(svd_res$d)),
+       v_mat = svd_res$v %*% diag(sqrt(svd_res$d)))
 }
 
 #########
