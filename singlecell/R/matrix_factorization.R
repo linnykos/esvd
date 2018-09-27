@@ -61,17 +61,24 @@
 #'
 #' @importClassesFrom recommenderlab realRatingMatrix
 .initialization <- function(dat, k = 2, lambda = 0.01){
-  dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat))
+  if(any(is.na(dat))){
+    dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat))
 
-  funk_svd <- recommenderlab::funkSVD(dat2, k = k, lambda = lambda)
-  u_mat <- funk_svd$U
-  v_mat <- funk_svd$V
+    funk_svd <- recommenderlab::funkSVD(dat2, k = k, lambda = lambda)
+    u_mat <- funk_svd$U
+    v_mat <- funk_svd$V
 
-  prod_mat <- u_mat %*% t(v_mat)
-  svd_res <- svd(prod_mat)
+    prod_mat <- u_mat %*% t(v_mat)
+    svd_res <- svd(prod_mat)
 
-  u_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
-  v_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+    u_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+    v_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+  } else {
+    svd_res <- svd(dat)
+
+    u_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+    v_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+  }
 
   # project v back into positive space based on u
   for(j in 1:nrow(v_mat)){
