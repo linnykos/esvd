@@ -5,10 +5,10 @@
   tmp <- as.numeric(dat)
   tmp <- tmp[tmp!=0]
 
-  break_vec <- quantile(tmp, probs = seq(0, 1, length.out = 20))
+  break_vec <- stats::quantile(tmp, probs = seq(0, 1, length.out = 20))
   break_vec <- c(-5, break_vec)
 
-  image(.rotate(dat), breaks = break_vec, col = col_vec, asp = nrow(dat)/ncol(dat),
+  graphics::image(.rotate(dat), breaks = break_vec, col = col_vec, asp = nrow(dat)/ncol(dat),
         axes = F)
 
   invisible()
@@ -33,7 +33,7 @@
   }))
 
   apply(mat, 1, function(x){
-    rgb(x[1], x[2], x[3])
+    grDevices::rgb(x[1], x[2], x[3])
   })
 }
 

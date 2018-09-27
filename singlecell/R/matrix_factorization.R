@@ -47,6 +47,16 @@
 
 ########
 
+
+#' Initialization function
+#'
+#' @param dat matrix
+#' @param k numeric
+#' @param lambda numeric
+#'
+#' @return list
+#'
+#' @importClassesFrom recommenderlab realRatingMatrix
 .initialization <- function(dat, k = 2, lambda = 0.01){
   dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat))
 
