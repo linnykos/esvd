@@ -1,5 +1,6 @@
 rm(list=ls())
 source("../experiment/Week23_simulation_generator.R")
+library(singlecell)
 
 col_vec <- c(rgb(205,40,54,maxColorValue=255),
              rgb(180,200,255,maxColorValue=255),
@@ -37,9 +38,12 @@ lines(slingshot_res)
 ##############
 
 # let's do something a bit more sensible?
-dropout_mat <- .dropout(dat)
+dropout_mat <- singlecell:::.dropout(dat)
 table(dropout_mat)
 
-zero_mat <- .find_true_zeros(dropout_mat)
+zero_mat <- singlecell:::.find_true_zeros(dropout_mat)
 c(table(zero_mat), length(which(is.na(zero_mat))))
 
+dat2 <- dat
+dat2[which(is.na(zero_mat))] <- NA
+res <- singlecell:::.fit_gaussian_factorization(dat2)

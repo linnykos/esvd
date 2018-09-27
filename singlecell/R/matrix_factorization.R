@@ -1,5 +1,5 @@
 .fit_gaussian_factorization <- function(dat, k = 2, lambda = 0.01,
-                                           max_iter = 100){
+                                           max_iter = 100, verbose = F){
   init <- .initialization(dat)
   u_mat <- init$u_mat; v_mat <- init$v_mat
 
@@ -14,6 +14,10 @@
     v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F)
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
+
+    if(verbose){
+      print(paste0("Iter ", iter, ": Decrease is ", abs(current_obj - next_obj)))
+    }
 
     iter <- iter + 1
   }
