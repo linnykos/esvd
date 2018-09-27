@@ -6,6 +6,7 @@
   current_obj <- Inf
   next_obj <- .evaluate_objective(dat, u_mat, v_mat)
   iter <- 1
+  if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
 
   while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
     current_obj <- next_obj
@@ -15,9 +16,7 @@
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
 
-    if(verbose){
-      print(paste0("Iter ", iter, ": Decrease is ", abs(current_obj - next_obj)))
-    }
+    if(verbose) print(paste0("Iter ", iter, ": Decrease is ", abs(current_obj - next_obj)))
 
     iter <- iter + 1
   }
