@@ -8,8 +8,8 @@
   iter <- 1
 
   while(abs(current_obj - next_obj) > 1e-6 | iter < max_iter){
-    u_mat <- .update_mat(dat, u_mat, v_mat, left = T)
-    v_mat <- .update_mat(dat, v_mat, u_mat, left = T)
+    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T)
+    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = T)
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
 
@@ -60,7 +60,7 @@
 
 #########
 
-.update_mat <- function(dat, current_mat, other_mat, left = T){
+.optimize_mat <- function(dat, current_mat, other_mat, left = T){
   stopifnot(length(current_vec) == ncol(other_mat))
   if(left) {
     stopifnot(ncol(dat) == nrow(other_mat))
@@ -70,13 +70,28 @@
 
   for(i in 1:nrow(current_mat)){
     if(left) {dat_vec <- dat[i,]} else {dat_vec <- dat[,i]}
-    grad_vec <- .gradient_vec(dat_vec, current_vec[i,], other_mat)
-    stepsize <- .backtrack_linesearch(dat_vec, current_vec, other_mat, grad_vec)
-
-    current_mat[i,] <- current_mat[i,] - stepsize * grad_vec
+    current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,], other_mat)
   }
 
   current_mat
+}
+
+.optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100){
+  current_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
+  next_obj <- Inf
+  iter <- 1
+
+  while(abs(current_obj - next_obj) > 1e-6 | iter < max_iter){
+    grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat)
+    stepsize <- .backtrack_linesearch(dat_vec, current_vec, other_mat, grad_vec)
+
+    current_vec <- current_vec - stepsize * grad_vec
+    next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
+
+    iter <- iter + 1
+  }
+
+  current_vec
 }
 
 .gradient_vec <- function(dat_vec, current_vec, other_mat){
@@ -92,8 +107,9 @@
 }
 
 .backtrack_linesearch <- function(dat_vec, current_vec, other_mat, grad_vec,
-                                  beta = .5, alpha = .5){
+                                  beta = .5, alpha = .5, tol = 1e-4){
   t_current <- min(as.numeric(other_mat %*% current_vec)/as.numeric(other_mat %*% grad_vec))
+  t_current <- max(t_current - tol, t_current/2)
 
   while(TRUE){
     obj1 <- .evaluate_objective_single(current_vec - t_current*grad_vec)
@@ -106,3 +122,29 @@
 }
 
 .l2norm <- function(x){sqrt(sum(x^2))}
+
+#######################
+
+.projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat)){
+  if(length(idx) == 0) return(current_vec)
+  stopifnot(ncol(other_mat) == length(current_vec))
+
+  other_mat <- other_mat[idx,]
+
+  k <- length(current_vec)
+  d <- nrow(other_mat)
+
+  objective_in <- c(rep(0, 2*k), rep(1, k))
+  const_mat <- rbind(cbind(diag(k), -diag(k), diag(k)),
+                     cbind(-diag(k), diag(k), diag(k)))
+  const_mat2 <- t(apply(other_mat, 1, function(v){
+    c(v, -v, rep(0,k))
+  }))
+  const_mat <- rbind(const_mat, const_mat2)
+
+  const_dir <- c(rep(">=", 2*k), rep("<=", nrow(other_mat)))
+  const_rhs <- c(current_vec, -current_vec, rep(0, nrow(other_mat)))
+
+  res <- lpSolve::lp("min", objective_in, const_mat, const_dir, const_rhs)
+  res$solution[1:k] - res$solution[(k+1):(2*k)]
+}

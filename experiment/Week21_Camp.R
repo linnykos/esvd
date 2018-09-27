@@ -13,8 +13,9 @@ dim(dat)
 dat <- dat[order(camp$cell.info[,2]),]
 camp$cell.info <- camp$cell.info[order(camp$cell.info[,2]),]
 
-#####################
+length(which(dat == 0))/prod(dim(dat))
 
+#####################
 
 colorRamp_custom <- function(vec1, vec2, length){
   mat <- matrix(0, nrow = length, ncol = 3)

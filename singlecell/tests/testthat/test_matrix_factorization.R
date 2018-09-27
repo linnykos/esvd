@@ -142,3 +142,6 @@ test_that(".evaluate_objective_single yields a smaller value under truth", {
   expect_true(res < res2)
 })
 
+################
+
+
