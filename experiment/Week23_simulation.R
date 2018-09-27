@@ -24,9 +24,9 @@ plot(sort(dat[dat != 0]))
 
 # try the naive thing
 svd_res <- svd(dat)
-k <- 2
-u_mat_naive <- svd_res$u %*% diag(sqrt(svd_res$d))
-v_mat_naive <- svd_res$v %*% diag(sqrt(svd_res$d))
+k <- 5
+u_mat_naive <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+v_mat_naive <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 library(slingshot)
 slingshot_res <- slingshot::slingshot(data = u_mat_naive, clusterLabels = rep(1:simulation$h, each = simulation$n_each))
 
@@ -41,9 +41,9 @@ lines(slingshot_res)
 ##############
 
 # compare to our implemented method
-.evaluate_objective(dat, res$u_mat, res$v_mat)
+.evaluate_objective(dat, res_nodropout$u_mat, res_nodropout$v_mat)
 
-plot(res$u_mat[,1], res$u_mat[,2],
+plot(res_nodropout$u_mat[,1], res_nodropout$u_mat[,2],
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
      pch = 16, xlab = "Estimated dim. 1", ylab = "Estimated dim. 2", main = "Cell estimated vectors")
 

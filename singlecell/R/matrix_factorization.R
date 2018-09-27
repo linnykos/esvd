@@ -62,6 +62,7 @@
 #' @importClassesFrom recommenderlab realRatingMatrix
 .initialization <- function(dat, k = 2, lambda = 0.01){
   if(any(is.na(dat))){
+    print("There are NAs")
     dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat))
 
     funk_svd <- recommenderlab::funkSVD(dat2, k = k, lambda = lambda)
@@ -74,6 +75,7 @@
     u_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
     v_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
   } else {
+    print("There are no NAs")
     svd_res <- svd(dat)
 
     u_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
@@ -142,7 +144,9 @@
 
 .backtrack_linesearch <- function(dat_vec, current_vec, other_mat, grad_vec,
                                   beta = .5, alpha = .5, tol = 1e-4){
-  t_current <- min(as.numeric(other_mat %*% current_vec)/as.numeric(other_mat %*% grad_vec))
+  denom <- as.numeric(other_mat %*% grad_vec)
+  idx <- which(abs(denom) > 1e-6)
+  t_current <- min(as.numeric(other_mat %*% current_vec)[idx]/denom[idx])
   t_current <- max(t_current - tol, t_current/2)
 
   while(TRUE){
