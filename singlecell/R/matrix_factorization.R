@@ -1,4 +1,4 @@
-.fit_exponential_factorization <- function(dat, k = 2, lambda = 0.01,
+.fit_gaussian_factorization <- function(dat, k = 2, lambda = 0.01,
                                            max_iter = 100){
   init <- .initialization(dat)
   u_mat <- init$u_mat; v_mat <- init$v_mat
@@ -7,7 +7,7 @@
   next_obj <- .evaluate_objective(dat, u_mat, v_mat)
   iter <- 1
 
-  while(abs(current_obj - next_obj) > 1e-6 | iter < max_iter){
+  while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
     current_obj <- next_obj
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T)
@@ -18,7 +18,12 @@
     iter <- iter + 1
   }
 
-  return(u_mat = u_mat, v_mat = v_mat)
+  pred_mat <- u_mat %*% t(v_mat)
+  svd_res <- svd(pred_mat)
+
+  list(u_mat = svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k])),
+       v_mat = svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k])),
+       iter = iter - 1)
 }
 
 .evaluate_objective <- function(dat, u_mat, v_mat){
@@ -88,7 +93,7 @@
   next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
   iter <- 1
 
-  while(abs(current_obj - next_obj) > 1e-6 | iter < max_iter){
+  while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
     current_obj <- next_obj
 
     grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat)

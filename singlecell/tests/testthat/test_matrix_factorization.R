@@ -454,4 +454,52 @@ test_that(".optimize_mat lowers the objective value", {
   expect_true(all(bool_vec))
 })
 
+######################
 
+## .fit_gaussian_factorization is correct
+
+test_that(".fit_gaussian_factorization works", {
+  set.seed(10)
+  dat <- abs(matrix(rnorm(20), nrow = 5, ncol = 4))
+
+  res <- .fit_gaussian_factorization(dat, k = 2)
+
+  expect_true(is.list(res))
+  expect_true(nrow(res$u_mat) == nrow(dat))
+  expect_true(nrow(res$v_mat) == ncol(dat))
+  expect_true(ncol(res$u_mat) == 2)
+  expect_true(ncol(res$v_mat) == 2)
+})
+
+test_that(".fit_gaussian_factorization works with missing values", {
+  set.seed(5)
+  dat <- abs(matrix(rnorm(20), nrow = 5, ncol = 4))
+  dat[sample(1:prod(dim(dat)), 5)] <- NA
+
+  res <- .fit_gaussian_factorization(dat)
+
+  expect_true(is.list(res))
+  expect_true(nrow(res$u_mat) == nrow(dat))
+  expect_true(nrow(res$v_mat) == ncol(dat))
+  expect_true(ncol(res$u_mat) == 2)
+  expect_true(ncol(res$v_mat) == 2)
+})
+
+test_that(".fit_gaussian_factorization preserves the positive entries", {
+  trials <- 10
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(x*10)
+    dat <- abs(matrix(rnorm(20), nrow = 5, ncol = 4))
+    dat[sample(1:prod(dim(dat)), 5)] <- NA
+
+    res <- .fit_gaussian_factorization(dat)
+
+    pred_mat <- res$u_mat %*% t(res$v_mat)
+
+    all(pred_mat[which(!is.na(dat))] >= -1e-6)
+  })
+
+  expect_true(all(bool_vec))
+
+})
