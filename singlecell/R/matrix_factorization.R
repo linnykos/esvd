@@ -25,9 +25,8 @@
             ncol(u_mat) == ncol(v_mat))
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
-  pred_mat[pred_mat > 0] <- -tol
 
-  sum(-log(-pred_mat[idx]) - dat[idx] * pred_mat[idx])
+  sum(pred_mat[idx]*(1-dat[idx]))
 }
 
 .evaluate_objective_single <- function(dat_vec, current_vec, other_mat,
@@ -37,9 +36,8 @@
 
   pred_vec <- other_mat %*% current_vec
   idx <- which(!is.na(dat_vec))
-  pred_vec[pred_vec > 0] <- -tol
 
-  sum(-log(-pred_vec[idx]) - dat_vec[idx] * pred_vec[idx])
+  sum(pred_vec[idx]*(1-dat_vec[idx]))
 }
 
 ########
@@ -54,8 +52,15 @@
   prod_mat <- u_mat %*% t(v_mat)
   svd_res <- svd(prod_mat)
 
-  list(u_mat = svd_res$u %*% diag(sqrt(svd_res$d)),
-       v_mat = svd_res$v %*% diag(sqrt(svd_res$d)))
+  u_mat <- svd_res$u %*% diag(sqrt(svd_res$d))
+  v_mat <- svd_res$v %*% diag(sqrt(svd_res$d))
+
+  # project v back into positive space based on u
+  for(j in 1:nrow(v_mat)){
+    v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])))
+  }
+
+  list(u_mat = u_mat, v_mat = v_mat)
 }
 
 #########
@@ -100,7 +105,7 @@
 
   non_na_idx <- which(!is.na(dat_vec))
   tmp <- sapply(non_na_idx, function(j){
-    other_mat[j,]/as.numeric(current_vec %*% other_mat[j,]) - dat_vec[j] * other_mat[j,]
+    other_mat[j,]*(1-dat_vec[j])
   })
 
   rowSums(tmp)
