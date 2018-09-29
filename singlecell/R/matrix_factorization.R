@@ -1,7 +1,12 @@
-.fit_gaussian_factorization <- function(dat, k = 2, lambda = 0.01,
-                                           max_iter = 100, verbose = F){
-  init <- .initialization(dat)
+.fit_gaussian_factorization <- function(dat, k = 2,
+                                        max_val = sqrt(max(abs(dat))),
+                                        lambda = 0.01,
+                                        max_iter = 100, verbose = F,
+                                        enforce_constraint = T){
+  init <- .initialization(dat, k = k, enforce_constraint = enforce_constraint)
   u_mat <- init$u_mat; v_mat <- init$v_mat
+  u_mat[abs(u_mat) >= max_val] <- sign(u_mat[abs(u_mat) >= max_val]) * max_val
+  v_mat[abs(v_mat) >= max_val] <- sign(v_mat[abs(v_mat) >= max_val]) * max_val
 
   current_obj <- Inf
   next_obj <- .evaluate_objective(dat, u_mat, v_mat)
@@ -11,8 +16,11 @@
   while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
     current_obj <- next_obj
 
-    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T)
-    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F)
+    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, enforce_constraint = enforce_constraint)
+    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, enforce_constraint = enforce_constraint)
+
+    u_mat[abs(u_mat) >= max_val] <- sign(u_mat[abs(u_mat) >= max_val]) * max_val
+    v_mat[abs(v_mat) >= max_val] <- sign(v_mat[abs(v_mat) >= max_val]) * max_val
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
 
@@ -60,7 +68,7 @@
 #' @return list
 #'
 #' @importClassesFrom recommenderlab realRatingMatrix
-.initialization <- function(dat, k = 2, lambda = 0.01){
+.initialization <- function(dat, k = 2, lambda = 0.01, enforce_constraint = T){
   if(any(is.na(dat))){
     print("There are NAs")
     dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat))
@@ -82,9 +90,11 @@
     v_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
   }
 
-  # project v back into positive space based on u
-  for(j in 1:nrow(v_mat)){
-    v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])))
+  if(enforce_constraint){
+    # project v back into positive space based on u
+    for(j in 1:nrow(v_mat)){
+      v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])))
+    }
   }
 
   list(u_mat = u_mat, v_mat = v_mat)
@@ -92,7 +102,7 @@
 
 #########
 
-.optimize_mat <- function(dat, current_mat, other_mat, left = T){
+.optimize_mat <- function(dat, current_mat, other_mat, left = T, enforce_constraint = T){
   stopifnot(ncol(current_mat) == ncol(other_mat))
   if(left) {
     stopifnot(ncol(dat) == nrow(other_mat))
@@ -102,13 +112,13 @@
 
   for(i in 1:nrow(current_mat)){
     if(left) {dat_vec <- dat[i,]} else {dat_vec <- dat[,i]}
-    if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,], other_mat)
+    if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,], other_mat, enforce_constraint = enforce_constraint)
   }
 
   current_mat
 }
 
-.optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100){
+.optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100, enforce_constraint = T){
   stopifnot(length(which(!is.na(dat_vec))) > 0)
 
   current_obj <- Inf
@@ -122,6 +132,10 @@
     stepsize <- .backtrack_linesearch(dat_vec, current_vec, other_mat, grad_vec)
 
     current_vec <- current_vec - stepsize * grad_vec
+    if(enforce_constraint){
+      current_vec <- .projection_l1(current_vec, other_mat, which(!is.na(dat_vec)))
+    }
+
     next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
 
     iter <- iter + 1
@@ -143,11 +157,11 @@
 }
 
 .backtrack_linesearch <- function(dat_vec, current_vec, other_mat, grad_vec,
-                                  beta = .5, alpha = .5, tol = 1e-4){
-  denom <- as.numeric(other_mat %*% grad_vec)
-  idx <- which(abs(denom) > 1e-6)
-  t_current <- min(as.numeric(other_mat %*% current_vec)[idx]/denom[idx])
-  t_current <- max(t_current - tol, t_current/2)
+                                  t_current = .1, beta = .5, alpha = .5, tol = 1e-4){
+  # denom <- as.numeric(other_mat %*% grad_vec)
+  # idx <- which(abs(denom) > 1e-6)
+  # t_current <- min(as.numeric(other_mat %*% current_vec)[idx]/denom[idx])
+  # t_current <- max(t_current - tol, t_current/2)
 
   while(TRUE){
     obj1 <- .evaluate_objective_single(dat_vec, current_vec - t_current*grad_vec, other_mat)
