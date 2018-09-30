@@ -3,48 +3,47 @@
                             total = 150){
 
   #construct the cell information
-  cell_pop <- matrix(c(1, 0, 2, 0,
-                       0, 2, 1, 0,
-                       0, 2, 0, 3,
-                       0, 2, 1, 3), nrow = 4, ncol = 4, byrow = T)
+  cell_pop <- matrix(c(4,10, 25,100,
+                       40,10, 60,80,
+                       4,10, 10,4,
+                       10,4, 100,25), nrow = 4, ncol = 4, byrow = T)
   h <- nrow(cell_pop)
   n_each <- 50
   cell_mat <- do.call(rbind, lapply(1:h, function(x){
     pos <- stats::runif(n_each)
-    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 1/10),
-          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 1/10))
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 1),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 1))
   }))
   n <- nrow(cell_mat)
   k <- ncol(cell_mat)
 
   # construct the gene information
-  gene_pop <- matrix(c(0, 0, 0.1, 1,
-                       0, 0, 1, 0.1), nrow = 2, ncol = 4, byrow = T)
+  gene_pop <- -1*matrix(c(20, 90, 25, 100,
+                       90,20, 100,25), nrow = 2, ncol = 4, byrow = T)
   g <- nrow(gene_pop)
   d_each <- 120
   gene_mat <- do.call(rbind, lapply(1:g, function(x){
     pos <- stats::runif(d_each)
-    cbind(pos*gene_pop[x,1] + (1-pos)*gene_pop[x,3] + stats::rnorm(d_each, sd = 1/10),
-          pos*gene_pop[x,2] + (1-pos)*gene_pop[x,4] + stats::rnorm(d_each, sd = 1/10))
+    cbind(pos*gene_pop[x,1] + (1-pos)*gene_pop[x,3] + stats::rnorm(d_each, sd = 1),
+          pos*gene_pop[x,2] + (1-pos)*gene_pop[x,4] + stats::rnorm(d_each, sd = 1))
   }))
   d <- nrow(gene_mat)
 
   # form observations
+  gram_mat <- cell_mat %*% t(gene_mat) #natural parameter
+  inv_mat <- -1/gram_mat #the actual mean
+  inv_mat[inv_mat >= 1] <- 1
+  inv_mat[inv_mat <= 1e-6] <- 1e-6
+  gram_mat <- -1/inv_mat
+  svd_res <- svd(gram_mat)
+  cell_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+  gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
   gram_mat <- cell_mat %*% t(gene_mat)
-
-  # threshold population matrix
-  val <- quantile(as.numeric(gram_mat[gram_mat > 0]), probs = 0.05)
-  gram_mat[gram_mat <= val] <- 0
-
-  # recover what V can be
-  gene_mat <- t(MASS::ginv(cell_mat) %*% gram_mat)
-  gram_mat <- cell_mat %*% t(gene_mat) #huh.. not much actually changed. oh well
-  gram_mat[gram_mat < 1e-4] <- 0
 
   obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- distr_func(max(gram_mat[i,j], min_val))
+      obs_mat[i,j] <- distr_func(-1/min(gram_mat[i,j], -1e-4))
     }
   }
 

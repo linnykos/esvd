@@ -2,15 +2,25 @@ rm(list=ls())
 source("../experiment/Week23_simulation_generator.R")
 
 set.seed(10)
-load("../experiment/Week23_tmp.RData")
+simulation <- .data_generator(total = 200, distr_func = function(x){stats::rexp(1, 1/x)})
 
-col_vec <- c(rgb(205,40,54,maxColorValue=255),
-             rgb(180,200,255,maxColorValue=255),
-             rgb(100,100,200,maxColorValue=255),
-             rgb(149,219,144,maxColorValue=255))
+col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
+             rgb(180,200,255,maxColorValue=255), #purple
+             rgb(100,100,200,maxColorValue=255), #blue
+             rgb(149,219,144,maxColorValue=255)) #green
 
+dat <- simulation$dat
 length(which(dat == 0))/prod(dim(dat))
 .plot_singlecell(dat)
+
+plot(simulation$cell_mat[,1], simulation$cell_mat[,2],
+     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
+     pch = 16, xlab = "Estimated dim. 1", ylab = "Estimated dim. 2", main = "Cell estimated vectors")
+
+plot(simulation$gene_mat[,1], simulation$gene_mat[,2],
+     col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
+     pch = 16, xlab = "Estimated dim. 1", ylab = "Estimated dim. 2", main = "Cell estimated vectors")
+
 
 par(mfrow = c(1,3))
 zz <- apply(dat, 1, function(x){length(which(x != 0))/length(x)})
@@ -24,7 +34,7 @@ plot(sort(dat[dat != 0]))
 
 # try the naive thing
 svd_res <- svd(dat)
-k <- 5
+k <- 2
 u_mat_naive <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 v_mat_naive <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 library(slingshot)

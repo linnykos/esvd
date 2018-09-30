@@ -36,7 +36,8 @@ test_that(".gradient_vec satisfies the gradient definition", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x)
     dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-    u_vec <- abs(rnorm(2)); u_vec2 <- abs(rnorm(2))
+    u_vec <- abs(rnorm(2))
+    u_vec2 <- abs(rnorm(2))
     v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
 
     i <- sample(1:10, 1)
@@ -47,6 +48,8 @@ test_that(".gradient_vec satisfies the gradient definition", {
 
     res2 >= res + as.numeric(grad %*% (u_vec2 - u_vec)) - 1e-6
   })
+
+  res2 - (res + as.numeric(grad %*% (u_vec2 - u_vec)))
 
   expect_true(all(bool_vec))
 })
@@ -60,8 +63,8 @@ test_that(".evaluate_objective works", {
   set.seed(20)
   dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
   dat[sample(1:prod(dim(dat)), 10)] <- NA
-  u_mat <- matrix(rnorm(20), nrow = 10, ncol = 2)
-  v_mat <- matrix(rnorm(8), nrow = 4, ncol = 2)
+  u_mat <- abs(matrix(rnorm(20), nrow = 10, ncol = 2))
+  v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
 
   res <- .evaluate_objective(dat, u_mat, v_mat)
 
@@ -99,6 +102,52 @@ test_that(".evaluate_objective yields a smaller value under truth", {
   expect_true(mean(avg_obj[1,]) < mean(avg_obj[2,]))
 })
 
+test_that(".evaluate_objective is equal to many .evaluate_objective_single", {
+  set.seed(20)
+  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+  dat[sample(1:prod(dim(dat)), 10)] <- NA
+  u_mat <- abs(matrix(rnorm(20), nrow = 10, ncol = 2))
+  v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
+
+  res <- .evaluate_objective(dat, u_mat, v_mat)
+
+  res2 <- sum(sapply(1:nrow(u_mat), function(x){
+    .evaluate_objective_single(dat[x,], u_mat[x,], v_mat)
+  }))
+
+  expect_true(abs(res - res2) <= 1e-6)
+})
+
+test_that(".evaluate_objective gives sensible optimal", {
+  set.seed(20)
+  dat <- abs(matrix(rnorm(100, mean = 50, sd = 50/2), nrow = 10, ncol = 10))
+  u_mat <- matrix(10, nrow = 10, ncol = 1)
+  v_mat <- matrix(5, nrow = 10, ncol = 1)
+
+  res <- .evaluate_objective(dat, u_mat, v_mat)
+
+  trials <- 100
+  bool_vec <- sapply(1:trials, function(x){
+    u_mat2 <- abs(matrix(rnorm(10, mean = 10), nrow = 10, ncol = 1))
+    v_mat2 <- abs(matrix(rnorm(10, mean = 5), nrow = 10, ncol = 1))
+    res2 <- .evaluate_objective(dat, u_mat2, v_mat2)
+
+    res < res2
+  })
+
+  expect_true(all(bool_vec))
+
+  u_mat2 <- matrix(50, nrow = 10, ncol = 1)
+  v_mat2 <- matrix(50, nrow = 10, ncol = 1)
+  res2 <- .evaluate_objective(dat, u_mat2, v_mat2)
+  expect_true(res < res2)
+
+  u_mat2 <- matrix(5, nrow = 10, ncol = 1)
+  v_mat2 <- matrix(5, nrow = 10, ncol = 1)
+  res2 <- .evaluate_objective(dat, u_mat2, v_mat2)
+  expect_true(res < res2)
+})
+
 ################
 
 ## .evaluate_objective_single is correct
@@ -107,8 +156,8 @@ test_that(".evaluate_objective_single works", {
   set.seed(20)
   dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
   dat[sample(1:prod(dim(dat)), 10)] <- NA
-  u_mat <- -matrix(rnorm(20), nrow = 10, ncol = 2)
-  v_mat <- matrix(rnorm(8), nrow = 4, ncol = 2)
+  u_mat <- abs(matrix(rnorm(20), nrow = 10, ncol = 2))
+  v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
 
   i <- 5
   res <- .evaluate_objective_single(dat[i,], u_mat[i,], v_mat)

@@ -43,7 +43,7 @@
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
 
-  sum(pred_mat[idx]*(1-dat[idx]))
+  sum(log(pred_mat[idx]) + 2 * dat[idx]^2 /(pred_mat[idx])^2 - 4 * dat[idx]/pred_mat[idx])
 }
 
 .evaluate_objective_single <- function(dat_vec, current_vec, other_mat){
@@ -53,7 +53,7 @@
   pred_vec <- other_mat %*% current_vec
   idx <- which(!is.na(dat_vec))
 
-  sum(pred_vec[idx]*(1-dat_vec[idx]))
+  sum(log(pred_vec[idx]) + 2 * dat_vec[idx]^2 /(pred_vec[idx])^2 - 4 * dat_vec[idx]/pred_vec[idx])
 }
 
 ########
@@ -148,9 +148,11 @@
   stopifnot(length(current_vec) == ncol(other_mat))
   stopifnot(length(dat_vec) == nrow(other_mat))
 
-  non_na_idx <- which(!is.na(dat_vec))
-  tmp <- sapply(non_na_idx, function(j){
-    other_mat[j,]*(1-dat_vec[j])
+  pred_vec <- other_mat %*% current_vec
+  idx <- which(!is.na(dat_vec))
+
+  tmp <- sapply(idx, function(j){
+    other_mat[j,]*(1/pred_vec[j] - 4*dat_vec[j]^2/pred_vec[j]^3 + 4*dat_vec[j]/pred_vec[j]^2)
   })
 
   rowSums(tmp)
@@ -177,7 +179,8 @@
 
 #######################
 
-.projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat)){
+.projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat),
+                           tol = 1e-6){
   if(length(idx) == 0) return(current_vec)
   stopifnot(ncol(other_mat) == length(current_vec))
 
@@ -195,7 +198,7 @@
   const_mat <- rbind(const_mat, const_mat2)
 
   const_dir <- c(rep(">=", 2*k), rep(">=", nrow(other_mat)))
-  const_rhs <- c(current_vec, -current_vec, rep(0, nrow(other_mat)))
+  const_rhs <- c(current_vec, -current_vec, rep(tol, nrow(other_mat)))
 
   res <- lpSolve::lp("min", objective_in, const_mat, const_dir, const_rhs)
   res$solution[1:k] - res$solution[(k+1):(2*k)]
