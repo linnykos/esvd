@@ -2,7 +2,7 @@ rm(list=ls())
 source("../experiment/Week23_simulation_generator.R")
 
 set.seed(10)
-simulation <- .data_generator(total = 200, distr_func = function(x){stats::rexp(1, 1/x)})
+simulation <- .data_generator(total = 200)
 
 col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
              rgb(180,200,255,maxColorValue=255), #purple
