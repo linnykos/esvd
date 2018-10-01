@@ -1,4 +1,4 @@
-.data_generator <- function(distr_func = function(x){stats::rexp(1, 1/x)},
+.data_generator <- function(distr_func = function(x){stats::rexp(1, -x)},
                             min_val = 1e-4,
                             total = 150){
 
@@ -43,7 +43,7 @@
   obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- distr_func(-1/min(gram_mat[i,j], -1e-4))
+      obs_mat[i,j] <- distr_func(max(gram_mat[i,j], -1e4))
     }
   }
 

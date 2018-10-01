@@ -33,7 +33,11 @@ plot(sort(dat[dat != 0]))
 ###########
 
 # try the naive thing
-svd_res <- svd(dat)
+dat_inv <- dat
+dat_inv[which(dat > 0)] <- 1/dat[which(dat > 0)]
+dat_inv[which(dat == 0)] <- max(dat_inv)
+
+svd_res <- svd(dat_inv)
 k <- 2
 u_mat_naive <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 v_mat_naive <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
