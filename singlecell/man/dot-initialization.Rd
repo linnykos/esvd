@@ -4,14 +4,12 @@
 \alias{.initialization}
 \title{Initialization function}
 \usage{
-.initialization(dat, k = 2, lambda = 0.01)
+.initialization(dat, k = 2)
 }
 \arguments{
 \item{dat}{matrix}
 
 \item{k}{numeric}
-
-\item{lambda}{numeric}
 }
 \value{
 list

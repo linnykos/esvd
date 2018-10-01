@@ -49,8 +49,6 @@ test_that(".gradient_vec satisfies the gradient definition", {
     res2 >= res + as.numeric(grad %*% (u_vec2 - u_vec)) - 1e-6
   })
 
-  res2 - (res + as.numeric(grad %*% (u_vec2 - u_vec)))
-
   expect_true(all(bool_vec))
 })
 
@@ -229,7 +227,7 @@ test_that(".projection_l1 maintains less than 0", {
     all(prod_mat[which(!is.na(dat))] <= 0)
   })
 
-  expect_true(all(other_mat %*% res <= 1e-6))
+  expect_true(all(bool_vec))
 })
 
 test_that(".projection_l1 can keep the current vector", {
@@ -281,7 +279,7 @@ test_that(".initialization actually gives negative predictions", {
   res <- .initialization(dat)
   pred_mat <- res$u_mat %*% t(res$v_mat)
 
-  expect_true(all(pred_mat[which(!is.na(dat))] <= -1e6))
+  expect_true(all(pred_mat[which(!is.na(dat))] <= 1e-6))
 })
 
 #########################
@@ -326,7 +324,8 @@ test_that(".backtrack_linesearch actually keeps the negative constraint", {
       res <- .backtrack_linesearch(dat[i,], u_mat[i,], v_mat, grad_vec)
 
       u_new <- u_mat[i,] - res*grad_vec
-      all(v_mat %*% u_new <= 1e-6)
+      vec <- v_mat %*% u_new
+      all(vec[which(!is.na(dat[i,]))] <= 1e-6)
     } else {
       TRUE
     }
@@ -553,7 +552,7 @@ test_that(".fit_exponential_factorization preserves the positive entries", {
     dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
     dat[sample(1:prod(dim(dat)), 5)] <- NA
 
-    res <- .fit_exponential_factorization(dat)
+    res <- .fit_exponential_factorization(dat, tol = 0.1, max_iter = 2)
 
     pred_mat <- res$u_mat %*% t(res$v_mat)
 

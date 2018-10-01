@@ -1,4 +1,5 @@
-.fit_exponential_factorization <- function(dat, k = 2, max_iter = 100, verbose = F){
+.fit_exponential_factorization <- function(dat, k = 2, tol = 1e-3,
+                                           max_iter = 100, verbose = F){
   stopifnot(length(which(dat > 0)) > 0)
   stopifnot(length(which(dat < 0)) == 0)
 
@@ -14,7 +15,7 @@
   iter <- 1
   if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
 
-  while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
+  while(current_obj - next_obj > tol & iter < max_iter){
     current_obj <- next_obj
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T)
@@ -30,8 +31,9 @@
   pred_mat <- u_mat %*% t(v_mat)
   svd_res <- svd(pred_mat)
 
-  list(u_mat = svd_res$u[,1:k,drop = F] %*% diag(as.matrix(sqrt(svd_res$d[1:k]))),
-       v_mat = svd_res$v[,1:k,drop = F] %*% diag(as.matrix(sqrt(svd_res$d[1:k]))),
+  if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
+  list(u_mat = svd_res$u[,1:k,drop = F] %*% diag(diag_vec),
+       v_mat = svd_res$v[,1:k,drop = F] %*% diag(diag_vec),
        iter = iter - 1)
 }
 
@@ -63,7 +65,6 @@
 #'
 #' @param dat matrix
 #' @param k numeric
-#' @param lambda numeric
 #'
 #' @return list
 #'
@@ -83,18 +84,20 @@
     prod_mat <- u_mat %*% t(v_mat)
     svd_res <- svd(prod_mat)
 
-    u_mat <- svd_res$u[,1:k,drop = F] %*% diag(as.matrix(sqrt(svd_res$d[1:k])))
-    v_mat <- svd_res$v[,1:k,drop = F] %*% diag(as.matrix(sqrt(svd_res$d[1:k])))
+    if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
+    u_mat <- svd_res$u[,1:k,drop = F] %*% diag(diag_vec)
+    v_mat <- svd_res$v[,1:k,drop = F] %*% diag(diag_vec)
   } else {
     svd_res <- svd(dat2)
 
-    u_mat <- svd_res$u[,1:k,drop = F] %*% diag(as.matrix(sqrt(svd_res$d[1:k])))
-    v_mat <- svd_res$v[,1:k,drop = F] %*% diag(as.matrix(sqrt(svd_res$d[1:k])))
+    if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
+    u_mat <- svd_res$u[,1:k,drop = F] %*% diag(diag_vec)
+    v_mat <- svd_res$v[,1:k,drop = F] %*% diag(diag_vec)
   }
 
   # project v back into positive space based on u
   for(j in 1:nrow(v_mat)){
-    v_mat[j,] <- .projection_l1(v_mat[j,,drop = F], u_mat, which(!is.na(dat[,j])))
+    v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])))
   }
 
   list(u_mat = u_mat, v_mat = v_mat)
@@ -157,7 +160,7 @@
 }
 
 .backtrack_linesearch <- function(dat_vec, current_vec, other_mat, grad_vec,
-                                  t_init = 10, beta = .5, alpha = .5, tol = 1e-4){
+                                  t_init = 10, beta = .5, alpha = .5){
   t_current <- t_init
   idx <- which(!is.na(dat_vec))
 
@@ -178,7 +181,6 @@
 
 #######################
 
-
 #' L1 projection of the product of two vectors to become nonpositive
 #'
 #' Solves the linear program:
@@ -190,10 +192,10 @@
 #'            V %*% (u_+(1:k) - u_-(1:k)) <= 0 elementwise (for entire vector of length d)
 #'            s_i, u_+i, u_-i >= 0 for i from 1 to k
 #'
-#' @param current_vec
-#' @param other_mat
-#' @param idx
-#' @param tol
+#' @param current_vec vector
+#' @param other_mat matrix
+#' @param idx row indices for other_mat
+#' @param tol numeric
 #'
 #' @return
 .projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat),
@@ -202,6 +204,7 @@
   stopifnot(ncol(other_mat) == length(current_vec))
 
   other_mat <- other_mat[idx,,drop = F]
+  if(all(other_mat %*% current_vec <= 0)) return(current_vec)
 
   k <- length(current_vec)
   d <- nrow(other_mat)
