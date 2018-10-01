@@ -1,4 +1,4 @@
-.fit_exponential_factorization <- function(dat, k = 2, tol = 1e-3,
+.fit_exponential_factorization <- function(dat, u_mat, v_mat, tol = 1e-3,
                                            max_iter = 100, verbose = F){
   stopifnot(length(which(dat > 0)) > 0)
   stopifnot(length(which(dat < 0)) == 0)
@@ -7,15 +7,12 @@
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat == 0)] <- min_val/2
 
-  init <- .initialization(dat, k = k)
-  u_mat <- init$u_mat; v_mat <- init$v_mat
-
   current_obj <- Inf
   next_obj <- .evaluate_objective(dat, u_mat, v_mat)
-  iter <- 1
+  obj_vec <- c(next_obj)
   if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
 
-  while(current_obj - next_obj > tol & iter < max_iter){
+  while(current_obj - next_obj > tol & length(obj_vec) < max_iter){
     current_obj <- next_obj
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T)
@@ -25,7 +22,7 @@
 
     if(verbose) print(paste0("Iter ", iter, ": Decrease is ", abs(current_obj - next_obj)))
 
-    iter <- iter + 1
+    obj_vec <- c(obj_vec, next_obj)
   }
 
   pred_mat <- u_mat %*% t(v_mat)
@@ -34,7 +31,7 @@
   if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
   list(u_mat = svd_res$u[,1:k,drop = F] %*% diag(diag_vec),
        v_mat = svd_res$v[,1:k,drop = F] %*% diag(diag_vec),
-       iter = iter - 1)
+       obj_vec = obj_vec)
 }
 
 .evaluate_objective <- function(dat, u_mat, v_mat){
@@ -56,51 +53,6 @@
   stopifnot(all(pred_vec[idx] < 0))
 
   sum(-log(-pred_vec[idx]) - pred_vec[idx]*dat_vec[idx])
-}
-
-########
-
-
-#' Initialization function
-#'
-#' @param dat matrix
-#' @param k numeric
-#'
-#' @return list
-#'
-#' @importClassesFrom recommenderlab realRatingMatrix
-.initialization <- function(dat, k = 2){
-  stopifnot(length(which(dat == 0)) == 0)
-  dat2 <- dat
-  dat2[which(dat > 0)] <- -1/dat2[which(dat > 0)]
-
-  if(any(is.na(dat))){
-    dat2 <- methods::new("realRatingMatrix", data = recommenderlab::dropNA(dat2))
-
-    funk_svd <- recommenderlab::funkSVD(dat2, k = k)
-    u_mat <- funk_svd$U
-    v_mat <- funk_svd$V
-
-    prod_mat <- u_mat %*% t(v_mat)
-    svd_res <- svd(prod_mat)
-
-    if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
-    u_mat <- svd_res$u[,1:k,drop = F] %*% diag(diag_vec)
-    v_mat <- svd_res$v[,1:k,drop = F] %*% diag(diag_vec)
-  } else {
-    svd_res <- svd(dat2)
-
-    if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
-    u_mat <- svd_res$u[,1:k,drop = F] %*% diag(diag_vec)
-    v_mat <- svd_res$v[,1:k,drop = F] %*% diag(diag_vec)
-  }
-
-  # project v back into positive space based on u
-  for(j in 1:nrow(v_mat)){
-    v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])))
-  }
-
-  list(u_mat = u_mat, v_mat = v_mat)
 }
 
 #########

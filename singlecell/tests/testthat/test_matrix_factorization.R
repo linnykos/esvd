@@ -214,6 +214,7 @@ test_that(".projection_l1 maintains less than 0", {
   trials <- 50
 
   bool_vec <- sapply(1:trials, function(x){
+    print(x)
     set.seed(10*x)
 
     dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
@@ -252,34 +253,6 @@ test_that(".projection_l1 is actually a projection compared to the all 0 vector"
   })
 
   expect_true(all(bool_vec))
-})
-
-#############
-
-## .initialization is correct
-
-test_that(".initialization works", {
-  set.seed(10)
-  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-  dat[sample(1:prod(dim(dat)), 10)] <- NA
-
-  res <- .initialization(dat)
-
-  expect_true(is.list(res))
-  expect_true(ncol(res$u_mat) == ncol(res$v_mat))
-  expect_true(nrow(res$u_mat) == nrow(dat))
-  expect_true(nrow(res$v_mat) == ncol(dat))
-})
-
-test_that(".initialization actually gives negative predictions", {
-  set.seed(20)
-  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-  dat[sample(1:prod(dim(dat)), 10)] <- NA
-
-  res <- .initialization(dat)
-  pred_mat <- res$u_mat %*% t(res$v_mat)
-
-  expect_true(all(pred_mat[which(!is.na(dat))] <= 1e-6))
 })
 
 #########################
