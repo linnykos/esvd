@@ -72,6 +72,16 @@ test_that(".nnls_impute can reduce to linear regression", {
   expect_true(sum(abs(sort(res[-idx]) == sort(pred_val))) <= 1e-6)
 })
 
+test_that(".nnls_impute can work when only two known genes are included", {
+  set.seed(20)
+  dat <- abs(matrix(rnorm(40), nrow = 4, ncol = 10))
+  vec <- abs(rnorm(10))
+
+  res <- .nnls_impute(vec, dat, 1:2, max_time = 5)
+
+  expect_true(is.vector(res))
+})
+
 test_that(".nnls_impute does not get stuck in a loop", {
   set.seed(10)
   dat <- abs(rbind(MASS::mvrnorm(20, rep(0, 10), diag(10)),

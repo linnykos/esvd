@@ -77,7 +77,7 @@
   stopifnot(max(B_vec) <= length(cell_vec))
   stopifnot(!is.matrix(cell_vec))
   stopifnot(length(cell_vec) == ncol(neigh_mat), length(max_vec) == length(cell_vec))
-  stopifnot(length(B_vec) == length(unique(B_vec)))
+  stopifnot(length(B_vec) == length(unique(B_vec)), length(B_vec) > 1)
 
   if(length(B_vec) == length(cell_vec)) return(cell_vec)
 

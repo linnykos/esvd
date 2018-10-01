@@ -11,7 +11,11 @@ LazyData: true
 Imports:
     recommenderlab,
     methods,
-    lpSolve
+    lpSolve,
+    penalized,
+    kernlab,
+    R.utils,
+    MASS
 Suggests:
     testthat
 RoxygenNote: 6.1.0
