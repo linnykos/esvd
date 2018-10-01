@@ -116,9 +116,7 @@
   dat2[drop_idx] <- NA
 
   for(k in neigh_list){
-    print(k)
     for(i in k){
-      print(i)
       keep_idx <- which(!is.na(dat2[i,]))
       dat2[i,] <- .nnls_impute(dat[i,], dat[setdiff(k, i),,drop = F], keep_idx,
                                max_time = max_time)

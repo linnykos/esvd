@@ -81,7 +81,6 @@ test_that(".nnls_impute does not get stuck in a loop", {
   Kcluster <- 2
   neigh_vec <- .find_neighbors_impute(dat, Kcluster = Kcluster)
   neigh_list <- lapply(1:Kcluster, function(k){which(neigh_vec == k)})
-  stopifnot(all(sapply(neigh_list, length) >= min_size))
 
   dat2 <- dat
   dat2[drop_idx] <- NA
@@ -93,6 +92,7 @@ test_that(".nnls_impute does not get stuck in a loop", {
   res <- .nnls_impute(dat[i,], dat[setdiff(k, i),,drop = F], keep_idx,
                       max_time = 5)
 
+  expect_true(is.numeric(res))
 })
 
 ######################
@@ -135,13 +135,39 @@ test_that(".initialization works", {
   expect_true(nrow(res$v_mat) == ncol(dat))
 })
 
-test_that(".initialization actually gives negative predictions", {
-  set.seed(20)
-  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-  dat[sample(1:prod(dim(dat)), 10)] <- NA
+test_that(".initialization works off of an imputed matrix", {
+  set.seed(10)
+  dat <- abs(rbind(MASS::mvrnorm(5, rep(0, 5), diag(5)),
+                   MASS::mvrnorm(5, rep(10, 5), 2*diag(5))))
+  dat2 <- dat
+  for(i in 1:nrow(dat2)){
+    dat2[i, sample(1:5, 1)] <- NA
+  }
+  drop_idx <- which(is.na(dat2))
+  dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3, max_time = 5)
 
-  res <- .initialization(dat)
+  res <- .initialization(dat2)
+
+  expect_true(is.list(res))
+  expect_true(ncol(res$u_mat) == ncol(res$v_mat))
+  expect_true(nrow(res$u_mat) == nrow(dat))
+  expect_true(nrow(res$v_mat) == ncol(dat))
+})
+
+test_that(".initialization gives negative predictions", {
+  set.seed(10)
+  dat <- abs(rbind(MASS::mvrnorm(5, rep(0, 5), diag(5)),
+                   MASS::mvrnorm(5, rep(10, 5), 2*diag(5))))
+  dat2 <- dat
+  for(i in 1:nrow(dat2)){
+    dat2[i, sample(1:5, 1)] <- NA
+  }
+  drop_idx <- which(is.na(dat2))
+  dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3, max_time = 5)
+
+  res <- .initialization(dat2)
   pred_mat <- res$u_mat %*% t(res$v_mat)
 
   expect_true(all(pred_mat[which(!is.na(dat))] <= 1e-6))
 })
+

@@ -214,11 +214,9 @@ test_that(".projection_l1 maintains less than 0", {
   trials <- 50
 
   bool_vec <- sapply(1:trials, function(x){
-    print(x)
     set.seed(10*x)
 
     dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-    dat[sample(1:prod(dim(dat)), 10)] <- NA
 
     res <- .initialization(dat)
     u_mat <- res$u_mat
@@ -262,7 +260,6 @@ test_that(".projection_l1 is actually a projection compared to the all 0 vector"
 test_that(".backtrack_linesearch works", {
   set.seed(20)
   dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-  dat[sample(1:prod(dim(dat)), 10)] <- NA
 
   res <- .initialization(dat)
   u_mat <- res$u_mat
@@ -284,7 +281,6 @@ test_that(".backtrack_linesearch actually keeps the negative constraint", {
     set.seed(10*x)
 
     dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-    dat[sample(1:prod(dim(dat)), 10)] <- NA
 
     res <- .initialization(dat)
     u_mat <- res$u_mat
@@ -315,7 +311,6 @@ test_that(".backtrack_linesearch lowers the objective", {
     set.seed(10*x)
 
     dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-    dat[sample(1:prod(dim(dat)), 10)] <- NA
 
     res <- .initialization(dat)
     u_mat <- res$u_mat
@@ -347,7 +342,6 @@ test_that(".backtrack_linesearch lowers the objective", {
 test_that(".optimize_row works", {
   set.seed(20)
   dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
-  dat[sample(1:prod(dim(dat)), 10)] <- NA
 
   res <- .initialization(dat)
   u_mat <- res$u_mat
@@ -366,7 +360,6 @@ test_that(".optimize_row actually lowers the objective", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
-    dat[sample(1:prod(dim(dat)), 10)] <- NA
 
     res <- .initialization(dat)
     u_mat <- res$u_mat
@@ -391,7 +384,6 @@ test_that(".optimize_row works the other way", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
-    dat[sample(1:prod(dim(dat)), 10)] <- NA
 
     res <- .initialization(dat)
     u_mat <- res$u_mat
@@ -417,7 +409,6 @@ test_that(".optimize_row works the other way", {
 test_that(".optimize_mat works", {
   set.seed(20)
   dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
-  dat[sample(1:prod(dim(dat)), 10)] <- NA
 
   res <- .initialization(dat)
   u_mat <- res$u_mat
@@ -435,7 +426,6 @@ test_that(".optimize_mat keeps the positive constraint", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
-    dat[sample(1:prod(dim(dat)), 10)] <- NA
     bool <- sample(c(T, F), 1)
 
     res <- .initialization(dat)
@@ -464,7 +454,6 @@ test_that(".optimize_mat lowers the objective value", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
-    dat[sample(1:prod(dim(dat)), 10)] <- NA
     bool <- sample(c(T, F), 1)
 
     res <- .initialization(dat)
@@ -493,8 +482,9 @@ test_that(".optimize_mat lowers the objective value", {
 test_that(".fit_exponential_factorization works", {
   set.seed(10)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
+  init <- .initialization(dat)
 
-  res <- .fit_exponential_factorization(dat, k = 2)
+  res <- .fit_exponential_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat)
 
   expect_true(is.list(res))
   expect_true(nrow(res$u_mat) == nrow(dat))
@@ -506,9 +496,9 @@ test_that(".fit_exponential_factorization works", {
 test_that(".fit_exponential_factorization works with missing values", {
   set.seed(5)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
-  dat[sample(1:prod(dim(dat)), 5)] <- NA
+  init <- .initialization(dat)
 
-  res <- .fit_exponential_factorization(dat)
+  res <- .fit_exponential_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat)
 
   expect_true(is.list(res))
   expect_true(nrow(res$u_mat) == nrow(dat))
@@ -523,9 +513,9 @@ test_that(".fit_exponential_factorization preserves the positive entries", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
-    dat[sample(1:prod(dim(dat)), 5)] <- NA
+    init <- .initialization(dat)
 
-    res <- .fit_exponential_factorization(dat, tol = 0.1, max_iter = 2)
+    res <- .fit_exponential_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat)
 
     pred_mat <- res$u_mat %*% t(res$v_mat)
 
@@ -542,8 +532,10 @@ test_that(".fit_exponential_factorization can roughly recover the all 1's matrix
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
     dat <- abs(matrix(rexp(100), nrow = 10, ncol = 10))
+    init <- .initialization(dat)
 
-    fit <- .fit_exponential_factorization(dat, k = 1)
+    fit <- .fit_exponential_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                                          max_iter = 5)
 
     res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat)
     res2 <- .evaluate_objective(dat, matrix(1, ncol = 1, nrow = 10),

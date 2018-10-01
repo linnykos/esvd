@@ -2,6 +2,8 @@
                                            max_iter = 100, verbose = F){
   stopifnot(length(which(dat > 0)) > 0)
   stopifnot(length(which(dat < 0)) == 0)
+  stopifnot(nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat), ncol(u_mat) == ncol(v_mat))
+  k <- ncol(u_mat)
 
   idx <- which(dat == 0)
   min_val <- min(dat[which(dat > 0)])
