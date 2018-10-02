@@ -1,4 +1,4 @@
-.plot_singlecell <- function(dat){
+.plot_singlecell <- function(dat, ...){
   col_vec <- .colorRamp_custom(c(0.584, 0.858, 0.564), c(0.803, 0.156, 0.211), 19)
   col_vec <- c("white", col_vec)
 
@@ -9,7 +9,7 @@
   break_vec <- c(-5, break_vec)
 
   graphics::image(.rotate(dat), breaks = break_vec, col = col_vec, asp = nrow(dat)/ncol(dat),
-        axes = F)
+        axes = F, ...)
 
   invisible()
 }

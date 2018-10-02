@@ -1,33 +1,79 @@
 rm(list=ls())
+load("../experiment/Week23_simulation.RData")
 source("../experiment/Week23_simulation_generator.R")
-
-set.seed(10)
-simulation <- .data_generator(total = 200)
 
 col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
              rgb(180,200,255,maxColorValue=255), #purple
              rgb(100,100,200,maxColorValue=255), #blue
              rgb(149,219,144,maxColorValue=255)) #green
 
-dat <- simulation$dat
-length(which(dat == 0))/prod(dim(dat))
-.plot_singlecell(dat)
+###############
 
-plot(simulation$cell_mat[,1], simulation$cell_mat[,2],
-     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
-     pch = 16, xlab = "Estimated dim. 1", ylab = "Estimated dim. 2", main = "Cell estimated vectors")
+set.seed(10)
+simulation2 <- .data_generator(total = 200)
 
-plot(simulation$gene_mat[,1], simulation$gene_mat[,2],
-     col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
-     pch = 16, xlab = "Estimated dim. 1", ylab = "Estimated dim. 2", main = "Cell estimated vectors")
+library(slingshot)
+slingshot_res <- slingshot::slingshot(data = simulation2$cell_mat_org,
+                                      clusterLabels = rep(1:simulation2$h, each = simulation2$n_each),
+                                      omega = 9)
 
+png("../figure/experiment/23_latent.png", height = 1200, width = 2000, res = 300, units = "px")
+par(mfrow = c(1,2))
+plot(simulation2$cell_mat_org[,1], simulation2$cell_mat_org[,2],
+     xlim = range(c(simulation2$cell_mat_org[,1], 0)),
+     ylim = range(c(simulation2$cell_mat_org[,2], 0)),
+     col = col_vec[rep(1:simulation2$h, each = simulation2$n_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(slingshot_res)
 
-par(mfrow = c(1,3))
-zz <- apply(dat, 1, function(x){length(which(x != 0))/length(x)})
-plot(sort(zz))
-zz <- apply(dat, 2, function(x){length(which(x != 0))/length(x)})
-plot(sort(zz))
-plot(sort(dat[dat != 0]))
+plot(simulation2$gene_mat_org[,1], simulation2$gene_mat_org[,2],
+     xlim = range(c(simulation2$gene_mat_org[,1], 0)),
+     ylim = range(c(simulation2$gene_mat_org[,2], 0)),
+     col = col_vec[rep(1:simulation2$g, each = simulation2$d_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+graphics.off()
+
+##################
+
+png("../figure/experiment/23_data.png", height = 1000, width = 2400, res = 300, units = "px")
+par(mar = c(0.5, 0.5, 3, 0.5), mfrow = c(1,2))
+.plot_singlecell(abs(simulation$gram_mat), main = "Inner product matrix")
+lines(rep(0.5, 2), c(0,1), lwd = 5, lty = 2)
+for(i in 1:3){
+  lines(c(0, 1), rep(i/4, 2), lwd = 5, lty = 2)
+}
+
+.plot_singlecell(dat, main = "Observed matrix")
+lines(rep(0.5, 2), c(0,1), lwd = 5, lty = 2)
+for(i in 1:3){
+  lines(c(0, 1), rep(i/4, 2), lwd = 5, lty = 2)
+}
+graphics.off()
+
+png("../figure/experiment/23_histograms.png", height = 2000, width = 2500, res = 300, units = "px")
+par(mfrow = c(2,2), mar = c(4,3,3,1))
+zz <- which.max(apply(dat, 1, function(x){length(which(x == 0))}))
+.hist_augment(dat[zz,], main = paste0("Cell ", zz), xlab = "Value")
+zz <- which.min(apply(dat, 1, function(x){length(which(x == 0))}))
+.hist_augment(dat[zz,], main = paste0("Cell ", zz), xlab = "Value")
+zz <- which.max(apply(dat, 2, function(x){length(which(x == 0))}))
+.hist_augment(dat[,zz], main = paste0("Gene ", zz), xlab = "Value")
+zz <- which.min(apply(dat, 2, function(x){length(which(x == 0))}))
+.hist_augment(dat[,zz], main = paste0("Gene ", zz), xlab = "Value")
+graphics.off()
+
+###########################
+
+# par(mfrow = c(1,3))
+# zz <- apply(dat, 1, function(x){length(which(x != 0))/length(x)})
+# plot(sort(zz))
+# zz <- apply(dat, 2, function(x){length(which(x != 0))/length(x)})
+# plot(sort(zz))
+# plot(sort(dat[dat != 0]))
 
 
 ###########

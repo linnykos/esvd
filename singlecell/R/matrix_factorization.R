@@ -22,7 +22,7 @@
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
 
-    if(verbose) print(paste0("Iter ", length(obj_vec), ": Decrease is ", abs(current_obj - next_obj)))
+    if(verbose) print(paste0("Iter ", length(obj_vec), ": Decrease is ", current_obj - next_obj))
 
     obj_vec <- c(obj_vec, next_obj)
   }
