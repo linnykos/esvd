@@ -1,6 +1,5 @@
 context("Test matrix factorization - Exponential")
 
-
 # .gradient_vec is correct
 
 test_that(".gradient_vec works", {
