@@ -134,7 +134,7 @@
   idx <- which(!is.na(dat_vec))
 
   s <- -1*unique(as.numeric(sign(other_mat %*% current_vec)))
-  stopifnot(length(s) == 1)
+  stopifnot(length(s) == 1, s %in% c(-1,1))
 
   while(TRUE){
     if(any((s*(other_mat %*% (current_vec - t_current*grad_vec))[idx]) >= 0)){

@@ -13,6 +13,24 @@ test_that(".projection_l1 works", {
   expect_true(length(res) == length(current_vec))
 })
 
+test_that(".projection_l1 enforces negativity", {
+  set.seed(10)
+  current_vec <- rnorm(10)
+  other_mat <- matrix(rnorm(50), ncol = 10)
+  res <- .projection_l1(current_vec, other_mat)
+
+  expect_true(all(other_mat %*% res <= 0))
+})
+
+test_that(".projection_l1 enforces positivity", {
+  set.seed(10)
+  current_vec <- rnorm(10)
+  other_mat <- matrix(rnorm(50), ncol = 10)
+  res <- .projection_l1(current_vec, other_mat, direction = ">=")
+
+  expect_true(all(other_mat %*% res >= 0))
+})
+
 test_that(".projection_l1 maintains less than 0", {
   trials <- 50
 
@@ -27,6 +45,25 @@ test_that(".projection_l1 maintains less than 0", {
     prod_mat <- u_mat %*% t(v_mat)
 
     all(prod_mat[which(!is.na(dat))] <= 0)
+  })
+
+  expect_true(all(bool_vec))
+})
+
+test_that(".projection_l1 maintains greater than 0", {
+  trials <- 50
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(10*x)
+
+    dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+
+    res <- .initialization(dat, family = "gaussian")
+    u_mat <- res$u_mat
+    v_mat <- res$v_mat
+    prod_mat <- u_mat %*% t(v_mat)
+
+    all(prod_mat[which(!is.na(dat))] > 0)
   })
 
   expect_true(all(bool_vec))
