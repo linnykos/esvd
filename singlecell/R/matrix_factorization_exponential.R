@@ -1,0 +1,37 @@
+.evaluate_objective.exponential <- function(dat, u_mat, v_mat, ...){
+  stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
+            ncol(u_mat) == ncol(v_mat))
+
+  pred_mat <- u_mat %*% t(v_mat)
+  idx <- which(!is.na(dat))
+  stopifnot(all(pred_mat[idx] < 0))
+
+  sum(-log(-pred_mat[idx]) - pred_mat[idx]*dat[idx])
+}
+
+.evaluate_objective_single.exponential <- function(dat_vec, current_vec, other_mat, ...){
+  stopifnot(!is.matrix(dat_vec))
+  stopifnot(length(current_vec) == ncol(other_mat))
+  stopifnot(length(dat_vec) == nrow(other_mat))
+
+  pred_vec <- other_mat %*% current_vec
+  idx <- which(!is.na(dat_vec))
+  stopifnot(all(pred_vec[idx] < 0))
+
+  sum(-log(-pred_vec[idx]) - pred_vec[idx]*dat_vec[idx])
+}
+
+.gradient_vec.exponential <- function(dat_vec, current_vec, other_mat){
+  stopifnot(!is.matrix(dat_vec))
+  stopifnot(length(current_vec) == ncol(other_mat))
+  stopifnot(length(dat_vec) == nrow(other_mat))
+
+  pred_vec <- other_mat %*% current_vec
+  idx <- which(!is.na(dat_vec))
+
+  tmp <- sapply(idx, function(j){
+    other_mat[j,,drop=F]*(-1/pred_vec[j]-dat_vec[j])
+  })
+
+  if(is.matrix(tmp)) rowSums(tmp) else sum(tmp)
+}

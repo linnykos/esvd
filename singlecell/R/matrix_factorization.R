@@ -1,9 +1,12 @@
-.fit_exponential_factorization <- function(dat, u_mat, v_mat, tol = 1e-3,
-                                           max_iter = 100, verbose = F){
+.fit_factorization <- function(dat, u_mat, v_mat, tol = 1e-3,
+                                           max_iter = 100, verbose = F,
+                                           family = "exponential"){
   stopifnot(length(which(dat > 0)) > 0)
   stopifnot(length(which(dat < 0)) == 0)
-  stopifnot(nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat), ncol(u_mat) == ncol(v_mat))
+  stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
+            ncol(u_mat) == ncol(v_mat))
   k <- ncol(u_mat)
+  class(dat) <- c(family, class(dat)[length(class(dat))])
 
   idx <- which(dat == 0)
   min_val <- min(dat[which(dat > 0)])
@@ -36,25 +39,30 @@
        obj_vec = obj_vec)
 }
 
-.evaluate_objective <- function(dat, u_mat, v_mat){
-  stopifnot(nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
-            ncol(u_mat) == ncol(v_mat))
-  pred_mat <- u_mat %*% t(v_mat)
-  idx <- which(!is.na(dat))
-  stopifnot(all(pred_mat[idx] < 0))
+#########
 
-  sum(-log(-pred_mat[idx]) - pred_mat[idx]*dat[idx])
+.evaluate_objective <- function (dat, ...) {
+  UseMethod(".evaluate_objective", dat)
 }
 
-.evaluate_objective_single <- function(dat_vec, current_vec, other_mat){
-  stopifnot(length(current_vec) == ncol(other_mat))
-  stopifnot(length(dat_vec) == nrow(other_mat))
+.evaluate_objective.default <- function(dat, u_mat, v_mat){
+  .evaluate_objective.exponential(dat, u_mat, v_mat)
+}
 
-  pred_vec <- other_mat %*% current_vec
-  idx <- which(!is.na(dat_vec))
-  stopifnot(all(pred_vec[idx] < 0))
+.evaluate_objective_single <- function (dat_vec, ...) {
+  UseMethod(".evaluate_objective_single", dat_vec)
+}
 
-  sum(-log(-pred_vec[idx]) - pred_vec[idx]*dat_vec[idx])
+.evaluate_objective_single.default <- function(dat_vec, current_vec, other_mat){
+  .evaluate_objective_single.exponential(dat_vec, current_vec, other_mat)
+}
+
+.gradient_vec <- function (dat_vec, ...) {
+  UseMethod(".gradient_vec", dat_vec)
+}
+
+.gradient_vec.default <- function(dat_vec, current_vec, other_mat){
+  .gradient_vec.exponential(dat_vec, current_vec, other_mat)
 }
 
 #########
@@ -68,7 +76,8 @@
   }
 
   for(i in 1:nrow(current_mat)){
-    if(left) {dat_vec <- dat[i,]} else {dat_vec <- dat[,i]}
+    if(left) { dat_vec <- dat[i,] } else { dat_vec <- dat[,i] }
+    class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
     if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,], other_mat)
   }
 
@@ -97,20 +106,6 @@
   }
 
   current_vec
-}
-
-.gradient_vec <- function(dat_vec, current_vec, other_mat){
-  stopifnot(length(current_vec) == ncol(other_mat))
-  stopifnot(length(dat_vec) == nrow(other_mat))
-
-  pred_vec <- other_mat %*% current_vec
-  idx <- which(!is.na(dat_vec))
-
-  tmp <- sapply(idx, function(j){
-    other_mat[j,,drop=F]*(-1/pred_vec[j]-dat_vec[j])
-  })
-
-  if(is.matrix(tmp)) rowSums(tmp) else sum(tmp)
 }
 
 .backtrack_linesearch <- function(dat_vec, current_vec, other_mat, grad_vec,
