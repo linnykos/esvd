@@ -212,6 +212,7 @@ test_that(".optimize_row works the other way", {
 test_that(".optimize_mat works", {
   set.seed(20)
   dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+  class(dat) <- c("exponential", class(dat))
 
   res <- .initialization(dat)
   u_mat <- res$u_mat
@@ -229,6 +230,7 @@ test_that(".optimize_mat keeps the positive constraint", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+    class(dat) <- c("exponential", class(dat))
     bool <- sample(c(T, F), 1)
 
     res <- .initialization(dat)
@@ -257,6 +259,7 @@ test_that(".optimize_mat lowers the objective value", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+    class(dat) <- c("exponential", class(dat))
     bool <- sample(c(T, F), 1)
 
     res <- .initialization(dat)

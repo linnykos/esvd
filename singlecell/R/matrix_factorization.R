@@ -6,7 +6,7 @@
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
             ncol(u_mat) == ncol(v_mat))
   k <- ncol(u_mat)
-  class(dat) <- c(family, class(dat)[length(class(dat))])
+  if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
 
   idx <- which(dat == 0)
   min_val <- min(dat[which(dat > 0)])
@@ -41,7 +41,7 @@
 
 #########
 
-.evaluate_objective <- function (dat, u_mat, v_mat, ...) {
+.evaluate_objective <- function (dat, u_mat, v_mat) {
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
             ncol(u_mat) == ncol(v_mat))
 
@@ -52,7 +52,7 @@
   .evaluate_objective.exponential(dat, u_mat, v_mat)
 }
 
-.evaluate_objective_single <- function (dat_vec, current_vec, other_mat, ...) {
+.evaluate_objective_single <- function (dat_vec, current_vec, other_mat) {
   stopifnot(!is.matrix(dat_vec))
   stopifnot(length(current_vec) == ncol(other_mat))
   stopifnot(length(dat_vec) == nrow(other_mat))
@@ -64,7 +64,7 @@
   .evaluate_objective_single.exponential(dat_vec, current_vec, other_mat)
 }
 
-.gradient_vec <- function (dat_vec, current_vec, other_mat, ...) {
+.gradient_vec <- function (dat_vec, current_vec, other_mat) {
   stopifnot(!is.matrix(dat_vec))
   stopifnot(length(current_vec) == ncol(other_mat))
   stopifnot(length(dat_vec) == nrow(other_mat))
@@ -79,6 +79,8 @@
 #########
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T){
+  stopifnot(length(class(dat)) == 2)
+
   stopifnot(ncol(current_mat) == ncol(other_mat))
   if(left) {
     stopifnot(ncol(dat) == nrow(other_mat))
@@ -98,6 +100,12 @@
 .optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100){
   stopifnot(length(which(!is.na(dat_vec))) > 0)
 
+  if(class(dat_vec)[1] == "exponential"){
+    direction = "<="
+  } else if(class(dat_vec)[1] == "gaussian"){
+    direction = ">="
+  }
+
   current_obj <- Inf
   next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
   iter <- 1
@@ -109,7 +117,8 @@
     stepsize <- .backtrack_linesearch(dat_vec, current_vec, other_mat, grad_vec)
 
     current_vec <- current_vec - stepsize * grad_vec
-    current_vec <- .projection_l1(current_vec, other_mat, which(!is.na(dat_vec)))
+    current_vec <- .projection_l1(current_vec, other_mat, which(!is.na(dat_vec)),
+                                  direction = direction)
 
     next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
 
@@ -124,8 +133,11 @@
   t_current <- t_init
   idx <- which(!is.na(dat_vec))
 
+  s <- -1*unique(as.numeric(sign(other_mat %*% current_vec)))
+  stopifnot(length(s) == 1)
+
   while(TRUE){
-    if(any((other_mat %*% (current_vec - t_current*grad_vec))[idx] >= 0)){
+    if(any((s*(other_mat %*% (current_vec - t_current*grad_vec))[idx]) >= 0)){
       t_current <- t_current*beta
     } else {
       obj1 <- .evaluate_objective_single(dat_vec, current_vec - t_current*grad_vec, other_mat)
@@ -149,7 +161,7 @@
 #' Optimization problem: min s_1 + ... + s_k
 #' such that: s_i >= u_i - (u_+i - u_-i) for i from 1 to k,
 #'            s_i >= -(u_i - (u_+i - u_-i)) for i from 1 to k,
-#'            V %*% (u_+(1:k) - u_-(1:k)) <= 0 elementwise (for entire vector of length d)
+#'            V %*% (u_+(1:k) - u_-(1:k)) <= tol elementwise (for entire vector of length d)
 #'            s_i, u_+i, u_-i >= 0 for i from 1 to k
 #'
 #' @param current_vec vector
@@ -159,7 +171,7 @@
 #'
 #' @return
 .projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat),
-                           tol = 1e-6){
+                           tol = 1e-6, direction = "<="){
   if(length(idx) == 0) return(current_vec)
   stopifnot(ncol(other_mat) == length(current_vec))
 
@@ -177,8 +189,9 @@
   }))
   const_mat <- rbind(const_mat, const_mat2)
 
-  const_dir <- c(rep(">=", 2*k), rep("<=", nrow(other_mat)))
-  const_rhs <- c(current_vec, -current_vec, rep(-tol, nrow(other_mat)))
+  const_dir <- c(rep(">=", 2*k), rep(direction, nrow(other_mat)))
+  if(direction == "<=") s <- -1 else s <- 1
+  const_rhs <- c(current_vec, -current_vec, rep(s*tol, nrow(other_mat)))
 
   res <- lpSolve::lp("min", objective_in, const_mat, const_dir, const_rhs)
   res$solution[1:k] - res$solution[(k+1):(2*k)]

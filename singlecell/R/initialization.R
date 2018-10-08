@@ -7,13 +7,19 @@
 #' @param k numeric
 #'
 #' @return list
-.initialization <- function(dat, k = 2){
+.initialization <- function(dat, k = 2, family = "exponential"){
   stopifnot(length(which(is.na(dat))) == 0)
 
   idx <- which(dat == 0)
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat == 0)] <- min_val/2
-  dat2 <- -1/dat
+  if(family == "exponential") {
+    dat2 <- -1/dat
+    direction <- "<="
+  } else {
+    dat2 <- 1/dat
+    direction <- ">="
+  }
 
   svd_res <- svd(dat2)
 
@@ -23,11 +29,16 @@
 
   # project v back into positive space based on u
   for(j in 1:nrow(v_mat)){
-    v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])))
+    v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])),
+                                direction = direction)
   }
 
   pred_mat <- u_mat %*% t(v_mat)
-  stopifnot(all(pred_mat[which(!is.na(dat))] <= 0))
+  if(family == "exponential") {
+    stopifnot(all(pred_mat[which(!is.na(dat))] < 0))
+  } else {
+    stopifnot(all(pred_mat[which(!is.na(dat))] > 0))
+  }
 
   list(u_mat = u_mat, v_mat = v_mat)
 }

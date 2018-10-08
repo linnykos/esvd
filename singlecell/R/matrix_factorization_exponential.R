@@ -1,4 +1,4 @@
-.evaluate_objective.exponential <- function(dat, u_mat, v_mat, ...){
+.evaluate_objective.exponential <- function(dat, u_mat, v_mat){
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
   stopifnot(all(pred_mat[idx] < 0))
@@ -6,7 +6,7 @@
   sum(-log(-pred_mat[idx]) - pred_mat[idx]*dat[idx])
 }
 
-.evaluate_objective_single.exponential <- function(dat_vec, current_vec, other_mat, ...){
+.evaluate_objective_single.exponential <- function(dat_vec, current_vec, other_mat){
   pred_vec <- other_mat %*% current_vec
   idx <- which(!is.na(dat_vec))
   stopifnot(all(pred_vec[idx] < 0))
