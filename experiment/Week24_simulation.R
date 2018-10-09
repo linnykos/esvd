@@ -1,9 +1,10 @@
 rm(list=ls())
 source("../experiment/Week24_simulation_generator.R")
+load("../experiment/Week24_simulation.RData")
 
 set.seed(10)
-simulation <- .data_generator(total = 200, col_drop = F)
-dat <- simulation$dat
+#simulation <- .data_generator(total = 200, col_drop = F)
+#dat <- simulation$dat
 .plot_singlecell(dat)
 length(which(dat == 0))/prod(dim(dat))
 length(which(simulation$obs_mat2 == 0))/prod(dim(simulation$obs_mat2)) #percentage of true zeros
@@ -13,10 +14,19 @@ col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
              rgb(100,100,200,maxColorValue=255), #purple
              rgb(149,219,144,maxColorValue=255)) #green
 
-plot(simulation$cell_mat_org[,1], simulation$cell_mat_org[,2],
-     xlim = range(c(simulation$cell_mat_org[,1], 0)),
-     ylim = range(c(simulation$cell_mat_org[,2], 0)),
+plot(simulation$cell_mat[,1], simulation$cell_mat[,2],
+     xlim = range(c(simulation$cell_mat[,1], 0)),
+     ylim = range(c(simulation$cell_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+
+##################
+
+plot(res_nodropout$u_mat[,1], res_nodropout$u_mat[,2],
+     xlim = range(c(res_nodropout$u_mat[,1], 0)),
+     ylim = range(c(res_nodropout$u_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+
