@@ -6,6 +6,13 @@ set.seed(10)
 simulation <- .data_generator_exponential(total = 200, col_drop = F)
 dat <- simulation$dat
 
+init_ideal <- singlecell:::.initialization(simulation$obs_mat, family = "exponential")
+res_ideal <- singlecell:::.fit_factorization(simulation$obs_mat, init_ideal$u_mat, init_ideal$v_mat,
+                                             verbose = T, family = "exponential",
+                                             cores = 15)
+
+save.image("Week24_simulation_exponential.RData")
+
 init <- singlecell:::.initialization(dat, family = "exponential")
 res_nodropout <- singlecell:::.fit_factorization(dat, init$u_mat, init$v_mat,
                                                  verbose = T, family = "exponential",
@@ -35,3 +42,4 @@ res_withimpute <- singlecell:::.fit_factorization(dat_impute, init_impute$u_mat,
                                                   cores = 15)
 
 save.image("Week24_simulation_exponential.RData")
+

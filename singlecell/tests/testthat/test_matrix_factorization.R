@@ -105,9 +105,11 @@ test_that(".backtrack_linesearch works", {
   u_mat <- res$u_mat
   v_mat <- res$v_mat
   i <- 1
-  grad_vec <- .gradient_vec(dat[i,], u_mat[i,], v_mat)
+  dat_vec <- dat[i,]
+  class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+  grad_vec <- .gradient_vec(dat_vec, u_mat[i,], v_mat)
 
-  res <- .backtrack_linesearch(dat[i,], u_mat[i,], v_mat, grad_vec)
+  res <- .backtrack_linesearch(dat_vec, u_mat[i,], v_mat, grad_vec)
 
   expect_true(is.numeric(res))
   expect_true(!is.matrix(res))
@@ -128,9 +130,11 @@ test_that(".backtrack_linesearch actually keeps the negative constraint", {
     i <- sample(1:10, 1)
 
     if(any(!is.na(dat[i,]))){
-      grad_vec <- .gradient_vec(dat[i,], u_mat[i,], v_mat)
+      dat_vec <- dat[i,]
+      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+      grad_vec <- .gradient_vec(dat_vec, u_mat[i,], v_mat)
 
-      res <- .backtrack_linesearch(dat[i,], u_mat[i,], v_mat, grad_vec)
+      res <- .backtrack_linesearch(dat_vec, u_mat[i,], v_mat, grad_vec)
 
       u_new <- u_mat[i,] - res*grad_vec
       vec <- v_mat %*% u_new
@@ -158,13 +162,15 @@ test_that(".backtrack_linesearch lowers the objective", {
 
     i <- sample(1:10, 1)
     if(any(!is.na(dat[i,]))){
-      obj1 <- .evaluate_objective_single(dat[i,], u_mat[i,], v_mat)
-      grad_vec <- .gradient_vec(dat[i,], u_mat[i,], v_mat)
+      dat_vec <- dat[i,]
+      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+      obj1 <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat)
+      grad_vec <- .gradient_vec(dat_vec, u_mat[i,], v_mat)
 
-      res <- .backtrack_linesearch(dat[i,], u_mat[i,], v_mat, grad_vec)
+      res <- .backtrack_linesearch(dat_vec, u_mat[i,], v_mat, grad_vec)
 
       u_new <- u_mat[i,] - res*grad_vec
-      obj2 <- .evaluate_objective_single(dat[i,], u_new, v_mat)
+      obj2 <- .evaluate_objective_single(dat_vec, u_new, v_mat)
 
       obj2 <= obj1 + 1e-6
     } else {
@@ -188,7 +194,9 @@ test_that(".optimize_row works", {
   v_mat <- res$v_mat
   i <- 1
 
-  res <- .optimize_row(dat[i,], u_mat[i,], v_mat)
+  dat_vec <- dat[i,]
+  class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+  res <- .optimize_row(dat_vec, u_mat[i,], v_mat)
 
   expect_true(is.numeric(res))
   expect_true(length(res) == length(u_mat[i,]))
@@ -207,9 +215,11 @@ test_that(".optimize_row actually lowers the objective", {
     i <- sample(1:10, 1)
 
     if(any(!is.na(dat[i,]))){
-      u_new <- .optimize_row(dat[i,], u_mat[i,], v_mat)
-      obj1 <- .evaluate_objective_single(dat[i,], u_mat[i,], v_mat)
-      obj2 <- .evaluate_objective_single(dat[i,], u_new, v_mat)
+      dat_vec <- dat[i,]
+      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+      u_new <- .optimize_row(dat_vec, u_mat[i,], v_mat)
+      obj1 <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat)
+      obj2 <- .evaluate_objective_single(dat_vec, u_new, v_mat)
 
       obj2 <= obj1 + 1e-6
     } else {TRUE}
@@ -231,9 +241,37 @@ test_that(".optimize_row works the other way", {
     j <- sample(1:4, 1)
 
     if(any(!is.na(dat[,j]))){
-      v_new <- .optimize_row(dat[,j], v_mat[j,], u_mat)
-      obj1 <- .evaluate_objective_single(dat[,j], v_mat[j,], u_mat)
-      obj2 <- .evaluate_objective_single(dat[,j], v_new, u_mat)
+      dat_vec <- dat[,j]
+      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+      v_new <- .optimize_row(dat_vec, v_mat[j,], u_mat)
+      obj1 <- .evaluate_objective_single(dat_vec, v_mat[j,], u_mat)
+      obj2 <- .evaluate_objective_single(dat_vec, v_new, u_mat)
+
+      obj2 <= obj1 + 1e-6
+    } else {TRUE}
+  })
+
+  expect_true(all(bool_vec))
+})
+
+test_that(".optimize_row respects an upper bound", {
+  trials <- 25
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(x*10)
+    dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+
+    res <- .initialization(dat)
+    u_mat <- res$u_mat
+    v_mat <- res$v_mat
+    i <- sample(1:10, 1)
+
+    if(any(!is.na(dat[i,]))){
+      dat_vec <- dat[i,]
+      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+      u_new <- .optimize_row(dat_vec, u_mat[i,], v_mat)
+      obj1 <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat)
+      obj2 <- .evaluate_objective_single(dat_vec, u_new, v_mat)
 
       obj2 <= obj1 + 1e-6
     } else {TRUE}

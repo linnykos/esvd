@@ -1,4 +1,5 @@
 .fit_factorization <- function(dat, u_mat, v_mat, tol = 1e-3,
+                               max_val = NA,
                                max_iter = 100, verbose = F,
                                family = "exponential",
                                cores = NA){
@@ -22,8 +23,8 @@
   while(current_obj - next_obj > tol & length(obj_vec) < max_iter){
     current_obj <- next_obj
 
-    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, !is.na(cores))
-    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, !is.na(cores))
+    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, !is.na(cores))
+    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, !is.na(cores))
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
 
@@ -80,7 +81,8 @@
 
 #########
 
-.optimize_mat <- function(dat, current_mat, other_mat, left = T, parallelized = F){
+.optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
+                          parallelized = F){
   stopifnot(length(class(dat)) == 2)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
@@ -94,7 +96,7 @@
     func <- function(i){
       if(left) { dat_vec <- dat[i,] } else { dat_vec <- dat[,i] }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
-      .optimize_row(dat_vec, current_mat[i,], other_mat)
+      .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val)
     }
 
     lis <- foreach::"%dopar%"(foreach::foreach(i = 1:nrow(current_mat)), func(i))
@@ -104,7 +106,8 @@
     for(i in 1:nrow(current_mat)){
       if(left) { dat_vec <- dat[i,] } else { dat_vec <- dat[,i] }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
-      if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,], other_mat)
+      if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
+                                                                other_mat, max_val = max_val)
     }
   }
 
@@ -112,13 +115,15 @@
   current_mat
 }
 
-.optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100){
+.optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100, max_val = NA){
   stopifnot(length(which(!is.na(dat_vec))) > 0)
 
   if(class(dat_vec)[1] == "exponential"){
     direction = "<="
   } else if(class(dat_vec)[1] == "gaussian"){
     direction = ">="
+  } else {
+    stop("input vector in .optimize_row() does not have a proper class")
   }
 
   current_obj <- Inf
@@ -134,6 +139,11 @@
     current_vec <- current_vec - stepsize * grad_vec
     current_vec <- .projection_l1(current_vec, other_mat, which(!is.na(dat_vec)),
                                   direction = direction)
+    if(!is.na(max_val)){
+      other_direction <- ifelse(direction == "<=", ">=", "<=")
+      current_vec <- .projection_l1(current_vec, other_mat, which(!is.na(dat_vec)),
+                                    val = max_val, direction = other_direction)
+    }
 
     next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
 
@@ -148,11 +158,13 @@
   t_current <- t_init
   idx <- which(!is.na(dat_vec))
 
- if("gaussian" %in% class(dat_vec)){
-   s <- -1
- } else {
-   s <- 1
- }
+  if(class(dat_vec)[1] == "exponential"){
+    s <- 1
+  } else if(class(dat_vec)[1] == "gaussian"){
+    s <- -1
+  } else {
+    stop("input vector in .backtrack_linesearch() does not have a proper class")
+  }
 
   while(TRUE){
     if(any((s*(other_mat %*% (current_vec - t_current*grad_vec))[idx]) >= 0)){
@@ -179,17 +191,17 @@
 #' Optimization problem: min s_1 + ... + s_k
 #' such that: s_i >= u_i - (u_+i - u_-i) for i from 1 to k,
 #'            s_i >= -(u_i - (u_+i - u_-i)) for i from 1 to k,
-#'            V %*% (u_+(1:k) - u_-(1:k)) <= tol elementwise (for entire vector of length d)
+#'            V %*% (u_+(1:k) - u_-(1:k)) <= val elementwise (for entire vector of length d)
 #'            s_i, u_+i, u_-i >= 0 for i from 1 to k
 #'
 #' @param current_vec vector
 #' @param other_mat matrix
 #' @param idx row indices for other_mat
-#' @param tol numeric
+#' @param val numeric
 #'
 #' @return
 .projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat),
-                           tol = 1e-6, direction = "<="){
+                           val = 1e-6, direction = "<="){
   if(length(idx) == 0) return(current_vec)
   stopifnot(ncol(other_mat) == length(current_vec))
 
@@ -209,7 +221,7 @@
 
   const_dir <- c(rep(">=", 2*k), rep(direction, nrow(other_mat)))
   if(direction == "<=") s <- -1 else s <- 1
-  const_rhs <- c(current_vec, -current_vec, rep(s*tol, nrow(other_mat)))
+  const_rhs <- c(current_vec, -current_vec, rep(s*val, nrow(other_mat)))
 
   res <- lpSolve::lp("min", objective_in, const_mat, const_dir, const_rhs)
   res$solution[1:k] - res$solution[(k+1):(2*k)]
