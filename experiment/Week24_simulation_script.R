@@ -23,7 +23,7 @@ dat_impute <- singlecell:::.scImpute(dat, which(is.na(zero_mat)), Kcluster = 4,
 
 save.image("Week24_simulation.RData")
 
-init_impute <- singlecell:::.initialization(dat_impute)
+init_impute <- singlecell:::.initialization(dat_impute, family = "gaussian")
 res_withdropout <- singlecell:::.fit_factorization(dat2, init_impute$u_mat, init_impute$v_mat,
                                                    verbose = T, family = "gaussian",
                                                    cores = 15)
