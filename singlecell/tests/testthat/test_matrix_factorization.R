@@ -93,6 +93,15 @@ test_that(".projection_l1 is actually a projection compared to the all 0 vector"
   expect_true(all(bool_vec))
 })
 
+test_that(".projection_l1 can take another bound", {
+  set.seed(10)
+  current_vec <- rnorm(10)
+  other_mat <- matrix(rnorm(50), ncol = 10)
+  res <- .projection_l1(current_vec, other_mat, direction = ">=", other_bound = 1)
+
+  expect_true(all(other_mat %*% res <= 1+1e-6))
+})
+
 #########################
 
 ## .backtrack_linesearch is correct
@@ -255,29 +264,21 @@ test_that(".optimize_row works the other way", {
 })
 
 test_that(".optimize_row respects an upper bound", {
-  trials <- 25
+  set.seed(20)
+  dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
 
-  bool_vec <- sapply(1:trials, function(x){
-    set.seed(x*10)
-    dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+  res <- .initialization(dat)
+  u_mat <- res$u_mat
+  v_mat <- res$v_mat
+  i <- 1
 
-    res <- .initialization(dat)
-    u_mat <- res$u_mat
-    v_mat <- res$v_mat
-    i <- sample(1:10, 1)
+  dat_vec <- dat[i,]
+  class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+  res1 <- .optimize_row(dat_vec, u_mat[i,], v_mat)
+  res2 <- .optimize_row(dat_vec, u_mat[i,], v_mat, max_val = -5)
 
-    if(any(!is.na(dat[i,]))){
-      dat_vec <- dat[i,]
-      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-      u_new <- .optimize_row(dat_vec, u_mat[i,], v_mat)
-      obj1 <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat)
-      obj2 <- .evaluate_objective_single(dat_vec, u_new, v_mat)
-
-      obj2 <= obj1 + 1e-6
-    } else {TRUE}
-  })
-
-  expect_true(all(bool_vec))
+  expect_true(sum(abs(res1 - res2)) > 1e-6)
+  expect_true(all(v_mat %*% res2 >= -5))
 })
 
 ##################

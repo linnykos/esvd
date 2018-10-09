@@ -138,12 +138,7 @@
 
     current_vec <- current_vec - stepsize * grad_vec
     current_vec <- .projection_l1(current_vec, other_mat, which(!is.na(dat_vec)),
-                                  direction = direction)
-    if(!is.na(max_val)){
-      other_direction <- ifelse(direction == "<=", ">=", "<=")
-      current_vec <- .projection_l1(current_vec, other_mat, which(!is.na(dat_vec)),
-                                    val = max_val, direction = other_direction)
-    }
+                                  direction = direction, other_bound = max_val)
 
     next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
 
@@ -191,8 +186,8 @@
 #' Optimization problem: min s_1 + ... + s_k
 #' such that: s_i >= u_i - (u_+i - u_-i) for i from 1 to k,
 #'            s_i >= -(u_i - (u_+i - u_-i)) for i from 1 to k,
-#'            V %*% (u_+(1:k) - u_-(1:k)) <= val elementwise (for entire vector of length d)
-#'            s_i, u_+i, u_-i >= 0 for i from 1 to k
+#'            V %*% (u_+(1:k) - u_-(1:k)) <= tol elementwise (for entire vector of length d)
+#'            u_+i, u_-i, s_i >= 0 for i from 1 to k
 #'
 #' @param current_vec vector
 #' @param other_mat matrix
@@ -201,12 +196,20 @@
 #'
 #' @return
 .projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat),
-                           val = 1e-6, direction = "<="){
+                           tol = 1e-6, direction = "<=", other_bound = NA){
   if(length(idx) == 0) return(current_vec)
   stopifnot(ncol(other_mat) == length(current_vec))
+  stopifnot(is.na(other_bound) || (direction == "<=" & other_bound < 0) ||
+              (direction == ">=" & other_bound > 0))
 
   other_mat <- other_mat[idx,,drop = F]
-  if(all(other_mat %*% current_vec <= 0)) return(current_vec)
+  if(direction == "<=") {
+    if(all(other_mat %*% current_vec < 0) & (is.na(other_bound) || all(other_mat %*% current_vec > other_bound))) return(current_vec)
+    other_direction <- ">="
+  } else {
+    if(all(other_mat %*% current_vec > 0) & (is.na(other_bound) || all(other_mat %*% current_vec < other_bound))) return(current_vec)
+    other_direction <- "<="
+  }
 
   k <- length(current_vec)
   d <- nrow(other_mat)
@@ -218,10 +221,14 @@
     c(v, -v, rep(0,k))
   }))
   const_mat <- rbind(const_mat, const_mat2)
+  if(!is.na(other_bound)) const_mat <- rbind(const_mat, const_mat2)
 
   const_dir <- c(rep(">=", 2*k), rep(direction, nrow(other_mat)))
+  if(!is.na(other_bound)) const_dir <- c(const_dir, rep(other_direction, nrow(other_mat)))
+
   if(direction == "<=") s <- -1 else s <- 1
-  const_rhs <- c(current_vec, -current_vec, rep(s*val, nrow(other_mat)))
+  const_rhs <- c(current_vec, -current_vec, rep(s*tol, nrow(other_mat)))
+  if(!is.na(other_bound)) const_rhs <- c(const_rhs, rep(other_bound, nrow(other_mat)))
 
   res <- lpSolve::lp("min", objective_in, const_mat, const_dir, const_rhs)
   res$solution[1:k] - res$solution[(k+1):(2*k)]
