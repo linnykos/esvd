@@ -14,7 +14,7 @@ res_nodropout <- singlecell:::.fit_factorization(dat, init$u_mat, init$v_mat,
 save.image("Week24_simulation.RData")
 
 dropout_mat <- singlecell:::.dropout(dat)
-zero_mat <- singlecell:::.find_true_zeros(dropout_mat)
+zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 5)
 
 dat2 <- dat
 dat2[which(is.na(zero_mat))] <- NA

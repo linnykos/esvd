@@ -148,9 +148,11 @@
   t_current <- t_init
   idx <- which(!is.na(dat_vec))
 
-  s <- -1*unique(as.numeric(sign(other_mat %*% current_vec)))
-  stopifnot(any(s %in% c(-1,1)), !all(c(-1,1) %in% s))
-  if(length(s) > 1) s <- s[s %in% c(-1,1)]
+ if("gaussian" %in% class(dat_vec)){
+   s <- -1
+ } else {
+   s <- 1
+ }
 
   while(TRUE){
     if(any((s*(other_mat %*% (current_vec - t_current*grad_vec))[idx]) >= 0)){

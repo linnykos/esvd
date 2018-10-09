@@ -30,3 +30,11 @@ plot(res_nodropout$u_mat[,1], res_nodropout$u_mat[,2],
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
 
+##################
+
+zero_mat2 <- zero_mat
+zero_mat2[is.na(zero_mat2)] <- 2
+
+par(mar = rep(0.5,4))
+image(.rotate(zero_mat2), breaks = c(-0.5,0.5,1.5,2.5), col = c("blue3", "gold", "firebrick1"), asp = nrow(zero_mat)/ncol(zero_mat),
+      axes = F)

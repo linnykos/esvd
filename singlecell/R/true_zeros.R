@@ -9,8 +9,8 @@
   row_vec[order(vec, decreasing = T)[1:num_neighbors]]
 }
 
-.find_true_zeros <- function(dropout_mat){
-  num_neighbors <- ceiling(nrow(dropout_mat)/10)
+.find_true_zeros <- function(dropout_mat, num_neighbors = NA){
+  if(is.na(num_neighbors)) num_neighbors <- ceiling(nrow(dropout_mat)/10)
 
   neighbor_list <- lapply(1:nrow(dropout_mat), function(x){
     .find_neighbor(dropout_mat, x, num_neighbors)
