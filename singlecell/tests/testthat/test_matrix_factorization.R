@@ -261,7 +261,25 @@ test_that(".optimize_mat works", {
   expect_true(all(dim(res) == dim(u_mat)))
 })
 
-test_that(".optimize_mat keeps the positive constraint", {
+
+test_that(".optimize_mat works with parallelization", {
+  set.seed(20)
+  dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+  class(dat) <- c("exponential", class(dat))
+
+  res <- .initialization(dat)
+  u_mat <- res$u_mat
+  v_mat <- res$v_mat
+
+  res1 <- .optimize_mat(dat, u_mat, v_mat, parallelized = F)
+
+  doMC::registerDoMC(cores = 3)
+  res2 <- .optimize_mat(dat, u_mat, v_mat, parallelized = T)
+
+  expect_true(sum(abs(res1 - res2)) <= 1e-6)
+})
+
+test_that(".optimize_mat keeps the negative constraint", {
   trials <- 10
 
   bool_vec <- sapply(1:trials, function(x){
@@ -284,6 +302,34 @@ test_that(".optimize_mat keeps the positive constraint", {
     idx <- which(!is.na(dat))
 
     all(pred_mat[idx] <= -1e-6)
+  })
+
+  expect_true(all(bool_vec))
+})
+
+test_that(".optimize_mat keeps the positive constraint", {
+  trials <- 10
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(x*10)
+    dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+    class(dat) <- c("gaussian", class(dat))
+    bool <- sample(c(T, F), 1)
+
+    res <- .initialization(dat, family = "gaussian")
+    u_mat <- res$u_mat
+    v_mat <- res$v_mat
+    if(bool){
+      res <- .optimize_mat(dat, u_mat, v_mat, bool)
+      pred_mat <- res %*% t(v_mat)
+    } else {
+      res <- .optimize_mat(dat, v_mat, u_mat, bool)
+      pred_mat <- u_mat %*% t(res)
+    }
+
+    idx <- which(!is.na(dat))
+
+    all(pred_mat[idx] >= 1e-6)
   })
 
   expect_true(all(bool_vec))

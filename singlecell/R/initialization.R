@@ -115,7 +115,7 @@
   cell_vec2
 }
 
-.scImpute <- function(dat, drop_idx, Kcluster, min_size = 5, max_time = 60){
+.scImpute <- function(dat, drop_idx, Kcluster, min_size = 5, max_time = 60, verbose = F){
   stopifnot(length(which(is.na(dat))) == 0)
   if(length(drop_idx) == 0) return(dat)
 
@@ -127,11 +127,13 @@
   dat2[drop_idx] <- NA
 
   for(k in neigh_list){
-    for(i in k){
-      keep_idx <- which(!is.na(dat2[i,]))
-      dat2[i,] <- .nnls_impute(dat[i,], dat[setdiff(k, i),,drop = F], keep_idx,
+    for(i in 1:length(k)){
+      if(verbose && i %% floor(length(k)/10) == 0) cat('*')
+      keep_idx <- which(!is.na(dat2[k[i],]))
+      dat2[k[i],] <- .nnls_impute(dat[k[i],], dat[setdiff(k, k[i]),,drop = F], keep_idx,
                                max_time = max_time)
     }
+    if(verbose) cat('\n')
   }
 
   dat2

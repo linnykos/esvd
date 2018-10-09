@@ -15,7 +15,13 @@ Imports:
     penalized,
     kernlab,
     R.utils,
-    MASS
+    MASS,
+    foreach,
+    doMC,
+    princurve,
+    matrixStats,
+    ape,
+    igraph
 Suggests:
     testthat
 RoxygenNote: 6.1.0

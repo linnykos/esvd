@@ -1,6 +1,8 @@
 .fit_factorization <- function(dat, u_mat, v_mat, tol = 1e-3,
-                                           max_iter = 100, verbose = F,
-                                           family = "exponential"){
+                               max_iter = 100, verbose = F,
+                               family = "exponential",
+                               cores = NA){
+  if(!is.na(cores)) doMC::registerDoMC(cores = cores)
   stopifnot(length(which(dat > 0)) > 0)
   stopifnot(length(which(dat < 0)) == 0)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
@@ -20,8 +22,8 @@
   while(current_obj - next_obj > tol & length(obj_vec) < max_iter){
     current_obj <- next_obj
 
-    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T)
-    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F)
+    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, !is.na(cores))
+    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, !is.na(cores))
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
 
@@ -78,7 +80,7 @@
 
 #########
 
-.optimize_mat <- function(dat, current_mat, other_mat, left = T){
+.optimize_mat <- function(dat, current_mat, other_mat, left = T, parallelized = F){
   stopifnot(length(class(dat)) == 2)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
@@ -88,11 +90,24 @@
     stopifnot(nrow(dat) == nrow(other_mat))
   }
 
-  for(i in 1:nrow(current_mat)){
-    if(left) { dat_vec <- dat[i,] } else { dat_vec <- dat[,i] }
-    class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
-    if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,], other_mat)
+  if(parallelized){
+    func <- function(i){
+      if(left) { dat_vec <- dat[i,] } else { dat_vec <- dat[,i] }
+      class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
+      .optimize_row(dat_vec, current_mat[i,], other_mat)
+    }
+
+    lis <- foreach::"%dopar%"(foreach::foreach(i = 1:nrow(current_mat)), func(i))
+    current_mat <- do.call(rbind, lis)
+
+  } else {
+    for(i in 1:nrow(current_mat)){
+      if(left) { dat_vec <- dat[i,] } else { dat_vec <- dat[,i] }
+      class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
+      if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,], other_mat)
+    }
   }
+
 
   current_mat
 }
