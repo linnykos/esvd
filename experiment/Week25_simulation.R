@@ -1,6 +1,6 @@
 rm(list=ls())
-source("../experiment/Week24_simulation_generator.R")
-load("../experiment/Week24_simulation_exponential.RData")
+source("../experiment/Week25_simulation_generator.R")
+load("../experiment/Week25_simulation_exponential2.RData")
 
 set.seed(10)
 #simulation <- .data_generator(total = 200, col_drop = F)
@@ -81,6 +81,29 @@ graphics.off()
 #####################
 
 par(mfrow = c(1,3))
+plot(res_ideal$u_mat[,1], res_ideal$u_mat[,2],
+     xlim = range(c(res_ideal$u_mat[,1], 0)),
+     ylim = range(c(res_ideal$u_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+
+plot(res_ideal$v_mat[,1], res_ideal$v_mat[,2],
+     xlim = range(c(res_ideal$v_mat[,1], 0)),
+     ylim = range(c(res_ideal$v_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+
+pred_mat <- res_ideal$u_mat %*% t(res_ideal$v_mat)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T)
+lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+
+###
+
+par(mfrow = c(1,3))
 plot(res_nodropout$u_mat[,1], res_nodropout$u_mat[,2],
      xlim = range(c(res_nodropout$u_mat[,1], 0)),
      ylim = range(c(res_nodropout$u_mat[,2], 0)),
@@ -103,25 +126,47 @@ lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
 
 ###
 
-par(mfrow = c(1,2))
+par(mfrow = c(1,3))
 plot(res_withdropout$u_mat[,1], res_withdropout$u_mat[,2],
      xlim = range(c(res_withdropout$u_mat[,1], 0)),
      ylim = range(c(res_withdropout$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+
+plot(res_withdropout$v_mat[,1], res_withdropout$v_mat[,2],
+     xlim = range(c(res_withdropout$v_mat[,1], 0)),
+     ylim = range(c(res_withdropout$v_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+
 pred_mat <- res_withdropout$u_mat %*% t(res_withdropout$v_mat)
-plot(as.numeric(simulation$gram_mat), pred_mat, asp = T)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T)
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
 
-par(mfrow = c(1,2))
+####
+
+par(mfrow = c(1,3))
 plot(res_withimpute$u_mat[,1], res_withimpute$u_mat[,2],
      xlim = range(c(res_withimpute$u_mat[,1], 0)),
      ylim = range(c(res_withimpute$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+
+plot(res_withimpute$v_mat[,1], res_withimpute$v_mat[,2],
+     xlim = range(c(res_withimpute$v_mat[,1], 0)),
+     ylim = range(c(res_withimpute$v_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+
 pred_mat <- res_withimpute$u_mat %*% t(res_withimpute$v_mat)
-plot(as.numeric(simulation$gram_mat), pred_mat, asp = T)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T)
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+
+plot(as.numeric(simulation$obs_mat), as.numeric(dat_impute))
 
 ####################
 

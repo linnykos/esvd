@@ -20,7 +20,7 @@
   obj_vec <- c(next_obj)
   if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
 
-  while(current_obj - next_obj > tol & length(obj_vec) < max_iter){
+  while((is.na(tol) | abs(current_obj - next_obj) > tol) & length(obj_vec) < max_iter){
     current_obj <- next_obj
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, !is.na(cores))
