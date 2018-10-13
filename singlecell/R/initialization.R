@@ -7,7 +7,8 @@
 #' @param k numeric
 #'
 #' @return list
-.initialization <- function(dat, k = 2, family = "exponential"){
+.initialization <- function(dat, k = 2, family = "exponential",
+                            max_val = NA){
   stopifnot(length(which(is.na(dat))) == 0)
 
   idx <- which(dat == 0)
@@ -30,7 +31,7 @@
   # project v back into positive space based on u
   for(j in 1:nrow(v_mat)){
     v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])),
-                                direction = direction)
+                                direction = direction, other_bound = max_val)
   }
 
   pred_mat <- u_mat %*% t(v_mat)

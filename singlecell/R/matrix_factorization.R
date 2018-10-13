@@ -115,7 +115,8 @@
   current_mat
 }
 
-.optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100, max_val = NA){
+.optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100,
+                          max_val = NA){
   stopifnot(length(which(!is.na(dat_vec))) > 0)
 
   if(class(dat_vec)[1] == "exponential"){
@@ -134,11 +135,10 @@
     current_obj <- next_obj
 
     grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat)
-    stepsize <- .backtrack_linesearch(dat_vec, current_vec, other_mat, grad_vec)
-
-    current_vec <- current_vec - stepsize * grad_vec
-    current_vec <- .projection_l1(current_vec, other_mat, which(!is.na(dat_vec)),
-                                  direction = direction, other_bound = max_val)
+    step_vec <- .frank_wolfe(grad_vec, other_mat, which(!is.na(dat_vec)),
+                             direction = direction, other_bound = max_val)
+    step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat)
+    current_vec <- (1-step_size)*current_vec + step_size*step_vec
 
     next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
 
@@ -148,35 +148,101 @@
   current_vec
 }
 
-.backtrack_linesearch <- function(dat_vec, current_vec, other_mat, grad_vec,
-                                  t_init = 10, beta = .5, alpha = .5){
-  t_current <- t_init
-  idx <- which(!is.na(dat_vec))
-
-  if(class(dat_vec)[1] == "exponential"){
-    s <- 1
-  } else if(class(dat_vec)[1] == "gaussian"){
-    s <- -1
-  } else {
-    stop("input vector in .backtrack_linesearch() does not have a proper class")
+.binary_search <- function(dat_vec, current_vec, step_vec, other_mat,
+                           max_iter = 100){
+  form_current <- function(s){
+    stopifnot(0<=s, s<=1)
+    (1-s)*current_vec + s*step_vec
   }
 
-  while(TRUE){
-    if(any((s*(other_mat %*% (current_vec - t_current*grad_vec))[idx]) >= 0)){
-      t_current <- t_current*beta
+  upper <- 1; lower <- 0; mid <- 0.5
+  iter <- 1
+
+  upper_val <- .evaluate_objective_single(dat_vec, form_current(upper), other_mat)
+  lower_val <- .evaluate_objective_single(dat_vec, form_current(lower), other_mat)
+
+  upper_val_org <- upper_val; lower_val_org <- lower_val
+  mid_val <- 2*max(upper_val, lower_val);
+
+  # stage 1: do at least a few iterations first
+  while(iter <= 6){
+    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat)
+
+    if(lower_val <= upper_val){
+      upper <- mid; upper_val <- mid_val
     } else {
-      obj1 <- .evaluate_objective_single(dat_vec, current_vec - t_current*grad_vec, other_mat)
-      obj2 <- .evaluate_objective_single(dat_vec, current_vec, other_mat) - alpha*t_current*.l2norm(grad_vec)^2
-      if(obj1 > obj2) t_current <- t_current*beta else break()
+      lower <- mid; lower_val <- mid_val
     }
+
+    mid <- (upper + lower)/2
+    iter <- iter + 1
   }
 
-  t_current
+  # stage 2: ensure that the stepsize actually decreases the obj val
+  while(iter <= max_iter & mid_val > min(upper_val_org, lower_val_org)){
+    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat)
+
+    if(lower_val <= upper_val){
+      upper <- mid; upper_val <- mid_val
+    } else {
+      lower <- mid; lower_val <- mid_val
+    }
+
+    mid <- (upper + lower)/2
+    iter <- iter + 1
+  }
+
+  if(upper_val_org <= mid_val) return(1)
+  if(lower_val_org <= mid_val) return(0)
+
+  mid
 }
 
 .l2norm <- function(x){sqrt(sum(x^2))}
 
 #######################
+
+#' Frank wolfe linear program
+#'
+#' Solves the linear program:
+#' Data: g_i (vector), i from 1 to k. V (matrix), with d rows and k columns.
+#' Variables: y_+1 to y_+k, y_-1 to y_-k
+#' Optimization problem: min g_1*(y_+1-y_-1) + ... + g_k(y_+k-y_-k)
+#' such that: V %*% (y_+(1:k) - y_-(1:k)) <= tol elementwise (for entire vector of length d)
+#'            V %*% (y_+(1:k) - y_-(1:k)) >= other_bound
+#'            y_+i, y_-i >= 0 for i from 1 to k
+#'
+#' @param grad_vec vector
+#' @param other_mat matrix
+#' @param idx row indices for other_mat
+#' @param tol numierc
+#' @param direction character
+#' @param other_bound numeric
+#'
+#' @return vector
+.frank_wolfe <- function(grad_vec, other_mat, idx = 1:nrow(other_mat),
+                         tol = 1e-6, direction = "<=", other_bound = NA){
+
+  k <- length(grad_vec)
+  other_mat <- other_mat[idx,,drop = F]
+  other_direction <- ifelse(direction == "<=", ">=", "<=")
+
+  objective_in <- c(grad_vec, -grad_vec)
+
+  const_mat <- t(apply(other_mat, 1, function(v){ c(v, -v) }))
+  if(!is.na(other_bound)) const_mat <- rbind(const_mat, const_mat)
+
+  const_dir <- rep(direction, nrow(other_mat))
+  if(!is.na(other_bound)) const_dir <- c(const_dir, rep(other_direction, nrow(other_mat)))
+
+  if(direction == "<=") s <- -1 else s <- 1
+  const_rhs <- rep(s*tol, nrow(other_mat))
+  if(!is.na(other_bound)) const_rhs <- c(const_rhs, rep(other_bound, nrow(other_mat)))
+
+  res <- lpSolve::lp("min", objective_in, const_mat, const_dir, const_rhs)
+  stopifnot(res$status == 0)
+  res$solution[1:k] - res$solution[(k+1):(2*k)]
+}
 
 #' L1 projection of the product of two vectors to become nonpositive
 #'
@@ -192,7 +258,9 @@
 #' @param current_vec vector
 #' @param other_mat matrix
 #' @param idx row indices for other_mat
-#' @param val numeric
+#' @param tol numeric
+#' @param direction character
+#' @param other_bound numeric
 #'
 #' @return
 .projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat),

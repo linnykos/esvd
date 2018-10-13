@@ -102,94 +102,6 @@ test_that(".projection_l1 can take another bound", {
   expect_true(all(other_mat %*% res <= 1+1e-6))
 })
 
-#########################
-
-## .backtrack_linesearch is correct
-
-test_that(".backtrack_linesearch works", {
-  set.seed(20)
-  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-
-  res <- .initialization(dat)
-  u_mat <- res$u_mat
-  v_mat <- res$v_mat
-  i <- 1
-  dat_vec <- dat[i,]
-  class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-  grad_vec <- .gradient_vec(dat_vec, u_mat[i,], v_mat)
-
-  res <- .backtrack_linesearch(dat_vec, u_mat[i,], v_mat, grad_vec)
-
-  expect_true(is.numeric(res))
-  expect_true(!is.matrix(res))
-  expect_true(length(res) == 1)
-})
-
-test_that(".backtrack_linesearch actually keeps the negative constraint", {
-  trials <- 50
-
-  bool_vec <- sapply(1:trials, function(x){
-    set.seed(10*x)
-
-    dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-
-    res <- .initialization(dat)
-    u_mat <- res$u_mat
-    v_mat <- res$v_mat
-    i <- sample(1:10, 1)
-
-    if(any(!is.na(dat[i,]))){
-      dat_vec <- dat[i,]
-      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-      grad_vec <- .gradient_vec(dat_vec, u_mat[i,], v_mat)
-
-      res <- .backtrack_linesearch(dat_vec, u_mat[i,], v_mat, grad_vec)
-
-      u_new <- u_mat[i,] - res*grad_vec
-      vec <- v_mat %*% u_new
-      all(vec[which(!is.na(dat[i,]))] <= 1e-6)
-    } else {
-      TRUE
-    }
-  })
-
-  expect_true(all(bool_vec))
-})
-
-
-test_that(".backtrack_linesearch lowers the objective", {
-  trials <- 50
-
-  bool_vec <- sapply(1:trials, function(x){
-    set.seed(10*x)
-
-    dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
-
-    res <- .initialization(dat)
-    u_mat <- res$u_mat
-    v_mat <- res$v_mat
-
-    i <- sample(1:10, 1)
-    if(any(!is.na(dat[i,]))){
-      dat_vec <- dat[i,]
-      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-      obj1 <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat)
-      grad_vec <- .gradient_vec(dat_vec, u_mat[i,], v_mat)
-
-      res <- .backtrack_linesearch(dat_vec, u_mat[i,], v_mat, grad_vec)
-
-      u_new <- u_mat[i,] - res*grad_vec
-      obj2 <- .evaluate_objective_single(dat_vec, u_new, v_mat)
-
-      obj2 <= obj1 + 1e-6
-    } else {
-      TRUE
-    }
-  })
-
-  expect_true(all(bool_vec))
-})
-
 ##################
 
 ## .optimize_row is correct
@@ -205,7 +117,7 @@ test_that(".optimize_row works", {
 
   dat_vec <- dat[i,]
   class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-  res <- .optimize_row(dat_vec, u_mat[i,], v_mat)
+  res <- .optimize_row(dat_vec, u_mat[i,], v_mat, max_val = -100)
 
   expect_true(is.numeric(res))
   expect_true(length(res) == length(u_mat[i,]))
@@ -226,7 +138,7 @@ test_that(".optimize_row actually lowers the objective", {
     if(any(!is.na(dat[i,]))){
       dat_vec <- dat[i,]
       class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-      u_new <- .optimize_row(dat_vec, u_mat[i,], v_mat)
+      u_new <- .optimize_row(dat_vec, u_mat[i,], v_mat, max_val = -100)
       obj1 <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat)
       obj2 <- .evaluate_objective_single(dat_vec, u_new, v_mat)
 
@@ -252,7 +164,7 @@ test_that(".optimize_row works the other way", {
     if(any(!is.na(dat[,j]))){
       dat_vec <- dat[,j]
       class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-      v_new <- .optimize_row(dat_vec, v_mat[j,], u_mat)
+      v_new <- .optimize_row(dat_vec, v_mat[j,], u_mat, max_val = -100)
       obj1 <- .evaluate_objective_single(dat_vec, v_mat[j,], u_mat)
       obj2 <- .evaluate_objective_single(dat_vec, v_new, u_mat)
 
@@ -267,14 +179,14 @@ test_that(".optimize_row respects an upper bound", {
   set.seed(20)
   dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
 
-  res <- .initialization(dat)
+  res <- .initialization(dat, max_val = -5)
   u_mat <- res$u_mat
   v_mat <- res$v_mat
   i <- 1
 
   dat_vec <- dat[i,]
   class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-  res1 <- .optimize_row(dat_vec, u_mat[i,], v_mat)
+  res1 <- .optimize_row(dat_vec, u_mat[i,], v_mat, max_val = -100)
   res2 <- .optimize_row(dat_vec, u_mat[i,], v_mat, max_val = -5)
 
   expect_true(sum(abs(res1 - res2)) > 1e-6)
@@ -294,7 +206,7 @@ test_that(".optimize_mat works", {
   u_mat <- res$u_mat
   v_mat <- res$v_mat
 
-  res <- .optimize_mat(dat, u_mat, v_mat)
+  res <- .optimize_mat(dat, u_mat, v_mat, max_val = -100)
 
   expect_true(is.matrix(res))
   expect_true(all(dim(res) == dim(u_mat)))
@@ -310,10 +222,10 @@ test_that(".optimize_mat works with parallelization", {
   u_mat <- res$u_mat
   v_mat <- res$v_mat
 
-  res1 <- .optimize_mat(dat, u_mat, v_mat, parallelized = F)
+  res1 <- .optimize_mat(dat, u_mat, v_mat, parallelized = F, max_val = -100)
 
   doMC::registerDoMC(cores = 3)
-  res2 <- .optimize_mat(dat, u_mat, v_mat, parallelized = T)
+  res2 <- .optimize_mat(dat, u_mat, v_mat, parallelized = T, max_val = -100)
 
   expect_true(sum(abs(res1 - res2)) <= 1e-6)
 })
@@ -331,10 +243,10 @@ test_that(".optimize_mat keeps the negative constraint", {
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     if(bool){
-      res <- .optimize_mat(dat, u_mat, v_mat, bool)
+      res <- .optimize_mat(dat, u_mat, v_mat, bool, max_val = -100)
       pred_mat <- res %*% t(v_mat)
     } else {
-      res <- .optimize_mat(dat, v_mat, u_mat, bool)
+      res <- .optimize_mat(dat, v_mat, u_mat, bool, max_val = -100)
       pred_mat <- u_mat %*% t(res)
     }
 
@@ -359,10 +271,10 @@ test_that(".optimize_mat keeps the positive constraint", {
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     if(bool){
-      res <- .optimize_mat(dat, u_mat, v_mat, bool)
+      res <- .optimize_mat(dat, u_mat, v_mat, bool, max_val = 100)
       pred_mat <- res %*% t(v_mat)
     } else {
-      res <- .optimize_mat(dat, v_mat, u_mat, bool)
+      res <- .optimize_mat(dat, v_mat, u_mat, bool, max_val = 100)
       pred_mat <- u_mat %*% t(res)
     }
 
@@ -390,10 +302,10 @@ test_that(".optimize_mat lowers the objective value", {
     obj1 <- .evaluate_objective(dat, u_mat, v_mat)
 
     if(bool){
-      res <- .optimize_mat(dat, u_mat, v_mat, bool)
+      res <- .optimize_mat(dat, u_mat, v_mat, bool, max_val = -100)
       obj2 <- .evaluate_objective(dat, res, v_mat)
     } else {
-      res <- .optimize_mat(dat, v_mat, u_mat, bool)
+      res <- .optimize_mat(dat, v_mat, u_mat, bool, max_val = -100)
       obj2 <- .evaluate_objective(dat, u_mat, res)
     }
 
@@ -412,7 +324,8 @@ test_that(".fit_factorization works", {
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
   init <- .initialization(dat)
 
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat)
+  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                            max_val = -100)
 
   expect_true(is.list(res))
   expect_true(nrow(res$u_mat) == nrow(dat))
@@ -426,7 +339,8 @@ test_that(".fit_factorization works with missing values", {
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
   init <- .initialization(dat)
 
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat)
+  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                            max_val = -100)
 
   expect_true(is.list(res))
   expect_true(nrow(res$u_mat) == nrow(dat))
@@ -443,7 +357,8 @@ test_that(".fit_factorization preserves the positive entries", {
     dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
     init <- .initialization(dat)
 
-    res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat)
+    res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                              max_val = -100)
 
     pred_mat <- res$u_mat %*% t(res$v_mat)
 
@@ -463,7 +378,7 @@ test_that(".fit_factorization can roughly recover the all 1's matrix", {
     init <- .initialization(dat)
 
     fit <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                                          max_iter = 5)
+                                          max_iter = 5, max_val = -100)
 
     res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat)
     res2 <- .evaluate_objective(dat, matrix(1, ncol = 1, nrow = 10),
