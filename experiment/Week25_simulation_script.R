@@ -8,7 +8,7 @@ dat <- simulation$dat
 
 zz <- dat[dat > 0]
 max_val <- -1/mean(zz[zz < quantile(zz, probs = 0.2)])
-max_iter <- 200
+max_iter <- 50
 
 set.seed(10)
 init_ideal <- singlecell:::.initialization(simulation$obs_mat, family = "exponential")
