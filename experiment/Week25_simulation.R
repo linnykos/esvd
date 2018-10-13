@@ -1,6 +1,6 @@
 rm(list=ls())
 source("../experiment/Week25_simulation_generator.R")
-load("../experiment/Week25_simulation_exponential2.RData")
+load("../experiment/Week25_simulation_exponential.RData")
 
 set.seed(10)
 #simulation <- .data_generator(total = 200, col_drop = F)
