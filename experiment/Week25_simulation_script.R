@@ -11,9 +11,7 @@ max_val <- -1/mean(zz[zz < quantile(zz, probs = 0.2)])
 max_iter <- 50
 
 set.seed(10)
-init_ideal <- singlecell:::.initialization(simulation$obs_mat, family = "exponential",
-                                           max_val = max_val)
-res_ideal <- singlecell:::.fit_factorization(simulation$obs_mat, init_ideal$u_mat, init_ideal$v_mat,
+res_ideal <- singlecell:::.fit_factorization(simulation$obs_mat, simulation$cell_mat, simulation$gene_mat,
                                              verbose = T, family = "exponential",
                                              max_iter = max_iter, tol = NA,
                                              cores = 15, max_val = max_val)

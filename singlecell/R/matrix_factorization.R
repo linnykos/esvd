@@ -24,6 +24,7 @@
     current_obj <- next_obj
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, !is.na(cores))
+    print("U done")
     v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, !is.na(cores))
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
