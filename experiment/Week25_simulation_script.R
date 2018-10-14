@@ -11,7 +11,8 @@ max_val <- -1/mean(zz[zz < quantile(zz, probs = 0.2)])
 max_iter <- 50
 
 set.seed(10)
-init_ideal <- singlecell:::.initialization(simulation$obs_mat, family = "exponential")
+init_ideal <- singlecell:::.initialization(simulation$obs_mat, family = "exponential",
+                                           max_val = max_val)
 res_ideal <- singlecell:::.fit_factorization(simulation$obs_mat, init_ideal$u_mat, init_ideal$v_mat,
                                              verbose = T, family = "exponential",
                                              max_iter = max_iter, tol = NA,
@@ -20,7 +21,8 @@ res_ideal <- singlecell:::.fit_factorization(simulation$obs_mat, init_ideal$u_ma
 save.image("Week25_simulation_exponential.RData")
 
 set.seed(10)
-init <- singlecell:::.initialization(dat, family = "exponential")
+init <- singlecell:::.initialization(dat, family = "exponential",
+                                     max_val = max_val)
 res_nodropout <- singlecell:::.fit_factorization(dat, init$u_mat, init$v_mat,
                                                  verbose = T, family = "exponential",
                                                  max_iter = max_iter, tol = NA,
@@ -50,7 +52,8 @@ dat_impute <- singlecell:::.scImpute(dat, which(is.na(zero_mat)), Kcluster = 4,
 save.image("Week25_simulation_exponential.RData")
 
 set.seed(10)
-init_impute <- singlecell:::.initialization(dat_impute, family = "exponential")
+init_impute <- singlecell:::.initialization(dat_impute, family = "exponential",
+                                            max_val = max_val)
 res_withdropout <- singlecell:::.fit_factorization(dat2, init_impute$u_mat, init_impute$v_mat,
                                                    verbose = T, family = "exponential",
                                                    max_iter = max_iter, tol = NA,
