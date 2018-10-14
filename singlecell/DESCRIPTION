@@ -9,9 +9,7 @@ License: MIT +file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
-    recommenderlab,
     methods,
-    lpSolve,
     penalized,
     kernlab,
     R.utils,
@@ -21,7 +19,8 @@ Imports:
     princurve,
     matrixStats,
     ape,
-    igraph
+    igraph,
+    clplite
 Suggests:
     testthat
 RoxygenNote: 6.1.0
