@@ -220,4 +220,4 @@ const_ub <- rep(-tol, nrow(const_mat))
 var_lb <- rep(-abs(max_val), nrow(const_mat))
 var_ub <- rep(abs(max_val), nrow(const_mat))
 
-clplite::clp_solve(objective_in, const_mat, const_lb, const_ub, var_lb, var_ub, max = F)
+res <- clplite::clp_solve(objective_in, const_mat, const_lb, const_ub, var_lb, var_ub, max = F)

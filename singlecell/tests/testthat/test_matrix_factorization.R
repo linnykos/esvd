@@ -315,6 +315,20 @@ test_that(".optimize_mat lowers the objective value", {
   expect_true(all(bool_vec))
 })
 
+#######################
+
+## .frank_wolfe is correct
+
+test_that(".frank_wolfe is able to solve the following LP", {
+  load("../assets/frank_wolfe1.RData")
+  res <- .frank_wolfe(grad_vec, other_mat, other_bound = -150)
+
+  expect_true(is.numeric(res))
+  expect_true(length(res) == 2)
+  expect_true(all(other_mat %*% res >= -150))
+  expect_true(all(other_mat %*% res <= 0))
+})
+
 ######################
 
 ## .fit_factorization is correct

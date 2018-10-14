@@ -24,7 +24,6 @@
     current_obj <- next_obj
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, !is.na(cores))
-    print("U done")
     v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, !is.na(cores))
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
@@ -228,21 +227,27 @@
   other_mat <- other_mat[idx,,drop = F]
   other_direction <- ifelse(direction == "<=", ">=", "<=")
 
-  objective_in <- c(grad_vec, -grad_vec)
+  objective_in <- grad_vec
+  constr_mat <- other_mat
+  k <- nrow(constr_mat)
 
-  const_mat <- t(apply(other_mat, 1, function(v){ c(v, -v) }))
-  if(!is.na(other_bound)) const_mat <- rbind(const_mat, const_mat)
+  if(direction == "<="){
+    constr_ub <- rep(-tol, k)
+    if(all(is.na(other_bound))) constr_lb <- rep(-Inf, k) else constr_lb <- rep(other_bound, k)
+  } else {
+    constr_lb <- rep(tol, k)
+    if(all(is.na(other_bound))) constr_ub <- rep(Inf, k) else constr_ub <- rep(other_bound, k)
+  }
 
-  const_dir <- rep(direction, nrow(other_mat))
-  if(!is.na(other_bound)) const_dir <- c(const_dir, rep(other_direction, nrow(other_mat)))
+  if(all(is.na(other_bound))){
+    var_ub <- rep(Inf, k); var_lb <- rep(-Inf, k)
+  } else {
+    var_ub <- rep(abs(other_bound), k); var_lb <- rep(-abs(other_bound), k)
+  }
 
-  if(direction == "<=") s <- -1 else s <- 1
-  const_rhs <- rep(s*tol, nrow(other_mat))
-  if(!is.na(other_bound)) const_rhs <- c(const_rhs, rep(other_bound, nrow(other_mat)))
-
-  res <- lpSolve::lp("min", objective_in, const_mat, const_dir, const_rhs)
+  res <- clplite::clp_solve(objective_in, constr_mat, constr_lb, constr_ub, var_lb, var_ub, max = F)
   stopifnot(res$status == 0)
-  res$solution[1:k] - res$solution[(k+1):(2*k)]
+  res$solution
 }
 
 #' L1 projection of the product of two vectors to become nonpositive
