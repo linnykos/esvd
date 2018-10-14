@@ -14,7 +14,7 @@ set.seed(10)
 res_ideal <- singlecell:::.fit_factorization(simulation$obs_mat, simulation$cell_mat, simulation$gene_mat,
                                              verbose = T, family = "exponential",
                                              max_iter = max_iter, tol = NA,
-                                             cores = 15, max_val = max_val)
+                                             cores = 15, max_val = -max(abs(simulation$gram_mat)))
 
 save.image("Week25_simulation_exponential.RData")
 
