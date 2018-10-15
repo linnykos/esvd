@@ -245,10 +245,7 @@
     var_ub <- rep(abs(other_bound), k); var_lb <- rep(-abs(other_bound), k)
   }
 
-  print(constr_ub)
-  print(constr_lb)
   res <- clplite::clp_solve(objective_in, constr_mat, constr_lb, constr_ub, var_lb, var_ub, max = F)
-  print(range(other_mat %*% res$solution))
 
   stopifnot(res$status == 0)
   stopifnot(all(other_mat %*% res$solution <= 0))
