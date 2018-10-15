@@ -16,21 +16,26 @@ col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
 
 png("../figure/experiment/25_latent.png", height = 1200, width = 2000, res = 300, units = "px")
 par(mfrow = c(1,2))
-plot(simulation$cell_mat_org[,1], simulation$cell_mat_org[,2],
-     xlim = range(c(simulation$cell_mat_org[,1], 0)),
-     ylim = range(c(simulation$cell_mat_org[,2], 0)),
+plot(simulation$cell_mat[,1], simulation$cell_mat[,2],
+     xlim = range(c(simulation$cell_mat[,1], 0)),
+     ylim = range(c(simulation$cell_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
-plot(simulation$gene_mat_org[,1], simulation$gene_mat_org[,2],
-     xlim = range(c(simulation$gene_mat_org[,1], 0)),
-     ylim = range(c(simulation$gene_mat_org[,2], 0)),
+plot(simulation$gene_mat[,1], simulation$gene_mat[,2],
+     xlim = range(c(simulation$gene_mat[,1], 0)),
+     ylim = range(c(simulation$gene_mat[,2], 0)),
      col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, -1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, -1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+
 graphics.off()
 
 ####
@@ -64,6 +69,28 @@ for(i in 1:3){
 }
 graphics.off()
 
+####
+
+png("../figure/experiment/25_true_scatter.png", height = 1000, width = 1000, res = 300, units = "px")
+plot(-1/simulation$gram_mat, simulation$obs_mat, pch = 16, col = rgb(0,0,0,0.1),
+     xlim = c(0,1.2), asp = T,
+     ylab = "True observed value", xlab = "True expected value",
+     main = "Simulated data")
+lines(c(-1e6, 1e6), c(-1e6, 1e6), col = "red", lty = 2, lwd = 2)
+lines(rep(0,2), c(-1e6, 1e6), col = "red", lty = 2, lwd = 1)
+lines(c(-1e6, 1e6), rep(0,2), col = "red", lty = 2, lwd = 1)
+
+# plot confidence bands
+zz <- seq(0, 5, length.out = 500)
+upper <- sapply(zz, function(x){qexp(p = 0.9, rate = 1/x)})
+lower <- sapply(zz, function(x){qexp(p = 0.1, rate = 1/x)})
+
+lines(zz, upper, col = "red", lty = "dotted", lwd = 1)
+lines(zz, lower, col = "red", lty = "dotted", lwd = 1)
+
+graphics.off()
+
+
 ###
 
 png("../figure/experiment/25_data_properties.png", height = 1000, width = 2400, res = 300, units = "px")
@@ -80,106 +107,324 @@ graphics.off()
 
 #####################
 
+# IDEAL FIT
+png("../figure/experiment/25_fit_ideal.png", height = 1000, width = 2400, res = 300, units = "px")
 par(mfrow = c(1,3))
 plot(res_ideal$u_mat[,1], res_ideal$u_mat[,2],
      xlim = range(c(res_ideal$u_mat[,1], 0)),
      ylim = range(c(res_ideal$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
-     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(Ideal fit)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
 plot(res_ideal$v_mat[,1], res_ideal$v_mat[,2],
      xlim = range(c(res_ideal$v_mat[,1], 0)),
      ylim = range(c(res_ideal$v_mat[,2], 0)),
      col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
-     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(Ideal fit)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, -1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, -1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
 
 pred_mat <- res_ideal$u_mat %*% t(res_ideal$v_mat)
-plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat),
+     pch = 16, col = rgb(0,0,0,0.1), asp = T,
+     xlab = "True inner product value",
+     ylab = "Predicted inner product value",
+     main = "Gram matrix\n(Ideal fit)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+graphics.off()
 
 ###
 
+#NO DROPOUT
+png("../figure/experiment/25_fit_nodropout.png", height = 1000, width = 2400, res = 300, units = "px")
 par(mfrow = c(1,3))
 plot(res_nodropout$u_mat[,1], res_nodropout$u_mat[,2],
      xlim = range(c(res_nodropout$u_mat[,1], 0)),
      ylim = range(c(res_nodropout$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
-     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(No dropout)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
 plot(res_nodropout$v_mat[,1], res_nodropout$v_mat[,2],
      xlim = range(c(res_nodropout$v_mat[,1], 0)),
      ylim = range(c(res_nodropout$v_mat[,2], 0)),
      col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
-     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(No dropout)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, -1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, -1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
 
 pred_mat <- res_nodropout$u_mat %*% t(res_nodropout$v_mat)
-plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat),
+     pch = 16, col = rgb(0,0,0,0.1), asp = T,
+     xlab = "True inner product value",
+     ylab = "Predicted inner product value",
+     main = "Gram matrix\n(No dropout)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+graphics.off()
 
-###
+#NO DROPOUT BUT CHEAT
+png("../figure/experiment/25_fit_nodropout_cheat.png", height = 1000, width = 2400, res = 300, units = "px")
+par(mfrow = c(1,3))
+plot(res_nodropout_cheat$u_mat[,1], res_nodropout_cheat$u_mat[,2],
+     xlim = range(c(res_nodropout_cheat$u_mat[,1], 0)),
+     ylim = range(c(res_nodropout_cheat$u_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(No dropout, with cheating)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
+plot(res_nodropout_cheat$v_mat[,1], res_nodropout_cheat$v_mat[,2],
+     xlim = range(c(res_nodropout_cheat$v_mat[,1], 0)),
+     ylim = range(c(res_nodropout_cheat$v_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(No dropout, with cheating)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, -1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, -1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+
+pred_mat <- res_nodropout_cheat$u_mat %*% t(res_nodropout_cheat$v_mat)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat),
+     pch = 16, col = rgb(0,0,0,0.1), asp = T,
+     xlab = "True inner product value",
+     ylab = "Predicted inner product value",
+     main = "Gram matrix\n(No dropout, with cheating)")
+lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+graphics.off()
+
+res_nodropout$obj_vec[length(res_nodropout$obj_vec)]
+res_nodropout_cheat$obj_vec[length(res_nodropout_cheat$obj_vec)]
+
+#########################
+
+# INVESTIGATION INTO IMPUTATION
+# true zeros
+
+png("../figure/experiment/25_true_zero2.png", height = 1000, width = 2400, res = 300, units = "px")
+par(mar = c(0.5, 0.5, 3, 0.5), mfrow = c(1,2))
+true_zero <- matrix(1, ncol = ncol(dat), nrow = nrow(dat))
+true_zero[which(simulation$gram_mat < quantile(simulation$gram_mat, probs = 0.05))] <- 0
+image(.rotate(true_zero), breaks = c(-0.5,0.5,1.5), col = c("blue3", "gray88"), asp = nrow(true_zero)/ncol(true_zero),
+      axes = F, main = "Position of the true zeros")
+lines(rep(0.5, 2), c(0,1), lwd = 5, lty = 2)
+for(i in 1:3){
+  lines(c(0, 1), rep(i/4, 2), lwd = 5, lty = 2)
+}
+
+est_zero <- zero_mat
+est_zero[is.na(est_zero)] <- 2
+image(.rotate(est_zero), breaks = c(-0.5,0.5,1.5,2.5), col = c("blue3", "gray88", "goldenrod1"), asp = nrow(true_zero)/ncol(true_zero),
+      axes = F, main = "Position of the estimated zeros")
+lines(rep(0.5, 2), c(0,1), lwd = 5, lty = 2)
+for(i in 1:3){
+  lines(c(0, 1), rep(i/4, 2), lwd = 5, lty = 2)
+}
+graphics.off()
+
+length(which(zero_mat == 0))/prod(dim(zero_mat))
+
+# histograms on to-be imputed values
+png("../figure/experiment/25_hist_values.png", height = 800, width = 2400, res = 300, units = "px")
+par(mfrow = c(1,3))
+max_val <- 0.15
+idx <- which(zero_mat == 0)
+.hist_augment(dat[idx], max_val = max_val, xlab = "Value", main = "Histogram of true zeros")
+
+idx <- which(is.na(zero_mat))
+.hist_augment(dat[idx], max_val = max_val, xlab = "Value", main = "Histogram of to-be imputed values")
+
+idx <- which(zero_mat == 1)
+.hist_augment(dat[idx], max_val = max_val, xlab = "Value", main = "Histogram of untounched values")
+graphics.off()
+
+# now for the values we imputed to
+png("../figure/experiment/25_imputed_scatter.png", height = 1000, width = 2400, res = 300, units = "px")
+par(mfrow = c(1,2), mar = c(5, 5, 0.5, 0.5))
+idx <- which(is.na(zero_mat))
+# plot(dat_impute[idx], dat[idx], asp = T)
+plot(dat_impute[idx], simulation$obs_mat[idx], asp = T, pch = 16, col = rgb(0,0,0,0.1),
+     xlab = "Imputed value", ylab = "True observation value",
+     ylim = c(0, 0.3))
+lines(c(0, 1e6), c(0, 1e6), col = "red", lty = 2, lwd = 2)
+lines(rep(0,2), c(-1e6, 1e6), col = "red", lty = 2, lwd = 1)
+lines(c(-1e6, 1e6), rep(0,2), col = "red", lty = 2, lwd = 1)
+
+plot(dat_impute[idx], -1/simulation$gram_mat[idx], asp = T, pch = 16, col = rgb(0,0,0,0.1),
+     xlab = "Imputed value", ylab = "True expected value",
+     ylim = c(0, 0.3))
+lines(c(-1e6, 1e6), c(-1e6, 1e6), col = "red", lty = 2, lwd = 2)
+lines(rep(0,2), c(-1e6, 1e6), col = "red", lty = 2, lwd = 1)
+lines(c(-1e6, 1e6), rep(0,2), col = "red", lty = 2, lwd = 1)
+graphics.off()
+
+
+############################
+# now for our usual histograms
+
+png("../figure/experiment/25_fit_withdropout.png", height = 1000, width = 2400, res = 300, units = "px")
 par(mfrow = c(1,3))
 plot(res_withdropout$u_mat[,1], res_withdropout$u_mat[,2],
      xlim = range(c(res_withdropout$u_mat[,1], 0)),
      ylim = range(c(res_withdropout$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
-     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(With dropout)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
 plot(res_withdropout$v_mat[,1], res_withdropout$v_mat[,2],
      xlim = range(c(res_withdropout$v_mat[,1], 0)),
      ylim = range(c(res_withdropout$v_mat[,2], 0)),
      col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
-     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(With dropout)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, -1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, -1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
 
 pred_mat <- res_withdropout$u_mat %*% t(res_withdropout$v_mat)
-plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T,
+     pch = 16, col = rgb(0,0,0,0.1),
+     xlab = "True inner product value",
+     ylab = "Predicted inner product value",
+     main = "Gram matrix\n(With dropout)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+graphics.off()
 
-####
+png("../figure/experiment/25_fit_withdropout_cheat.png", height = 1000, width = 2400, res = 300, units = "px")
+par(mfrow = c(1,3))
+plot(res_withdropout_cheat$u_mat[,1], res_withdropout_cheat$u_mat[,2],
+     xlim = range(c(res_withdropout_cheat$u_mat[,1], 0)),
+     ylim = range(c(res_withdropout_cheat$u_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(With dropout, with cheating)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
+plot(res_withdropout_cheat$v_mat[,1], res_withdropout_cheat$v_mat[,2],
+     xlim = range(c(res_withdropout_cheat$v_mat[,1], 0)),
+     ylim = range(c(res_withdropout_cheat$v_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(With dropout, with cheating)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, -1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, -1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+
+pred_mat <- res_withdropout_cheat$u_mat %*% t(res_withdropout_cheat$v_mat)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T,
+     pch = 16, col = rgb(0,0,0,0.1),
+     xlab = "True inner product value",
+     ylab = "Predicted inner product value",
+     main = "Gram matrix\n(With dropout, with cheating)")
+lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+graphics.off()
+
+###############################
+png("../figure/experiment/25_fit_withimpute.png", height = 1000, width = 2400, res = 300, units = "px")
 par(mfrow = c(1,3))
 plot(res_withimpute$u_mat[,1], res_withimpute$u_mat[,2],
      xlim = range(c(res_withimpute$u_mat[,1], 0)),
      ylim = range(c(res_withimpute$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
-     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(With impute)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
 plot(res_withimpute$v_mat[,1], res_withimpute$v_mat[,2],
      xlim = range(c(res_withimpute$v_mat[,1], 0)),
      ylim = range(c(res_withimpute$v_mat[,2], 0)),
      col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
-     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(With impute)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, -1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, -1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
 
 pred_mat <- res_withimpute$u_mat %*% t(res_withimpute$v_mat)
-plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T,
+     pch = 16, col = rgb(0,0,0,0.1),
+     xlab = "True inner product value",
+     ylab = "Predicted inner product value",
+     main = "Gram matrix\n(With impute)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+graphics.off()
 
-plot(as.numeric(simulation$obs_mat), as.numeric(dat_impute))
+png("../figure/experiment/25_fit_withimpute_cheat.png", height = 1000, width = 2400, res = 300, units = "px")
+par(mfrow = c(1,3))
+plot(res_withimpute_cheat$u_mat[,1], res_withimpute_cheat$u_mat[,2],
+     xlim = range(c(res_withimpute_cheat$u_mat[,1], 0)),
+     ylim = range(c(res_withimpute_cheat$u_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(With impute, with cheating)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
+
+plot(res_withimpute_cheat$v_mat[,1], res_withimpute_cheat$v_mat[,2],
+     xlim = range(c(res_withimpute_cheat$v_mat[,1], 0)),
+     ylim = range(c(res_withimpute_cheat$v_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(With impute, with cheating)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+lines(c(0, -1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
+lines(c(0, -1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
+
+pred_mat <- res_withimpute_cheat$u_mat %*% t(res_withimpute_cheat$v_mat)
+plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T,
+     pch = 16, col = rgb(0,0,0,0.1),
+     xlab = "True inner product value",
+     ylab = "Predicted inner product value",
+     main = "Gram matrix\n(With impute, with cheating)")
+lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+graphics.off()
 
 ####################
 
-zero_mat2 <- zero_mat
-zero_mat2[is.na(zero_mat2)] <- 2
-length(which(zero_mat2 == 0))/prod(dim(zero_mat2))
+# do the "naive" analyses
+svd_res <- svd(dat)
+k <- 6
+u_mat_naive <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+v_mat_naive <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+pred_mat <- u_mat_naive %*% t(v_mat_naive)
 
-par(mar = rep(0.5,4))
-image(.rotate(zero_mat2), breaks = c(-0.5,0.5,1.5,2.5), col = c("blue3", "gold", "firebrick1"), asp = nrow(zero_mat)/ncol(zero_mat),
-      axes = F)
+png("../figure/experiment/25_naive.png", height = 1200, width = 2000, res = 300, units = "px")
+par(mfrow = c(1,2))
+plot(u_mat_naive[,1], u_mat_naive[,2],
+     xlim = range(c(u_mat_naive[,1], 0)),
+     ylim = range(c(u_mat_naive[,2], 0)),
+     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(Naive fit, mean)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
 
-idx1 <- which(simulation$obs_mat < quantile(as.numeric(simulation$obs_mat[simulation$obs_mat > 0]), probs = 0.05))
-idx2 <- which(zero_mat == 0)
-length(intersect(idx1, idx2))/prod(dim(zero_mat))
+plot(init$u_mat[,1], init$u_mat[,2],
+     xlim = range(c(init$u_mat[,1], 0)),
+     ylim = range(c(init$u_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(Naive fit, reciprocal of -mean)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
 
+graphics.off()
 

@@ -40,7 +40,7 @@ load("../experiment/Week25_simulation_exponential.RData")
 #
 # set.seed(10)
 # dropout_mat <- singlecell:::.dropout(dat)
-# zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 15)
+# zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 14)
 #
 # set.seed(10)
 # dat2 <- dat
@@ -50,38 +50,50 @@ load("../experiment/Week25_simulation_exponential.RData")
 #
 # save.image("Week25_simulation_exponential.RData")
 
+idx_impute2 <- which(is.na(zero_mat))
+dat3 <- dat
+dat[idx_imputed] <- -1/simulation$gram_mat
 set.seed(10)
-init_impute <- singlecell:::.initialization(dat_impute, family = "exponential",
+init_impute2 <- singlecell:::.initialization(dat3, family = "exponential",
                                             max_val = max_val)
-res_withdropout <- singlecell:::.fit_factorization(dat2, init_impute$u_mat, init_impute$v_mat,
+res_withdropout <- singlecell:::.fit_factorization(dat3, init_impute2$u_mat, init_impute2$v_mat,
                                                    verbose = T, family = "exponential",
                                                    max_iter = max_iter, tol = NA,
                                                    cores = 15, max_val = max_val)
 save.image("Week25_simulation_exponential.RData")
 
-set.seed(10)
-res_withdropout_cheat <- singlecell:::.fit_factorization(dat2, simulation$cell_mat, simulation$gene_mat,
-                                                   verbose = T, family = "exponential",
-                                                   max_iter = max_iter, tol = NA,
-                                                   cores = 15, max_val = max_val)
-
-save.image("Week25_simulation_exponential.RData")
-
-######
-
-set.seed(10)
-res_withimpute <- singlecell:::.fit_factorization(dat_impute, init_impute$u_mat, init_impute$v_mat,
-                                                  verbose = T, family = "exponential",
-                                                  max_iter = max_iter, tol = NA,
-                                                  cores = 15, max_val = max_val)
-
-save.image("Week25_simulation_exponential.RData")
-
-set.seed(10)
-res_withimpute_cheat <- singlecell:::.fit_factorization(dat_impute, simulation$cell_mat, simulation$gene_mat,
-                                                  verbose = T, family = "exponential",
-                                                  max_iter = max_iter, tol = NA,
-                                                  cores = 15, max_val = max_val)
-
-save.image("Week25_simulation_exponential.RData")
-
+# set.seed(10)
+# init_impute <- singlecell:::.initialization(dat_impute, family = "exponential",
+#                                             max_val = max_val)
+# res_withdropout <- singlecell:::.fit_factorization(dat2, init_impute$u_mat, init_impute$v_mat,
+#                                                    verbose = T, family = "exponential",
+#                                                    max_iter = max_iter, tol = NA,
+#                                                    cores = 15, max_val = max_val)
+# save.image("Week25_simulation_exponential.RData")
+#
+# set.seed(10)
+# res_withdropout_cheat <- singlecell:::.fit_factorization(dat2, simulation$cell_mat, simulation$gene_mat,
+#                                                    verbose = T, family = "exponential",
+#                                                    max_iter = max_iter, tol = NA,
+#                                                    cores = 15, max_val = max_val)
+#
+# save.image("Week25_simulation_exponential.RData")
+#
+# ######
+#
+# set.seed(10)
+# res_withimpute <- singlecell:::.fit_factorization(dat_impute, init_impute$u_mat, init_impute$v_mat,
+#                                                   verbose = T, family = "exponential",
+#                                                   max_iter = max_iter, tol = NA,
+#                                                   cores = 15, max_val = max_val)
+#
+# save.image("Week25_simulation_exponential.RData")
+#
+# set.seed(10)
+# res_withimpute_cheat <- singlecell:::.fit_factorization(dat_impute, simulation$cell_mat, simulation$gene_mat,
+#                                                   verbose = T, family = "exponential",
+#                                                   max_iter = max_iter, tol = NA,
+#                                                   cores = 15, max_val = max_val)
+#
+# save.image("Week25_simulation_exponential.RData")
+#

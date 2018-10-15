@@ -1,6 +1,7 @@
-.hist_augment <- function(x, breaks = 50, min_val = 0,
+.hist_augment <- function(x, breaks = 50, max_val = NA, min_val = 0,
                          multiplier = 1, param_list = NA, lwd = 1, ...){
-  break_vec <- seq(min_val, max(x), length.out = breaks)
+  if(is.na(max_val)) max_val <- max(x) else x <- x[x <= max_val]
+  break_vec <- seq(min_val, max_val, length.out = breaks)
 
   min_nonzero <- min(x[x != min_val])
   interval <- diff(break_vec)[1]
