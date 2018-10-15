@@ -221,7 +221,7 @@
 #'
 #' @return vector
 .frank_wolfe <- function(grad_vec, other_mat, idx = 1:nrow(other_mat),
-                         tol = 1e-6, direction = "<=", other_bound = NA){
+                         tol = 0.0001, direction = "<=", other_bound = NA){
 
   k <- length(grad_vec)
   other_mat <- other_mat[idx,,drop = F]
@@ -245,8 +245,14 @@
     var_ub <- rep(abs(other_bound), k); var_lb <- rep(-abs(other_bound), k)
   }
 
+  print(constr_ub)
+  print(constr_lb)
   res <- clplite::clp_solve(objective_in, constr_mat, constr_lb, constr_ub, var_lb, var_ub, max = F)
+  print(range(other_mat %*% res$solution))
+
   stopifnot(res$status == 0)
+  stopifnot(all(other_mat %*% res$solution <= 0))
+
   res$solution
 }
 
@@ -270,7 +276,7 @@
 #'
 #' @return
 .projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat),
-                           tol = 1e-6, direction = "<=", other_bound = NA){
+                           tol = 0.001, direction = "<=", other_bound = NA){
   if(length(idx) == 0) return(current_vec)
   stopifnot(ncol(other_mat) == length(current_vec))
   stopifnot(is.na(other_bound) || (direction == "<=" & other_bound < 0) ||
