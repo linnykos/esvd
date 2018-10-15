@@ -38,25 +38,23 @@ load("../experiment/Week25_simulation_exponential.RData")
 #
 # ######################
 #
-# set.seed(10)
-# dropout_mat <- singlecell:::.dropout(dat)
-# zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 14)
-#
-# set.seed(10)
-# dat2 <- dat
-# dat2[which(is.na(zero_mat))] <- NA
-# dat_impute <- singlecell:::.scImpute(dat, which(is.na(zero_mat)), Kcluster = 4,
-#                                      max_time = 5, verbose = T)
-#
-# save.image("Week25_simulation_exponential.RData")
+set.seed(10)
+dropout_mat <- singlecell:::.dropout(dat)
+zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 14)
+
+set.seed(10)
+dat2 <- dat
+dat2[which(is.na(zero_mat))] <- NA
+dat_impute <- singlecell:::.scImpute(dat, which(is.na(zero_mat)), Kcluster = 4,
+                                     max_time = 5, verbose = T)
+
+save.image("Week25_simulation_exponential.RData")
 
 idx_impute2 <- which(is.na(zero_mat))
 dat3 <- dat
 dat[idx_imputed] <- -1/simulation$gram_mat
 set.seed(10)
-init_impute2 <- singlecell:::.initialization(dat3, family = "exponential",
-                                            max_val = max_val)
-res_withdropout <- singlecell:::.fit_factorization(dat3, init_impute2$u_mat, init_impute2$v_mat,
+res_withimpute_population <- singlecell:::.fit_factorization(dat3, simulation$cell_mat, simulation$gene_mat,
                                                    verbose = T, family = "exponential",
                                                    max_iter = max_iter, tol = NA,
                                                    cores = 15, max_val = max_val)
