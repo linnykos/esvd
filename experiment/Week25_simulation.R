@@ -2,9 +2,9 @@ rm(list=ls())
 source("../experiment/Week25_simulation_generator.R")
 load("../experiment/Week25_simulation_exponential.RData")
 
-set.seed(10)
-#simulation <- .data_generator(total = 200, col_drop = F)
-#dat <- simulation$dat
+# set.seed(10)
+# simulation <- .data_generator_exponential(total = 200, col_drop = F)
+# dat <- simulation$dat
 # .plot_singlecell(dat)
 length(which(dat == 0))/prod(dim(dat))
 length(which(simulation$obs_mat2 == 0))/prod(dim(simulation$obs_mat2)) #percentage of true zeros
