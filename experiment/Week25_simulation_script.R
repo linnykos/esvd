@@ -46,7 +46,7 @@ set.seed(10)
 dat2 <- dat
 dat2[which(is.na(zero_mat))] <- NA
 dat_impute <- singlecell:::.scImpute(dat, which(is.na(zero_mat)), Kcluster = 4,
-                                      verbose = T, weight = 0.5)
+                                      verbose = T, weight = 0.25)
 
 save.image("Week25_simulation_exponential.RData")
 
@@ -88,13 +88,13 @@ save.image("Week25_simulation_exponential.RData")
 
 #########################
 
-idx_impute2 <- which(is.na(zero_mat))
-dat3 <- dat
-dat3[idx_impute2] <- -1/simulation$gram_mat[idx_impute2]
-set.seed(10)
-res_withimpute_population <- singlecell:::.fit_factorization(dat3, simulation$cell_mat, simulation$gene_mat,
-                                                   verbose = T, family = "exponential",
-                                                   max_iter = max_iter, tol = NA,
-                                                   cores = 15, max_val = max_val)
-save.image("Week25_simulation_exponential.RData")
-
+# idx_impute2 <- which(is.na(zero_mat))
+# dat3 <- dat
+# dat3[idx_impute2] <- -1/simulation$gram_mat[idx_impute2]
+# set.seed(10)
+# res_withimpute_population <- singlecell:::.fit_factorization(dat3, simulation$cell_mat, simulation$gene_mat,
+#                                                    verbose = T, family = "exponential",
+#                                                    max_iter = max_iter, tol = NA,
+#                                                    cores = 15, max_val = max_val)
+# save.image("Week25_simulation_exponential.RData")
+#

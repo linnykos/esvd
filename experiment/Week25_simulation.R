@@ -349,9 +349,9 @@ graphics.off()
 ###############################
 png("../figure/experiment/25_fit_withimpute.png", height = 1000, width = 2400, res = 300, units = "px")
 par(mfrow = c(1,3))
-plot(res_withimpute$u_mat[,1], res_withimpute$u_mat[,2],
+plot(res_withimpute$u_mat[,1], -res_withimpute$u_mat[,2],
      xlim = range(c(res_withimpute$u_mat[,1], 0)),
-     ylim = range(c(res_withimpute$u_mat[,2], 0)),
+     ylim = range(c(-res_withimpute$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(With impute)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
@@ -359,9 +359,9 @@ lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
 lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
 lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
-plot(res_withimpute$v_mat[,1], res_withimpute$v_mat[,2],
+plot(res_withimpute$v_mat[,1], -res_withimpute$v_mat[,2],
      xlim = range(c(res_withimpute$v_mat[,1], 0)),
-     ylim = range(c(res_withimpute$v_mat[,2], 0)),
+     ylim = range(c(-res_withimpute$v_mat[,2], 0)),
      col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(With impute)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
