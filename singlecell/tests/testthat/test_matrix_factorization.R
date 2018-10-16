@@ -325,7 +325,7 @@ test_that(".frank_wolfe is able to solve the following LP", {
 
   expect_true(is.numeric(res))
   expect_true(length(res) == 2)
-  expect_true(all(other_mat %*% res >= -150))
+  expect_true(all(other_mat %*% res >= -150-1e-3))
   expect_true(all(other_mat %*% res <= 0))
 })
 

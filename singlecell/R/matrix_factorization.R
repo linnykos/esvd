@@ -248,7 +248,12 @@
   res <- clplite::clp_solve(objective_in, constr_mat, constr_lb, constr_ub, var_lb, var_ub, max = F)
 
   stopifnot(res$status == 0)
-  stopifnot(all(other_mat %*% res$solution <= 0))
+
+  if(direction == "<="){
+    stopifnot(all(other_mat %*% res$solution <= 0))
+  } else {
+    stopifnot(all(other_mat %*% res$solution >= 0))
+  }
 
   res$solution
 }

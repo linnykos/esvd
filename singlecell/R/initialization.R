@@ -93,21 +93,15 @@
 
   if(length(B_vec) == length(cell_vec)) return(cell_vec)
 
-  nnls <- tryCatch({
-    R.utils::withTimeout(penalized::penalized(cell_vec[B_vec], penalized = t(neigh_mat[,B_vec,drop = F]),
-                                              unpenalized = ~0, positive = TRUE,
-                                              lambda1 = 0, lambda2 = 0, trace = F),
-                         timeout = max_time, onTimeout = "error")
-  }, error = function(e){
-    penalized::penalized(cell_vec[B_vec], penalized = t(neigh_mat[,B_vec,drop = F]),
-                         unpenalized = ~0, positive = TRUE,
-                         lambda1 = 1, lambda2 = 1, trace = F)
-  })
+  # format covariates, also add a constant vector
+  min_val <- min(cell_vec[cell_vec > 0])
+  x_mat <- t(neigh_mat[,B_vec,drop = F])
+  x_mat <- cbind(x_mat, min_val)
 
-  y_new <- penalized::predict(nnls, penalized = t(neigh_mat[,-B_vec,drop = F]),
-                             unpenalized = ~0)
+  nnls_res <- nnls::nnls(A = x_mat, b = cell_vec[B_vec])
+  coef_vec <- nnls_res$x
+  y_new <- as.numeric(cbind(t(neigh_mat[,-B_vec,drop = F]), min_val) %*% coef_vec)
 
-  if(!is.matrix(y_new)) y_new <- y_new[1] else y_new <- y_new[,1]
   y_new[y_new > max_vec[-B_vec]] <- max_vec[-B_vec][y_new > max_vec[-B_vec]]
 
   cell_vec2 <- cell_vec
