@@ -40,6 +40,17 @@ test_that(".nnls_impute works", {
   expect_true(length(res) == ncol(dat))
 })
 
+test_that(".nnls_impute works for larger matrices", {
+  set.seed(20)
+  dat <- abs(matrix(rnorm(120), nrow = 4, ncol = 30))
+
+  res <- .nnls_impute(dat[1,], dat[-1,], sample(1:30, 20))
+
+  expect_true(is.numeric(res))
+  expect_true(!is.matrix(res))
+  expect_true(length(res) == ncol(dat))
+})
+
 test_that(".nnls_impute preserves the values that are kept", {
   set.seed(20)
   dat <- abs(matrix(rnorm(40), nrow = 4, ncol = 10))

@@ -85,7 +85,7 @@
 
 .nnls_impute <- function(cell_vec, neigh_mat, B_vec,
                          max_vec = apply(neigh_mat, 2, max),
-                         max_time = 60){
+                         with_intercept = T){
   stopifnot(max(B_vec) <= length(cell_vec))
   stopifnot(!is.matrix(cell_vec))
   stopifnot(length(cell_vec) == ncol(neigh_mat), length(max_vec) == length(cell_vec))
@@ -94,14 +94,26 @@
   if(length(B_vec) == length(cell_vec)) return(cell_vec)
 
   # format covariates, also add a constant vector
-  min_val <- min(cell_vec[cell_vec > 0])
-  x_mat <- t(neigh_mat[,B_vec,drop = F])
-  x_mat <- cbind(x_mat, min_val)
+  if(length(B_vec) <= 15){
+    min_val <- min(neigh_mat[neigh_mat > 0])
+    x_mat <- t(neigh_mat[,B_vec,drop = F])
+    if(with_intercept) x_mat <- cbind(x_mat, min_val)
 
-  nnls_res <- nnls::nnls(A = x_mat, b = cell_vec[B_vec])
-  coef_vec <- nnls_res$x
-  y_new <- as.numeric(cbind(t(neigh_mat[,-B_vec,drop = F]), min_val) %*% coef_vec)
+    nnls_res <- nnls::nnls(A = x_mat, b = cell_vec[B_vec])
+    coef_vec <- nnls_res$x
 
+    x_new <- t(neigh_mat[,-B_vec,drop = F])
+    if(with_intercept) x_new <- cbind(x_new, min_val)
+    y_new <- as.numeric(x_new %*% coef_vec)
+  } else {
+    x_mat <- t(neigh_mat[,B_vec,drop = F])
+    glmnet_res <- glmnet::cv.glmnet(x = x_mat, y = cell_vec[B_vec], family = "gaussian",
+                                    intercept=TRUE, nfolds = min(floor(nrow(x_mat)/3), 10))
+    x_new <- t(neigh_mat[,-B_vec,drop = F])
+    y_new <- as.numeric(stats::predict(glmnet_res, newx = x_new, s = "lambda.min"))
+  }
+
+  y_new[y_new < 0] <- 0
   y_new[y_new > max_vec[-B_vec]] <- max_vec[-B_vec][y_new > max_vec[-B_vec]]
 
   cell_vec2 <- cell_vec
@@ -110,7 +122,8 @@
   cell_vec2
 }
 
-.scImpute <- function(dat, drop_idx, Kcluster, min_size = 5, max_time = 60, verbose = F){
+.scImpute <- function(dat, drop_idx, Kcluster, min_size = 5, verbose = F,
+                      with_intercept = T){
   stopifnot(length(which(is.na(dat))) == 0)
   if(length(drop_idx) == 0) return(dat)
 
@@ -126,7 +139,7 @@
       if(verbose && i %% floor(length(k)/10) == 0) cat('*')
       keep_idx <- which(!is.na(dat2[k[i],]))
       dat2[k[i],] <- .nnls_impute(dat[k[i],], dat[setdiff(k, k[i]),,drop = F], keep_idx,
-                               max_time = max_time)
+                                  with_intercept = with_intercept)
     }
     if(verbose) cat('\n')
   }

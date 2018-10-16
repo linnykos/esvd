@@ -261,6 +261,11 @@ plot(dat_impute[idx], simulation$obs_mat[idx], asp = T, pch = 16, col = rgb(0,0,
 lines(c(0, 1e6), c(0, 1e6), col = "red", lty = 2, lwd = 2)
 lines(rep(0,2), c(-1e6, 1e6), col = "red", lty = 2, lwd = 1)
 lines(c(-1e6, 1e6), rep(0,2), col = "red", lty = 2, lwd = 1)
+err <- sum((dat_impute[idx] - simulation$obs_mat[idx])^2)
+coords <- par("usr")
+text(x = .05*coords[1]+0.95*coords[2], y = .1*coords[3]+0.9*coords[4],
+     labels = paste0("Error: ", round(err, 2)),
+     col = "red", pos = 2)
 
 plot(dat_impute[idx], -1/simulation$gram_mat[idx], asp = T, pch = 16, col = rgb(0,0,0,0.1),
      xlab = "Imputed value", ylab = "True expected value",
@@ -268,6 +273,11 @@ plot(dat_impute[idx], -1/simulation$gram_mat[idx], asp = T, pch = 16, col = rgb(
 lines(c(-1e6, 1e6), c(-1e6, 1e6), col = "red", lty = 2, lwd = 2)
 lines(rep(0,2), c(-1e6, 1e6), col = "red", lty = 2, lwd = 1)
 lines(c(-1e6, 1e6), rep(0,2), col = "red", lty = 2, lwd = 1)
+err <- sum((dat_impute[idx] - -1/simulation$gram_mat[idx])^2)
+coords <- par("usr")
+text(x = .05*coords[1]+0.95*coords[2], y = .1*coords[3]+0.9*coords[4],
+     labels = paste0("Error: ", round(err, 2)),
+     col = "red", pos = 2)
 graphics.off()
 
 

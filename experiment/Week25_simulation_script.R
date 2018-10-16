@@ -46,7 +46,7 @@ set.seed(10)
 dat2 <- dat
 dat2[which(is.na(zero_mat))] <- NA
 dat_impute <- singlecell:::.scImpute(dat, which(is.na(zero_mat)), Kcluster = 4,
-                                     max_time = 5, verbose = T)
+                                      verbose = T, with_intercept = T)
 
 save.image("Week25_simulation_exponential.RData")
 
