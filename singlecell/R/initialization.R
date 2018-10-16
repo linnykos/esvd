@@ -85,7 +85,8 @@
 
 .nnls_impute <- function(cell_vec, neigh_mat, B_vec,
                          max_vec = apply(neigh_mat, 2, max),
-                         with_intercept = T){
+                         weight = 1){
+  stopifnot(weight >= 0 & weight <= 1)
   stopifnot(max(B_vec) <= length(cell_vec))
   stopifnot(!is.matrix(cell_vec))
   stopifnot(length(cell_vec) == ncol(neigh_mat), length(max_vec) == length(cell_vec))
@@ -119,11 +120,11 @@
   cell_vec2 <- cell_vec
   cell_vec2[-B_vec] <- y_new
 
-  cell_vec2
+  (1-weight)*cell_vec + weight*cell_vec2
 }
 
 .scImpute <- function(dat, drop_idx, Kcluster, min_size = 5, verbose = F,
-                      with_intercept = T){
+                      weight = 0.5){
   stopifnot(length(which(is.na(dat))) == 0)
   if(length(drop_idx) == 0) return(dat)
 
@@ -139,7 +140,7 @@
       if(verbose && i %% floor(length(k)/10) == 0) cat('*')
       keep_idx <- which(!is.na(dat2[k[i],]))
       dat2[k[i],] <- .nnls_impute(dat[k[i],], dat[setdiff(k, k[i]),,drop = F], keep_idx,
-                                  with_intercept = with_intercept)
+                                  weight = weight)
     }
     if(verbose) cat('\n')
   }
