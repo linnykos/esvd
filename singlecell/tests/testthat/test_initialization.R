@@ -88,7 +88,7 @@ test_that(".nnls_impute can work when only two known genes are included", {
   dat <- abs(matrix(rnorm(40), nrow = 4, ncol = 10))
   vec <- abs(rnorm(10))
 
-  res <- .nnls_impute(vec, dat, 1:2, max_time = 5)
+  res <- .nnls_impute(vec, dat, 1:2)
 
   expect_true(is.vector(res))
 })
@@ -110,8 +110,7 @@ test_that(".nnls_impute does not get stuck in a loop", {
   i <- 23
 
   keep_idx <- which(!is.na(dat2[i,]))
-  res <- .nnls_impute(dat[i,], dat[setdiff(k, i),,drop = F], keep_idx,
-                      max_time = 5)
+  res <- .nnls_impute(dat[i,], dat[setdiff(k, i),,drop = F], keep_idx)
 
   expect_true(is.numeric(res))
 })
@@ -130,8 +129,7 @@ test_that(".scImpute works", {
   }
   drop_idx <- which(is.na(dat2))
 
-  res <- .scImpute(dat, drop_idx = drop_idx, Kcluster = 2, min_size = 3,
-                   max_time = 5)
+  res <- .scImpute(dat, drop_idx = drop_idx, Kcluster = 2, min_size = 3)
 
   expect_true(nrow(res) == nrow(dat))
   expect_true(ncol(res) == ncol(res))
@@ -165,7 +163,7 @@ test_that(".initialization works off of an imputed matrix", {
     dat2[i, sample(1:5, 1)] <- NA
   }
   drop_idx <- which(is.na(dat2))
-  dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3, max_time = 5)
+  dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
 
   res <- .initialization(dat2)
 
@@ -184,7 +182,7 @@ test_that(".initialization gives negative predictions", {
     dat2[i, sample(1:5, 1)] <- NA
   }
   drop_idx <- which(is.na(dat2))
-  dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3, max_time = 5)
+  dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
 
   res <- .initialization(dat2)
   pred_mat <- res$u_mat %*% t(res$v_mat)

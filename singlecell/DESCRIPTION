@@ -19,7 +19,8 @@ Imports:
     matrixStats,
     ape,
     igraph,
-    clplite
+    clplite,
+    nnls
 Suggests:
     testthat
 RoxygenNote: 6.1.0
