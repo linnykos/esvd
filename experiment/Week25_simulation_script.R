@@ -52,7 +52,7 @@ save.image("Week25_simulation_exponential.RData")
 
 idx_impute2 <- which(is.na(zero_mat))
 dat3 <- dat
-dat[idx_impute2] <- -1/simulation$gram_mat
+dat3[idx_impute2] <- -1/simulation$gram_mat
 set.seed(10)
 res_withimpute_population <- singlecell:::.fit_factorization(dat3, simulation$cell_mat, simulation$gene_mat,
                                                    verbose = T, family = "exponential",
