@@ -344,9 +344,7 @@
 
   pcurves_dense <- lapply(pcurves, function(pcv){
     vapply(seq_len(p),function(jj){
-      interpolated <- stats::approx(pcv$lambda, pcv$s[,jj], xout = lambdas_all)$y
-
-      interpolated
+      stats::approx(pcv$lambda, pcv$s[,jj], xout = lambdas_all)$y
     }, rep(0,length(lambdas_all)))
   })
 
