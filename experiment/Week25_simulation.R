@@ -2,16 +2,16 @@ rm(list=ls())
 source("../experiment/Week25_simulation_generator.R")
 load("../experiment/Week25_simulation_exponential.RData")
 
-set.seed(10)
-simulation <- .data_generator_exponential(total = 200, col_drop = F)
-dat <- simulation$dat
+# set.seed(10)
+# simulation <- .data_generator_exponential(total = 200, col_drop = F)
+# dat <- simulation$dat
 # .plot_singlecell(dat)
 length(which(dat == 0))/prod(dim(dat))
 length(which(simulation$obs_mat2 == 0))/prod(dim(simulation$obs_mat2)) #percentage of true zeros
 
 col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
-             rgb(180,200,255,maxColorValue=255), #blue
-             rgb(100,100,200,maxColorValue=255), #purple
+             rgb(180,200,255,maxColorValue=255), #purple
+             rgb(100,100,200,maxColorValue=255), #blue
              rgb(149,219,144,maxColorValue=255)) #green
 
 png("../figure/experiment/25_latent.png", height = 1200, width = 2000, res = 300, units = "px")
@@ -137,6 +137,12 @@ plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat),
      ylab = "Predicted inner product value",
      main = "Gram matrix\n(Ideal fit)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+
+err <- mean((simulation$gram_mat - pred_mat)^2)
+coords <- par("usr")
+text(x = .05*coords[1]+0.95*coords[2], y = .9*coords[3]+0.1*coords[4],
+     labels = paste0("Error: ", round(err, 2)),
+     col = "red", pos = 2)
 graphics.off()
 
 ###
@@ -171,6 +177,12 @@ plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat),
      ylab = "Predicted inner product value",
      main = "Gram matrix\n(No dropout)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+
+err <- mean((simulation$gram_mat - pred_mat)^2)
+coords <- par("usr")
+text(x = .05*coords[1]+0.95*coords[2], y = .9*coords[3]+0.1*coords[4],
+     labels = paste0("Error: ", round(err, 2)),
+     col = "red", pos = 2)
 graphics.off()
 
 #NO DROPOUT BUT CHEAT
@@ -203,6 +215,12 @@ plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat),
      ylab = "Predicted inner product value",
      main = "Gram matrix\n(No dropout, with cheating)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+
+err <- mean((simulation$gram_mat - pred_mat)^2)
+coords <- par("usr")
+text(x = .05*coords[1]+0.95*coords[2], y = .9*coords[3]+0.1*coords[4],
+     labels = paste0("Error: ", round(err, 2)),
+     col = "red", pos = 2)
 graphics.off()
 
 res_nodropout$obj_vec[length(res_nodropout$obj_vec)]
@@ -214,7 +232,7 @@ res_nodropout_cheat$obj_vec[length(res_nodropout_cheat$obj_vec)]
 # true zeros
 
 png("../figure/experiment/25_true_zero2.png", height = 1000, width = 2400, res = 300, units = "px")
-par(mar = c(0.5, 0.5, 3, 0.5), mfrow = c(1,2))
+par(mar = c(0.5, 0.5, 3, 1), mfrow = c(1,2))
 true_zero <- matrix(1, ncol = ncol(dat), nrow = nrow(dat))
 true_zero[which(simulation$gram_mat < quantile(simulation$gram_mat, probs = 0.05))] <- 0
 image(.rotate(true_zero), breaks = c(-0.5,0.5,1.5), col = c("blue3", "gray88"), asp = nrow(true_zero)/ncol(true_zero),
@@ -252,7 +270,7 @@ graphics.off()
 
 # now for the values we imputed to
 png("../figure/experiment/25_imputed_scatter.png", height = 1000, width = 2400, res = 300, units = "px")
-par(mfrow = c(1,2), mar = c(5, 5, 0.5, 0.5))
+par(mfrow = c(1,2), mar = c(5, 5, 0.5, 1))
 idx <- which(is.na(zero_mat))
 # plot(dat_impute[idx], dat[idx], asp = T)
 plot(dat_impute[idx], simulation$obs_mat[idx], asp = T, pch = 16, col = rgb(0,0,0,0.1),
@@ -286,9 +304,9 @@ graphics.off()
 
 png("../figure/experiment/25_fit_withdropout.png", height = 1000, width = 2400, res = 300, units = "px")
 par(mfrow = c(1,3))
-plot(res_withdropout$u_mat[,1], res_withdropout$u_mat[,2],
+plot(res_withdropout$u_mat[,1], -res_withdropout$u_mat[,2],
      xlim = range(c(res_withdropout$u_mat[,1], 0)),
-     ylim = range(c(res_withdropout$u_mat[,2], 0)),
+     ylim = range(c(-res_withdropout$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(With dropout)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
@@ -296,9 +314,9 @@ lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
 lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
 lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
-plot(res_withdropout$v_mat[,1], res_withdropout$v_mat[,2],
+plot(res_withdropout$v_mat[,1], -res_withdropout$v_mat[,2],
      xlim = range(c(res_withdropout$v_mat[,1], 0)),
-     ylim = range(c(res_withdropout$v_mat[,2], 0)),
+     ylim = range(c(-res_withdropout$v_mat[,2], 0)),
      col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(With dropout)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
@@ -313,6 +331,12 @@ plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T,
      ylab = "Predicted inner product value",
      main = "Gram matrix\n(With dropout)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+
+err <- mean((simulation$gram_mat - pred_mat)^2)
+coords <- par("usr")
+text(x = .05*coords[1]+0.95*coords[2], y = .9*coords[3]+0.1*coords[4],
+     labels = paste0("Error: ", round(err, 2)),
+     col = "red", pos = 2)
 graphics.off()
 
 png("../figure/experiment/25_fit_withdropout_cheat.png", height = 1000, width = 2400, res = 300, units = "px")
@@ -344,14 +368,20 @@ plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T,
      ylab = "Predicted inner product value",
      main = "Gram matrix\n(With dropout, with cheating)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+
+err <- mean((simulation$gram_mat - pred_mat)^2)
+coords <- par("usr")
+text(x = .05*coords[1]+0.95*coords[2], y = .9*coords[3]+0.1*coords[4],
+     labels = paste0("Error: ", round(err, 2)),
+     col = "red", pos = 2)
 graphics.off()
 
 ###############################
 png("../figure/experiment/25_fit_withimpute.png", height = 1000, width = 2400, res = 300, units = "px")
 par(mfrow = c(1,3))
-plot(res_withimpute$u_mat[,1], -res_withimpute$u_mat[,2],
+plot(res_withimpute$u_mat[,1], res_withimpute$u_mat[,2],
      xlim = range(c(res_withimpute$u_mat[,1], 0)),
-     ylim = range(c(-res_withimpute$u_mat[,2], 0)),
+     ylim = range(c(res_withimpute$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(With impute)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
@@ -359,9 +389,9 @@ lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
 lines(c(0, 1e6), c(0, 1e6), col = "red", lwd = 1, lty = 2)
 lines(c(0, 1e6), c(0, -1e6), col = "red", lwd = 1, lty = 2)
 
-plot(res_withimpute$v_mat[,1], -res_withimpute$v_mat[,2],
+plot(res_withimpute$v_mat[,1], res_withimpute$v_mat[,2],
      xlim = range(c(res_withimpute$v_mat[,1], 0)),
-     ylim = range(c(-res_withimpute$v_mat[,2], 0)),
+     ylim = range(c(res_withimpute$v_mat[,2], 0)),
      col = col_vec[rep(1:simulation$g, each = simulation$d_each)], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors\n(With impute)")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
@@ -376,6 +406,12 @@ plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T,
      ylab = "Predicted inner product value",
      main = "Gram matrix\n(With impute)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+
+err <- mean((simulation$gram_mat - pred_mat)^2)
+coords <- par("usr")
+text(x = .05*coords[1]+0.95*coords[2], y = .9*coords[3]+0.1*coords[4],
+     labels = paste0("Error: ", round(err, 2)),
+     col = "red", pos = 2)
 graphics.off()
 
 png("../figure/experiment/25_fit_withimpute_cheat.png", height = 1000, width = 2400, res = 300, units = "px")
@@ -407,6 +443,12 @@ plot(as.numeric(simulation$gram_mat), as.numeric(pred_mat), asp = T,
      ylab = "Predicted inner product value",
      main = "Gram matrix\n(With impute, with cheating)")
 lines(c(-1e5, 1e5), c(-1e5, 1e5), col = "red", lwd = 2, lty = 2)
+
+err <- mean((simulation$gram_mat - pred_mat)^2)
+coords <- par("usr")
+text(x = .05*coords[1]+0.95*coords[2], y = .9*coords[3]+0.1*coords[4],
+     labels = paste0("Error: ", round(err, 2)),
+     col = "red", pos = 2)
 graphics.off()
 
 ####################
@@ -416,10 +458,13 @@ svd_res <- svd(dat)
 k <- 6
 u_mat_naive <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 v_mat_naive <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
-pred_mat <- u_mat_naive %*% t(v_mat_naive)
 
-png("../figure/experiment/25_naive.png", height = 1200, width = 2000, res = 300, units = "px")
-par(mfrow = c(1,2))
+set.seed(10)
+svd_impute <- singlecell:::.initialization(dat_impute, family = "exponential",
+                                           max_val = max_val)
+
+png("../figure/experiment/25_naive.png", height = 1000, width = 2400, res = 300, units = "px")
+par(mfrow = c(1,3))
 plot(u_mat_naive[,1], u_mat_naive[,2],
      xlim = range(c(u_mat_naive[,1], 0)),
      ylim = range(c(u_mat_naive[,2], 0)),
@@ -432,7 +477,15 @@ plot(init$u_mat[,1], init$u_mat[,2],
      xlim = range(c(init$u_mat[,1], 0)),
      ylim = range(c(init$u_mat[,2], 0)),
      col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
-     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(Naive fit, reciprocal of -mean)")
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(Naive fit, -1/mean)")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+
+plot(svd_impute$u_mat[,1], svd_impute$u_mat[,2],
+     xlim = range(c(svd_impute$u_mat[,1], 0)),
+     ylim = range(c(svd_impute$u_mat[,2], 0)),
+     col = col_vec[rep(1:simulation$h, each = simulation$n_each)], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors\n(Naive fit, -1/(imputed mean))")
 lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
 lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
 

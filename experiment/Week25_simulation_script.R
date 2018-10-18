@@ -50,10 +50,10 @@ dat_impute <- singlecell:::.scImpute(dat, which(is.na(zero_mat)), Kcluster = 4,
 
 save.image("Week25_simulation_exponential.RData")
 
-#
-# set.seed(10)
-# init_impute <- singlecell:::.initialization(dat_impute, family = "exponential",
-#                                             max_val = max_val)
+
+set.seed(10)
+init_impute <- singlecell:::.initialization(dat_impute, family = "exponential",
+                                            max_val = max_val)
 # res_withdropout <- singlecell:::.fit_factorization(dat2, init_impute$u_mat, init_impute$v_mat,
 #                                                    verbose = T, family = "exponential",
 #                                                    max_iter = max_iter, tol = NA,

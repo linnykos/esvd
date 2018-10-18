@@ -14,8 +14,8 @@
 
   smoother_func <- .smoother_slingshot(smoother)
 
-  ### STEP 1 setup
-  num_lineage <- length(grep("Lineage",names(lineages))) # number of lineages
+  ### setup
+  num_lineage <- length(grep("Lineage", names(lineages))) # number of lineages
   clusters <- colnames(cluster_mat)
   n <- nrow(dat)
   p <- ncol(dat)
@@ -36,7 +36,7 @@
   W.orig <- W
   D <- W; D[,] <- NA
 
-  ## STEP 2 determine curve hierarchy
+  ### determine curve hierarchy
   C <- as.matrix(vapply(lineages[seq_len(num_lineage)], function(lin) {
     vapply(clusters, function(cluster_id) {
       as.numeric(cluster_id %in% lin)
@@ -46,7 +46,7 @@
   segmnts <- unique(C[rowSums(C)>1,,drop = FALSE])
   segmnts <- segmnts[order(rowSums(segmnts),decreasing = FALSE), ,
                      drop = FALSE]
-  avg_order <- list()
+  avg_order <- list() #avg_order will have length equal to number of connected components, i think
   for(i in seq_len(nrow(segmnts))){
     idx <- segmnts[i,] == 1
     avg_order[[i]] <- colnames(segmnts)[idx]
@@ -55,10 +55,10 @@
     colnames(segmnts)[ncol(segmnts)] <- paste('average',i,sep='')
   }
 
-  ### STEP 3 initial curves are piecewise linear paths through the tree
+  ### initial curves are piecewise linear paths through the tree
   pcurves <- list()
   for(l in seq_len(num_lineage)){
-    idx <- W[,l] > 0
+    idx <- which(W[,l] > 0)
     line_initial <- centers[clusters %in% lineages[[l]], ,
                             drop = FALSE]
     line_initial <- line_initial[match(lineages[[l]],
@@ -93,7 +93,7 @@
 
     if(extend == 'y'){
       curve <- princurve::project_to_curve(dat[idx, ,drop = FALSE],
-                                s = line_initial, stretch = 9999)
+                                s = line_initial, stretch = 9999) #note: this changes line_initial
       curve$dist_ind <- abs(curve$dist_ind)
     }
 
@@ -109,8 +109,7 @@
     D[,l] <- abs(pcurve$dist_ind)
   }
 
-  ### STEP 4 track distances between curves and data points to determine
-  # convergence
+  ### track distances between curves and data points to determine convergence
   dist_new <- sum(abs(D[W>0]), na.rm=TRUE)
 
   it <- 0
@@ -122,18 +121,18 @@
     if(reweight | reassign){
       ordD <- order(D)
       W_prob <- W/rowSums(W)
-      WrnkD <- cumsum(W_prob[ordD]) / sum(W_prob)
+      WrnkD <- cumsum(W_prob[ordD]) / sum(W_prob) #ERROR?
       Z <- D
-      Z[ordD] <- WrnkD
+      Z[ordD] <- WrnkD #ERROR?
     }
 
     if(reweight){
       Z_prime <- 1-Z^2
       Z_prime[W==0] <- NA
       W0 <- W
-      W <- Z_prime / rowMaxs(Z_prime,na.rm = TRUE) #rowMins(D) / D
-      W[is_nan(W)] <- 1 # handle 0/0
-      W[is_na(W)] <- 0
+      W <- Z_prime / matrixStats::rowMaxs(Z_prime, na.rm = TRUE) #rowMins(D) / D
+      W[is.nan(W)] <- 1 # handle 0/0
+      W[is.na(W)] <- 0
       W[W > 1] <- 1
       W[W < 0] <- 0
       W[W0==0] <- 0
@@ -145,29 +144,28 @@
       W[idx] <- 1 #(rowMins(D) / D)[idx]
 
       # drop if z > .9 and w < .1
-      ridx <- rowMaxs(Z, na.rm = TRUE) > .9 &
-        rowMins(W, na.rm = TRUE) < .1
+      ridx <- matrixStats::rowMaxs(Z, na.rm = TRUE) > .9 &
+        matrixStats::rowMins(W, na.rm = TRUE) < .1
       W0 <- W[ridx, ]
       Z0 <- Z[ridx, ]
       W0[!is.na(Z0) & Z0 > .9 & W0 < .1] <- 0
       W[ridx, ] <- W0
     }
 
-    # predict each dimension as a function of lambda (pseudotime)
+    ### predict each dimension as a function of lambda (pseudotime)
     for(l in seq_len(num_lineage)){
       pcurve <- pcurves[[l]]
       s <- pcurve$s
       ordL <- order(pcurve$lambda)
       for(jj in seq_len(p)){
-        s[, jj] <- smootherFcn(pcurve$lambda, X[,jj], w = pcurve$w,
-                               ...)[ordL]
+        s[, jj] <- smoother_func(pcurve$lambda, dat[,jj], w = pcurve$w)[ordL]
       }
-      new.pcurve <- princurve::project_to_curve(dat, s = s, stretch = stretch)
-      new.pcurve$dist_ind <- abs(new.pcurve$dist_ind)
-      new.pcurve$lambda <- new.pcurve$lambda -
-        min(new.pcurve$lambda, na.rm = TRUE)
-      new.pcurve$w <- W[,l]
-      pcurves[[l]] <- new.pcurve
+      new_pcurve <- princurve::project_to_curve(dat, s = s, stretch = stretch)
+      new_pcurve$dist_ind <- abs(new_pcurve$dist_ind)
+      new_pcurve$lambda <- new_pcurve$lambda -
+        min(new_pcurve$lambda, na.rm = TRUE)
+      new_pcurve$w <- W[,l]
+      pcurves[[l]] <- new_pcurve
     }
     D[,] <- vapply(pcurves, function(p){ p$dist_ind }, rep(0,nrow(dat)))
 
@@ -176,33 +174,30 @@
       if(max(rowSums(C)) > 1){
 
         segmnts <- unique(C[rowSums(C)>1,,drop=FALSE])
-        segmnts <- segmnts[order(rowSums(segmnts),
-                                 decreasing = FALSE),
-                           , drop = FALSE]
+        segmnts <- segmnts[order(rowSums(segmnts), decreasing = FALSE),, drop = FALSE]
         seg_mix <- segmnts
         avg_lines <- list()
         pct_shrink <- list()
 
-        # determine average curves and amount of shrinkage
+        ### determine average curves and amount of shrinkage
         for(i in seq_along(avg_order)){
           ns <- avg_order[[i]]
-          to_avg <- lapply(ns,function(n){
-            if(grepl('Lineage',n)){
-              l_ind <- as.numeric(gsub('Lineage','',n))
-              return(pcurves[[l_ind]])
-            }
-            if(grepl('average',n)){
-              a_ind <- as.numeric(gsub('average','',n))
-              return(avg_lines[[a_ind]])
+          to_avg <- lapply(ns, function(n_element){
+            if(grepl('Lineage', n_element)){
+              l_ind <- as.numeric(gsub('Lineage','',n_element))
+              pcurves[[l_ind]]
+            } else if(grepl('average', n_element)){
+              a_ind <- as.numeric(gsub('average','',n_element))
+              avg_lines[[a_ind]]
             }
           })
-          avg <- .avg_curves(to.avg, X, stretch = stretch)
+
+          avg <- .avg_curves(to_avg, dat, stretch = stretch)
           avg_lines[[i]] <- avg
-          common_ind <- rowMeans(vapply(to_avg,
-                                        function(crv){ crv$w > 0 },
-                                        rep(TRUE,nrow(X)))) == 1
-          pct_shrink[[i]] <- lapply(to_avg,function(crv){
-            .percent_shrinkage(crv, common.ind, method = shrink.method)
+          common_ind <- rowMeans(vapply(to_avg, function(crv){ crv$w > 0 },
+                                        rep(TRUE,nrow(dat)))) == 1
+          pct_shrink[[i]] <- lapply(to_avg, function(crv){
+            .percent_shrinkage(crv, common_ind, method = shrink_method)
           })
 
           # check for degenerate case (if one curve won't be
@@ -229,26 +224,29 @@
                                       })
           }
         }
-        # do the shrinking in reverse order
+
+        ### do the shrinking in reverse order
         for(j in rev(seq_along(avg_lines))){
           ns <- avg_order[[j]]
           avg <- avg_lines[[j]]
-          to_shrink <- lapply(ns,function(n){
-            if(grepl('Lineage',n)){
-              l_ind <- as.numeric(gsub('Lineage','',n))
+          to_shrink <- lapply(ns, function(n_element){
+            if(grepl('Lineage', n_element)){
+              l_ind <- as.numeric(gsub('Lineage','',n_element))
               return(pcurves[[l_ind]])
             }
             if(grepl('average',n)){
-              a_ind <- as.numeric(gsub('average','',n))
+              a_ind <- as.numeric(gsub('average','',n_element))
               return(avg_lines[[a_ind]])
             }
           })
+
           shrunk <- lapply(seq_along(ns),function(jj){
             crv <- to_shrink[[jj]]
-            return(.shrink_to_avg(crv, avg,
+            .shrink_to_avg(crv, avg,
                                   pct_shrink[[j]][[jj]] * shrink,
-                                  X, stretch = stretch))
+                                  dat, stretch = stretch)
           })
+
           for(jj in seq_along(ns)){
             n <- ns[jj]
             if(grepl('Lineage',n)){
@@ -264,11 +262,11 @@
         avg_order <- new_avg_order
       }
     }
-    D[,] <- vapply(pcurves, function(p){ p$dist_ind }, rep(0,nrow(X)))
+    D[,] <- vapply(pcurves, function(p){ p$dist_ind }, rep(0,nrow(dat)))
 
     dist_new <- sum(D[W>0], na.rm=TRUE)
     hasConverged <- (abs((dist_old -
-                            dist_new)) <= thresh * dist.old)
+                            dist_new)) <= thresh * dist_old)
   }
 
 
@@ -276,45 +274,44 @@
   if(reweight | reassign){
     ordD <- order(D)
     W_prob <- W/rowSums(W)
-    WrnkD <- cumsum(W.prob[ordD]) / sum(W_prob)
+    WrnkD <- cumsum(W_prob[ordD]) / sum(W_prob)
     Z <- D
     Z[ordD] <- WrnkD
   }
+
   if(reweight){
     Z_prime <- 1-Z^2
     Z_prime[W==0] <- NA
     W0 <- W
-    W <- Z_prime / rowMaxs(Z_prime,na.rm = TRUE) #rowMins(D) / D
+    W <- Z_prime / matrixStats::rowMaxs(Z_prime,na.rm = TRUE) #rowMins(D) / D
     W[is.nan(W)] <- 1 # handle 0/0
     W[is.na(W)] <- 0
     W[W > 1] <- 1
     W[W < 0] <- 0
     W[W0==0] <- 0
   }
+
   if(reassign){
     # add if z < .5
     idx <- Z < .5
     W[idx] <- 1 #(rowMins(D) / D)[idx]
 
     # drop if z > .9 and w < .1
-    ridx <- rowMaxs(Z, na.rm = TRUE) > .9 &
-      rowMins(W, na.rm = TRUE) < .1
+    ridx <- matrixStats::rowMaxs(Z, na.rm = TRUE) > .9 &
+      matrixStats::rowMins(W, na.rm = TRUE) < .1
     W0 <- W[ridx, ]
     Z0 <- Z[ridx, ]
     W0[!is.na(Z0) & Z0 > .9 & W0 < .1] <- 0
     W[ridx, ] <- W0
   }
 
-  for(l in seq_len(L)){
+  for(l in seq_len(num_lineage)){
     class(pcurves[[l]]) <- 'principal_curve'
     pcurves[[l]]$w <- W[,l]
   }
   names(pcurves) <- paste('curve',seq_along(pcurves),sep='')
 
-  .slingCurves(sds) <- pcurves
-
-  validObject(sds)
-  return(sds)
+  pcurves
 }
 
 # DEFINE SMOOTHER FUNCTION
@@ -350,7 +347,7 @@
       interpolated <- stats::approx(pcv$lambda, pcv$s[,jj], xout = lambdas_all)$y
 
       interpolated
-    }, rep(0,length(lambdas.all)))
+    }, rep(0,length(lambdas_all)))
   })
 
   avg <- vapply(seq_len(p),function(jj){
@@ -372,7 +369,7 @@
   if(method %in% base::eval(formals(stats::density.default)$kernel)){
     dens <- stats::density(0, bw=1, kernel = method)
     surv <- list(x = dens$x, y = (sum(dens$y) - cumsum(dens$y))/sum(dens$y))
-    box_vals <- graphics::boxplot(pst[share.idx], plot = FALSE)$stats
+    box_vals <- graphics::boxplot(pst[share_idx], plot = FALSE)$stats
     surv$x <- .scaleAB(surv$x, a = box_vals[1], b = box_vals[5])
     if(box_vals[1]==box_vals[5]){
       pct_l <- rep(0, length(pst))
@@ -404,4 +401,17 @@
   pcurve$w <- w
 
   pcurve
+}
+
+.smoother_func_better <- function(lambda, dat2){
+  ord <- order(lambda, decreasing = F)
+  lambda <- lambda[ord]
+  dat2 <- dat2[ord,]
+
+  kernel_func <- function(x, y){exp(-(x-y)^2)}
+
+  t(sapply(1:length(lambda), function(i){
+    weights <- kernel_func(lambda[i], lambda)
+    as.numeric(colSums(diag(weights) %*% dat2))/sum(weights)
+  }))
 }
