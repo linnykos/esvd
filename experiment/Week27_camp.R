@@ -126,8 +126,11 @@ for(i in col_idx_lines){
 graphics.off()
 
 svd_res <- svd(dat_impute)
-k <- 2
+k <- 4
 u_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+v_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+# res <- .identification(u_mat, v_mat)
+# u_mat <- res$X; v_mat <- res$Y
 
 col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
              rgb(180,200,255,maxColorValue=255), #purple
@@ -141,4 +144,34 @@ plot(u_mat[,1], u_mat[,2],
      xlim = range(c(u_mat[,1], 0)), ylim = range(c(u_mat[,2], 0)),
      col = col_vec[cell_type_coarse], asp = T,
      pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+lines(c(-1e6, 1e6), rep(0, 2), col = "red", lwd = 2, lty = 2)
+lines( rep(0, 2), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
 graphics.off()
+
+######################################
+load("../experiment/Week27_camp.RData")
+col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
+             rgb(180,200,255,maxColorValue=255), #purple
+             rgb(100,100,200,maxColorValue=255), #blue
+             rgb(149,219,144,maxColorValue=255)) #green
+cell_type <- camp$cell.info[,2]
+cell_type_coarse <- as.numeric(as.factor(sapply(cell_type, function(x){substr(x, 1, 1)})))
+cell_type_numeric <- as.numeric(as.factor(cell_type))
+
+plot(res_withimpute$u_mat[,1], res_withimpute$u_mat[,2],
+     xlim = range(c(res_withimpute$u_mat[,1], 0)), ylim = range(c(res_withimpute$u_mat[,2], 0)),
+     col = col_vec[cell_type_coarse], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+
+col_vec2 <- c("coral", "brown", "gray70", "black",
+              "cyan", "dodgerblue", "blue")
+
+plot(res_withimpute$u_mat[,1], res_withimpute$u_mat[,2],
+     xlim = range(c(res_withimpute$u_mat[,1], 0)), ylim = range(c(res_withimpute$u_mat[,2], 0)),
+     col = col_vec2[cell_type_numeric], asp = T,
+     pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Cell latent vectors")
+
+plot(res_withimpute$v_mat[,1], res_withimpute$v_mat[,2],
+     xlim = range(c(res_withimpute$v_mat[,1], 0)), ylim = range(c(res_withimpute$v_mat[,2], 0)),
+     asp = T, pch = 16, xlab = "Latent dim. 1", ylab = "Latent dim. 2", main = "Gene latent vectors")
+
