@@ -14,13 +14,8 @@
   idx <- which(dat == 0)
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat == 0)] <- min_val/2
-  if(family == "exponential") {
-    dat2 <- -1/dat
-    direction <- "<="
-  } else {
-    dat2 <- 1/dat
-    direction <- ">="
-  }
+  direction <- .dictate_direction(family)
+  dat2 <- .mean_transformation(dat, family)
 
   svd_res <- svd(dat2)
 

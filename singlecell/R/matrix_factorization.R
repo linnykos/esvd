@@ -138,14 +138,7 @@
                           max_val = NA){
   stopifnot(length(which(!is.na(dat_vec))) > 0)
 
-  if(class(dat_vec)[1] == "exponential"){
-    direction = "<="
-  } else if(class(dat_vec)[1] == "gaussian"){
-    direction = ">="
-  } else {
-    stop("input vector in .optimize_row() does not have a proper class")
-  }
-
+  direction <- .dictate_direction(class(dat_vec)[1])
   current_obj <- Inf
   next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
   iter <- 1
