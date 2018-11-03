@@ -106,9 +106,9 @@
   if(parallelized){
     func <- function(i){
       if(left) {
-        dat_vec <- dat[i,]; other_mat <- other_mat * extra_weights[i];
+        dat_vec <- dat[i,]; other_mat <- other_mat * extra_weights[i]
       } else {
-        dat_vec <- dat[,i]; other_mat <- diag(extra_weights) %*% other_mat;
+        dat_vec <- dat[,i]; other_mat <- diag(extra_weights) %*% other_mat
       }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
       .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val)
@@ -119,7 +119,11 @@
 
   } else {
     for(i in 1:nrow(current_mat)){
-      if(left) { dat_vec <- dat[i,] } else { dat_vec <- dat[,i] }
+      if(left) {
+        dat_vec <- dat[i,]; other_mat <- other_mat * extra_weights[i]
+      } else {
+        dat_vec <- dat[,i]; other_mat <- diag(extra_weights) %*% other_mat
+        }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
       if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
                                                                 other_mat, max_val = max_val)
