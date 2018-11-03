@@ -85,7 +85,7 @@
 
 .nnls_impute <- function(cell_vec, neigh_mat, B_vec,
                          max_vec = apply(neigh_mat, 2, max),
-                         weight = 1){
+                         weight = 1, with_intercept = T){
   stopifnot(weight >= 0 & weight <= 1)
   stopifnot(max(B_vec) <= length(cell_vec))
   stopifnot(!is.matrix(cell_vec))

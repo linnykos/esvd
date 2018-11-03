@@ -2,7 +2,7 @@
                         extend = 'y', reweight = TRUE, reassign = F,
                         thresh = 0.001, maxit = 15, stretch = 2,
                         shrink_method = 'cosine',
-                        allow.breaks = TRUE){
+                        allow.breaks = TRUE, b = 1){
   shrink <- as.numeric(shrink)
   # CHECKS
   if(shrink < 0 | shrink > 1){
@@ -126,7 +126,7 @@
     for(l in seq_len(num_lineage)){
       pcurve <- pcurves[[l]]
       sample_idx <- sort(unique(unlist(lapply(as.numeric(lineages[[l]]), function(x){which(cluster_mat[,x] == 1)}))))
-      s <-  .smoother_func_better(pcurve$lambda, dat[sample_idx,], idx = sample_idx)
+      s <-  .smoother_func_better(pcurve$lambda, dat[sample_idx,], idx = sample_idx, b = b)
       new_pcurve <- princurve::project_to_curve(dat[sample_idx,], s = s, stretch = stretch)
       new_pcurve$dist_ind <- abs(new_pcurve$dist_ind)
       new_pcurve$lambda <- new_pcurve$lambda -
@@ -316,13 +316,13 @@
 }
 
 
-.smoother_func_better <- function(lambda, dat2, idx = NA){
+.smoother_func_better <- function(lambda, dat2, idx = NA, b = 1){
   if(all(!is.na(idx)) & nrow(dat2) != length(lambda)) lambda <- lambda[idx]
   ord <- order(lambda, decreasing = F)
   lambda <- lambda[ord]
   dat2 <- dat2[ord,]
 
-  kernel_func <- function(x, y){exp(-(x-y)^2)}
+  kernel_func <- function(x, y){exp(-(x-y)^2/b)}
 
   t(sapply(1:length(lambda), function(i){
     weights <- kernel_func(lambda[i], lambda)

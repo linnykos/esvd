@@ -1,7 +1,9 @@
-.fit_factorization <- function(dat, u_mat, v_mat, tol = 1e-3,
-                               max_val = NA,
-                               max_iter = 100, verbose = F,
+.fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
                                family = "exponential",
+                               reparameterize = F,
+                               extra_weights = rep(1, nrow(dat)),
+                               tol = 1e-3, max_iter = 100,
+                               verbose = F,
                                cores = NA){
   if(!is.na(cores)) doMC::registerDoMC(cores = cores)
   stopifnot(length(which(dat > 0)) > 0)
@@ -23,10 +25,19 @@
   while((is.na(tol) | abs(current_obj - next_obj) > tol) & length(obj_vec) < max_iter){
     current_obj <- next_obj
 
-    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, !is.na(cores))
-    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, !is.na(cores))
+    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, extra_weights = extra_weights,
+                           !is.na(cores))
+    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, extra_weights = extra_weights,
+                           !is.na(cores))
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat)
+
+    if(reparameterize){
+      pred_mat <- u_mat %*% t(v_mat)
+      svd_res <- svd(pred_mat)
+      u_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+      v_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+    }
 
     if(verbose) print(paste0("Iter ", length(obj_vec), ": Decrease is ", current_obj - next_obj))
 
@@ -82,7 +93,7 @@
 #########
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
-                          parallelized = F){
+                          extra_weights = rep(1, nrow(dat)), parallelized = F){
   stopifnot(length(class(dat)) == 2)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
@@ -94,7 +105,11 @@
 
   if(parallelized){
     func <- function(i){
-      if(left) { dat_vec <- dat[i,] } else { dat_vec <- dat[,i] }
+      if(left) {
+        dat_vec <- dat[i,]; other_mat <- other_mat * extra_weights[i];
+      } else {
+        dat_vec <- dat[,i]; other_mat <- diag(extra_weights) %*% other_mat;
+      }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
       .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val)
     }
