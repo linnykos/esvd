@@ -1,3 +1,8 @@
+# distribution: poisson
+# natural parameter: m_{ij} = u_i^Tv_j
+# relation to canonical parameters: m_{ij} = log(lambda)
+# optimization problem: exp(m_{ij}) - a_{ij}*m_{ij}
+
 .evaluate_objective.poisson <- function(dat, u_mat, v_mat){
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))

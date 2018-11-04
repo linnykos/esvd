@@ -211,3 +211,34 @@ test_that(".evaluate_objective_single yields a smaller value under truth", {
 
   expect_true(mean(avg_obj[1,]) < mean(avg_obj[2,]))
 })
+
+
+#######################
+
+
+test_that(".fit_factorization is appropriate for gaussians", {
+  trials <- 10
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(10*x)
+    dat <- abs(matrix(rnorm(25, 2, 1), nrow = 5, ncol = 5))
+    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    init <- .initialization(dat, family = "gaussian")
+
+    fit <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                              max_iter = 5, max_val = 100,
+                              family = "gaussian")
+
+    res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat)
+    res2 <- .evaluate_objective(dat, matrix(1, ncol = 1, nrow = 5),
+                                matrix(1, ncol = 1, nrow = 5))
+    res3 <- .evaluate_objective(dat, abs(matrix(rnorm(5), ncol = 1, nrow = 5)),
+                                abs(matrix(rnorm(5), ncol = 1, nrow = 5)))
+
+    res1 < res2 & res1 < res3
+  })
+  set.seed(10)
+
+  expect_true(all(bool_vec))
+
+})

@@ -1,3 +1,8 @@
+# distribution: one-parameter Gaussian where var = mean/2
+# natural parameter: m_{ij} = u_i^Tv_j
+# relation to canonical parameters: -2/mu^2 and m_{ij} = 4/mu
+# optimization problem: -log(2*m_{ij}) - a_{ij}^2*(-m_{ij}^2/8) - a_{ij}*m_{ij}
+
 .evaluate_objective.gaussian <- function(dat, u_mat, v_mat){
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
