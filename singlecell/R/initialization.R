@@ -17,10 +17,12 @@
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat == 0)] <- min_val/2
   direction <- .dictate_direction(family)
-  dat2 <- .mean_transformation(dat, family)
+  dat2 <- dat
   for(i in 1:nrow(dat2)){
     dat2[i,] <- dat2[i,]/extra_weights[i]
   }
+  dat2 <- .mean_transformation(dat2, family)
+
 
   svd_res <- svd(dat2)
 

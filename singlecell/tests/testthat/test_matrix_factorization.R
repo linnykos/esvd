@@ -316,7 +316,7 @@ test_that(".fit_factorization works with non-trivial extra_weights", {
     }
   }
 
-  extra_weights <- log(rowSums(dat)/ncol(dat))
+  extra_weights <- rowSums(dat)/ncol(dat)
   init <- .initialization(dat, family = "poisson", max_val = 100,
                           extra_weights = extra_weights)
 
@@ -326,4 +326,35 @@ test_that(".fit_factorization works with non-trivial extra_weights", {
                             family = "poisson")
 
   expect_true(is.list(res))
+})
+
+test_that(".fit_factorization shrinks the inner products when extra_weights > 1 are used", {
+  set.seed(10)
+  u_mat <- cbind(c(rep(0.1, 5), rep(0.5, 5)), c(rep(0.3, 5), rep(1, 5)))
+  v_mat <- cbind(c(rep(0.5, 2), rep(0.2, 2)), c(rep(0.1, 2), rep(1, 2)))
+  s_vec <- rep(100, nrow(u_mat))
+
+  dat <- matrix(0, nrow = 10, ncol = 4)
+  for(i in 1:10){
+    for(j in 1:4){
+      dat[i,j] <- stats::rpois(1, lambda = s_vec[i]*exp(u_mat[i,]%*%v_mat[j,]))
+    }
+  }
+
+  extra_weights <- rowSums(dat)/ncol(dat)
+  init1 <- .initialization(dat, family = "poisson", max_val = 100,
+                          extra_weights = extra_weights)
+
+  res1 <- .fit_factorization(dat, u_mat = init1$u_mat, v_mat = init1$v_mat,
+                            max_iter = 5, max_val = 100,
+                            extra_weights = extra_weights,
+                            family = "poisson")
+
+  init2 <- .initialization(dat, family = "poisson", max_val = 100)
+
+  res2 <- .fit_factorization(dat, u_mat = init2$u_mat, v_mat = init2$v_mat,
+                             max_iter = 5, max_val = 100,
+                             family = "poisson")
+
+  expect_true(all(exp(res2$u_mat %*% t(res2$v_mat)) >= exp(res1$u_mat %*% t(res1$v_mat))))
 })
