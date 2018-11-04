@@ -8,14 +8,19 @@
 #'
 #' @return list
 .initialization <- function(dat, k = 2, family = "exponential",
+                            extra_weights = rep(1, nrow(dat)),
                             max_val = NA, verbose = F){
   stopifnot(length(which(is.na(dat))) == 0)
+  stopifnot(length(extra_weights) == nrow(dat))
 
   idx <- which(dat == 0)
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat == 0)] <- min_val/2
   direction <- .dictate_direction(family)
   dat2 <- .mean_transformation(dat, family)
+  for(i in 1:nrow(dat2)){
+    dat2[i,] <- dat2[i,]/extra_weights[i]
+  }
 
   svd_res <- svd(dat2)
 

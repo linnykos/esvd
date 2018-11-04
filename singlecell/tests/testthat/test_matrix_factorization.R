@@ -296,10 +296,34 @@ test_that(".fit_factorization can roughly recover the all 1's matrix", {
     res3 <- .evaluate_objective(dat, abs(matrix(rnorm(10), ncol = 1, nrow = 10)),
                                 -abs(matrix(rnorm(10), ncol = 1, nrow = 10)))
 
-    res1 < res2 & res2 < res3
+    res1 < res2 & res1 < res3
   })
   set.seed(10)
 
   expect_true(all(bool_vec))
+})
 
+test_that(".fit_factorization works with non-trivial extra_weights", {
+  set.seed(10)
+  u_mat <- cbind(c(rep(0.1, 5), rep(0.5, 5)), c(rep(0.3, 5), rep(1, 5)))
+  v_mat <- cbind(c(rep(0.5, 2), rep(0.2, 2)), c(rep(0.1, 2), rep(1, 2)))
+  s_vec <- c(5:15)
+
+  dat <- matrix(0, nrow = 10, ncol = 4)
+  for(i in 1:10){
+    for(j in 1:4){
+      dat[i,j] <- stats::rpois(1, lambda = s_vec[i]*exp(u_mat[i,]%*%v_mat[j,]))
+    }
+  }
+
+  extra_weights <- log(rowSums(dat)/ncol(dat))
+  init <- .initialization(dat, family = "poisson", max_val = 100,
+                          extra_weights = extra_weights)
+
+  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                            max_iter = 5, max_val = 100,
+                            extra_weights = extra_weights,
+                            family = "poisson")
+
+  expect_true(is.list(res))
 })

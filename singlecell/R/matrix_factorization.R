@@ -7,6 +7,7 @@
                                cores = NA){
   if(!is.na(cores)) doMC::registerDoMC(cores = cores)
   stopifnot(length(which(dat > 0)) > 0)
+  stopifnot(family == "poisson" | all(extra_weights == 1))
   stopifnot(length(which(dat < 0)) == 0)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
             ncol(u_mat) == ncol(v_mat))
@@ -18,7 +19,7 @@
   dat[which(dat == 0)] <- min_val/2
 
   current_obj <- Inf
-  next_obj <- .evaluate_objective(dat, u_mat, v_mat)
+  next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
   obj_vec <- c(next_obj)
   if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
 
@@ -30,7 +31,7 @@
     v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, extra_weights = extra_weights,
                            !is.na(cores))
 
-    next_obj <- .evaluate_objective(dat, u_mat, v_mat)
+    next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
 
     if(reparameterize){
       pred_mat <- u_mat %*% t(v_mat)
@@ -55,18 +56,18 @@
 
 #########
 
-.evaluate_objective <- function (dat, u_mat, v_mat) {
+.evaluate_objective <- function (dat, u_mat, v_mat, ...) {
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
             ncol(u_mat) == ncol(v_mat))
 
   UseMethod(".evaluate_objective")
 }
 
-.evaluate_objective.default <- function(dat, u_mat, v_mat){
-  .evaluate_objective.exponential(dat, u_mat, v_mat)
+.evaluate_objective.default <- function(dat, u_mat, v_mat, ...){
+  .evaluate_objective.exponential(dat, u_mat, v_mat, ...)
 }
 
-.evaluate_objective_single <- function (dat_vec, current_vec, other_mat) {
+.evaluate_objective_single <- function (dat_vec, current_vec, other_mat, ...) {
   stopifnot(!is.matrix(dat_vec))
   stopifnot(length(current_vec) == ncol(other_mat))
   stopifnot(length(dat_vec) == nrow(other_mat))
@@ -74,11 +75,11 @@
   UseMethod(".evaluate_objective_single")
 }
 
-.evaluate_objective_single.default <- function(dat_vec, current_vec, other_mat){
-  .evaluate_objective_single.exponential(dat_vec, current_vec, other_mat)
+.evaluate_objective_single.default <- function(dat_vec, current_vec, other_mat, ...){
+  .evaluate_objective_single.exponential(dat_vec, current_vec, other_mat, ...)
 }
 
-.gradient_vec <- function (dat_vec, current_vec, other_mat) {
+.gradient_vec <- function (dat_vec, current_vec, other_mat, ...) {
   stopifnot(!is.matrix(dat_vec))
   stopifnot(length(current_vec) == ncol(other_mat))
   stopifnot(length(dat_vec) == nrow(other_mat))
@@ -86,8 +87,8 @@
   UseMethod(".gradient_vec")
 }
 
-.gradient_vec.default <- function(dat_vec, current_vec, other_mat){
-  .gradient_vec.exponential(dat_vec, current_vec, other_mat)
+.gradient_vec.default <- function(dat_vec, current_vec, other_mat, ...){
+  .gradient_vec.exponential(dat_vec, current_vec, other_mat, ...)
 }
 
 #########
@@ -106,12 +107,12 @@
   if(parallelized){
     func <- function(i){
       if(left) {
-        dat_vec <- dat[i,]; other_mat <- other_mat * extra_weights[i]
+        dat_vec <- dat[i,]; extra_vec <- rep(extra_weights[i], nrow(other_mat))
       } else {
-        dat_vec <- dat[,i]; other_mat <- diag(extra_weights) %*% other_mat
+        dat_vec <- dat[,i]; extra_vec <- extra_weights
       }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
-      .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val)
+      .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val, extra_weights = extra_vec)
     }
 
     lis <- foreach::"%dopar%"(foreach::foreach(i = 1:nrow(current_mat)), func(i))
@@ -120,39 +121,40 @@
   } else {
     for(i in 1:nrow(current_mat)){
       if(left) {
-        dat_vec <- dat[i,]; other_mat <- other_mat * extra_weights[i]
+        dat_vec <- dat[i,]; extra_vec <- rep(extra_weights[i], nrow(other_mat))
       } else {
-        dat_vec <- dat[,i]; other_mat <- diag(extra_weights) %*% other_mat
-        }
+        dat_vec <- dat[,i]; extra_vec <- extra_weights
+      }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
       if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
-                                                                other_mat, max_val = max_val)
+                                                                other_mat, max_val = max_val,
+                                                                extra_weights = extra_vec)
     }
   }
-
 
   current_mat
 }
 
 .optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100,
-                          max_val = NA){
+                          max_val = NA, extra_weights = rep(1, nrow(other_mat))){
   stopifnot(length(which(!is.na(dat_vec))) > 0)
+  stopifnot(length(extra_weights) == nrow(other_mat))
 
   direction <- .dictate_direction(class(dat_vec)[1])
   current_obj <- Inf
-  next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
+  next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights)
   iter <- 1
 
   while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
     current_obj <- next_obj
 
-    grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat)
+    grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, extra_weights = extra_weights)
     step_vec <- .frank_wolfe(grad_vec, other_mat, which(!is.na(dat_vec)),
                              direction = direction, other_bound = max_val)
-    step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat)
+    step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, extra_weights = extra_weights)
     current_vec <- (1-step_size)*current_vec + step_size*step_vec
 
-    next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat)
+    next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights)
 
     iter <- iter + 1
   }
@@ -161,7 +163,7 @@
 }
 
 .binary_search <- function(dat_vec, current_vec, step_vec, other_mat,
-                           max_iter = 100){
+                           max_iter = 100, extra_weights = rep(1, nrow(other_mat))){
   form_current <- function(s){
     stopifnot(0<=s, s<=1)
     (1-s)*current_vec + s*step_vec
@@ -170,15 +172,15 @@
   upper <- 1; lower <- 0; mid <- 0.5
   iter <- 1
 
-  upper_val <- .evaluate_objective_single(dat_vec, form_current(upper), other_mat)
-  lower_val <- .evaluate_objective_single(dat_vec, form_current(lower), other_mat)
+  upper_val <- .evaluate_objective_single(dat_vec, form_current(upper), other_mat, extra_weights = extra_weights)
+  lower_val <- .evaluate_objective_single(dat_vec, form_current(lower), other_mat, extra_weights = extra_weights)
 
   upper_val_org <- upper_val; lower_val_org <- lower_val
   mid_val <- 2*max(upper_val, lower_val);
 
   # stage 1: do at least a few iterations first
   while(iter <= 6){
-    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat)
+    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, extra_weights = extra_weights)
 
     if(lower_val <= upper_val){
       upper <- mid; upper_val <- mid_val
@@ -192,7 +194,7 @@
 
   # stage 2: ensure that the stepsize actually decreases the obj val
   while(iter <= max_iter & mid_val > min(upper_val_org, lower_val_org)){
-    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat)
+    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, extra_weights = extra_weights)
 
     if(lower_val <= upper_val){
       upper <- mid; upper_val <- mid_val
@@ -238,7 +240,6 @@
   k <- length(grad_vec)
   other_mat <- other_mat[idx,,drop = F]
   other_direction <- ifelse(direction == "<=", ">=", "<=")
-
   objective_in <- grad_vec
   constr_mat <- other_mat
   k <- nrow(constr_mat)
