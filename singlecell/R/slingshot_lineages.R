@@ -1,27 +1,40 @@
 # code adapted from https://github.com/kstreet13/slingshot
 
-.get_lineages <- function(dat, cluster_labels, start_clus = NA, end_clus = NA,
-                          omega = NA){
+#' Title
+#'
+#' Note: I removed the functionality to explicitly label a starting or
+#' ending cluster (might put back in later?).
+#'
+#' Note: I removed the Omega parameter, which, to my understanding,
+#' controls if a lineage (i.e. tree) is split into two separate lineages.
+#'
+#' @param dat
+#' @param cluster_labels
+#' @param knn
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.get_lineages <- function(dat, cluster_labels, knn = 5){
   ### formatting
-  cluster_mat <- .format_clusterlabels(cluster_labels)
+  cluster_mat <- .construct_cluster_matrix(cluster_labels)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(cluster_mat))
-  if(!any(is.na(start_clus))){
-    start_clus <- as.character(start_clus)
-  }
-  if(!any(is.na(end_clus))){
-    end_clus <- as.character(end_clus)
-  }
 
   ### get the connectivity matrix
-  centers <- .compute_clustercenter(dat, cluster_mat)
+  centers <- .compute_cluster_center(dat, cluster_mat)
+  dat_augment <- rbind(centers, dat)
 
-  ### get pairwise cluster distance matrix
-  D <- .pairwise_cluster_distance(dat, cluster_mat)
+  ### construct the k-nearest neighbor graph
+  knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
 
-  ### set omega
-  if(is.na(omega)) omega <- max(D) + 1
-  D <- rbind(D, rep(omega, ncol(D)))
-  D <- cbind(D, c(rep(omega, ncol(D)), 0))
+  # ### get pairwise cluster distance matrix
+  # D <- .pairwise_cluster_distance(dat, cluster_mat)
+  #
+  # ### set omega
+  # if(is.na(omega)) omega <- max(D) + 1
+  # D <- rbind(D, rep(omega, ncol(D)))
+  # D <- cbind(D, c(rep(omega, ncol(D)), 0))
 
   ### draw MST on cluster centers + OMEGA
   forest <- .construct_mst_slingshot(D, cluster_mat, end_clus)
@@ -41,7 +54,18 @@
 
 #############
 
-.format_clusterlabels <- function(cluster_labels){
+#' Construst cluster matrix from cluster labels
+#'
+#' @param cluster_labels vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels)}
+#'
+#' @return A 0-1 matrix with \code{length(cluster_labels)} rows
+#' and \code{max(cluster_labels)} columns
+.construct_cluster_matrix <- function(cluster_labels){
+  stopifnot(all(cluster_labels > 0), all(cluster_labels %% 1 == 0))
+  stopifnot(length(unique(cluster_labels)) == max(cluster_labels))
+
   k <- max(cluster_labels)
   n <- length(cluster_labels)
 
@@ -55,46 +79,40 @@
   mat
 }
 
-.compute_clustercenter <- function(dat, cluster_mat){
-  t(vapply(1:ncol(cluster_mat), function(cluster_id){
-    w <- cluster_mat[,cluster_id]
-    matrixStats::colWeightedMeans(dat, w = w)
-  }, rep(0,ncol(dat))))
+#' Compute the cluster centers
+#'
+#' @param dat a \code{n} by \code{d} matrix
+#' @param cluster_mat a 0-1 matrix that is \code{n} by \code{k}
+#'
+#' @return a \code{k} by \code{d} matrix
+.compute_cluster_center <- function(dat, cluster_mat){
+  t(sapply(1:ncol(cluster_mat), function(x){
+    idx <- which(cluster_mat[,x] == 1)
+    colMeans(dat[idx,,drop=F])
+  }))
 }
 
-.dist_clusters_full <- function(dat, w1, w2){
-  if(length(w1) != nrow(dat) | length(w2) != nrow(dat)){
-    stop("Reduced dimensional matrix and weights vector contain different
-         numbers of points.")
-  }
+#' Construct the K-nearest neighbor graph based on Euclidean distance
+#'
+#' @param dat a \code{n} by \code{d} matrix
+#' @param knn positive integer
+#'
+#' @return \code{igraph} graph object
+.construct_knn_graph <- function(dat, knn = 5){
+  n <- nrow(dat)
+  dist_mat <- as.matrix(stats::dist(dat, method = "euclidean"))
+  adj_mat <- sapply(1:n, function(x){
+    vec <- dist_mat[,x]; vec[x] <- Inf
+    idx <- order(vec, decreasing = F)[1:knn]
+    adj_vec <- rep(0, n)
+    adj_vec[idx] <- 1
+    adj_vec
+  })
 
-  mu1 <- matrixStats::colWeightedMeans(dat, w = w1)
-  mu2 <- matrixStats::colWeightedMeans(dat, w = w2)
-  diff <- mu1 - mu2
-  s1 <- stats::cov.wt(dat, wt = w1)$cov
-  s2 <- stats::cov.wt(dat, wt = w2)$cov
-
-  as.numeric(t(diff) %*% solve(s1 + s2) %*% diff)
+  adj_mat <- ceiling((adj_mat + t(adj_mat))/2)
+  igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
 }
 
-.pairwise_cluster_distance <- function(dat, cluster_mat){
-  clusters <- 1:ncol(cluster_mat)
-  nclus <- ncol(cluster_mat)
-
-  D <- as.matrix(vapply(clusters, function(cluster_id1){
-    vapply(clusters, function(cluster_id2){
-      w1 <- cluster_mat[,cluster_id1]
-      w2 <- cluster_mat[,cluster_id2]
-
-      .dist_clusters_full(dat, w1, w2)
-    },0)
-  }, rep(0, nclus)))
-
-  rownames(D) <- as.character(clusters)
-  colnames(D) <- as.character(clusters)
-
-  D
-}
 
 .construct_mst_slingshot <- function(D, cluster_mat, end_clus = NA){
   clusters <- 1:ncol(cluster_mat)

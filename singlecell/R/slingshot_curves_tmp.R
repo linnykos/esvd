@@ -1,3 +1,5 @@
+# code adapted from https://github.com/kstreet13/slingshot
+
 .get_curves_tmp <- function(dat, cluster_mat, lineages, shrink = TRUE,
                         extend = 'y', reweight = TRUE, reassign = F,
                         thresh = 0.001, maxit = 15, stretch = 2,
