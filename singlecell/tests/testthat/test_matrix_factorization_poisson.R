@@ -58,6 +58,32 @@ test_that(".gradient_vec satisfies the gradient definition", {
   expect_true(all(bool_vec))
 })
 
+
+test_that(".gradient_vec satisfies the gradient definition even with extra_weights", {
+  trials <- 100
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(x)
+    dat <- abs(matrix(rpois(40, lambda = 1), nrow = 10, ncol = 4))
+    extra_weights <- runif(nrow(dat), min = 1, max = 5)
+    u_mat <- 0.1*abs(matrix(rnorm(20), nrow = 10, ncol = 2))
+    v_vec <- 0.1*abs(rnorm(2))
+    v_vec2 <- 0.1*abs(rnorm(2))
+
+    i <- sample(1:4, 1)
+    dat_vec <- dat[,i]
+    class(dat_vec) <- c("poisson", class(dat_vec)[length(class(dat_vec))])
+    grad <- .gradient_vec(dat_vec, v_vec, u_mat, extra_weights = extra_weights)
+
+    res <- .evaluate_objective_single(dat_vec, v_vec, u_mat, extra_weights = extra_weights)
+    res2 <- .evaluate_objective_single(dat_vec, v_vec2, u_mat, extra_weights = extra_weights)
+
+    res2 >= res + as.numeric(grad %*% (v_vec2 - v_vec)) - 1e-6
+  })
+
+  expect_true(all(bool_vec))
+})
+
 #################
 
 
