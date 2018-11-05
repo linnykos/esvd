@@ -48,11 +48,11 @@
     stopifnot(igraph::components(knn_graph)$no == 1)
   }
 
-  ### construct the mst
-  mst_graph <- .construct_spt(knn_graph, k = k, starting_cluster = starting_cluster)
+  ### construct the spt
+  spt_graph <- .construct_spt(knn_graph, k = k, starting_cluster = starting_cluster)
 
   ### identify lineages (paths through trees)
-  lineages <- .construct_lineages(mst_graph, starting_cluster = starting_cluster)
+  lineages <- .construct_lineages(spt_graph, starting_cluster = starting_cluster)
 
   lineages
 }
@@ -132,12 +132,14 @@
 .construct_spt <- function(knn_graph, k, starting_cluster){
   stopifnot(starting_cluster <= k)
 
+  # construct distance graph
   dist_mat <- igraph::distances(knn_graph, v = 1:k, to = 1:k, mode = "all")
   dist_mat[is.infinite(dist_mat)] <- 0
   dist_mat <- dist_mat^2
   dist_graph <- igraph::graph_from_adjacency_matrix(dist_mat, weighted = T,
                                                     mode = "undirected")
 
+  # enumerate shortest paths and then make it into a graph
   lis <- igraph::shortest_paths(dist_graph, from = starting_cluster, output = "vpath")
   adj_mat <- matrix(0, k, k)
   for(vpath in lis$vpath){
@@ -150,99 +152,29 @@
   igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
 }
 
-.identify_trees <- function(forest){
-  subtrees <- subtrees.update <- forest
-  diag(subtrees) <- 1
-  while(sum(subtrees.update) > 0){
-    subtrees.new <- apply(subtrees,2,function(col){
-      rowSums(subtrees[,as.logical(col), drop=FALSE]) > 0
-    })
-    subtrees.update <- subtrees.new - subtrees
-    subtrees <- subtrees.new
-  }
-  subtrees <- unique(subtrees)
-  trees <- lapply(seq_len(nrow(subtrees)),function(ri){
-    colnames(forest)[subtrees[ri,]]
-  })
+#' Construct the lineages
+#'
+#' Enumerates the shortest paths from \code{starting_cluster} to
+#' each of the leaves in \code{spt_graph}
+#'
+#' @param spt_graph \code{igraph} object
+#' @param starting_cluster positive integer
+#'
+#' @return a list
+.construct_lineages <- function(spt_graph, starting_cluster){
+  # find all leaf nodes (aside from starting_cluster) and trace its path
+  deg_vec <- igraph::degree(spt_graph)
+  leaf_idx <- which(deg_vec == 1)
+  leaf_idx <- leaf_idx[!leaf_idx %in% starting_cluster]
 
-  trees[order(vapply(trees,length,0),decreasing = TRUE)]
-}
-
-.construct_lineages <- function(trees, forest, start_clus = NA){
-  lineages <- list()
-
-  for(tree in trees){
-    if(length(tree) == 1){
-      lineages[[length(lineages)+1]] <- tree
-      next
-    }
-
-    tree_ind <- rownames(forest) %in% tree
-    tree_graph <- forest[tree_ind, tree_ind, drop = FALSE]
-    degree <- rowSums(tree_graph)
-    g <- igraph::graph.adjacency(tree_graph, mode="undirected")
-
-    # if you have starting cluster(s) in this tree, draw lineages
-    # to each leaf
-    if(!is.na(any(start_clus)) && sum(start_clus %in% tree) > 0){
-      starts <- start_clus[start_clus %in% tree]
-      ends <- rownames(tree_graph)[
-        degree == 1 & ! rownames(tree_graph) %in% starts]
-      for(st in starts){
-        paths <- igraph::shortest_paths(g, from = st, to = ends,
-                                mode = 'out',
-                                output = 'vpath')$vpath
-        for(p in paths){
-          lineages[[length(lineages)+1]] <- names(p)
-        }
-      }
-    } else {
-      # else, need a criteria for picking root
-      # highest average length (~parsimony)
-      leaves <- rownames(tree_graph)[degree == 1]
-      avg_lineage_length <- vapply(leaves, function(l){
-        ends <- leaves[leaves != l]
-        paths <- igraph::shortest_paths(g, from = l, to = ends,
-                                        mode = 'out',
-                                        output = 'vpath')$vpath
-        mean(vapply(paths, length, 0))
-      }, 0)
-      st <- names(avg_lineage_length)[
-        which.max(avg_lineage_length)]
-      ends <- leaves[leaves != st]
-      paths <- igraph::shortest_paths(g, from = st, to = ends,
-                                      mode = 'out',
-                                      output = 'vpath')$vpath
-      for(p in paths){
-        lineages[[length(lineages)+1]] <- names(p)
-      }
-    }
+  stopifnot(length(leaf_idx) > 0)
+  lineages <- igraph::shortest_paths(spt_graph, from = starting_cluster,
+                                     to = leaf_idx, output = "vpath")$vpath
+  for(i in 1:length(lineages)){
+    lineages[[i]] <- as.numeric(lineages[[i]])
   }
 
-  lineages <- lineages[order(vapply(lineages, length, 0),
-                             decreasing = TRUE)]
   names(lineages) <- paste('Lineage',seq_along(lineages),sep='')
 
   lineages
-}
-
-.format_lineagecontrol <- function(lineages, D, cluster_mat, start_clus, end_clus){
-  nclus <- ncol(cluster_mat)
-
-  lineageControl <- list()
-  first <- unique(vapply(lineages,function(l){ l[1] },''))
-  last <- unique(vapply(lineages,function(l){ l[length(l)] },''))
-
-  lineageControl$start_clus <- first
-  lineageControl$end_clus <- last
-
-  start_given <- first %in% start_clus
-  end_given <- last %in% end_clus
-  lineageControl$start_given <- start_given
-  lineageControl$end_given <- end_given
-
-  lineageControl$dist <- D[seq_len(nclus),seq_len(nclus),
-                           drop = FALSE]
-
-  lineageControl
 }
