@@ -48,3 +48,16 @@ test_that(".construct_knn_graph is actually constructing the graph based on min 
   expect_true(all(diag(adj) == 0))
   expect_true(adj[1,2] == 1)
 })
+
+####################
+
+## .construct_mst is correct
+
+test_that(".construct_mst works", {
+  set.seed(10)
+  dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
+  knn_graph <- .construct_knn_graph(dat, 5)
+  res <- .construct_mst(knn_graph, k = 5)
+
+  expect_true(class(res) == "igraph")
+})

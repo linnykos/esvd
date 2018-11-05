@@ -2,11 +2,13 @@
 
 #' Title
 #'
-#' Note: I removed the functionality to explicitly label a starting or
-#' ending cluster (might put back in later?).
+#' Note: I removed the functionality to explicitly label a ending cluster
+#' (might put back in later?).
 #'
 #' Note: I removed the Omega parameter, which, to my understanding,
 #' controls if a lineage (i.e. tree) is split into two separate lineages.
+#' Currently, the only way for a forest to occur is if the KNN graph is
+#' naturally disconnected
 #'
 #' @param dat
 #' @param cluster_labels
@@ -16,7 +18,8 @@
 #' @export
 #'
 #' @examples
-.get_lineages <- function(dat, cluster_labels, knn = 5){
+.get_lineages <- function(dat, cluster_labels, starting_cluster, knn = 5,
+                          verbose = F){
   ### formatting
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(cluster_mat))
@@ -28,16 +31,8 @@
   ### construct the k-nearest neighbor graph
   knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
 
-  # ### get pairwise cluster distance matrix
-  # D <- .pairwise_cluster_distance(dat, cluster_mat)
-  #
-  # ### set omega
-  # if(is.na(omega)) omega <- max(D) + 1
-  # D <- rbind(D, rep(omega, ncol(D)))
-  # D <- cbind(D, c(rep(omega, ncol(D)), 0))
-
-  ### draw MST on cluster centers + OMEGA
-  forest <- .construct_mst_slingshot(D, cluster_mat, end_clus)
+  ### construct the mst
+  mst_graph <- .construct_mst(knn_graph)
 
   ### identify sub-trees
   trees <- .identify_trees(forest)
@@ -113,41 +108,17 @@
   igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
 }
 
+#' Construct the minimum spanning tree graph from KNN graph
+#'
+#' @param knn_graph \code{igraph} object
+#' @param k positive integer for number of clusters
+#'
+#' @return \code{igraph} object representing the MST
+.construct_mst <- function(knn_graph, k){
+  dist_mat <- igraph::distances(knn_graph, v = 1:k, to = 1:k, mode = "all")
 
-.construct_mst_slingshot <- function(D, cluster_mat, end_clus = NA){
-  clusters <- 1:ncol(cluster_mat)
-  nclus <- ncol(cluster_mat)
-
-  if(!any(is.na(end_clus))){
-    end_idx <- which(clusters %in% end_clus)
-    mstree <- ape::mst(D[-end_clus, -end_clus, drop = FALSE])
-  }else{
-    mstree <- ape::mst(D)
-  }
-
-  # (add in endpoint clusters)
-  if(!any(is.na(end_clus))){
-    forest <- D
-    forest[forest != 0] <- 0
-    forest[-end.idx, -end.idx] <- mstree
-    for(cluster_id in end.clus){
-      cl_idx <- which(clusters == cluster_id)
-      dists <- D[! rownames(D) %in% end_clus, cl_idx]
-      # get closest non-endpoint cluster
-      closest <- names(dists)[which.min(dists)]
-      closest_idx <- which.max(clusters == closest)
-      forest[cl_idx, closest_idx] <- 1
-      forest[closest_idx, cl_idx] <- 1
-    }
-  }else{
-    forest <- mstree
-  }
-  # remove OMEGA
-  forest <- forest[seq_len(nclus), seq_len(nclus), drop = FALSE]
-  rownames(forest) <- clusters
-  colnames(forest) <- clusters
-
-  forest
+  adj_mat <- ape::mst(dist_mat)
+  igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
 }
 
 .identify_trees <- function(forest){
