@@ -1,6 +1,4 @@
-# code adapted from https://github.com/kstreet13/slingshot
-
-#' Title
+#' Estimate the lineages (via Slingshot)
 #'
 #' Note: I removed the functionality to explicitly label a ending cluster
 #' (might put back in later?).
@@ -8,20 +6,29 @@
 #' Note: I removed the Omega parameter, which, to my understanding,
 #' controls if a lineage (i.e. tree) is split into two separate lineages.
 #' Currently, the only way for a forest to occur is if the KNN graph is
-#' naturally disconnected
+#' naturally disconnected.
 #'
-#' @param dat
-#' @param cluster_labels
-#' @param knn
+#' Note: Currently, this code is hard-coded to work for only a fully connected
+#' KNN graph.
 #'
-#' @return
-#' @export
+#' Code adapted from https://github.com/kstreet13/slingshot.
 #'
-#' @examples
-.get_lineages <- function(dat, cluster_labels, starting_cluster, knn = 5,
+#' @param dat a \code{n} by \code{d} matrix
+#' @param cluster_labels vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels)}
+#' @param starting_cluster the "origin" cluster that all the lineages will start
+#' from
+#' @param knn positive integer
+#' @param verbose boolean
+#'
+#' @return A list of cluster indices, with \code{starting_cluster} starting as
+#' its first element
+.get_lineages <- function(dat, cluster_labels, starting_cluster, knn = NA,
                           verbose = F){
   ### formatting
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
+  k <- ncol(cluster_mat)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(cluster_mat))
 
   ### get the connectivity matrix
@@ -29,22 +36,25 @@
   dat_augment <- rbind(centers, dat)
 
   ### construct the k-nearest neighbor graph
-  knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
+  if(is.na(knn)){
+    knn <- 1
+    while(TRUE){
+      knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
+      if(igraph::components(knn_graph)$no == 1) break()
+      knn <- knn + 1
+    }
+  } else {
+    knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
+    stopifnot(igraph::components(knn_graph)$no == 1)
+  }
 
   ### construct the mst
-  mst_graph <- .construct_mst(knn_graph)
-
-  ### identify sub-trees
-  trees <- .identify_trees(forest)
-  ntree <- length(trees)
+  mst_graph <- .construct_spt(knn_graph, k = k, starting_cluster = starting_cluster)
 
   ### identify lineages (paths through trees)
-  lineages <- .construct_lineages(trees, forest, start_clus)
-  lineageControl <- .format_lineagecontrol(lineages, D, cluster_mat, start_clus, end_clus)
+  lineages <- .construct_lineages(mst_graph, starting_cluster = starting_cluster)
 
-  list(dat = dat, cluster_mat = cluster_mat,
-       lineages = lineages, adjacency = forest,
-       slingParams = lineageControl)
+  lineages
 }
 
 #############
@@ -108,16 +118,35 @@
   igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
 }
 
-#' Construct the minimum spanning tree graph from KNN graph
+#' Construct the shortest path tree graph from KNN graph
+#'
+#' This is currently hard-coded to work for only one \code{starting_cluster}.
+#'
+#' Note: The squaring of \code{dist_mat} is arbitrary, currently used to
+#' encourage paths through other clusters.
 #'
 #' @param knn_graph \code{igraph} object
 #' @param k positive integer for number of clusters
 #'
-#' @return \code{igraph} object representing the MST
-.construct_mst <- function(knn_graph, k){
-  dist_mat <- igraph::distances(knn_graph, v = 1:k, to = 1:k, mode = "all")
+#' @return \code{igraph} object representing the shortest path tree
+.construct_spt <- function(knn_graph, k, starting_cluster){
+  stopifnot(starting_cluster <= k)
 
-  adj_mat <- ape::mst(dist_mat)
+  dist_mat <- igraph::distances(knn_graph, v = 1:k, to = 1:k, mode = "all")
+  dist_mat[is.infinite(dist_mat)] <- 0
+  dist_mat <- dist_mat^2
+  dist_graph <- igraph::graph_from_adjacency_matrix(dist_mat, weighted = T,
+                                                    mode = "undirected")
+
+  lis <- igraph::shortest_paths(dist_graph, from = starting_cluster, output = "vpath")
+  adj_mat <- matrix(0, k, k)
+  for(vpath in lis$vpath){
+    if(length(vpath) == 1) next()
+    for(i in 2:length(vpath)){
+      adj_mat[vpath[i-1], vpath[i]] <- 1
+    }
+  }
+  adj_mat <- ceiling((adj_mat + t(adj_mat))/2)
   igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
 }
 

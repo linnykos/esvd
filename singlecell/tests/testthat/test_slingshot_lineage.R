@@ -51,13 +51,46 @@ test_that(".construct_knn_graph is actually constructing the graph based on min 
 
 ####################
 
-## .construct_mst is correct
+## .construct_spt is correct
 
-test_that(".construct_mst works", {
+test_that(".construct_spt works", {
   set.seed(10)
   dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
   knn_graph <- .construct_knn_graph(dat, 5)
-  res <- .construct_mst(knn_graph, k = 5)
+  res <- .construct_spt(knn_graph, k = 5, starting_cluster = 1)
 
   expect_true(class(res) == "igraph")
+})
+
+test_that(".construct_spt finds the right graph for a specific configuration", {
+  set.seed(10)
+  cell_pop <- matrix(c(4,10, 25,100,
+                       40,10, 60,80,
+                       60,80, 25,100,
+                       60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
+  h <- nrow(cell_pop)
+  n_each <- 50
+  dat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_each)
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 0.1),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
+  }))
+  cluster_labels <- rep(1:4, each = 50)
+
+  cluster_mat <- .construct_cluster_matrix(cluster_labels)
+  centers <- .compute_cluster_center(dat, cluster_mat)
+  dat_augment <- rbind(centers, dat)
+  knn <- 1
+  while(TRUE){
+    knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
+    if(igraph::components(knn_graph)$no == 1) break()
+    knn <- knn + 1
+  }
+  res <- .construct_spt(knn_graph, k = 4, starting_cluster = 1)
+  res <- as.matrix(igraph::as_adjacency_matrix(res))
+
+  expect_true(res[1,3] == 1)
+  expect_true(res[3,2] == 1)
+  expect_true(res[3,4] == 1)
+  expect_true(sum(res) == 6)
 })
