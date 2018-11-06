@@ -54,11 +54,13 @@ test_that(".initial_curve_fit works", {
   k <- ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
   W <- .initialize_weight_matrix(cluster_mat, lineages)
+  cluster_vec <- 1:ncol(cluster_mat)
+  s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
 
-  res <- .initial_curve_fit(dat, lineages, W, cluster_mat, centers)
+  res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
 
   expect_true(is.list(res))
-  expect_true(all(names(res) == c("pcurves", "D")))
-  expect_true(all(sapply(res$pcurves, class) == "principal_curve"))
+  expect_true(all(names(res) == c("pcurve_list", "D")))
+  expect_true(all(sapply(res$pcurve_list, class) == "principal_curve"))
   expect_true(all(dim(res$D) == c(100, length(lineages))))
 })

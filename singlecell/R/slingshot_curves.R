@@ -1,19 +1,32 @@
 # code adapted from https://github.com/kstreet13/slingshot
 
+#' Title
+#'
+#' @param dat
+#' @param cluster_labels
+#' @param lineages
+#' @param shrink
+#' @param extend
+#' @param thresh parameter to determine convergence
+#' @param max_iter
+#' @param shrink_method
+#' @param allow.breaks
+#' @param b parameter for the kernel function (when smoothing)
+#'
+#' @return
+#' @export
+#'
+#' @examples
 .get_curves <- function(dat, cluster_labels, lineages, shrink = 1,
-                        extend = 'y', reweight = TRUE, reassign = F,
-                        thresh = 0.001, maxit = 15, stretch = 2,
+                        extend = 'y',
+                        thresh = 0.001, max_iter = 15,
                         shrink_method = 'cosine',
                         allow.breaks = TRUE, b = 1){
   stopifnot(shrink >= 0 & shrink <= 1)
 
   ### setup
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
-  k <- ncol(cluster_mat)
-  num_lineage <- length(lineages)
-  cluster_vec <- 1:k
-  n <- nrow(dat)
-  p <- ncol(dat)
+  cluster_vec <- 1:ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
 
   W <- .initialize_weight_matrix(cluster_mat, lineages)
@@ -22,69 +35,27 @@
   avg_order <- .initialize_curve_hierarchy(lineages, cluster_vec)
 
   ### initial curves are piecewise linear paths through the tree
-
+  s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
+  res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+  pcurve_list <- res$pcurve_list; D <- res$D
 
   ### track distances between curves and data points to determine convergence
-  dist_new <- sum(abs(D[W>0]), na.rm=TRUE)
+  dist_new <- sum(abs(D[W>0]))
+  dist_old <- Inf
 
-  it <- 0
-  hasConverged <- FALSE
-  while (!hasConverged && it < maxit){
-    it <- it + 1
+  iter <- 1
+  while (abs((dist_old - dist_new) >= thresh * dist_old) && iter < max_iter){
     dist_old <- dist_new
 
-    if(reweight | reassign){
-      ordD <- order(D)
-      W_prob <- W/rowSums(W)
-      WrnkD <- cumsum(W_prob[ordD]) / sum(W_prob) #ERROR?
-      Z <- D
-      Z[ordD] <- WrnkD #ERROR?
-    }
-
-    if(reweight){
-      Z_prime <- 1-Z^2
-      Z_prime[W==0] <- NA
-      W0 <- W
-      W <- Z_prime / matrixStats::rowMaxs(Z_prime, na.rm = TRUE) #rowMins(D) / D
-      W[is.nan(W)] <- 1 # handle 0/0
-      W[is.na(W)] <- 0
-      W[W > 1] <- 1
-      W[W < 0] <- 0
-      W[W0==0] <- 0
-    }
-
-    if(reassign){
-      # add if z < .5
-      idx <- Z < .5
-      W[idx] <- 1 #(rowMins(D) / D)[idx]
-
-      # drop if z > .9 and w < .1
-      ridx <- matrixStats::rowMaxs(Z, na.rm = TRUE) > .9 &
-        matrixStats::rowMins(W, na.rm = TRUE) < .1
-      W0 <- W[ridx, ]
-      Z0 <- Z[ridx, ]
-      W0[!is.na(Z0) & Z0 > .9 & W0 < .1] <- 0
-      W[ridx, ] <- W0
-    }
-
     ### predict each dimension as a function of lambda (pseudotime)
-    for(l in seq_len(num_lineage)){
-      pcurve <- pcurves[[l]]
-      sample_idx <- sort(unique(unlist(lapply(as.numeric(lineages[[l]]), function(x){which(cluster_mat[,x] == 1)}))))
-      s <-  .smoother_func_better(pcurve$lambda, dat[sample_idx,], idx = sample_idx, b = b)
-      new_pcurve <- princurve::project_to_curve(dat[sample_idx,], s = s, stretch = stretch)
-      new_pcurve$dist_ind <- abs(new_pcurve$dist_ind)
-      new_pcurve$lambda <- new_pcurve$lambda -
-        min(new_pcurve$lambda, na.rm = TRUE)
-      new_pcurve$w <- W[,l]
-      pcurves[[l]] <- new_pcurve
-    }
-    D[,] <- vapply(1:length(pcurves), function(p){
-      sample_idx <- sort(unique(unlist(lapply(as.numeric(lineages[[p]]), function(x){which(cluster_mat[,x] == 1)}))))
-      vec <- rep(NA, nrow(dat))
-      vec[sample_idx] <- pcurves[[p]]$dist_ind
-      vec
-    }, rep(0,nrow(dat)))
+    s_list <- lapply(1:num_lineage, function(lin){
+      sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
+      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,],
+                     idx = sample_idx, b = b)
+    })
+
+    res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+    pcurve_list <- res$pcurve_list; D <- res$D
 
     # shrink together lineages near shared clusters
     if(shrink > 0){
@@ -182,50 +153,10 @@
     D[,] <- vapply(pcurves, function(p){ p$dist_ind }, rep(0,nrow(dat)))
 
     dist_new <- sum(D[W>0], na.rm=TRUE)
-    hasConverged <- (abs((dist_old -
-                            dist_new)) <= thresh * dist_old)
+    hasConverged <-
+    iter <- iter + 1
   }
 
-
-  ## STEP 5
-  if(reweight | reassign){
-    ordD <- order(D)
-    W_prob <- W/rowSums(W)
-    WrnkD <- cumsum(W_prob[ordD]) / sum(W_prob)
-    Z <- D
-    Z[ordD] <- WrnkD
-  }
-
-  if(reweight){
-    Z_prime <- 1-Z^2
-    Z_prime[W==0] <- NA
-    W0 <- W
-    W <- Z_prime / matrixStats::rowMaxs(Z_prime,na.rm = TRUE) #rowMins(D) / D
-    W[is.nan(W)] <- 1 # handle 0/0
-    W[is.na(W)] <- 0
-    W[W > 1] <- 1
-    W[W < 0] <- 0
-    W[W0==0] <- 0
-  }
-
-  if(reassign){
-    # add if z < .5
-    idx <- Z < .5
-    W[idx] <- 1 #(rowMins(D) / D)[idx]
-
-    # drop if z > .9 and w < .1
-    ridx <- matrixStats::rowMaxs(Z, na.rm = TRUE) > .9 &
-      matrixStats::rowMins(W, na.rm = TRUE) < .1
-    W0 <- W[ridx, ]
-    Z0 <- Z[ridx, ]
-    W0[!is.na(Z0) & Z0 > .9 & W0 < .1] <- 0
-    W[ridx, ] <- W0
-  }
-
-  for(l in seq_len(num_lineage)){
-    class(pcurves[[l]]) <- 'principal_curve'
-    pcurves[[l]]$w <- W[,l]
-  }
   names(pcurves) <- paste('curve',seq_along(pcurves),sep='')
 
   pcurves
@@ -281,61 +212,91 @@
   avg_order
 }
 
+
+#' Initial curve fit
+#'
+#' @param lineages list output of \code{.get_lineages()}
+#' @param cluster_vec a vector from 1 to \code{k}
+#' @param centers matrix output of \code{.compute_cluster_center()} that's
+#' \code{k} by \code{d}
+#'
+#' @return a list of points
+.initial_curve_fit <- function(lineages, cluster_vec, centers){
+  lapply(lineages, function(lineage){
+    line_initial <- centers[cluster_vec %in% lineage, , drop = FALSE]
+    line_initial[match(lineage, rownames(line_initial)),,drop = FALSE]
+  })
+}
+
+
+#' Determine which samples are part of a lineage
+#'
+#' @param lineage one specific element of the list output of \code{.get_lineages()}
+#' @param cluster_mat 0-1 matrix output of \code{.construct_cluster_matrix()} that
+#' has \code{n} rows and \code{k} column
+#'
+#' @return
+.determine_idx_lineage <- function(lineage, cluster_mat){
+  sort(unique(unlist(lapply(as.numeric(lineage), function(x){
+    which(cluster_mat[,x] == 1)
+  }))))
+}
+
+.clean_curve <- function(pcurve, W){
+  stopifnot(class(pcurve) == "principal_curve")
+
+  # force non-negative distances
+  pcurve$dist_ind <- abs(pcurve$dist_ind)
+  # force pseudotime to start at 0
+  pcurve$lambda <- pcurve$lambda - min(pcurve$lambda, na.rm=TRUE)
+  pcurve$w <- W
+
+  pcurve
+}
+
+
 #' Initial fit of the curves
 #'
 #' This method is heavily dependent on \code{princurve::project_to_curve()}.
 #'
 #' @param dat a \code{n} by \code{d} matrix
+#' @param curve_list sequence of points, input for \code{princurve::project_to_curve()}
 #' @param lineages list output of \code{.get_lineages()}
 #' @param W a weight matrix that is \code{n} by \code{num_lineage} (number of lineages)
 #' @param cluster_mat 0-1 matrix output of \code{.construct_cluster_matrix()} that
 #' has \code{n} rows and \code{k} column
-#' @param centers matrix output of \code{.compute_cluster_center()} that's
-#' \code{k} by \code{d}
 #'
 #' @return a list that contains the \code{num_lineage} curves as \code{principal_curve}
 #' and a distance matrix (\code{D}) that contains the squared distance of each point
 #' to its repsective lineage curve
-.initial_curve_fit <- function(dat, lineages, W, cluster_mat, centers){
-  stopifnot(nrow(dat) == nrow(W), ncol(W) == length(lineages),
-            ncol(dat) == ncol(centers), nrow(centers) == ncol(cluster_mat))
+.refine_curve_fit <- function(dat, curve_list, lineages, W, cluster_mat){
+  stopifnot(nrow(dat) == nrow(W), ncol(W) == length(lineages))
 
   n <- nrow(dat); num_lineage <- length(lineages)
   D <- matrix(NA, nrow = n, ncol = num_lineage)
   cluster_vec <- 1:ncol(cluster_mat)
-  pcurves <- list()
 
+  pcurve_list <- list()
   for(lin in 1:num_lineage){
     idx <- which(W[,lin] > 0)
-    line_initial <- centers[cluster_vec %in% lineages[[lin]], , drop = FALSE]
-    line_initial <- line_initial[match(lineages[[lin]], rownames(line_initial)),,
-                                 drop = FALSE]
 
-    # initial fit based on just centers
-    curve <- princurve::project_to_curve(dat[idx, ,drop = FALSE],
-                                         s = line_initial, stretch = 9999) #note: this changes line_initial
-    curve$dist_ind <- abs(curve$dist_ind)
+    sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
 
-    # more refined fit based on samples of those clusters
-    sample_idx <- sort(unique(unlist(lapply(as.numeric(lineages[[lin]]), function(x){
-      which(cluster_mat[,x] == 1)
-    }))))
-    pcurve <- princurve::project_to_curve(dat[sample_idx,], s = curve$s[curve$ord, ,drop=FALSE],
-                                          stretch=0)
+    pcurve <- princurve::project_to_curve(dat[idx, ,drop = FALSE], s = curve_list[[lin]])
+      # note: princurve::project_to_curve changes the input s
+    pcurve$s <- pcurve$s[pcurve$ord, ,drop=FALSE]
+    pcurve <- .clean_curve(pcurve, W[sample_idx, lin])
+    pcurve_list[[lin]] <- pcurve
 
-    # force non-negative distances
-    pcurve$dist_ind <- abs(pcurve$dist_ind)
-    # force pseudotime to start at 0
-    pcurve$lambda <- pcurve$lambda - min(pcurve$lambda,
-                                         na.rm=TRUE)
-    pcurve$w <- W[sample_idx,lin]
-    pcurves[[lin]] <- pcurve
     D[sample_idx,lin] <- abs(pcurve$dist_ind)
   }
 
-  list(pcurves = pcurves, D = D)
+  list(pcurve_list = pcurve_list, D = D)
 }
 
+
+
+##################
 
 .avg_curves_tmp <- function(pcurves, dat, stretch = 2){
   n <- nrow(pcurves[[1]]$s)
@@ -366,7 +327,7 @@
 }
 
 
-.smoother_func_better <- function(lambda, dat2, idx = NA, b = 1){
+.smoother_func <- function(lambda, dat2, idx = NA, b = 1){
   if(all(!is.na(idx)) & nrow(dat2) != length(lambda)) lambda <- lambda[idx]
   ord <- order(lambda, decreasing = F)
   lambda <- lambda[ord]
