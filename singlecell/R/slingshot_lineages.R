@@ -91,10 +91,12 @@
 #'
 #' @return a \code{k} by \code{d} matrix
 .compute_cluster_center <- function(dat, cluster_mat){
-  t(sapply(1:ncol(cluster_mat), function(x){
+  mat <- t(sapply(1:ncol(cluster_mat), function(x){
     idx <- which(cluster_mat[,x] == 1)
     colMeans(dat[idx,,drop=F])
   }))
+  rownames(mat) <- colnames(cluster_mat)
+  mat
 }
 
 #' Construct the K-nearest neighbor graph based on Euclidean distance
