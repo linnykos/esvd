@@ -9,7 +9,6 @@
 #' @param extend
 #' @param thresh parameter to determine convergence
 #' @param max_iter
-#' @param shrink_method
 #' @param allow.breaks
 #' @param b parameter for the kernel function (when smoothing)
 #'
@@ -20,7 +19,6 @@
 .get_curves <- function(dat, cluster_labels, lineages, shrink = 1,
                         extend = 'y',
                         thresh = 0.001, max_iter = 15,
-                        shrink_method = 'cosine',
                         allow.breaks = TRUE, b = 1){
   stopifnot(shrink >= 0 & shrink <= 1)
 
@@ -50,8 +48,7 @@
     ### predict each dimension as a function of lambda (pseudotime)
     s_list <- lapply(1:num_lineage, function(lin){
       sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
-      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,],
-                     idx = sample_idx, b = b)
+      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,], b = b)
     })
 
     res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
@@ -59,94 +56,88 @@
 
     # shrink together lineages near shared clusters
     if(shrink > 0){
-      if(max(rowSums(C)) > 1){
+      avg_curve_list <- vector("list", length(avg_order))
+      names(avg_curve_list) <- paste0("Average", 1:length(avg_order))
+      pct_shrink <- vector("list", length(avg_order))
 
-        segmnts <- unique(C[rowSums(C)>1,,drop=FALSE])
-        segmnts <- segmnts[order(rowSums(segmnts), decreasing = FALSE),, drop = FALSE]
-        seg_mix <- segmnts
-        avg_lines <- list()
-        pct_shrink <- list()
+      ### determine average curves and amount of shrinkage
+      for (i in 1:length(avg_order)) {
+        to_avg_curves <- lapply(avg_order[[i]], function(n_element){
+          if(grepl('Lineage', n_element)){
+            pcurve_list[[n_element]]
+          } else {
+            avg_curve_list[[n_element]]
+          }
+        })
 
-        ### determine average curves and amount of shrinkage
-        for(i in seq_along(avg_order)){
-          ns <- avg_order[[i]]
-          to_avg <- lapply(ns, function(n_element){
-            if(grepl('Lineage', n_element)){
-              l_ind <- as.numeric(gsub('Lineage','',n_element))
-              pcurves[[l_ind]]
-            } else if(grepl('average', n_element)){
-              a_ind <- as.numeric(gsub('average','',n_element))
-              avg_lines[[a_ind]]
-            }
-          })
+        avg <- .construct_average_curve(to_avg_curves, dat)
+        avg_curve_list[[i]] <- avg
 
-          avg <- .avg_curves_tmp(to_avg, dat, stretch = stretch)
-          avg_lines[[i]] <- avg
-          common_ind <- rowMeans(vapply(to_avg, function(crv){ crv$w > 0 },
-                                        rep(TRUE,nrow(dat)))) == 1
-          pct_shrink[[i]] <- lapply(to_avg, function(crv){
-            .percent_shrinkage(crv, common_ind, method = shrink_method)
-          })
+        # find the indicies shared by all the curves
+        common_ind <- which(rowMeans(sapply(to_avg_curves, function(crv){ crv$w > 0 })) == 1)
+        pct_shrink[[i]] <- lapply(to_avg, function(curve) {
+          .percent_shrinkage(curve, common_ind)
+        })
 
-          # check for degenerate case (if one curve won't be
-          # shrunk, then the other curve shouldn't be,
-          # either)
-          new_avg_order <- avg_order
-          all_zero <- vapply(pct_shrink[[i]], function(pij){
-            return(all(pij == 0))
-          }, TRUE)
-          if(any(all_zero)){
-            if(allow_breaks){
-              new_avg_order[[i]] <- NULL
-              message('Curves for ', ns[1], ' and ',
-                      ns[2], ' appear to be going in opposite ',
-                      'directions. No longer forcing them to ',
-                      'share an initial point. To manually ',
-                      'override this, set allow.breaks = ',
-                      'FALSE.')
-            }
-            pct_shrink[[i]] <- lapply(pct_shrink[[i]],
-                                      function(pij){
-                                        pij[] <- 0
-                                        return(pij)
-                                      })
+        # check for degenerate case (if one curve won't be
+        # shrunk, then the other curve shouldn't be,
+        # either)
+        new_avg_order <- avg_order
+        all_zero <- vapply(pct_shrink[[i]], function(pij){
+          return(all(pij == 0))
+        }, TRUE)
+        if(any(all_zero)){
+          if(allow_breaks){
+            new_avg_order[[i]] <- NULL
+            message('Curves for ', ns[1], ' and ',
+                    ns[2], ' appear to be going in opposite ',
+                    'directions. No longer forcing them to ',
+                    'share an initial point. To manually ',
+                    'override this, set allow.breaks = ',
+                    'FALSE.')
+          }
+          pct_shrink[[i]] <- lapply(pct_shrink[[i]],
+                                    function(pij){
+                                      pij[] <- 0
+                                      return(pij)
+                                    })
+        }
+      }
+
+      ### do the shrinking in reverse order
+      for(j in rev(seq_along(avg_lines))){
+        ns <- avg_order[[j]]
+        avg <- avg_lines[[j]]
+        to_shrink <- lapply(ns, function(n_element){
+          if(grepl('Lineage', n_element)){
+            l_ind <- as.numeric(gsub('Lineage','',n_element))
+            return(pcurves[[l_ind]])
+          }
+          if(grepl('average',n)){
+            a_ind <- as.numeric(gsub('average','',n_element))
+            return(avg_lines[[a_ind]])
+          }
+        })
+
+        shrunk <- lapply(seq_along(ns),function(jj){
+          crv <- to_shrink[[jj]]
+          .shrink_to_avg(crv, avg,
+                         pct_shrink[[j]][[jj]] * shrink,
+                         dat, stretch = stretch)
+        })
+
+        for(jj in seq_along(ns)){
+          n <- ns[jj]
+          if(grepl('Lineage',n)){
+            l_ind <- as.numeric(gsub('Lineage','',n))
+            pcurves[[l_ind]] <- shrunk[[jj]]
+          }
+          if(grepl('average',n)){
+            a_ind <- as.numeric(gsub('average','',n))
+            avg_lines[[a_ind]] <- shrunk[[jj]]
           }
         }
 
-        ### do the shrinking in reverse order
-        for(j in rev(seq_along(avg_lines))){
-          ns <- avg_order[[j]]
-          avg <- avg_lines[[j]]
-          to_shrink <- lapply(ns, function(n_element){
-            if(grepl('Lineage', n_element)){
-              l_ind <- as.numeric(gsub('Lineage','',n_element))
-              return(pcurves[[l_ind]])
-            }
-            if(grepl('average',n)){
-              a_ind <- as.numeric(gsub('average','',n_element))
-              return(avg_lines[[a_ind]])
-            }
-          })
-
-          shrunk <- lapply(seq_along(ns),function(jj){
-            crv <- to_shrink[[jj]]
-            .shrink_to_avg(crv, avg,
-                           pct_shrink[[j]][[jj]] * shrink,
-                           dat, stretch = stretch)
-          })
-
-          for(jj in seq_along(ns)){
-            n <- ns[jj]
-            if(grepl('Lineage',n)){
-              l_ind <- as.numeric(gsub('Lineage','',n))
-              pcurves[[l_ind]] <- shrunk[[jj]]
-            }
-            if(grepl('average',n)){
-              a_ind <- as.numeric(gsub('average','',n))
-              avg_lines[[a_ind]] <- shrunk[[jj]]
-            }
-          }
-        }
         avg_order <- new_avg_order
       }
     }
@@ -242,14 +233,15 @@
   }))))
 }
 
-.clean_curve <- function(pcurve, W){
+.clean_curve <- function(pcurve, W_vec, sample_idx){
   stopifnot(class(pcurve) == "principal_curve")
 
   # force non-negative distances
   pcurve$dist_ind <- abs(pcurve$dist_ind)
   # force pseudotime to start at 0
   pcurve$lambda <- pcurve$lambda - min(pcurve$lambda, na.rm=TRUE)
-  pcurve$w <- W
+  pcurve$w <- W_vec
+  pcurve$idx <- sample_idx
 
   pcurve
 }
@@ -276,7 +268,7 @@
   D <- matrix(NA, nrow = n, ncol = num_lineage)
   cluster_vec <- 1:ncol(cluster_mat)
 
-  pcurve_list <- list()
+  pcurve_list <- vector("list", num_lineage)
   for(lin in 1:num_lineage){
     idx <- which(W[,lin] > 0)
 
@@ -285,58 +277,135 @@
     pcurve <- princurve::project_to_curve(dat[idx, ,drop = FALSE], s = curve_list[[lin]])
       # note: princurve::project_to_curve changes the input s
     pcurve$s <- pcurve$s[pcurve$ord, ,drop=FALSE]
-    pcurve <- .clean_curve(pcurve, W[sample_idx, lin])
+    pcurve <- .clean_curve(pcurve, W[, lin], sample_idx)
     pcurve_list[[lin]] <- pcurve
 
     D[sample_idx,lin] <- abs(pcurve$dist_ind)
   }
 
+  names(pcurve_list) <- paste0("Lineage", 1:num_lineage)
+
   list(pcurve_list = pcurve_list, D = D)
 }
 
 
-
-##################
-
-.avg_curves_tmp <- function(pcurves, dat, stretch = 2){
-  n <- nrow(pcurves[[1]]$s)
-  p <- ncol(pcurves[[1]]$s)
-  lambdas_all <- lapply(pcurves, function(pcv){pcv$lambda})
-  lambdas_all <- unique(unlist(lambdas_all))
-  max_shared_lambda <- min(vapply(pcurves, function(pcv){max(pcv$lambda)},0))
-  lambdas_all <- sort(lambdas_all[lambdas_all <= max_shared_lambda])
-
-  pcurves_dense <- lapply(pcurves, function(pcv){
-    vapply(seq_len(p),function(jj){
-      stats::approx(pcv$lambda, pcv$s[,jj], xout = lambdas_all)$y
-    }, rep(0,length(lambdas_all)))
-  })
-
-  avg <- vapply(seq_len(p),function(jj){
-    dim_all <- vapply(seq_along(pcurves_dense),function(i){
-      pcurves_dense[[i]][,jj]
-    }, rep(0,length(lambdas_all)))
-
-    rowMeans(dim_all)
-  }, rep(0,length(lambdas_all)))
-
-  avg_curve <- princurve::project_to_curve(dat, avg, stretch=stretch)
-  avg_curve$w <- rowMeans(vapply(pcurves, function(p){ p$w }, rep(0,nrow(dat))))
-
-  avg_curve
-}
-
-
-.smoother_func <- function(lambda, dat2, idx = NA, b = 1){
-  if(all(!is.na(idx)) & nrow(dat2) != length(lambda)) lambda <- lambda[idx]
+#' Smooth approximation based on lambdas
+#'
+#' Does a kernel smoothing of \code{dat} based on the ordering given
+#' by \code{lambda}. The smoothing is done via a Gaussian kernel
+#' with bandwidth \code{b}.
+#'
+#' @param lambda vector given by one component of the \code{pricipal_curve} object
+#' @param data a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
+#' original dataset
+#' @param b kernel bandwith
+#'
+#' @return a smoothed \code{n} by \code{d} matrix
+.smoother_func <- function(lambda, dat, idx = NA, b = 1){
+  stopifnot(length(lambda) == nrow(dat))
   ord <- order(lambda, decreasing = F)
   lambda <- lambda[ord]
-  dat2 <- dat2[ord,]
+  dat <- dat[ord,]
 
   kernel_func <- function(x, y){exp(-(x-y)^2/b)}
 
   t(sapply(1:length(lambda), function(i){
     weights <- kernel_func(lambda[i], lambda)
-    as.numeric(colSums(diag(weights) %*% dat2))/sum(weights)
+    as.numeric(colSums(diag(weights) %*% dat))/sum(weights)
   }))
+}
+
+#' Construct average curve
+#'
+#' @param pcurve_list list of outputs of \code{princurve::project_to_curve()}
+#' @param dat a \code{n} by \code{d} matrix
+#'
+#' @return a \code{principal_curve} object
+.construct_average_curve <- function(pcurve_list, dat){
+  n <- nrow(pcurve_list[[1]]$s)
+  p <- ncol(pcurve_list[[1]]$s)
+  lambdas_all <- unique(unlist(lapply(pcurve_list, function(pcv){pcv$lambda})))
+  max_shared_lambda <- min(sapply(pcurve_list, function(pcv){max(pcv$lambda)}))
+  lambdas_all <- sort(lambdas_all[lambdas_all <= max_shared_lambda])
+
+  # interpolate all the curves so they're parameterized on the same points
+  pcurves_dense <- lapply(pcurve_list, function(pcurve){
+    sapply(1:p, function(jj){
+      stats::approx(pcurve$lambda, pcurve$s[,jj], xout = lambdas_all)$y
+    })
+  })
+
+  avg <- sapply(1:p, function(j){
+    dim_all <- sapply(1:length(pcurves_dense),function(i){
+      pcurves_dense[[i]][,j]
+    })
+    rowMeans(dim_all)
+  })
+
+  avg_curve <- princurve::project_to_curve(dat, avg)
+  W_vec <- rowMeans(sapply(pcurve_list, function(p){ p$w }))
+  sample_idx <- sort(unique(unlist(lapply(pcurve_list, function(p){ p$idx}))))
+  avg_curve <- .clean_curve(avg_curve, W_vec, sample_idx)
+
+  avg_curve
+}
+
+#' Determine the percentage shrinkage (a non-decreasing function)
+#'
+#' Determine the lambda's to use for interpolation based on the IQR for
+#' lambda at \code{common_idx} indicies. Then use a linear interpolation
+#' via \code{approx} to assign all the lambdas (even those not in \code{common_idx})
+#' a relevant value based on the CDF of the cosine kernel.
+#'
+#' @param pcurve output of \code{princurve::project_to_curve()}
+#' @param common_idx indices to use
+#'
+#' @return vector
+.percent_shrinkage <- function(pcurve, common_idx){
+  lambda <- pcurve$lambda
+
+  dens <- stats::density(0, bw = 1, kernel = "cosine")
+  surv <- list(x = dens$x, y = (sum(dens$y) - cumsum(dens$y))/sum(dens$y))
+  box_vals <- graphics::boxplot(lambda[common_idx], plot = FALSE)$stats
+  surv$x <- .scale_vector(surv$x, lower = box_vals[1], upper = box_vals[5])
+  if(box_vals[1] == box_vals[5]){
+    pct_l <- rep(0, length(lambda))
+  } else {
+    pct_l <- stats::approx(surv$x, surv$y, lambda, rule = 2)$y
+  }
+
+  pct_l
+}
+
+#' Scale a vector to lie between two endpoints
+#'
+#' Takes \code{x} and scales it so the relative distances between points
+#' are perseved and it ranges between \code{lower} and \code{upper}
+#'
+#' @param x vector
+#' @param lower numeric
+#' @param upper numeric
+#'
+#' @return vector
+.scale_vector <- function(x, lower=0, upper=1){
+  stopifnot(lower < upper)
+  ((x-min(x,na.rm=TRUE))/(max(x,na.rm=TRUE)-min(x, na.rm=TRUE)))*(upper-lower)+lower
+}
+
+.shrink_to_avg <- function(pcurve, avg_curve, pct, dat, stretch = 2){
+  n <- nrow(pcurve$s)
+  p <- ncol(pcurve$s)
+  lam <- pcurve$lambda
+  s <- vapply(seq_len(p),function(jj){
+    orig_jj <- pcurve$s[,jj]
+    avg_jj <- approx(x = avg_curve$lambda, y = avg_curve$s[,jj], xout = lam,
+                     rule = 2)$y
+    avg_jj * pct + orig_jj * (1-pct)
+  }, rep(0,n))
+  w <- pcurve$w
+  pcurve <- princurve::project_to_curve(dat, as.matrix(s[pcurve$ord, ,drop = FALSE]),
+                                        stretch = stretch)
+  pcurve$w <- w
+
+  pcurve
 }
