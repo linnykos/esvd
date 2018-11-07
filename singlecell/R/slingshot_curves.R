@@ -79,29 +79,7 @@
           .percent_shrinkage(curve, common_ind)
         })
 
-        # check for degenerate case (if one curve won't be
-        # shrunk, then the other curve shouldn't be,
-        # either)
-        new_avg_order <- avg_order
-        all_zero <- vapply(pct_shrink[[i]], function(pij){
-          return(all(pij == 0))
-        }, TRUE)
-        if(any(all_zero)){
-          if(allow_breaks){
-            new_avg_order[[i]] <- NULL
-            message('Curves for ', ns[1], ' and ',
-                    ns[2], ' appear to be going in opposite ',
-                    'directions. No longer forcing them to ',
-                    'share an initial point. To manually ',
-                    'override this, set allow.breaks = ',
-                    'FALSE.')
-          }
-          pct_shrink[[i]] <- lapply(pct_shrink[[i]],
-                                    function(pij){
-                                      pij[] <- 0
-                                      return(pij)
-                                    })
-        }
+
       }
 
       ### do the shrinking in reverse order
@@ -390,6 +368,31 @@
 .scale_vector <- function(x, lower=0, upper=1){
   stopifnot(lower < upper)
   ((x-min(x,na.rm=TRUE))/(max(x,na.rm=TRUE)-min(x, na.rm=TRUE)))*(upper-lower)+lower
+}
+
+.check_shrinkage <- function(pct_shrink){
+  # check for degenerate case (if one curve won't be
+  # shrunk, then the other curve shouldn't be,
+  # either)
+  all_zero <- vapply(pct_shrink[[i]], function(pij){
+    return(all(pij == 0))
+  }, TRUE)
+  if(any(all_zero)){
+    if(allow_breaks){
+      new_avg_order[[i]] <- NULL
+      message('Curves for ', ns[1], ' and ',
+              ns[2], ' appear to be going in opposite ',
+              'directions. No longer forcing them to ',
+              'share an initial point. To manually ',
+              'override this, set allow.breaks = ',
+              'FALSE.')
+    }
+    pct_shrink[[i]] <- lapply(pct_shrink[[i]],
+                              function(pij){
+                                pij[] <- 0
+                                return(pij)
+                              })
+  }
 }
 
 .shrink_to_avg <- function(pcurve, avg_curve, pct, dat, stretch = 2){
