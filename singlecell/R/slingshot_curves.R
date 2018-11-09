@@ -1,28 +1,36 @@
 # code adapted from https://github.com/kstreet13/slingshot
 
-#' Title
+slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
+                      shrink = 1, thresh = 0.001, max_iter = 15, b = 1){
+  cluster_mat <- .construct_cluster_matrix(cluster_labels)
+
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
+                            knn = knn)
+  curves <- .get_curves(dat, cluster_labels, lineages, shrink = shrink,
+                        thresh = thresh, max_iter = max_iter, b = b)
+
+  list(lineages = lineages, curves = curves, cluster_mat = cluster_mat)
+}
+
+#' Estimate the slingshot curves
 #'
-#' @param dat
-#' @param cluster_labels
-#' @param lineages
-#' @param shrink
-#' @param extend
+#' @param dat a \code{n} by \code{d} matrix
+#' @param cluster_labels vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels)}
+#' @param lineages output of \code{.get_lineage()}
+#' @param shrink shrinkage factor
 #' @param thresh parameter to determine convergence
-#' @param max_iter
-#' @param allow.breaks
+#' @param max_iter maximum number of iterations
 #' @param b parameter for the kernel function (when smoothing)
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return a list of \code{principal_curve} objects
 .get_curves <- function(dat, cluster_labels, lineages, shrink = 1,
-                        extend = 'y',
-                        thresh = 0.001, max_iter = 15,
-                        allow.breaks = TRUE, b = 1){
+                        thresh = 0.001, max_iter = 15, b = 1){
   stopifnot(shrink >= 0 & shrink <= 1)
 
   ### setup
+  num_lineage <- length(lineages)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   cluster_vec <- 1:ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -71,13 +79,12 @@
           }
         })
 
-        ## HERE
         avg <- .construct_average_curve(to_avg_curves, dat)
         avg_curve_list[[i]] <- avg
 
         # find the indicies shared by all the curves
         common_ind <- which(rowMeans(sapply(to_avg_curves, function(crv){ crv$W > 0 })) == 1)
-        pct_shrink[[i]] <- lapply(to_avg, function(curve) {
+        pct_shrink[[i]] <- lapply(to_avg_curves, function(curve) {
           .percent_shrinkage(curve, common_ind)
         })
 
@@ -95,9 +102,8 @@
           }
         })
 
-        shrunk_list <- lapply(1:length(ns),function(j){
+        shrunk_list <- lapply(1:length(to_shrink_list),function(j){
           pcurve <- to_shrink_list[[j]]
-          ## HERE
           .shrink_to_avg(pcurve, avg_curve,
                          pct_shrink[[i]][[j]] * shrink, dat)
         })
@@ -118,7 +124,7 @@
 
   names(pcurve_list) <- paste('Curve', 1:length(pcurve_list), sep='')
 
-  pcurves
+  pcurve_list
 }
 
 ##################
@@ -201,7 +207,7 @@
   }))))
 }
 
-.clean_curve <- function(pcurve, W_vec){
+.clean_curve <- function(pcurve, W_vec, sample_idx = NA){
   stopifnot(class(pcurve) == "principal_curve")
   stopifnot(!is.matrix(W_vec))
 
@@ -210,6 +216,7 @@
   # force pseudotime to start at 0
   pcurve$lambda <- pcurve$lambda - min(pcurve$lambda, na.rm=TRUE)
   pcurve$W <- W_vec
+  pcurve$idx <- sample_idx
 
   pcurve
 }
@@ -238,14 +245,13 @@
 
   pcurve_list <- vector("list", num_lineage)
   for(lin in 1:num_lineage){
-    idx <- which(W[,lin] > 0)
-
     sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
 
-    pcurve <- princurve::project_to_curve(dat[idx, ,drop = FALSE], s = curve_list[[lin]])
+    pcurve <- princurve::project_to_curve(dat[sample_idx, ,drop = FALSE],
+                                          s = curve_list[[lin]],
+                                          stretch = 9999)
       # note: princurve::project_to_curve changes the input s
-    pcurve$s <- pcurve$s[pcurve$ord, ,drop=FALSE]
-    pcurve <- .clean_curve(pcurve, W[, lin])
+    pcurve <- .clean_curve(pcurve, W[, lin], sample_idx)
     pcurve_list[[lin]] <- pcurve
 
     D[sample_idx,lin] <- abs(pcurve$dist_ind)
@@ -396,9 +402,10 @@
   })
 
   W_vec <- pcurve$W
-  sample_idx <- which(W_vec > 0)
-  pcurve <- princurve::project_to_curve(dat[sample_idx,,drop = F], as.matrix(s[pcurve$ord,,drop = FALSE]))
-  pcurve <- .clean_curve(pcurve, W_vec)
+  sample_idx <- pcurve$idx
+  pcurve <- princurve::project_to_curve(dat[sample_idx,,drop = F],
+                                        as.matrix(s[pcurve$ord,,drop = FALSE]))
+  pcurve <- .clean_curve(pcurve, W_vec, sample_idx)
 
   pcurve
 }

@@ -20,12 +20,10 @@
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
 #' @param knn positive integer
-#' @param verbose boolean
 #'
 #' @return A list of cluster indices, with \code{starting_cluster} starting as
 #' its first element
-.get_lineages <- function(dat, cluster_labels, starting_cluster, knn = NA,
-                          verbose = F){
+.get_lineages <- function(dat, cluster_labels, starting_cluster, knn = NA){
   ### formatting
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)

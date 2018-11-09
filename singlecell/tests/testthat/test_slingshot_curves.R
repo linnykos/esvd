@@ -235,5 +235,138 @@ test_that(".shrink_to_avg works", {
 
   expect_true(class(res) == "principal_curve")
   expect_true(all(res$W == pcurve$W))
-
 })
+
+######################
+
+## .get_curves is correct
+
+test_that(".get_curves works", {
+  set.seed(10)
+  cell_pop <- matrix(c(4,10, 25,100,
+                       40,10, 60,80,
+                       60,80, 25,100,
+                       60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
+  h <- nrow(cell_pop)
+  n_each <- 50
+  dat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_each)
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 0.1),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
+  }))
+  cluster_labels <- rep(1:4, each = 50)
+  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+
+  res <- .get_curves(dat, cluster_labels, lineages)
+
+  expect_true(length(res) == length(lineages))
+  expect_true(all(sapply(res, class) == "principal_curve"))
+
+  #plot(dat[,1], dat[,2], asp = T)
+  #lines(res$Curve1, col = "red", lwd = 2); lines(res$Curve2, col = "blue", lwd = 2)
+})
+
+
+test_that(".get_curves works for a harder example", {
+  set.seed(20)
+  cluster_labels <- rep(1:5, each = 20)
+  dat <- MASS::mvrnorm(100, rep(0, 2), diag(2))
+  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+
+  res <- .get_curves(dat, cluster_labels, lineages)
+
+  expect_true(length(res) == length(lineages))
+  expect_true(all(sapply(res, class) == "principal_curve"))
+
+  #plot(dat[,1], dat[,2], asp = T)
+  #for(i in 1:length(res)){lines(res[[i]], col = i, lwd = 2)}
+})
+
+test_that(".get_curves finds reasonable curves", {
+  set.seed(10)
+  cell_pop <- matrix(c(4,10, 25,100,
+                       60,80, 25,100,
+                       40,10, 60,80,
+                       60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
+  h <- nrow(cell_pop)
+  n_each <- 50
+  dat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_each)
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 0.1),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
+  }))
+  cluster_labels <- rep(1:4, each = 50)
+  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+
+  res <- .get_curves(dat, cluster_labels, lineages)
+
+  bool_vec <- sapply(1:length(res), function(x){
+    all(sapply(1:(length(lineages[[x]])-1), function(y){
+      mean(res[[x]]$lambda[((y-1)*50+1):(y*50)]) < mean(res[[x]]$lambda[(y*50+1):((y+1)*50)])
+    }))
+  })
+
+  expect_true(all(bool_vec))
+})
+
+##############################
+
+## slingshot works
+
+test_that("slingshot works", {
+  set.seed(10)
+  cell_pop <- matrix(c(4,10, 25,100,
+                       60,80, 25,100,
+                       40,10, 60,80,
+                       60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
+  h <- nrow(cell_pop)
+  n_each <- 50
+  dat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_each)
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 0.1),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
+  }))
+  cluster_labels <- rep(1:4, each = 50)
+  res <- slingshot(dat, cluster_labels, starting_cluster = 1)
+
+  expect_true(is.list(res))
+  expect_true(length(res) == 3)
+  expect_true(all(names(res) == c("lineages", "curves", "cluster_mat")))
+
+  #plot(dat[,1], dat[,2], asp = T)
+  #for(i in 1:length(res$curves)){lines(res$curves[[i]], col = i+1, lwd = 2)}
+})
+
+
+test_that("slingshot can give sensible lambdas", {
+  set.seed(10)
+  cell_pop <- matrix(c(4,10, 25,100,
+                       60,80, 25,100,
+                       40,10, 60,80,
+                       60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
+  h <- nrow(cell_pop)
+  n_each <- 50
+  dat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_each)
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 0.1),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
+  }))
+  cluster_labels <- rep(1:4, each = 50)
+  res <- slingshot(dat, cluster_labels, starting_cluster = 1)
+
+  bool_vec <- all(sapply(1:length(res$lineages), function(x){
+    lin <- res$lineages[[x]]
+    all(sapply(1:(length(lin)-1), function(y){
+      idx1 <- which(res$cluster_mat[,lin[y]] == 1)
+      idx2 <- which(res$cluster_mat[,lin[y+1]] == 1)
+
+      mean(res$curves[[x]]$lambda[which(res$curves[[x]]$idx %in% idx1)]) <
+        mean(res$curves[[x]]$lambda[which(res$curves[[x]]$idx %in% idx2)])
+    }))
+  }))
+
+  expect_true(all(bool_vec))
+})
+
+
+
