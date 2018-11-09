@@ -127,6 +127,8 @@
 #'
 #' @param knn_graph \code{igraph} object
 #' @param k positive integer for number of clusters
+#' @param starting_cluster the "origin" cluster that all the lineages will start
+#' from
 #'
 #' @return \code{igraph} object representing the shortest path tree
 .construct_spt <- function(knn_graph, k, starting_cluster){

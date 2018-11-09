@@ -1,12 +1,3 @@
-## Many of the following functions are attributed to scImpute:
-##  https://github.com/Vivianstats/scImpute
-
-#' Initialization function
-#'
-#' @param dat matrix
-#' @param k numeric
-#'
-#' @return list
 .initialization <- function(dat, k = 2, family = "exponential",
                             extra_weights = rep(1, nrow(dat)),
                             max_val = NA, verbose = F){

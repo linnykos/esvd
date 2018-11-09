@@ -1,3 +1,5 @@
+## Many of the following functions are attributed to scImpute:
+##  https://github.com/Vivianstats/scImpute
 
 .nnls_impute <- function(cell_vec, neigh_mat, B_vec,
                          max_vec = apply(neigh_mat, 2, max),

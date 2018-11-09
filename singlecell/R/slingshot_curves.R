@@ -288,12 +288,12 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
 #' with bandwidth \code{b}.
 #'
 #' @param lambda vector given by one component of the \code{pricipal_curve} object
-#' @param data a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
+#' @param dat a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
 #' original dataset
 #' @param b kernel bandwith
 #'
 #' @return a smoothed \code{n} by \code{d} matrix
-.smoother_func <- function(lambda, dat, idx = NA, b = 1){
+.smoother_func <- function(lambda, dat, b = 1){
   stopifnot(length(lambda) == nrow(dat))
   ord <- order(lambda, decreasing = F)
   lambda <- lambda[ord]
@@ -386,10 +386,10 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
 
 .check_shrinkage <- function(pct_shrink_list){
   all_zero <- sapply(pct_shrink_list, function(pij){
-    return(all(pij == 0))
+    all(pij == 0)
   })
   if(any(all_zero)){
-    pct_shrink_list <- lapply(pct_shrink[[i]], function(pij){
+    pct_shrink_list <- lapply(pct_shrink_list, function(pij){
                                 pij[] <- 0; pij
                               })
   }

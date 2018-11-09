@@ -120,7 +120,7 @@ test_that(".optimize_mat works with parallelization", {
 
   res1 <- .optimize_mat(dat, u_mat, v_mat, parallelized = F, max_val = -100)
 
-  doMC::registerDoMC(cores = 3)
+  doMC::registerDoMC(cores = 2)
   res2 <- .optimize_mat(dat, u_mat, v_mat, parallelized = T, max_val = -100)
 
   expect_true(sum(abs(res1 - res2)) <= 1e-6)
