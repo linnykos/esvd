@@ -1,5 +1,23 @@
 # code adapted from https://github.com/kstreet13/slingshot
 
+#' Use slingshot to estimate the cell development trajectories
+#'
+#' @param dat a \code{n} by \code{d} matrix
+#' @param cluster_labels vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels)}
+#' @param starting_cluster the "origin" cluster that all the lineages will start
+#' from
+#' @param knn positive integer, possibly \code{NA}
+#' @param shrink shrinkage factor
+#' @param thresh parameter to determine convergence
+#' @param max_iter maximum number of iterations
+#' @param b parameter for the kernel function (when smoothing)
+#'
+#' @return a list containing the lineages under \code{lineages},
+#' the list of curves as \code{principal_curve} objects under
+#' \code{curves} and the clustering matrix under \code{cluster_mat}
+#' @export
 slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
                       shrink = 1, thresh = 0.001, max_iter = 15, b = 1){
   cluster_mat <- .construct_cluster_matrix(cluster_labels)

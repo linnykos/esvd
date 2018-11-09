@@ -19,7 +19,7 @@
 #' \code{max(cluster_labels)}
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
-#' @param knn positive integer
+#' @param knn positive integer, possibly \code{NA}
 #'
 #' @return A list of cluster indices, with \code{starting_cluster} starting as
 #' its first element
