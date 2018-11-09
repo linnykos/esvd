@@ -206,3 +206,34 @@ test_that(".percent_shrinkage respects the order of lambda", {
   vec <- diff(res)
   expect_true(all(vec <= 0))
 })
+
+###########################
+
+## .shrink_to_avg is correct
+
+test_that(".shrink_to_avg works", {
+  set.seed(20)
+  cluster_labels <- rep(1:5, each = 20)
+  dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
+  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  cluster_mat <- .construct_cluster_matrix(cluster_labels)
+  k <- ncol(cluster_mat)
+  centers <- .compute_cluster_center(dat, cluster_mat)
+  W <- .initialize_weight_matrix(cluster_mat, lineages)
+  cluster_vec <- 1:ncol(cluster_mat)
+  s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
+
+
+  pcurve_list <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)$pcurve_list
+  avg_curve <- .construct_average_curve(pcurve_list, dat)
+
+  pcurve <- pcurve_list[[1]]
+  common_idx <- which(W[,1] == 1)
+  pct_shrink <- .percent_shrinkage(pcurve, common_idx)
+
+  res <- .shrink_to_avg(pcurve, avg_curve, pct_shrink, dat)
+
+  expect_true(class(res) == "principal_curve")
+  expect_true(all(res$W == pcurve$W))
+
+})
