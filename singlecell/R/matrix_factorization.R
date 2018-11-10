@@ -37,8 +37,9 @@
     if(reparameterize){
       pred_mat <- u_mat %*% t(v_mat)
       svd_res <- svd(pred_mat)
-      u_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
-      v_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+      if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
+      u_mat <- svd_res$u[,1:k] %*% diag(diag_vec)
+      v_mat <- svd_res$v[,1:k] %*% diag(diag_vec)
     }
 
     if(verbose) print(paste0("Iter ", length(obj_vec), ": Decrease is ", current_obj - next_obj))

@@ -14,7 +14,6 @@
   }
   dat2 <- .mean_transformation(dat2, family)
 
-
   svd_res <- svd(dat2)
 
   if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
