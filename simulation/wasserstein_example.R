@@ -1,7 +1,7 @@
 rm(list=ls())
 library(singlecell)
 
-.data_generator <- function(distr_func = function(x){stats::rnorm(1, 1/x, sd = sqrt(1/(2*x)))},
+.data_generator <- function(distr_func = function(x){stats::rnorm(1, 4/x, sd = 2/x)},
                             n_each = 50, d_each = 120, sigma = 0.05,
                             multiplier = 1){
 
@@ -89,7 +89,7 @@ plot(init$u_mat[,1], init$u_mat[,2], pch = 16, asp = T,
      col = col_vec[rep(1:4, each = res$n_each)])
 fit <- .fit_factorization(dat, init$u_mat, init$v_mat,
                           max_val = 5, family = "gaussian", verbose = T,
-                          max_iter = 50)
+                          max_iter = 4, reparameterize = T)
 plot(fit$u_mat[,1], fit$u_mat[,2], pch = 16, asp = T,
      col = col_vec[rep(1:4, each = res$n_each)])
 

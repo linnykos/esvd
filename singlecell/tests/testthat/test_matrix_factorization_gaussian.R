@@ -92,7 +92,7 @@ test_that(".evaluate_objective yields a smaller value under truth", {
 
     for(i in 1:10){
       for(j in 1:4){
-        dat[i,j] <- stats::rnorm(1, 1/pred_mat[i,j], 2/pred_mat[i,j])
+        dat[i,j] <- stats::rnorm(1, mean = 1/pred_mat[i,j], sd = sqrt(1/(2*pred_mat[i,j])))
       }
     }
 
@@ -107,6 +107,36 @@ test_that(".evaluate_objective yields a smaller value under truth", {
 
   expect_true(mean(avg_obj[1,]) < mean(avg_obj[2,]))
 })
+
+test_that(".evaluate_objective is correct for rank 1", {
+  set.seed(10)
+  true_val <- 1/2
+  u_mat <- matrix(true_val, nrow = 100, ncol = 1)
+  v_mat <- matrix(true_val, nrow = 100, ncol = 1)
+  pred_mat <- u_mat %*% t(v_mat)
+  dat <- pred_mat
+  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+
+  for(i in 1:nrow(u_mat)){
+    for(j in 1:nrow(v_mat)){
+      dat[i,j] <- stats::rnorm(1, mean = 4/pred_mat[i,j], sd = 2/pred_mat[i,j])
+    }
+  }
+
+  seq_val <- seq(0.01, 5, length.out = 100)
+  nll <- sapply(seq_val, function(x){
+    u_mat2 <- matrix(x, nrow = 100, ncol = 1)
+    v_mat2 <- matrix(x, nrow = 100, ncol = 1)
+    .evaluate_objective(dat, u_mat2, v_mat2)
+  })
+  argmin_idx <- which.min(nll)
+  min_val <- min(nll)
+  supposed_idx <- which.min(abs(seq_val - true_val))
+  supposed_val <- nll[supposed_idx]
+
+  expect_true(abs(min_val - supposed_val) <= 1e-6)
+})
+
 
 test_that(".evaluate_objective is equal to many .evaluate_objective_single", {
   set.seed(20)
