@@ -7,9 +7,10 @@ library(singlecell)
 
   #construct the cell information
   cell_pop <- multiplier*matrix(c(4,10, 25,100,
-                       40,10, 60,80,
-                       60,80, 25,100,
-                       60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
+                                  60,80, 25,100,
+                                  40,10, 60,80,
+                                  60,80, 100,25)/10,
+                                nrow = 4, ncol = 4, byrow = T)
   h <- nrow(cell_pop)
   cell_mat_org <- do.call(rbind, lapply(1:h, function(x){
     pos <- stats::runif(n_each)
@@ -36,6 +37,9 @@ library(singlecell)
   cell_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
   gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 
+  res <- .identification(cell_mat, gene_mat)
+  cell_mat <- res$X; gene_mat <- res$Y
+
   obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
   for(i in 1:n){
     for(j in 1:d){
@@ -58,7 +62,9 @@ col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
 #############################
 
 set.seed(10)
-res <- .data_generator(n_each = 20, d_each = 40, multiplier = 0.1)
+res <- .data_generator(n_each = 50, d_each = 120, multiplier = 0.1)
+stopifnot(sum(abs(t(res$cell_mat)%*%res$cell_mat - t(res$gene_mat)%*%res$gene_mat)) <= 1e-6)
+stopifnot(sum(abs((t(res$cell_mat)%*%res$cell_mat)[2:3])) <= 1e-6)
 dat <- res$dat
 quantile(dat)
 # .plot_singlecell(res$dat)
@@ -71,29 +77,28 @@ u_mat <- svd_res$u[,1:res$k] %*% diag(sqrt(svd_res$d[1:res$k]))
 plot(u_mat[,1], u_mat[,2], pch = 16, asp = T,
      col = col_vec[rep(1:4, each = res$n_each)])
 
+# naive analysis of gram matrix
+svd_res <- svd(res$gram_mat)
+u_mat <- svd_res$u[,1:res$k] %*% diag(sqrt(svd_res$d[1:res$k]))
+plot(u_mat[,1], u_mat[,2], pch = 16, asp = T,
+     col = col_vec[rep(1:4, each = res$n_each)])
+
 # real analysis
 init <- .initialization(dat, family = "gaussian", max_val = 10)
 plot(init$u_mat[,1], init$u_mat[,2], pch = 16, asp = T,
      col = col_vec[rep(1:4, each = res$n_each)])
-fit_a <- .fit_factorization(dat, init$u_mat, init$v_mat,
+fit <- .fit_factorization(dat, init$u_mat, init$v_mat,
                           max_val = 5, family = "gaussian", verbose = T,
                           max_iter = 50)
-plot(fit_a$u_mat[,1], fit_a$u_mat[,2], pch = 16, asp = T,
-     col = col_vec[rep(1:4, each = res$n_each)])
-fit_b <- .fit_factorization(dat, init$u_mat, init$v_mat,
-                          max_val = 5, family = "gaussian", verbose = T,
-                          max_iter = 50, reparameterize = T)
-plot(fit_b$u_mat[,1], fit_b$u_mat[,2], pch = 16, asp = T,
+plot(fit$u_mat[,1], fit$u_mat[,2], pch = 16, asp = T,
      col = col_vec[rep(1:4, each = res$n_each)])
 
 # ideal analysis
-fit2 <- .fit_factorization(dat, res$cell_mat, res$gene_mat,
+fit_2 <- .fit_factorization(dat, res$cell_mat, res$gene_mat,
                           max_val = 5, family = "gaussian", verbose = T,
-                          max_iter = 50)
-plot(fit2$u_mat[,1], fit2$u_mat[,2], pch = 16, asp = T,
+                          max_iter = 50, reparameterize = T)
+plot(fit_2$u_mat[,1], fit_2$u_mat[,2], pch = 16, asp = T,
      col = col_vec[rep(1:4, each = res$n_each)])
-fit2_b <- .fit_factorization(dat, res$cell_mat, res$gene_mat,
-                           max_val = 5, family = "gaussian", verbose = T,
-                           max_iter = 50, reparameterize = T)
-plot(fit2_b$u_mat[,1], fit2_b$u_mat[,2], pch = 16, asp = T,
-     col = col_vec[rep(1:4, each = res$n_each)])
+stopifnot(sum(abs(t(fit_2$u_mat)%*%fit_2$u_mat - t(fit_2$v_mat)%*%fit_2$v_mat)) <= 1e-6)
+stopifnot(sum(abs((t(fit_2$u_mat)%*%fit_2$u_mat)[2:3])) <= 1e-6)
+
