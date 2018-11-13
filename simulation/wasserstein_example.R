@@ -62,14 +62,14 @@ col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
 #############################
 
 set.seed(10)
-res <- .data_generator(n_each = 25, d_each = 50, multiplier = 0.1)
+res <- .data_generator(n_each = 50, d_each = 120, multiplier = 0.1)
 stopifnot(sum(abs(t(res$cell_mat)%*%res$cell_mat - t(res$gene_mat)%*%res$gene_mat)) <= 1e-6)
 stopifnot(sum(abs((t(res$cell_mat)%*%res$cell_mat)[2:3])) <= 1e-6)
 dat <- res$dat
 # quantile(dat)
 # .plot_singlecell(res$dat)
-# plot(res$cell_mat[,1], res$cell_mat[,2], pch = 16, asp = T,
-#      col = col_vec[rep(1:4, each = res$n_each)])
+plot(res$cell_mat[,1], res$cell_mat[,2], pch = 16, asp = T,
+     col = col_vec[rep(1:4, each = res$n_each)])
 
 # naive analysis
 # svd_res <- svd(dat)
@@ -91,8 +91,8 @@ fit <- .fit_factorization(dat, init$u_mat, init$v_mat,
                           max_val = 5, family = "gaussian", verbose = T,
                           max_iter = 10, reparameterize = T,
                           return_path = T)
-# plot(fit$u_mat[,1], fit$u_mat[,2], pch = 16, asp = T,
-#     col = col_vec[rep(1:4, each = res$n_each)])
+plot(fit$u_mat[,1], fit$u_mat[,2], pch = 16, asp = T,
+    col = col_vec[rep(1:4, each = res$n_each)])
 
 # ideal analysis
 # fit_2 <- .fit_factorization(dat, res$cell_mat, res$gene_mat,
