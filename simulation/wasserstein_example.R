@@ -78,23 +78,46 @@ for(i in 1:4){
                             return_path = F)
 }
 
-png("../figure/simulation/example_trajectories.png", height = 800, width = 3000, res = 300, units = "px")
-par(mfrow = c(1,4), mar = c(4,4,4,1))
+png("../figure/simulation/example_trajectories.png", height = 900, width = 3000, res = 300, units = "px")
+par(mfrow = c(1,4), mar = c(2,2,4,1))
 set.seed(10)
-n_pop <- 500
+n_pop <- 100
 res <- .data_generator(n_each = n_pop, d_each = 50, multiplier = 0.1)
 tmp <- res$cell_mat; svd_res <- svd(tmp); tmp <- svd_res$u[,1:res$k] %*% diag(svd_res$d[1:res$k])
-plot(tmp[,1], tmp[,2], pch = 16, col = col_vec[rep(1:4, each = n_pop)], asp = T)
+# plot(tmp[,1], tmp[,2], pch = 16, col = col_vec[rep(1:4, each = n_pop)], asp = T)
 
+sig <- ifelse(mean(tmp[1:n_seq[i],2]) > mean(tmp[(3*n_seq[i]+1):(4*n_seq[i]),2]), -1, 1)
+tmp[,2] <- sig*tmp[,2]
+
+f1 <- MASS::kde2d(tmp[,1], tmp[,2], n = 100)
+image(f1, col = grDevices::heat.colors(100, alpha = 0.5),
+      ylab = "", xlab = "", asp = T, main = "Population trajectory")
+contour(f1, add = T, drawlabels = F, col = rgb(0,0,0,0.5), lwd = 1)
+
+lineages <- list(Lineage1 = c(1,2,3), Lineage2 = c(1,2,4))
+b <- quantile(dist(tmp[1:n_pop,]), probs = 0.05)
+curves <- .get_curves(tmp, cluster_labels = rep(1:4, each = n_pop),
+                      lineages, b = b, max_iter = 2)
+for(j in 1:length(curves)){
+  lines(curves[[j]], lwd = 2)
+}
+
+# HOT FIX
 for(i in c(1,2,4)){
   tmp <- res_list[[i]]$u_mat; svd_res <- svd(tmp); tmp <- svd_res$u[,1:res$k] %*% diag(svd_res$d[1:res$k])
+
+  sig <- ifelse(mean(tmp[1:n_seq[i],2]) > mean(tmp[(3*n_seq[i]+1):(4*n_seq[i]),2]), -1, 1)
+  tmp[,2] <- sig*tmp[,2]
   plot(tmp[,1], tmp[,2],
        pch = 16, col = col_vec[rep(1:4, each = n_seq[i])], asp = T,
-       xlab = "X[,1]", ylab = "X[,2]")
-  curves <- slingshot(tmp, cluster_labels = rep(1:4, each = n_seq[i]),
-                      starting_cluster = 1)
-  for(i in 1:length(curves$curves)){
-    lines(curves$curves[[i]], lwd = 2)
+       xlab = "", ylab = "",
+       main = paste0("Estimated trajectory\n(n=", n_seq[i], ")"))
+  lineages <- list(Lineage1 = c(1,2,3), Lineage2 = c(1,2,4))
+  b <- quantile(dist(tmp[1:n_seq[i],]), probs = 0.05)
+  curves <- .get_curves(tmp, cluster_labels = rep(1:4, each = n_seq[i]),
+                        lineages, b = b)
+  for(j in 1:length(curves)){
+    lines(curves[[j]], lwd = 2)
   }
 }
 graphics.off()

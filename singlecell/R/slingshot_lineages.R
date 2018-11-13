@@ -118,26 +118,6 @@
   igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
 }
 
-.construct_nn_graph <- function(dat){
-  n <- nrow(dat)
-  dist_mat <- as.matrix(stats::dist(dat, method = "euclidean"))
-  val <- sort(unique(as.numeric(dist_mat)))[-1]
-  if(length(val) > 100) val <- unique(val[round(seq(1, length(val), length.out = 100))])
-
-  i <- 1
-  while(TRUE){
-
-    adj_mat <- matrix(0, nrow = nrow(dist_mat), ncol = ncol(dist_mat))
-    adj_mat[dist_mat <= val[i]] <- 1
-    g <- igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
-    if(igraph::components(g)$no == 1) break()
-
-    i <- i+1
-  }
-
-  g
-}
-
 #' Construct the shortest path tree graph from KNN graph
 #'
 #' This is currently hard-coded to work for only one \code{starting_cluster}.
