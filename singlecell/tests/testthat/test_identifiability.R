@@ -23,3 +23,15 @@ test_that(".identification is correct", {
 
   expect_true(sum(abs(cov_x - cov_y)) <= 1e-6)
 })
+
+test_that(".identification preserves the inner product", {
+  set.seed(20)
+  X <- MASS::mvrnorm(n = 100, mu = rep(0,5), Sigma = diag(5))
+  Y <- MASS::mvrnorm(n = 100, mu = rep(1,5), Sigma = 2*diag(5))
+  res <- .identification(X, Y)
+
+  pred_mat <- X %*% t(Y)
+  pred_mat2 <- res$X %*% t(res$Y)
+
+  expect_true(sum(abs(pred_mat - pred_mat2)) <= 1e-6)
+})

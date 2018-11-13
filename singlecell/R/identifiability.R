@@ -22,8 +22,6 @@
   A <- diag(sqrt(eigen_sym$values)) %*% t(eigen_sym$vectors)
 
   X <- X %*% t(A); Y <- Y %*% solve(A)
-  tmp <- svd(X); X <- tmp$u %*% diag(tmp$d)
-  tmp <- svd(Y); Y <- tmp$u %*% diag(tmp$d)
 
   list(X = X, Y = Y)
 }

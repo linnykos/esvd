@@ -22,7 +22,7 @@ library(singlecell)
 
   # construct the gene information
   gene_pop <- multiplier*matrix(c(20, 90, 25, 100,
-                          90,20, 100,25)/10, nrow = 2, ncol = 4, byrow = T)
+                                  90,20, 100,25)/10, nrow = 2, ncol = 4, byrow = T)
   g <- nrow(gene_pop)
   gene_mat_org <- do.call(rbind, lapply(1:g, function(x){
     pos <- stats::runif(d_each)
@@ -66,40 +66,48 @@ res <- .data_generator(n_each = 25, d_each = 50, multiplier = 0.1)
 stopifnot(sum(abs(t(res$cell_mat)%*%res$cell_mat - t(res$gene_mat)%*%res$gene_mat)) <= 1e-6)
 stopifnot(sum(abs((t(res$cell_mat)%*%res$cell_mat)[2:3])) <= 1e-6)
 dat <- res$dat
-# quantile(dat)
-# .plot_singlecell(res$dat)
-# plot(res$cell_mat[,1], res$cell_mat[,2], pch = 16, asp = T,
-#      col = col_vec[rep(1:4, each = res$n_each)])
 
-# naive analysis
-# svd_res <- svd(dat)
-# u_mat <- svd_res$u[,1:res$k] %*% diag(sqrt(svd_res$d[1:res$k]))
-# plot(u_mat[,1], u_mat[,2], pch = 16, asp = T,
-#      col = col_vec[rep(1:4, each = res$n_each)])
-
-# naive analysis of gram matrix
-# svd_res <- svd(res$gram_mat)
-# u_mat <- svd_res$u[,1:res$k] %*% diag(sqrt(svd_res$d[1:res$k]))
-# plot(u_mat[,1], u_mat[,2], pch = 16, asp = T,
-#      col = col_vec[rep(1:4, each = res$n_each)])
-
-# real analysis
 init <- .initialization(dat, family = "gaussian", max_val = 10)
-# plot(init$u_mat[,1], init$u_mat[,2], pch = 16, asp = T,
-#     col = col_vec[rep(1:4, each = res$n_each)])
-fit <- .fit_factorization(dat, init$u_mat, init$v_mat,
-                          max_val = 5, family = "gaussian", verbose = T,
-                          max_iter = 10, reparameterize = T,
-                          return_path = T)
-# plot(fit$u_mat[,1], fit$u_mat[,2], pch = 16, asp = T,
-#     col = col_vec[rep(1:4, each = res$n_each)])
+u_mat = init$u_mat
+v_mat = init$v_mat
+max_val = 5
+family = "gaussian"
+reparameterize = T
+extra_weights = rep(1, nrow(dat))
+tol = 1e-3
+max_iter = 10
+verbose = T
+return_path = T
+cores = NA
 
-# ideal analysis
-# fit_2 <- .fit_factorization(dat, res$cell_mat, res$gene_mat,
-#                           max_val = 5, family = "gaussian", verbose = T,
-#                           max_iter = 50, reparameterize = T)
-# plot(fit_2$u_mat[,1], fit_2$u_mat[,2], pch = 16, asp = T,
-#      col = col_vec[rep(1:4, each = res$n_each)])
-# stopifnot(sum(abs(t(fit_2$u_mat)%*%fit_2$u_mat - t(fit_2$v_mat)%*%fit_2$v_mat)) <= 1e-6)
-# stopifnot(sum(abs((t(fit_2$u_mat)%*%fit_2$u_mat)[2:3])) <= 1e-6)
-#
+k <- ncol(u_mat)
+if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
+
+idx <- which(!is.na(dat))
+min_val <- min(dat[which(dat > 0)])
+dat[which(dat == 0)] <- min_val/2
+
+current_obj <- Inf
+next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
+obj_vec <- c(next_obj)
+if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
+if(return_path) res_list <- list(list(u_mat = u_mat, v_mat = v_mat)) else res_list <- NA
+
+current_obj <- next_obj
+
+u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, extra_weights = extra_weights,
+                       !is.na(cores))
+v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, extra_weights = extra_weights,
+                       !is.na(cores))
+
+print(range(u_mat %*% t(v_mat)))
+
+if(reparameterize){
+  tmp <- .reparameterize(u_mat, v_mat)
+  u_mat <- tmp$X; v_mat <- tmp$Y
+  print(range(u_mat %*% t(v_mat)))
+}
+
+next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
+
+

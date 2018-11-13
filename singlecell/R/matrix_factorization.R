@@ -1,9 +1,9 @@
 .fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
                                family = "exponential",
-                               reparameterize = F,
+                               reparameterize = T,
                                extra_weights = rep(1, nrow(dat)),
                                tol = 1e-3, max_iter = 100,
-                               verbose = F,
+                               verbose = F, return_path = F,
                                cores = NA){
   if(!is.na(cores)) doMC::registerDoMC(cores = cores)
   stopifnot(length(which(dat > 0)) > 0)
@@ -15,7 +15,7 @@
   k <- ncol(u_mat)
   if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
 
-  idx <- which(dat == 0)
+  idx <- which(!is.na(dat))
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat == 0)] <- min_val/2
 
@@ -23,6 +23,7 @@
   next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
   obj_vec <- c(next_obj)
   if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
+  if(return_path) res_list <- list(list(u_mat = u_mat, v_mat = v_mat)) else res_list <- NA
 
   while((is.na(tol) | abs(current_obj - next_obj) > tol) & length(obj_vec) < max_iter){
     current_obj <- next_obj
@@ -32,14 +33,16 @@
     v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, extra_weights = extra_weights,
                            !is.na(cores))
 
-    next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
-
     if(reparameterize){
       tmp <- .reparameterize(u_mat, v_mat)
       u_mat <- tmp$X; v_mat <- tmp$Y
     }
 
+    next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
+
+
     if(verbose) print(paste0("Iter ", length(obj_vec), ": Decrease is ", current_obj - next_obj))
+    if(return_path) res_list[[length(res_list)+1]] <- list(u_mat = u_mat, v_mat = v_mat)
 
     obj_vec <- c(obj_vec, next_obj)
   }
@@ -47,7 +50,7 @@
   tmp <- .reparameterize(u_mat, v_mat)
   u_mat <- tmp$X; v_mat <- tmp$Y
 
-  list(u_mat = u_mat, v_mat = v_mat, obj_vec = obj_vec)
+  list(u_mat = u_mat, v_mat = v_mat, obj_vec = obj_vec, res_list = res_list)
 }
 
 .reparameterize <- function(u_mat, v_mat){

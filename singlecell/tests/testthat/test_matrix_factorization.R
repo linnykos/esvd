@@ -358,3 +358,39 @@ test_that(".fit_factorization shrinks the inner products when extra_weights > 1 
 
   expect_true(all(exp(res2$u_mat %*% t(res2$v_mat)) >= exp(res1$u_mat %*% t(res1$v_mat))))
 })
+
+####################
+
+## .reparameterize is correct
+
+test_that(".reparameterize works", {
+  set.seed(10)
+  u_mat <- MASS::mvrnorm(60, rep(0, 5), diag(5))
+  v_mat <- MASS::mvrnorm(50, rep(1, 5), 2*diag(5))
+
+  res <- .reparameterize(u_mat, v_mat)
+
+  expect_true(is.list(res))
+  expect_true(length(res) == 2)
+  expect_true(all(dim(res$X) == dim(u_mat)))
+  expect_true(all(dim(res$Y) == dim(v_mat)))
+})
+
+test_that(".reparameterize preserves the inner products", {
+  trials <- 100
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(10*x)
+    u_mat <- MASS::mvrnorm(5, rep(0, 5), diag(5))
+    v_mat <- MASS::mvrnorm(5, rep(1, 5), 2*diag(5))
+
+    res <- .reparameterize(u_mat, v_mat)
+
+    pred_mat <- u_mat %*% t(v_mat)
+    pred_mat2 <- res$X %*% t(res$Y)
+
+    sum(abs(pred_mat - pred_mat2)) <= 1e-6
+  })
+
+  expect_true(all(bool_vec))
+})

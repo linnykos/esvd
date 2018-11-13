@@ -6,6 +6,9 @@
 .evaluate_objective.gaussian <- function(dat, u_mat, v_mat, ...){
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
+  if(any(pred_mat[idx] <= 0)){
+    save(u_mat, v_mat, file = "../tmp.RData")
+  }
   stopifnot(all(pred_mat[idx] > 0))
 
   sum(-log(pred_mat[idx]) - pred_mat[idx]*dat[idx] + pred_mat[idx]^2*dat[idx]^2/8)
