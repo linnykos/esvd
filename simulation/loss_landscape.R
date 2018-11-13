@@ -107,42 +107,50 @@ plot3D::persp3D(z = z_mat, breaks = breaks_vec, zlim = range(breaks_vec))
 ##############
 
 list1 <- list(fit$u_mat, fit$v_mat)
-list2 <- list(fit$res_list[[9]]$u_mat, fit$res_list[[9]]$v_mat)
-list3 <- list(fit$res_list[[8]]$u_mat, fit$res_list[[8]]$v_mat)
+list2 <- list(fit$res_list[[4]]$u_mat, fit$res_list[[4]]$v_mat)
+list3 <- list(res$cell_mat, res$gene_mat)
 tmp <- .compute_directions(list1, list2, list3)
 max_dist <- max(tmp$dist1, tmp$dist2)
 z_mat <- .compute_grid(dat, vec1 = tmp$vec1, dir1 = tmp$dir1, dir2 = tmp$dir2,
                        n = tmp$n, d = tmp$d, k = tmp$k,
                        xrange = c(-0.1*max_dist, max_dist), yrange = c(-0.1*max_dist, max_dist))
-plot3D::persp3D(z = z_mat, breaks = breaks_vec)
+plot3D::persp3D(z = z_mat, breaks = breaks_vec,
+                zlim = range(breaks_vec),
+                colkey = F, )
+
+###
+image(.rotate(z_mat), breaks = breaks_vec, col = jet.col(length(breaks_vec)-1),
+      asp = T)
+contour(.rotate(z_mat), levels = breaks_vec[round(seq(1, length(breaks_vec), length.out = 15))],
+        add = T, asp = T, drawlabels = F)
 
 ###################
-
-# try a random direction
-list1 <- list(fit$u_mat, fit$v_mat)
-vec1 <- .convert_to_vector(list1[[1]], list1[[2]])
-n <- nrow(list1[[1]]); d <- nrow(list1[[2]]); k <- ncol(list1[[1]])
-
-iter <- 1
-min_perc <- Inf
-
-while(TRUE){
-  if(iter %% 20 == 0) print(paste0("Iteration: ", iter, ", Percentage: ", min_perc))
-  set.seed(10*iter)
-  dir1 <- rnorm(n*k+d*k); dir1 <- dir1/.l2norm(dir1)
-  dir2 <- rnorm(n*k+d*k); dir2 <- dir2/.l2norm(dir2)
-  dir2 <- as.numeric(dir2 %*% (diag(length(dir2)) - dir1 %*% t(dir1)))
-  dist2 <- .l2norm(dir2); dir2 <- dir2/dist2
-  max_dist <- 5
-  z_mat <- .compute_grid(dat, vec1 = vec1, dir1 = dir1, dir2 = dir2,
-                         n = tmp$n, d = tmp$d, k = tmp$k,
-                         xrange = c(-max_dist, max_dist),
-                         yrange = c(-max_dist, max_dist), grid_size = 5,
-                         verbose = F)
-  perc <- length(which(is.na(z_mat)))/prod(dim(z_mat))
-  if(perc <= min_perc) min_perc <- perc
-  if(perc <= 0.1) break()
-  iter <- iter + 1
-}
-
-
+#
+# # try a random direction
+# list1 <- list(fit$u_mat, fit$v_mat)
+# vec1 <- .convert_to_vector(list1[[1]], list1[[2]])
+# n <- nrow(list1[[1]]); d <- nrow(list1[[2]]); k <- ncol(list1[[1]])
+#
+# iter <- 1
+# min_perc <- Inf
+#
+# while(TRUE){
+#   if(iter %% 20 == 0) print(paste0("Iteration: ", iter, ", Percentage: ", min_perc))
+#   set.seed(10*iter)
+#   dir1 <- rnorm(n*k+d*k); dir1 <- dir1/.l2norm(dir1)
+#   dir2 <- rnorm(n*k+d*k); dir2 <- dir2/.l2norm(dir2)
+#   dir2 <- as.numeric(dir2 %*% (diag(length(dir2)) - dir1 %*% t(dir1)))
+#   dist2 <- .l2norm(dir2); dir2 <- dir2/dist2
+#   max_dist <- 5
+#   z_mat <- .compute_grid(dat, vec1 = vec1, dir1 = dir1, dir2 = dir2,
+#                          n = tmp$n, d = tmp$d, k = tmp$k,
+#                          xrange = c(-max_dist, max_dist),
+#                          yrange = c(-max_dist, max_dist), grid_size = 5,
+#                          verbose = F)
+#   perc <- length(which(is.na(z_mat)))/prod(dim(z_mat))
+#   if(perc <= min_perc) min_perc <- perc
+#   if(perc <= 0.1) break()
+#   iter <- iter + 1
+# }
+#
+#
