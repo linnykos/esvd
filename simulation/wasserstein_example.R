@@ -93,5 +93,8 @@ for(i in c(1,2,4)){
        xlab = "X[,1]", ylab = "X[,2]")
   curves <- slingshot(tmp, cluster_labels = rep(1:4, each = n_seq[i]),
                       starting_cluster = 1)
+  for(i in 1:length(curves$curves)){
+    lines(curves$curves[[i]], lwd = 2)
+  }
 }
 graphics.off()

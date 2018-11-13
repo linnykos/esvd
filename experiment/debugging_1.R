@@ -1,113 +1,172 @@
 rm(list=ls())
-library(singlecell)
+load("../tmp.RData")
+i = 1
+tmp <- res_list[[i]]$u_mat; svd_res <- svd(tmp); tmp <- svd_res$u[,1:res$k] %*% diag(svd_res$d[1:res$k])
+# curves <- slingshot(tmp, cluster_labels = rep(1:4, each = n_seq[i]),
+#                     starting_cluster = 1)
 
-.data_generator <- function(distr_func = function(x){stats::rnorm(1, 4/x, sd = 2/x)},
-                            n_each = 50, d_each = 120, sigma = 0.05,
-                            multiplier = 1){
+###########
 
-  #construct the cell information
-  cell_pop <- multiplier*matrix(c(4,10, 25,100,
-                                  60,80, 25,100,
-                                  40,10, 60,80,
-                                  60,80, 100,25)/10,
-                                nrow = 4, ncol = 4, byrow = T)
-  h <- nrow(cell_pop)
-  cell_mat_org <- do.call(rbind, lapply(1:h, function(x){
-    pos <- stats::runif(n_each)
-    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = sigma),
-          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = sigma))
-  }))
-  n <- nrow(cell_mat_org)
-  k <- ncol(cell_mat_org)
+lineages <- .get_lineages(tmp, cluster_labels = rep(1:4, each = n_seq[i]),
+                          starting_cluster = 1)
 
-  # construct the gene information
-  gene_pop <- multiplier*matrix(c(20, 90, 25, 100,
-                                  90,20, 100,25)/10, nrow = 2, ncol = 4, byrow = T)
-  g <- nrow(gene_pop)
-  gene_mat_org <- do.call(rbind, lapply(1:g, function(x){
-    pos <- stats::runif(d_each)
-    cbind(pos*gene_pop[x,1] + (1-pos)*gene_pop[x,3] + stats::rnorm(d_each, sd = 0.05),
-          pos*gene_pop[x,2] + (1-pos)*gene_pop[x,4] + stats::rnorm(d_each, sd = 0.05))
-  }))
-  d <- nrow(gene_mat_org)
+# curves <- .get_curves(tmp, cluster_labels = rep(1:4, each = n_seq[i]),
+#                       lineages = lineages)
 
-  # form observations
-  gram_mat <- cell_mat_org %*% t(gene_mat_org) #natural parameter
-  svd_res <- svd(gram_mat)
-  cell_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
-  gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+###########
 
-  res <- .identification(cell_mat, gene_mat)
-  cell_mat <- res$X; gene_mat <- res$Y
+dat = tmp
+cluster_labels = rep(1:4, each = n_seq[i])
+shrink = 1; thresh = 0.001; max_iter = 15; b = 1
+stopifnot(shrink >= 0 & shrink <= 1)
 
-  obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
-  for(i in 1:n){
-    for(j in 1:d){
-      obs_mat[i,j] <- distr_func(max(gram_mat[i,j], 1e-4))
+### setup
+num_lineage <- length(lineages)
+cluster_mat <- .construct_cluster_matrix(cluster_labels)
+cluster_vec <- 1:ncol(cluster_mat)
+centers <- .compute_cluster_center(dat, cluster_mat)
+
+W <- .initialize_weight_matrix(cluster_mat, lineages)
+
+### determine curve hierarchy
+avg_order <- .initialize_curve_hierarchy(lineages, cluster_vec)
+
+### initial curves are piecewise linear paths through the tree
+s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
+res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+pcurve_list <- res$pcurve_list; D <- res$D
+
+### track distances between curves and data points to determine convergence
+dist_new <- sum(abs(D[W>0]))
+dist_old <- Inf
+
+iter <- 1
+while (iter < 2){
+  dist_old <- dist_new
+
+  ### predict each dimension as a function of lambda (pseudotime)
+  s_list <- lapply(1:num_lineage, function(lin){
+    sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
+    .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], b = b)
+  })
+
+  res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+  pcurve_list <- res$pcurve_list; D <- res$D
+  dist_new <- sum(D[W>0], na.rm=TRUE)
+
+  # shrink together lineages near shared clusters
+  if(shrink > 0){
+    avg_curve_list <- vector("list", length(avg_order))
+    names(avg_curve_list) <- paste0("Average", 1:length(avg_order))
+    pct_shrink <- vector("list", length(avg_order))
+
+    ### determine average curves and amount of shrinkage
+    for (i in 1:length(avg_order)) {
+      to_avg_curves <- lapply(avg_order[[i]], function(n_element){
+        if(grepl('Lineage', n_element)){
+          pcurve_list[[n_element]]
+        } else {
+          avg_curve_list[[n_element]]
+        }
+      })
+
+      avg <- .construct_average_curve(to_avg_curves, dat)
+      avg_curve_list[[i]] <- avg
+
+      # find the indicies shared by all the curves
+      common_ind <- which(rowMeans(sapply(to_avg_curves, function(crv){ crv$W > 0 })) == 1)
+      pct_shrink[[i]] <- lapply(to_avg_curves, function(curve) {
+        .percent_shrinkage(curve, common_ind)
+      })
+
+      pct_shrink[[i]] <- .check_shrinkage(pct_shrink[[i]])
+    }
+
+    ### do the shrinking in reverse order
+    for(i in rev(1:length(avg_curve_list))){
+      avg_curve <- avg_curve_list[[i]]
+      to_shrink_list <-  lapply(avg_order[[i]], function(n_element){
+        if(grepl('Lineage', n_element)){
+          pcurve_list[[n_element]]
+        } else {
+          avg_curve_list[[n_element]]
+        }
+      })
+
+      shrunk_list <- lapply(1:length(to_shrink_list),function(j){
+        pcurve <- to_shrink_list[[j]]
+        .shrink_to_avg(pcurve, avg_curve,
+                       pct_shrink[[i]][[j]] * shrink, dat)
+      })
+
+      for(j in 1:length(avg_order[[i]])){
+        ns <- avg_order[[i]][[j]]
+        if(grepl('Lineage', ns)){
+          pcurve_list[[ns]] <- shrunk_list[[j]]
+        } else {
+          avg_curve_list[[ns]] <- shrunk_list[[j]]
+        }
+      }
     }
   }
 
-  obs_mat[obs_mat < 0] <- 0
-
-  list(dat = obs_mat, cell_mat = cell_mat, gene_mat = gene_mat,
-       gram_mat = gram_mat, n_each = n_each, d_each = d_each,
-       h = h, g = g, k = k)
+  iter <- iter + 1
 }
 
-col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
-             rgb(180,200,255,maxColorValue=255), #purple
-             rgb(100,100,200,maxColorValue=255), #blue
-             rgb(149,219,144,maxColorValue=255)) #green
+######### # bug happens on iter = 2
 
-#############################
-
-set.seed(10)
-res <- .data_generator(n_each = 25, d_each = 50, multiplier = 0.1)
-stopifnot(sum(abs(t(res$cell_mat)%*%res$cell_mat - t(res$gene_mat)%*%res$gene_mat)) <= 1e-6)
-stopifnot(sum(abs((t(res$cell_mat)%*%res$cell_mat)[2:3])) <= 1e-6)
-dat <- res$dat
-
-init <- .initialization(dat, family = "gaussian", max_val = 10)
-u_mat = init$u_mat
-v_mat = init$v_mat
-max_val = 5
-family = "gaussian"
-reparameterize = T
-extra_weights = rep(1, nrow(dat))
-tol = 1e-3
-max_iter = 10
-verbose = T
-return_path = T
-cores = NA
-
-k <- ncol(u_mat)
-if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
-
-idx <- which(!is.na(dat))
-min_val <- min(dat[which(dat > 0)])
-dat[which(dat == 0)] <- min_val/2
-
-current_obj <- Inf
-next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
-obj_vec <- c(next_obj)
-if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
-if(return_path) res_list <- list(list(u_mat = u_mat, v_mat = v_mat)) else res_list <- NA
-
-current_obj <- next_obj
-
-u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, extra_weights = extra_weights,
-                       !is.na(cores))
-v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, extra_weights = extra_weights,
-                       !is.na(cores))
-
-print(range(u_mat %*% t(v_mat)))
-
-if(reparameterize){
-  tmp <- .reparameterize(u_mat, v_mat)
-  u_mat <- tmp$X; v_mat <- tmp$Y
-  print(range(u_mat %*% t(v_mat)))
+# first see what the plot looks like
+plot(tmp[,1], tmp[,2],
+     pch = 16, col = col_vec[rep(1:4, each = n_seq[1])], asp = T,
+     xlab = "X[,1]", ylab = "X[,2]")
+for(i in 1:length(pcurve_list)){
+  lines(pcurve_list[[i]])
 }
 
-next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
+####
+dist_old <- dist_new
 
+### predict each dimension as a function of lambda (pseudotime)
+s_list <- lapply(1:num_lineage, function(lin){
+  sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
+  .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], b = b)
+})
 
+res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+pcurve_list <- res$pcurve_list; D <- res$D
+dist_new <- sum(D[W>0], na.rm=TRUE)
+
+# shrink together lineages near shared clusters
+avg_curve_list <- vector("list", length(avg_order))
+names(avg_curve_list) <- paste0("Average", 1:length(avg_order))
+pct_shrink <- vector("list", length(avg_order))
+
+### determine average curves and amount of shrinkage
+i= 1
+to_avg_curves <- lapply(avg_order[[i]], function(n_element){
+  if(grepl('Lineage', n_element)){
+    pcurve_list[[n_element]]
+  } else {
+    avg_curve_list[[n_element]]
+  }
+})
+
+avg <- .construct_average_curve(to_avg_curves, dat)
+avg_curve_list[[i]] <- avg
+
+#########
+
+# problem occurs here
+# find the indicies shared by all the curves
+common_ind <- which(rowMeans(sapply(to_avg_curves, function(crv){ crv$W > 0 })) == 1)
+.percent_shrinkage(to_avg_curves[[1]], common_ind)
+
+#########
+
+pcurve = to_avg_curves[[1]]
+common_idx = common_ind
+lambda <- pcurve$lambda
+
+dens <- stats::density(0, bw = 1, kernel = "cosine")
+surv <- list(x = dens$x, y = (sum(dens$y) - cumsum(dens$y))/sum(dens$y))
+box_vals <- graphics::boxplot(lambda[common_idx], plot = FALSE)$stats
