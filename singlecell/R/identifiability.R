@@ -23,5 +23,5 @@
 
   X <- X %*% t(A); Y <- Y %*% solve(A)
 
-  list(X = X, Y = Y)
+  list(X = X, Y = Y, A = A)
 }

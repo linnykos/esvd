@@ -33,7 +33,14 @@ load("../simulation/fit.RData")
   dist2 <- .l2norm(dir2); dir2 <- dir2/dist2
   stopifnot(abs(as.numeric(dir1 %*% dir2)) <= 1e-6)
 
-  list(vec1 = vec1, dir1 = dir1, dir2 = dir2, dist1 = dist1, dist2 = dist2,
+  # find the coordinates in terms of new basis
+  point1 <- c(0,0)
+  tmp <- cbind(dir1, dir2)
+  point2 <- as.numeric(solve(t(tmp)%*%tmp) %*% t(tmp) %*% (vec2 - vec1))
+  point3 <- as.numeric(solve(t(tmp)%*%tmp) %*% t(tmp) %*% (vec3 - vec1))
+
+  list(vec1 = vec1, dir1 = dir1, dir2 = dir2,
+       point1 = point1, point2 = point2, point3 = point3,
        n = n, d = d, k = k)
 }
 
@@ -51,12 +58,12 @@ load("../simulation/fit.RData")
 
     for(i in 1:grid_size){
       tmp <- .convert_to_matrix(vec1 + x_seq[i]*dir1 + y_seq[j]*dir2, n, d, k)
-      z_mat[i,j] <- tryCatch({.evaluate_objective.gaussian(dat, tmp$u_mat, tmp$v_mat)},
+      z_mat[j,i] <- tryCatch({.evaluate_objective.gaussian(dat, tmp$u_mat, tmp$v_mat)},
                              error = function(e){NA})
     }
   }
 
-  z_mat
+  z_mat[nrow(z_mat):1,]
 }
 
 .generate_breaks <- function(z_mat, len = 100,
@@ -85,24 +92,58 @@ load("../simulation/fit.RData")
 # try an extreme example
 
 list1 <- list(fit$u_mat, fit$v_mat)
-list2 <- list(-fit$u_mat, -fit$v_mat)
-list3 <- list(res$cell_mat, res$gene_mat)
+list2 <- list(res$cell_mat, res$gene_mat)
+list3 <- list(-fit$u_mat, -fit$v_mat)
 tmp <- .compute_directions(list1, list2, list3)
-max_dist <- max(tmp$dist1, tmp$dist2)
+max_dist <- max(abs(c(tmp$point1 ,tmp$point2, tmp$point3)))*1.1
 z_mat <- .compute_grid(dat, vec1 = tmp$vec1, dir1 = tmp$dir1, dir2 = tmp$dir2,
                        n = tmp$n, d = tmp$d, k = tmp$k,
                        xrange = c(-0.1*max_dist, max_dist), yrange = c(-0.1*max_dist, max_dist))
 
-image(.rotate(z_mat))
+# image(.rotate(z_mat))
 
 
 library(plot3D)
-par(mar = rep(0,4))
 zero <- .convert_to_matrix(rep(1e-3, tmp$n*tmp$k + tmp$d*tmp$k), tmp$n, tmp$d, tmp$k)
 mid_point <- .evaluate_objective.gaussian(dat, zero$u_mat, zero$v_mat)
 breaks_vec <- .generate_breaks(z_mat, len = 100, mid_point = mid_point,
                                split = 0.8)
-plot3D::persp3D(z = z_mat, breaks = breaks_vec, zlim = range(breaks_vec))
+
+png("../figure/simulation/landscape_1.png", height = 1200, width = 1500, res = 300, units = "px")
+par(mar = rep(0.1,4))
+plot3D::persp3D(z = z_mat, breaks = breaks_vec, zlim = range(breaks_vec),
+                colkey = F,
+                xlab = "Direction 1", ylab = "Direction 2",
+                zlab = "Negative log-likelihood")
+graphics.off()
+
+png("../figure/simulation/landscape_1b.png", height = 1200, width = 1200, res = 300, units = "px")
+par(mar = c(4,4,1,1))
+image(.rotate(z_mat), breaks = breaks_vec, col = jet.col(length(breaks_vec)-1),
+      asp = T, axes = F, xlab = "Direction 1", ylab = "Direction 2")
+
+#label the axes
+xaxs <- as.numeric(colnames(z_mat)); xaxs <- round(xaxs[round(seq(1,length(xaxs),length.out = 5))],1)
+axis(1, at=seq(0,1,length.out = 5), labels = F, las=2)
+text(seq(0,1,length.out = 5), par("usr")[3] - 0.1, labels = xaxs, srt = 0, pos = 1,
+     xpd = T)
+yaxs <- as.numeric(rownames(z_mat)); yaxs <- round(yaxs[round(seq(1,length(yaxs),length.out = 5))],1)
+axis(2, at=seq(0,1,length.out = 5), labels = rev(yaxs), las=2)
+
+#find the points
+point_vec <- list(tmp$point1, tmp$point2, tmp$point3)
+colseq <- seq(0, 1, length.out = ncol(z_mat))
+rowseq <- rev(seq(0, 1, length.out = nrow(z_mat)))
+for(i in 1:3){
+  col_idx <- which.min(abs(as.numeric(colnames(z_mat)) - point_vec[[i]][1]))
+  row_idx <- which.min(abs(as.numeric(rownames(z_mat)) - point_vec[[i]][2]))
+  points(colseq[col_idx], rowseq[row_idx], pch = 16)
+}
+
+#draw contours
+contour(.rotate(z_mat), levels = breaks_vec[round(seq(1, length(breaks_vec), length.out = 15))],
+        add = T, asp = T, drawlabels = F)
+graphics.off()
 
 ##############
 
@@ -116,7 +157,7 @@ z_mat <- .compute_grid(dat, vec1 = tmp$vec1, dir1 = tmp$dir1, dir2 = tmp$dir2,
                        xrange = c(-0.1*max_dist, max_dist), yrange = c(-0.1*max_dist, max_dist))
 plot3D::persp3D(z = z_mat, breaks = breaks_vec,
                 zlim = range(breaks_vec),
-                colkey = F, )
+                colkey = F)
 
 ###
 image(.rotate(z_mat), breaks = breaks_vec, col = jet.col(length(breaks_vec)-1),
