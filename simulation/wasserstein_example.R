@@ -108,8 +108,8 @@ gene_pop <- matrix(c(20,90, 25,100,
 }
 
 col_vec <- c(rgb(205,40,54,maxColorValue=255), #red
-             rgb(180,200,255,maxColorValue=255), #purple
-             rgb(100,100,200,maxColorValue=255), #blue
+             rgb(180,200,255,maxColorValue=255), #blue
+             rgb(100,100,200,maxColorValue=255), #purple
              rgb(149,219,144,maxColorValue=255)) #green
 
 #############################
@@ -171,7 +171,7 @@ par(mfrow = c(1,4), mar = c(4,4,4,0.1))
 
 image(.rotate(mat), col = grDevices::heat.colors(100, alpha = 0.5),
       ylab = "X[,2]", xlab = "X[,1]", asp = diff(range(as.numeric(rownames(mat))))/diff(range(as.numeric(colnames(mat)))),
-      main = "Population trajectory",
+      main = "Population trajectory", cex.lab = 1.25,
       axes = F)
 contour(.rotate(mat), add = T, drawlabels = F, col = rgb(0,0,0,0.5), lwd = 1,
         levels = quantile(mat, probs = c(0.25,0.5,0.75)))
@@ -203,8 +203,8 @@ for(i in c(1,2,4)){
        ylim = range(as.numeric(rownames(mat))),
        pch = 16, col = col_vec[rep(1:4, each = n_seq[i])],
        asp = T,
-       xlab = "X[,1]", ylab = "X[,2]", axes = F,
-       main = paste0("Estimated trajectory\n(n = ", n_seq[i], ")"))
+       xlab = "X[,1]", ylab = "X[,2]", axes = F, cex.lab = 1.25,
+       main = paste0("Estimated trajectory\n(n = ", 4*n_seq[i], ")"))
 
   xaxs <- as.numeric(colnames(mat)); xaxs <- round(xaxs[round(seq(1,length(xaxs),length.out = 5))],1)
   axis(1, at = xaxs, labels = F, las=2)
