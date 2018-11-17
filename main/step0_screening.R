@@ -15,8 +15,8 @@ dim(dat)
 
 # try a series of SPCAs
 k <- 5
-lvls <- 10
-v_seq <- exp(seq(log(1), log(sqrt(ncol(dat))), length.out = lvls))
+lvls <- 20
+v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
 res_list <- vector("list", lvls)
 
 for(i in 1:lvls){
