@@ -27,7 +27,7 @@ for(i in 1:lvls){
 }
 
 # run DESCEND
-res_descend <- descend::runDescend(dat, n.cores = 10)
+res_descend <- descend::runDescend(t(dat), n.cores = 10)
 res_hvg <- descend::findHVG(res_descend)
 
 save.image("../results/step0_screening.RData")
