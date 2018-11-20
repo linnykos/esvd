@@ -21,13 +21,12 @@ v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
 res_list <- vector("list", lvls)
 
 for(i in 1:lvls){
-  print(paste0(Sys.time(), ": Level ", i))
-  save.image(file = "../results/step0_screening_tmp.RData")
   res_list[[i]] <- PMA::SPC(dat, sumabsv = v_seq[i], K = k, trace = F)
 }
 
 # run DESCEND
 res_descend <- descend::runDescend(t(dat), n.cores = 10)
-res_hvg <- descend::findHVG(res_descend)
 
+rm(list = c("idx", "zz", "k", "lvls"))
+print(paste0(Sys.time(), ": Finished screening"))
 save.image("../results/step0_screening.RData")
