@@ -5,7 +5,7 @@ library(singlecell)
 paramMat <- cbind(round(exp(seq(log(10), log(200), length.out = 10))),
                   round(exp(seq(log(20), log(400), length.out = 10))))
 colnames(paramMat) <- c("n", "d")
-trials <- 1
+trials <- 5
 
 ################
 
@@ -82,7 +82,7 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = 15, as_list = T,
+                                        cores = 5, as_list = T,
                                         filepath = "../results/wasserstein_tmp.RData",
                                         verbose = T)
 
