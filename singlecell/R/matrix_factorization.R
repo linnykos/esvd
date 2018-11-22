@@ -35,7 +35,7 @@
 
     if(reparameterize){
       tmp <- .reparameterize(u_mat, v_mat)
-      u_mat <- tmp$X; v_mat <- tmp$Y
+      u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
     }
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
@@ -48,7 +48,7 @@
   }
 
   tmp <- .reparameterize(u_mat, v_mat)
-  u_mat <- tmp$X; v_mat <- tmp$Y
+  u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
   list(u_mat = u_mat, v_mat = v_mat, obj_vec = obj_vec, res_list = res_list)
 }
@@ -61,7 +61,7 @@
   if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
   u_mat <- svd_res$u[,1:k] %*% diag(diag_vec)
   v_mat <- svd_res$v[,1:k] %*% diag(diag_vec)
-  .identification(u_mat, v_mat)
+  list(u_mat = u_mat, v_mat = v_mat)
 }
 
 #########

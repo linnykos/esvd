@@ -1,6 +1,6 @@
 load("../results/step0_screening.RData")
 
-res_hvg <- descend::findHVG(res_descend, threshold = 12)
+res_hvg <- descend::findHVG(res_descend, threshold = 12, plot.result = F)
 length(res_hvg$HVG.genes)
 
 idx1 <- sort(unlist(apply(res_list[[5]]$v, 2, function(x){which(x != 0)})))
@@ -10,7 +10,8 @@ idx <- sort(unique(c(idx1, idx2)))
 dat <- dat[,idx]
 dim(dat)
 
-dat_impute <- SAVER::saver(dat, ncores = 10)
+impute_res <- SAVER::saver(dat, ncores = 10)
+dat_impute <- impute_res$estimate
 
 rm(list = c("idx1", "idx2"))
 print(paste0(Sys.time(), ": Finished imputing"))

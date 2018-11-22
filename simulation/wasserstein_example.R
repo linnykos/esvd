@@ -127,7 +127,7 @@ for(i in 1:4){
   init <- .initialization(dat, family = "gaussian", max_val = 10)
   res_list[[i]] <- .fit_factorization(dat, init$u_mat, init$v_mat,
                             max_val = 5, family = "gaussian", verbose = T,
-                            max_iter = 10, reparameterize = T,
+                            max_iter = 50, reparameterize = T,
                             return_path = F)
 }
 
