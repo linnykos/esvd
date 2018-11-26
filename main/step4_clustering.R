@@ -78,3 +78,14 @@ plot(u_mat[,2], u_mat[,4], pch = 16, col = clustering_kmeans$cluster, asp = T)
 plot(u_mat[,3], u_mat[,4], pch = 16, col = clustering_kmeans$cluster, asp = T)
 
 # hm not that good
+
+########################################
+#
+# set.seed(10)
+# zz = MeanShift::bmsClustering(t(u_mat), h = 0.8)
+# idx <- which(zz$labels == 1)
+# zz2 <- MeanShift::bmsClustering(t(u_mat[idx,]), h = 0.5)
+#
+# table(zz2$labels)
+# plot(u_mat[idx,1], u_mat[idx,2], col = zz2$labels, asp = T, pch = 16)
+
