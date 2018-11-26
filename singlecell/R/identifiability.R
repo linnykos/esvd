@@ -1,4 +1,4 @@
-.identification <- function(cov_x, cov_y, check = F){
+.identification <- function(cov_x, cov_y, check = T){
   eigen_x <- eigen(cov_x)
   eigen_y <- eigen(cov_y)
 
