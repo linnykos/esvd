@@ -9,16 +9,16 @@
 
   tmp <- t(Vx)%*%Vy%*%sqrt(Dy)
   svd_tmp <- svd(tmp)
-  Theta <- svd_tmp$u %*% diag(svd_tmp$d) %*% t(svd_tmp$u) %*% sqrt(Dx_inv)
+  R <- svd_tmp$u %*% diag(svd_tmp$d) %*% t(svd_tmp$u) %*% sqrt(Dx_inv)
 
   # run a check
   if(check){
     Q <- svd_tmp$u %*% t(svd_tmp$v)
-    Theta2 <- t(Vx)%*%Vy%*%sqrt(Dy) %*% t(Q) %*% sqrt(Dx_inv)
-    stopifnot(sum(abs(Theta2 - Theta)) <= 1e-6)
+    R2 <- t(Vx)%*%Vy%*%sqrt(Dy) %*% t(Q) %*% sqrt(Dx_inv)
+    stopifnot(sum(abs(R2 - R)) <= 1e-6)
   }
 
-  sym_prod <- Vx %*% Theta %*% t(Vx)
+  sym_prod <- Vx %*% R %*% t(Vx)
 
   if(check){
     stopifnot(sum(abs(sym_prod - t(sym_prod))) <= 1e-6)
@@ -37,4 +37,5 @@
 }
 
 # cov_x = matrix(c(2,1,1,2),2,2); cov_y = matrix(c(5,-1,-1,5),2,2)
+# T_mat = .identification(cov_x, cov_y)
 # T_mat %*% cov_x %*% t(T_mat); solve(t(T_mat)) %*% cov_y %*% solve(T_mat)
