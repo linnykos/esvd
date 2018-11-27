@@ -436,10 +436,10 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
   dist_mat <- as.matrix(stats::dist(dat))
   idx <- which(is.na(cluster_labels))
   dist_mat <- dist_mat[idx, -idx]
-  cluster_labels <- cluster_labels[-idx]
+  cluster_labels_short <- cluster_labels[-idx]
 
   assign_vec <- apply(dist_mat, 1, function(x){
-    cluster_labels[which.min(x)]
+    cluster_labels_short[which.min(x)]
   })
 
   cluster_labels[idx] <- assign_vec

@@ -110,6 +110,7 @@ test_that(".construct_average_curve works", {
   res <- .construct_average_curve(pcurve_list, dat)
 
   expect_true(class(res) == "principal_curve")
+  expect_true(all(!is.na(res$idx)))
 })
 
 ###############################
