@@ -19,11 +19,13 @@
 #' \code{curves} and the clustering matrix under \code{cluster_mat}
 #' @export
 slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
+                      remove_outlier = T, percentage = 0.05,
                       shrink = 1, thresh = 0.001, max_iter = 15, b = 1){
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
 
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
-                            knn = knn)
+                            knn = knn, remove_outlier = remove_outlier,
+                            percentage = percentage)
   curves <- .get_curves(dat, cluster_labels, lineages, shrink = shrink,
                         thresh = thresh, max_iter = max_iter, b = b)
 

@@ -17,6 +17,9 @@ plot(u_mat[,2], u_mat[,3], pch = 16, col = col_vec, asp = T)
 ############
 
 # determine the lineage
-lineages <- .get_lineages(u_mat, cluster_labels, starting_cluster = 1, knn = NA,
-              remove_outlier = T, percentage = 0.05)
+curves <- slingshot(u_mat, cluster_labels, starting_cluster = 1, b = 5)
 
+plot(u_mat[,2], u_mat[,3], pch = 16, col = col_vec, asp = T)
+for(i in 1:length(curves$curves)){
+  lines(curves$curves[[i]]$s[,2], curves$curves[[i]]$s[,3], lwd = 2)
+}
