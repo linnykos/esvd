@@ -16,14 +16,15 @@
 #' @param dat a \code{n} by \code{d} matrix
 #' @param cluster_labels vector of cluster labels, where
 #' the cluster labels are consecutive positive integers from 1 to
-#' \code{max(cluster_labels)}
+#' \code{max(cluster_labels, na.rm = T)}. Can include \code{NA}
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
 #' @param knn positive integer, possibly \code{NA}
 #'
 #' @return A list of cluster indices, with \code{starting_cluster} starting as
 #' its first element
-.get_lineages <- function(dat, cluster_labels, starting_cluster, knn = NA){
+.get_lineages <- function(dat, cluster_labels, starting_cluster, knn = NA,
+                          remove_outlier = T, percentage = 0.05){
   ### formatting
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
@@ -34,16 +35,11 @@
   dat_augment <- rbind(centers, dat)
 
   ### construct the k-nearest neighbor graph
-  if(is.na(knn)){
-    knn <- 1
-    while(TRUE){
-      knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
-      if(igraph::components(knn_graph)$no == 1) break()
-      knn <- knn + 1
-    }
-  } else {
-    knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
-    stopifnot(igraph::components(knn_graph)$no == 1)
+  knn_graph <- .determine_knn(dat_augment, knn)
+
+  if(remove_outlier){
+    idx <- .remove_outliers(knn_graph, cluster_labels, percentage = percentage)
+    knn_graph <- .determine_knn(dat_augment[c(1:k, idx+k),], knn)
   }
 
   ### construct the spt
@@ -59,17 +55,18 @@
 
 #' Construst cluster matrix from cluster labels
 #'
-#' @param cluster_labels vector of cluster labels, where
+#' @param cluster_labels  vector of cluster labels, where
 #' the cluster labels are consecutive positive integers from 1 to
-#' \code{max(cluster_labels)}
+#' \code{max(cluster_labels, na.rm = T)}. Can include \code{NA}
 #'
 #' @return A 0-1 matrix with \code{length(cluster_labels)} rows
 #' and \code{max(cluster_labels)} columns
 .construct_cluster_matrix <- function(cluster_labels){
-  stopifnot(all(cluster_labels > 0), all(cluster_labels %% 1 == 0))
-  stopifnot(length(unique(cluster_labels)) == max(cluster_labels))
+  idx <- !is.na(cluster_labels)
+  stopifnot(all(cluster_labels[idx] > 0), all(cluster_labels[idx] %% 1 == 0))
+  stopifnot(length(unique(cluster_labels[idx])) == max(cluster_labels[idx]))
 
-  k <- max(cluster_labels)
+  k <- max(cluster_labels, na.rm = T)
   n <- length(cluster_labels)
 
   mat <- sapply(1:k, function(x){
@@ -179,4 +176,57 @@
   names(lineages) <- paste('Lineage',seq_along(lineages),sep='')
 
   lineages
+}
+
+#' Remove outliers based on shortest path centrality
+#'
+#' This function relies on the specific format of \code{graph}.
+#' Specifically, the first \code{max(cluster_labels, na.rm=T)} nodes
+#' in \code{graph} correspond to the clutser centers and are not
+#' reflected with \code{cluster_labels}
+#'
+#' @param graph \code{igraph} object
+#' @param cluster_labels vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels, na.rm = T)}. Can include \code{NA}
+#' @param percentage percentage of vertices to remove that have
+#' a cluster label
+#'
+#' @return indices (of the original dataset, reflected by \code{cluster_labels})
+#' that should be kept
+.remove_outliers <- function(graph, cluster_labels, percentage = 0.05){
+  stopifnot(class(graph) == "igraph")
+  centrality <- igraph::betweenness(graph)
+
+  k <- max(cluster_labels, na.rm = T)
+
+  # remove outliers based on IQR
+  iqr_mat <- do.call(rbind, lapply(1:k, function(x){
+    idx <- which(cluster_labels == x)
+    iqr_val <- stats::IQR(centrality[idx+k])
+    med_val <- stats::median(centrality[idx+k])
+
+    cbind(idx, x, (centrality[idx+k]-med_val)/iqr_val)
+  }))
+  iqr_mat <- iqr_mat[order(iqr_mat[,ncol(iqr_mat)], decreasing = T),]
+  n <- nrow(iqr_mat)
+  remove_percentage <- round(percentage * n)
+
+  iqr_mat[-c(1:remove_percentage),1]
+}
+
+.determine_knn <- function(dat_augment, knn){
+  if(is.na(knn)){
+    knn <- 1
+    while(TRUE){
+      knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
+      if(igraph::components(knn_graph)$no == 1) break()
+      knn <- knn + 1
+    }
+  } else {
+    knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
+    stopifnot(igraph::components(knn_graph)$no == 1)
+  }
+
+  knn_graph
 }

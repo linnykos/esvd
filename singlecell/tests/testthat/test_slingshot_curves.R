@@ -369,4 +369,31 @@ test_that("slingshot can give sensible lambdas", {
 })
 
 
+test_that("slingshot works with an artifical example", {
+  set.seed(10)
+  cluster_labels <- sample(1:10, 200, replace = T)
+  dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
+
+  res <- slingshot(dat, cluster_labels, starting_cluster = 1)
+
+  expect_true(is.list(res))
+  expect_true(length(res) == 3)
+  expect_true(all(names(res) == c("lineages", "curves", "cluster_mat")))
+})
+
+test_that("slingshot works with NAs", {
+  set.seed(10)
+  cluster_labels <- sample(1:10, 200, replace = T)
+  cluster_labels[sample(1:200, 50)] <- NA
+  dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
+
+  res <- slingshot(dat, cluster_labels, starting_cluster = 1)
+
+  expect_true(is.list(res))
+  expect_true(length(res) == 3)
+  expect_true(all(names(res) == c("lineages", "curves", "cluster_mat")))
+})
+
+
+
 

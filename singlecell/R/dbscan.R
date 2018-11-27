@@ -55,5 +55,6 @@ dbscan <- function(dat, neighbor_count = 10, upper_cutoff = 14,
     assign_vec[which(assign_vec == mat[i,1])] <- mat[i,2]
   }
 
+  assign_vec[assign_vec == 0] <- NA
   assign_vec
 }

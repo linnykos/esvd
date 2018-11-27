@@ -49,6 +49,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
 
   ### setup
   num_lineage <- length(lineages)
+  if(any(is.na(cluster_labels))) cluster_labels <- .fill_in_labels(dat, cluster_labels)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   cluster_vec <- 1:ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -337,7 +338,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
   W_vec <- rowMeans(sapply(pcurve_list, function(p){ p$W }))
   sample_idx <- which(W_vec > 0)
   avg_curve <- princurve::project_to_curve(dat[sample_idx,,drop=F], avg)
-  avg_curve <- .clean_curve(avg_curve, W_vec)
+  avg_curve <- .clean_curve(avg_curve, W_vec, sample_idx)
 
   avg_curve
 }
@@ -426,4 +427,21 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
   pcurve <- .clean_curve(pcurve, W_vec, sample_idx)
 
   pcurve
+}
+
+.fill_in_labels <- function(dat, cluster_labels){
+  if(!any(is.na(cluster_labels))) return(cluster_labels)
+  stopifnot(!all(is.na(cluster_labels)))
+
+  dist_mat <- as.matrix(stats::dist(dat))
+  idx <- which(is.na(cluster_labels))
+  dist_mat <- dist_mat[idx, -idx]
+  cluster_labels <- cluster_labels[-idx]
+
+  assign_vec <- apply(dist_mat, 1, function(x){
+    cluster_labels[which.min(x)]
+  })
+
+  cluster_labels[idx] <- assign_vec
+  cluster_labels
 }

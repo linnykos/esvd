@@ -10,6 +10,16 @@ test_that(".construct_cluster_matrix works", {
   expect_true(all(sort(unique(as.numeric(res))) == c(0,1)))
 })
 
+test_that(".construct_cluster_matrix works with NAs", {
+  set.seed(10)
+  vec <- sample(1:10, 200, replace = T)
+  vec[sample(1:200, 50)] <- NA
+  res <- .construct_cluster_matrix(vec)
+
+  expect_true(all(dim(res) == c(200,10)))
+  expect_true(all(sort(unique(as.numeric(res))) == c(0,1)))
+})
+
 ###########
 
 ## .compute_cluster_center is correct
@@ -166,3 +176,14 @@ test_that(".get_lineages finds the right lineage for a specific configuration", 
   expect_true(all(res[[1]] == c(1,3,4)) | all(res[[2]] == c(1,3,4)))
   expect_true(any(res[[1]] != res[[2]]))
 })
+
+test_that(".get_lineages works with NAs", {
+  set.seed(10)
+  cluster_labels <- sample(1:10, 200, replace = T)
+  cluster_labels[sample(1:200, 50)] <- NA
+  dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
+  res <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+
+  expect_true(is.list(res))
+})
+
