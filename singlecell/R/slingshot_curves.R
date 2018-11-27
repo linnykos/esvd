@@ -445,5 +445,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
   })
 
   cluster_labels[idx] <- assign_vec
+
+  stopifnot(!any(is.na(cluster_labels)))
   cluster_labels
 }
