@@ -3,6 +3,9 @@ load("../results/step3_factorization_logged.RData")
 # specific clustering
 u_mat <- res$u_mat[,1:4]
 dist_vec <- as.numeric(dist(u_mat))
+clustering <- dbscan::dbscan(u_mat, eps = 0.1)
+clustering
+
 cutoff <- quantile(dist_vec, probs = 0.002)
 clustering <- dbscan::dbscan(u_mat, eps = cutoff)
 
