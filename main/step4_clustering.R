@@ -1,36 +1,12 @@
 load("../results/step3_factorization_logged.RData")
 
-u_mat <- res$u_mat[,1:3]
+k <- 3
+u_mat <- res$u_mat[,1:k]
 cluster_labels <- dbscan(u_mat, neighbor_count = 10, upper_cutoff = 14,
                      size_cutoff = 19)
-table(cluster_labels)
+# c(length(is.na(cluster_labels)), table(cluster_labels))
 
-col_vec <- cluster_labels
-col_vec[which(is.na(col_vec))] <- rgb(0,0,0,0.1)
-col_vec[col_vec == 1] <- rgb(0,0,0,0.5)
-plot(u_mat[,1], u_mat[,2], pch = 16, col = col_vec, asp = T)
-plot(u_mat[,1], u_mat[,3], pch = 16, col = col_vec, asp = T)
-plot(u_mat[,2], u_mat[,3], pch = 16, col = col_vec, asp = T)
-
-# plot3D::scatter3D(u_mat[,1], u_mat[,2], u_mat[,3], col = col_vec,
-#                   pch = 16)
-
-############
-
-
-
-# determine the lineage
 curves <- slingshot(u_mat, cluster_labels, starting_cluster = 1, b = 1)
 
-combn_mat <- utils::combn(3, 2)
-for(i in 1:ncol(combn_mat)){
-  idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
-  plot(u_mat[,idx1], u_mat[,idx2], pch = 16, col = col_vec, asp = T)
-  for(i in 1:length(curves$curves)){
-    ord <- curves$curves[[i]]$ord
-    lines(curves$curves[[i]]$s[ord, idx1], curves$curves[[i]]$s[ord, idx2], lwd = 3.5,
-          col = "white")
-    lines(curves$curves[[i]]$s[ord, idx1], curves$curves[[i]]$s[ord, idx2], lwd = 3,
-          col = "black")
-  }
-}
+rm(list = c("u_mat"))
+save.image("../results/step4_clustering.RData")
