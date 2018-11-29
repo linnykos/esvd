@@ -84,7 +84,7 @@ criterion <- function(dat, vec, y){
   init <- singlecell:::.initialization(dat, family = "gaussian", max_val = 10)
   res <- singlecell:::.fit_factorization(dat, init$u_mat, init$v_mat,
                                          max_val = 5, family = "gaussian", verbose = T,
-                                         max_iter = 50, reparameterize = T, cores = 15,
+                                         max_iter = 50, reparameterize = T, cores = 5,
                                          return_path = F)
 }
 
