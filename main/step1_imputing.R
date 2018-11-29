@@ -1,6 +1,6 @@
 load("../results/step0_screening.RData")
 
-res_hvg <- descend::findHVG(res_descend, threshold = 12, plot.result = F)
+res_hvg <- descend::findHVG(res_descend, threshold = 12)
 length(res_hvg$HVG.genes)
 
 idx1 <- sort(unlist(apply(res_list[[5]]$v, 2, function(x){which(x != 0)})))

@@ -18,7 +18,11 @@ for(i in 1:max(cluster_labels, na.rm = T)){
   col_vec[col_vec == i] <- col_template[i]
 }
 
-png("../figure/main/trajectory.png", height = 950, width = 2500, res = 300, units = "px")
+########################
+
+# plot cell trajectories
+
+png("../figure/main/trajectory.png", height = 800, width = 2200, res = 300, units = "px")
 par(mfrow = c(1,3), mar = c(4,4,0.5,0.5))
 combn_mat <- utils::combn(3, 2)
 for(i in 1:ncol(combn_mat)){
@@ -33,6 +37,25 @@ for(i in 1:ncol(combn_mat)){
     lines(curves$curves[[i]]$s[ord, idx1], curves$curves[[i]]$s[ord, idx2], lwd = 3,
           col = "black")
   }
+}
+graphics.off()
+
+##########################
+
+# plot estimated density
+png("../figure/main/estimated_density.png", height = 800, width = 2200, res = 300, units = "px")
+par(mfrow = c(1,3), mar = c(4,4,0.5,0.5))
+combn_mat <- utils::combn(3, 2)
+h_vec <- c(0.4, 0.6, 0.6)
+for(i in 1:ncol(combn_mat)){
+  idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
+  den <- MASS::kde2d(u_mat[,idx1], u_mat[,idx2], h = h_vec[i], n = 100)
+  image(den, col = grDevices::heat.colors(100, alpha = 0.7),
+        xlab = paste0("Latent dimension ", idx1),
+        ylab = paste0("Latent dimension ", idx2), asp = T)
+  points(u_mat[,idx1], u_mat[,idx2], col = rgb(0, 0,0, 0.3), pch = 16)
+  contour(den, add = T, drawlabels = F, col = rgb(1,1,1,0.5), lwd = 2,
+          nlevels = 10)
 }
 graphics.off()
 

@@ -5,7 +5,7 @@ library(singlecell)
 paramMat <- cbind(round(exp(seq(log(10), log(200), length.out = 10))),
                   round(exp(seq(log(20), log(400), length.out = 10))))
 colnames(paramMat) <- c("n", "d")
-trials <- 5
+trials <- 50
 
 ################
 
@@ -47,7 +47,7 @@ gene_pop <- matrix(c(20,90, 25,100,
   gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 
   res <- singlecell:::.reparameterize(cell_mat, gene_mat)
-  cell_mat <- res$X; gene_mat <- res$Y
+  cell_mat <- res$u_mat; gene_mat <- res$v_mat
 
   obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
   for(i in 1:n){
@@ -82,7 +82,7 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = 5, as_list = T,
+                                        cores = 15, as_list = T,
                                         filepath = "../results/wasserstein_tmp.RData",
                                         verbose = T)
 
