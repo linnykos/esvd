@@ -77,7 +77,8 @@ distr_func <- function(x, vec){
 
 rule <- function(vec){
   .data_generator(cell_pop, gene_pop, distr_func, vec,
-                  n_each = vec["n"], d_each = vec["d"])$dat
+                  n_each = vec["n"], d_each = vec["d"],
+                  sigma = vec["sigma"])$dat
 }
 
 criterion <- function(dat, vec, y){
