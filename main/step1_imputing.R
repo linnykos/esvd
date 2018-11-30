@@ -10,8 +10,8 @@ idx <- sort(unique(c(idx1, idx2)))
 dat <- dat[,idx]
 dim(dat)
 
-impute_res <- SAVER::saver(dat, ncores = 10)
-dat_impute <- impute_res$estimate
+impute_res <- SAVER::saver(t(dat), ncores = 10)
+dat_impute <- t(impute_res$estimate)
 
 rm(list = c("idx1", "idx2"))
 print(paste0(Sys.time(), ": Finished imputing"))

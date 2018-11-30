@@ -2,16 +2,16 @@ load("../results/step4_clustering.RData")
 
 u_mat <- res$u_mat[,1:k]
 col_vec <- cluster_labels
-col_vec[which(is.na(col_vec))] <- rgb(0,0,0,0.1)
+col_vec[which(is.na(col_vec))] <- rgb(0,0,0)
 
-col_template <- c(rgb(0,0,0,0.5),
-                  rgb(205,40,54, 120, maxColorValue=255), #red
-                  rgb(180,200,255, 230, maxColorValue=255), #blue
-                  rgb(100,100,200, 200, maxColorValue=255), #purple
-                  rgb(149,219,144, 200, maxColorValue=255), #green
-                  rgb(238,204,17, 200, maxColorValue=255), #goldenrod
-                  rgb(40,225,201, 200, maxColorValue=255), #turqouise
-                  rgb(255,152,41, 150, maxColorValue=255) #orange
+col_template <- c(rgb(227,73,86, maxColorValue=255), #red
+                  rgb(0,0,0),
+                  rgb(100,100,200, maxColorValue=255), #purple
+                  rgb(238,204,17, maxColorValue=255), #goldenrod
+                  rgb(149,219,144, maxColorValue=255), #green
+                  rgb(40,225,201, maxColorValue=255), #turqouise
+                  rgb(100,140,252, maxColorValue=255), #blue
+                  rgb(255,152,41, maxColorValue=255) #orange
 )
 
 for(i in 1:max(cluster_labels, na.rm = T)){
@@ -21,43 +21,62 @@ for(i in 1:max(cluster_labels, na.rm = T)){
 ########################
 
 # plot cell trajectories
-
-png("../figure/main/trajectory.png", height = 800, width = 2200, res = 300, units = "px")
-par(mfrow = c(1,3), mar = c(4,4,0.5,0.5))
 combn_mat <- utils::combn(3, 2)
-for(i in 1:ncol(combn_mat)){
-  idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
-  plot(u_mat[,idx1], u_mat[,idx2], pch = 16, col = col_vec, asp = T,
-       xlab = paste0("Latent dimension ", idx1),
-       ylab = paste0("Latent dimension ", idx2))
-  for(i in 1:length(curves$curves)){
-    ord <- curves$curves[[i]]$ord
-    lines(curves$curves[[i]]$s[ord, idx1], curves$curves[[i]]$s[ord, idx2], lwd = 3.5,
-          col = "white")
-    lines(curves$curves[[i]]$s[ord, idx1], curves$curves[[i]]$s[ord, idx2], lwd = 3,
-          col = "black")
+mid_vec <- apply(res$u_mat, 2, function(x){mean(range(x))})[1:3]
+rg <- max(apply(res$u_mat, 2, function(x){diff(range(x))})[1:3])
+lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
+
+png("../figure/main/latent_cluster.png", height = 1800, width = 2400, res = 300, units = "px")
+par(mfcol = c(3,4), mar = c(0.5,0.5,0.5,0.5))
+for(k in 1:length(curves$lineages)){
+  idx <- which(cluster_labels %in% curves$lineages[[k]])
+
+  for(i in 1:ncol(combn_mat)){
+    idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
+    plot(u_mat[-idx,idx1], u_mat[-idx,idx2], pch = 16, col = rgb(0.85,0.85,0.85),
+         asp = T, cex = 1.3, xlim = lim_list[[idx1]], ylim = lim_list[[idx2]],
+         xaxt = "n", yaxt = "n")
+    points(u_mat[idx,idx1], u_mat[idx,idx2], pch = 16, col = "white",
+           cex = 1.3)
+    points(u_mat[idx,idx1], u_mat[idx,idx2], pch = 16, col = col_vec[idx],
+           cex = 1)
   }
 }
 graphics.off()
 
-##########################
+########
 
-# plot estimated density
-png("../figure/main/estimated_density.png", height = 800, width = 2200, res = 300, units = "px")
-par(mfrow = c(1,3), mar = c(4,4,0.5,0.5))
+# trajectories
 combn_mat <- utils::combn(3, 2)
-h_vec <- c(0.4, 0.6, 0.6)
+mid_vec <- apply(res$u_mat, 2, function(x){mean(range(x))})[1:3]
+rg <- max(apply(res$u_mat, 2, function(x){diff(range(x))})[1:3])
+lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
+
+png("../figure/main/trajectory.png", height = 800, width = 2400, res = 300, units = "px")
+par(mfrow = c(1,3), mar = c(4,4,0.5,0.5))
 for(i in 1:ncol(combn_mat)){
   idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
-  den <- MASS::kde2d(u_mat[,idx1], u_mat[,idx2], h = h_vec[i], n = 100)
-  image(den, col = grDevices::heat.colors(100, alpha = 0.7),
-        xlab = paste0("Latent dimension ", idx1),
-        ylab = paste0("Latent dimension ", idx2), asp = T)
-  points(u_mat[,idx1], u_mat[,idx2], col = rgb(0, 0,0, 0.3), pch = 16)
-  contour(den, add = T, drawlabels = F, col = rgb(1,1,1,0.5), lwd = 2,
-          nlevels = 10)
+  plot(u_mat[,idx1], u_mat[,idx2], pch = 16, col = rgb(0.85,0.85,0.85),
+       asp = T, cex = 1.3, xlim = lim_list[[idx1]], ylim = lim_list[[idx2]],
+       xlab = paste0("Latent dimension ", idx1),
+       ylab = paste0("Latent dimension ", idx2))
+
+  for(k in 1:length(curves$curves)){
+    ord <- curves$curves[[k]]$ord
+    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3.5,
+          col = "white")
+    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3,
+          col = "black")
+  }
+
+  cluster_mat <- .construct_cluster_matrix(cluster_labels)
+  centers <- .compute_cluster_center(u_mat, cluster_mat)
+  points(centers[,idx1], centers[,idx2], col = "white", pch = 16, cex = 2.25)
+  points(centers[,idx1], centers[,idx2], col = col_template, pch = 16, cex = 2)
 }
 graphics.off()
+
+
 
 #######
 # 3D plot

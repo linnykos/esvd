@@ -20,14 +20,15 @@
 #' @export
 slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
                       remove_outlier = T, percentage = 0.05,
-                      shrink = 1, thresh = 0.001, max_iter = 15, b = 1){
+                      shrink = 1, thresh = 0.001, max_iter = 15, b = 1,
+                      upscale_vec = NA){
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
 
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
                             knn = knn, remove_outlier = remove_outlier,
                             percentage = percentage)
   curves <- .get_curves(dat, cluster_labels, lineages, shrink = shrink,
-                        thresh = thresh, max_iter = max_iter, b = b)
+                        thresh = thresh, max_iter = max_iter, b = b, upscale_vec = upscale_vec)
 
   list(lineages = lineages, curves = curves, cluster_mat = cluster_mat)
 }
@@ -46,12 +47,26 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
 #'
 #' @return a list of \code{principal_curve} objects
 .get_curves <- function(dat, cluster_labels, lineages, shrink = 1,
-                        thresh = 0.001, max_iter = 15, b = 1){
+                        thresh = 0.001, max_iter = 15, b = 1,
+                        upscale_vec = NA){
   stopifnot(shrink >= 0 & shrink <= 1)
+
+  if(!any(is.na(upscale_vec))){
+    idx_all <- unlist(lapply(1:max(cluster_labels, na.rm = T), function(x){
+      idx <- which(cluster_labels == x)
+      sample(idx, upscale_vec[x]*length(idx), replace = T)
+    }))
+    dat <- dat[idx_all,]
+    cluster_labels <- cluster_labels[idx_all]
+  }
 
   ### setup
   num_lineage <- length(lineages)
-  if(any(is.na(cluster_labels))) cluster_labels <- .fill_in_labels(dat, cluster_labels)
+  if(any(is.na(cluster_labels))) {
+    idx <- which(is.na(cluster_labels))
+    dat <- dat[-idx,]
+    cluster_labels <- cluster_labels[-idx]
+  }
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   cluster_vec <- 1:ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
