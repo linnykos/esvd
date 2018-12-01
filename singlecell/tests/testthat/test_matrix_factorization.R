@@ -260,6 +260,22 @@ test_that(".fit_factorization works for Gaussian with scalar setting", {
   expect_true(ncol(res$v_mat) == 2)
 })
 
+test_that(".fit_factorization for Gaussian with scalar setting respects max_val", {
+  set.seed(10)
+  dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
+
+  init <- .initialization(dat, family = "gaussian", scalar = 100)
+  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                            family = "gaussian",
+                            max_val = 5, scalar = 100)
+
+  expect_true(is.list(res))
+  expect_true(nrow(res$u_mat) == nrow(dat))
+  expect_true(nrow(res$v_mat) == ncol(dat))
+  expect_true(ncol(res$u_mat) == 2)
+  expect_true(ncol(res$v_mat) == 2)
+})
+
 
 test_that(".fit_factorization works with missing values", {
   set.seed(5)

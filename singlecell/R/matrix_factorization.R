@@ -174,6 +174,8 @@
     iter <- iter + 1
   }
 
+  stopifnot(all(abs(other_mat %*% current_vec) <= abs(max_val)+1e-6))
+
   current_vec
 }
 
