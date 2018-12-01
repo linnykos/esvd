@@ -1,12 +1,10 @@
 rm(list=ls())
 load("../results/wasserstein_simulation.RData")
-load("../results/wasserstein_tmp.RData")
 
 #forbenius_loss <- sapply(1:length(res), function(i){
-forbenius_loss <- sapply(1:8, function(i){
+forbenius_loss <- sapply(1:length(res), function(i){
   print(i)
-#  sapply(1:trials, function(y){
-  sapply(1:50, function(y){
+  sapply(1:trials, function(y){
     if(length(res[[i]][[y]]) == 1) return(NA)
     cat('*')
     set.seed(y)
@@ -17,4 +15,9 @@ forbenius_loss <- sapply(1:8, function(i){
   })
 })
 
-forbenius_vec <- apply(forbenius_loss, 2, mean, na.rm = T)
+forbenius_vec <- apply(forbenius_loss, 2, median, na.rm = T)
+bound_vec <- apply(forbenius_loss, 2, stats::quantile, na.rm = T,
+                   probs = c(0.25,0.75))
+plot(paramMat[,"n"], forbenius_vec, ylim = range(bound_vec))
+points(paramMat[,"n"], bound_vec[1,], col = "red", pch = 16)
+points(paramMat[,"n"], bound_vec[2,], col = "blue", pch = 16)

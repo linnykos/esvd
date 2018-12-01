@@ -30,7 +30,7 @@
   idx <- which(!is.na(dat_vec))
 
   tmp <- sapply(idx, function(j){
-    other_mat[j,,drop=F]*(pred_vec[j]*dat_vec[j]^2/(2*scalar^2) - dat_vec[j] - 1/pred_vec[j])
+    other_mat[j,,drop=F]*(pred_vec[j]*dat_vec[j]^2/scalar^2 - dat_vec[j] - 1/pred_vec[j])
   })
 
   if(is.matrix(tmp)) rowSums(tmp) else sum(tmp)
