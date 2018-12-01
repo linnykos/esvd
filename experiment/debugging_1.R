@@ -1,176 +1,83 @@
-load("../results/step3_factorization_logged.RData")
+rm(list=ls())
+library(simulation)
+library(singlecell)
 
-k <- 3
-u_mat <- res$u_mat[,1:k]
-cluster_labels <- dbscan(u_mat, neighbor_count = 10, upper_cutoff = 14,
-                         size_cutoff = 19)
+paramMat <- cbind(round(exp(seq(log(10), log(200), length.out = 10))),
+                  round(exp(seq(log(20), log(400), length.out = 10))))
+colnames(paramMat) <- c("n", "d")
+trials <- 50
 
-#######
-dat = u_mat
-starting_cluster = 1
-b = 1
-shrink = 1
-knn = NA
-remove_outlier = T
-percentage = 0.05
-thresh = 0.001
-max_iter = 15
+################
 
-lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
-                          knn = knn, remove_outlier = remove_outlier,
-                          percentage = percentage)
+# setup
+cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
+                     40,10, 60,80, 60,80, 100,25)/100,
+                   nrow = 4, ncol = 4, byrow = T)
+gene_pop <- matrix(c(20,90, 25,100,
+                     90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
 
-#######
-table(cluster_labels)
-upscale_vec <- c(.5,1,1, 10,10,1, 10,10)
-idx_all <- unlist(lapply(1:8, function(x){
-  idx <- which(cluster_labels == x)
-  sample(idx, upscale_vec[x]*length(idx), replace = T)
-}))
-dat <- dat[idx_all,]
-cluster_labels <- cluster_labels[idx_all]
+.data_generator <- function(cell_pop, gene_pop,
+                            distr_func = function(x){stats::rnorm(1, 4/x, sd = 2/x)},
+                            n_each = 50, d_each = 120, sigma = 0.05){
 
-### setup
-num_lineage <- length(lineages)
-if(any(is.na(cluster_labels))) {
-  idx <- which(is.na(cluster_labels))
-  dat <- dat[-idx,]
-  cluster_labels <- cluster_labels[-idx]
-}
-cluster_mat <- .construct_cluster_matrix(cluster_labels)
-cluster_vec <- 1:ncol(cluster_mat)
-centers <- .compute_cluster_center(dat, cluster_mat)
+  #construct the cell information
+  h <- nrow(cell_pop)
+  cell_mat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_each)
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = sigma),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = sigma))
+  }))
+  n <- nrow(cell_mat)
+  k <- ncol(cell_mat)
 
-W <- .initialize_weight_matrix(cluster_mat, lineages)
+  # construct the gene information
 
-### determine curve hierarchy
-avg_order <- .initialize_curve_hierarchy(lineages, cluster_vec)
+  g <- nrow(gene_pop)
+  gene_mat <- do.call(rbind, lapply(1:g, function(x){
+    pos <- stats::runif(d_each)
+    cbind(pos*gene_pop[x,1] + (1-pos)*gene_pop[x,3] + stats::rnorm(d_each, sd = sigma),
+          pos*gene_pop[x,2] + (1-pos)*gene_pop[x,4] + stats::rnorm(d_each, sd = sigma))
+  }))
+  d <- nrow(gene_mat)
 
-### initial curves are piecewise linear paths through the tree
-s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
-res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
-pcurve_list <- res$pcurve_list; D <- res$D
+  # form observations
+  gram_mat <- cell_mat %*% t(gene_mat) #natural parameter
+  svd_res <- svd(gram_mat)
+  cell_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+  gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 
-### track distances between curves and data points to determine convergence
-dist_new <- sum(abs(D[W>0]))
-dist_old <- Inf
+  res <- singlecell:::.reparameterize(cell_mat, gene_mat)
+  cell_mat <- res$u_mat; gene_mat <- res$v_mat
 
-# do some initial plotting
-combn_mat <- utils::combn(3, 2)
-mid_vec <- apply(u_mat, 2, function(x){mean(range(x))})[1:3]
-rg <- max(apply(u_mat, 2, function(x){diff(range(x))})[1:3])
-lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
-par(mfrow = c(1,3), mar = c(4,4,0.5,0.5))
-for(i in 1:ncol(combn_mat)){
-  idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
-  plot(u_mat[,idx1], u_mat[,idx2], pch = 16, col = rgb(0.85,0.85,0.85),
-       asp = T, cex = 1.3, xlim = lim_list[[idx1]], ylim = lim_list[[idx2]],
-       xlab = paste0("Latent dimension ", idx1),
-       ylab = paste0("Latent dimension ", idx2))
-
-  for(k in 1:length(pcurve_list)){
-    ord <- pcurve_list[[k]]$ord
-    lines(pcurve_list[[k]]$s[ord, idx1], pcurve_list[[k]]$s[ord, idx2], lwd = 3.5,
-          col = "white")
-    lines(pcurve_list[[k]]$s[ord, idx1], pcurve_list[[k]]$s[ord, idx2], lwd = 3,
-          col = "black")
-    points(centers[,idx1], centers[,idx2], pch = 16, cex = 2)
-  }
-}
-
-#################################
-
-# do one iteration
-iter <- 1
-dist_old <- dist_new
-
-### predict each dimension as a function of lambda (pseudotime)
-s_list <- lapply(1:num_lineage, function(lin){
-  sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
-  .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], b = b)
-})
-
-res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
-pcurve_list <- res$pcurve_list; D <- res$D
-dist_new <- sum(D[W>0], na.rm=TRUE)
-
-# shrink together lineages near shared clusters
-if(shrink > 0){
-  avg_curve_list <- vector("list", length(avg_order))
-  names(avg_curve_list) <- paste0("Average", 1:length(avg_order))
-  pct_shrink <- vector("list", length(avg_order))
-
-  ### determine average curves and amount of shrinkage
-  for (i in 1:length(avg_order)) {
-    to_avg_curves <- lapply(avg_order[[i]], function(n_element){
-      if(grepl('Lineage', n_element)){
-        pcurve_list[[n_element]]
-      } else {
-        avg_curve_list[[n_element]]
-      }
-    })
-
-    avg <- .construct_average_curve(to_avg_curves, dat)
-    avg_curve_list[[i]] <- avg
-
-    # find the indicies shared by all the curves
-    common_ind <- which(rowMeans(sapply(to_avg_curves, function(crv){ crv$W > 0 })) == 1)
-    pct_shrink[[i]] <- lapply(to_avg_curves, function(curve) {
-      .percent_shrinkage(curve, common_ind)
-    })
-
-    pct_shrink[[i]] <- .check_shrinkage(pct_shrink[[i]])
-  }
-
-  ### do the shrinking in reverse order
-  for(i in rev(1:length(avg_curve_list))){
-    avg_curve <- avg_curve_list[[i]]
-    to_shrink_list <-  lapply(avg_order[[i]], function(n_element){
-      if(grepl('Lineage', n_element)){
-        pcurve_list[[n_element]]
-      } else {
-        avg_curve_list[[n_element]]
-      }
-    })
-
-    shrunk_list <- lapply(1:length(to_shrink_list),function(j){
-      pcurve <- to_shrink_list[[j]]
-      .shrink_to_avg(pcurve, avg_curve,
-                     pct_shrink[[i]][[j]] * shrink, dat)
-    })
-
-    for(j in 1:length(avg_order[[i]])){
-      ns <- avg_order[[i]][[j]]
-      if(grepl('Lineage', ns)){
-        pcurve_list[[ns]] <- shrunk_list[[j]]
-      } else {
-        avg_curve_list[[ns]] <- shrunk_list[[j]]
-      }
+  obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
+  for(i in 1:n){
+    for(j in 1:d){
+      obs_mat[i,j] <- distr_func(max(gram_mat[i,j], 1e-4))
     }
   }
+
+  obs_mat[obs_mat < 0] <- 0
+
+  list(dat = obs_mat, cell_mat = cell_mat, gene_mat = gene_mat,
+       gram_mat = gram_mat, n_each = n_each, d_each = d_each,
+       h = h, g = g, k = k)
 }
 
-iter <- iter + 1
+set.seed(10)
+obj <- .data_generator(cell_pop, gene_pop, n_each = 25, d_each = 55)
 
-# do some initial plotting
-combn_mat <- utils::combn(3, 2)
-mid_vec <- apply(u_mat, 2, function(x){mean(range(x))})[1:3]
-rg <- max(apply(u_mat, 2, function(x){diff(range(x))})[1:3])
-lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
-par(mfrow = c(1,3), mar = c(4,4,0.5,0.5))
-for(i in 1:ncol(combn_mat)){
-  idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
-  plot(u_mat[,idx1], u_mat[,idx2], pch = 16, col = rgb(0.85,0.85,0.85),
-       asp = T, cex = 1.3, xlim = lim_list[[idx1]], ylim = lim_list[[idx2]],
-       xlab = paste0("Latent dimension ", idx1),
-       ylab = paste0("Latent dimension ", idx2))
+scalar_vec <- c(0.1, 0.5, 1, 1.5, 2, 2.5, 3, 5, 10, 100)
+res_list <- vector("list", length(scalar_vec))
 
-  for(k in 1:length(pcurve_list)){
-    ord <- pcurve_list[[k]]$ord
-    lines(pcurve_list[[k]]$s[ord, idx1], pcurve_list[[k]]$s[ord, idx2], lwd = 3.5,
-          col = "white")
-    lines(pcurve_list[[k]]$s[ord, idx1], pcurve_list[[k]]$s[ord, idx2], lwd = 3,
-          col = "black")
-    points(centers[,idx1], centers[,idx2], pch = 16, cex = 2)
-  }
+for(i in 1:length(scalar_vec)){
+  init <- .initialization(dat, family = "gaussian", scalar = scalar_vec[i])
+  res_list[[i]] <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                            family = "gaussian",
+                            max_val = 10, scalar = scalar_vec[i])
+
+  save.image("../results/debugging.RData")
 }
+
+save.image("../results/debugging.RData")
+
+
