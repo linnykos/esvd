@@ -70,8 +70,8 @@ scalar_vec <- c(0.1, 0.5, 1, 1.5, 2, 2.5, 3, 5, 10, 100)
 res_list <- vector("list", length(scalar_vec))
 
 for(i in 1:length(scalar_vec)){
-  init <- .initialization(dat, family = "gaussian", scalar = scalar_vec[i])
-  res_list[[i]] <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  init <- singlecell:::.initialization(dat, family = "gaussian", scalar = scalar_vec[i])
+  res_list[[i]] <- singlecell:::.fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "gaussian",
                             max_val = 10, scalar = scalar_vec[i])
 
