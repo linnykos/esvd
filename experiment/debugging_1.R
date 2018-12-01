@@ -64,7 +64,7 @@ gene_pop <- matrix(c(20,90, 25,100,
 }
 
 set.seed(10)
-obj <- .data_generator(cell_pop, gene_pop, n_each = 25, d_each = 55)
+obj <- .data_generator(cell_pop, gene_pop, n_each = 50, d_each = 60)
 
 scalar_vec <- c(0.1, 0.5, 1, 1.5, 2, 2.5, 3, 5, 10, 100)
 res_list <- vector("list", length(scalar_vec))
@@ -73,7 +73,7 @@ for(i in 1:length(scalar_vec)){
   init <- singlecell:::.initialization(obj$dat, family = "gaussian", scalar = scalar_vec[i])
   res_list[[i]] <- singlecell:::.fit_factorization(obj$dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "gaussian",
-                            max_val = 10, scalar = scalar_vec[i])
+                            max_iter = 10, max_val = 10, scalar = scalar_vec[i])
 
   save.image("../results/debugging.RData")
 }
