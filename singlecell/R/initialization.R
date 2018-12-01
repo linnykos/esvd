@@ -1,6 +1,6 @@
 .initialization <- function(dat, k = 2, family = "exponential",
                             extra_weights = rep(1, nrow(dat)),
-                            max_val = NA, verbose = F){
+                            max_val = NA, verbose = F, ...){
   stopifnot(length(which(is.na(dat))) == 0)
   stopifnot(length(extra_weights) == nrow(dat))
 
@@ -12,7 +12,7 @@
   for(i in 1:nrow(dat2)){
     dat2[i,] <- dat2[i,]/extra_weights[i]
   }
-  dat2 <- .mean_transformation(dat2, family)
+  dat2 <- .mean_transformation(dat2, family, ...)
 
   svd_res <- svd(dat2)
 

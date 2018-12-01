@@ -1,11 +1,11 @@
 load("../results/step4_clustering.RData")
 
-est_sd <- stats::sd(as.numeric(dat_impute_log))
+est_sd <- stats::sd(as.numeric(dat_impute))
 trials <- 50
-n <- nrow(dat_impute_log); d <- ncol(dat_impute_log)
-svd_naive <- svd(dat_impute_log)
-naive_pred_mat <- svd_naive$u[,1:k] %*% diag(svd_naive$d[1:k]) %*% t(svd_naive$v[,1:k])
-our_pred_mat <- res$u_mat[,1:k] %*% t(res$v_mat[,1:k])
+n <- nrow(dat_impute); d <- ncol(dat_impute)
+svd_naive <- svd(dat_impute)
+naive_pred_mat <- svd_naive$u[,1:5] %*% diag(svd_naive$d[1:5]) %*% t(svd_naive$v[,1:5])
+our_pred_mat <- 4/res$u_mat %*% t(res$v_mat)
 sum(svd_naive$d[1:k])/sum(svd_naive$d)
 
 set.seed(10)
@@ -23,7 +23,7 @@ for(i in 1:n){
   }
 }
 
-dat_impute_vec <- as.numeric(dat_impute_log)
+dat_impute_vec <- as.numeric(dat_impute)
 dat_impute_vec <- (dat_impute_vec-min(dat_impute_vec))/diff(range(dat_impute_vec))
 naive_simulated_vec <- as.numeric(naive_simulated_dat)
 naive_simulated_vec <- (naive_simulated_vec-min(naive_simulated_vec))/diff(range(naive_simulated_vec))

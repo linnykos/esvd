@@ -2,6 +2,7 @@
                                family = "exponential",
                                reparameterize = T,
                                extra_weights = rep(1, nrow(dat)),
+                               scalar = 2,
                                tol = 1e-3, max_iter = 100,
                                verbose = F, return_path = F,
                                cores = NA){
@@ -20,7 +21,7 @@
   dat[which(dat == 0)] <- min_val/2
 
   current_obj <- Inf
-  next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
+  next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights, scalar = scalar)
   obj_vec <- c(next_obj)
   if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
   if(return_path) res_list <- list(list(u_mat = u_mat, v_mat = v_mat)) else res_list <- NA
@@ -29,16 +30,16 @@
     current_obj <- next_obj
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, extra_weights = extra_weights,
-                           !is.na(cores))
+                           scalar = scalar, !is.na(cores))
     v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, extra_weights = extra_weights,
-                           !is.na(cores))
+                           scalar = scalar, !is.na(cores))
 
     if(reparameterize){
       tmp <- .reparameterize(u_mat, v_mat)
       u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
     }
 
-    next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights)
+    next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights, scalar = scalar)
 
 
     if(verbose) print(paste0("Iter ", length(obj_vec), ": Decrease is ", current_obj - next_obj))
@@ -104,7 +105,7 @@
 #########
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
-                          extra_weights = rep(1, nrow(dat)), parallelized = F){
+                          extra_weights = rep(1, nrow(dat)), scalar = scalar, parallelized = F){
   stopifnot(length(class(dat)) == 2)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
@@ -122,7 +123,8 @@
         dat_vec <- dat[,i]; extra_vec <- extra_weights
       }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
-      .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val, extra_weights = extra_vec)
+      .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val, extra_weights = extra_vec,
+                    scalar = scalar)
     }
 
     lis <- foreach::"%dopar%"(foreach::foreach(i = 1:nrow(current_mat)), func(i))
@@ -138,7 +140,8 @@
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
       if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
                                                                 other_mat, max_val = max_val,
-                                                                extra_weights = extra_vec)
+                                                                extra_weights = extra_vec,
+                                                                scalar = scalar)
     }
   }
 
@@ -146,25 +149,27 @@
 }
 
 .optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100,
-                          max_val = NA, extra_weights = rep(1, nrow(other_mat))){
+                          max_val = NA, extra_weights = rep(1, nrow(other_mat)),
+                          scalar = scalar){
   stopifnot(length(which(!is.na(dat_vec))) > 0)
   stopifnot(length(extra_weights) == nrow(other_mat))
 
   direction <- .dictate_direction(class(dat_vec)[1])
   current_obj <- Inf
-  next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights)
+  next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights,
+                                         scalar = scalar)
   iter <- 1
 
   while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
     current_obj <- next_obj
 
-    grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, extra_weights = extra_weights)
+    grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
     step_vec <- .frank_wolfe(grad_vec, other_mat, which(!is.na(dat_vec)),
                              direction = direction, other_bound = max_val)
-    step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, extra_weights = extra_weights)
+    step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
     current_vec <- (1-step_size)*current_vec + step_size*step_vec
 
-    next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights)
+    next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
 
     iter <- iter + 1
   }
@@ -173,7 +178,8 @@
 }
 
 .binary_search <- function(dat_vec, current_vec, step_vec, other_mat,
-                           max_iter = 100, extra_weights = rep(1, nrow(other_mat))){
+                           max_iter = 100, extra_weights = rep(1, nrow(other_mat)),
+                           scalar = scalar){
   form_current <- function(s){
     stopifnot(0<=s, s<=1)
     (1-s)*current_vec + s*step_vec
@@ -182,15 +188,15 @@
   upper <- 1; lower <- 0; mid <- 0.5
   iter <- 1
 
-  upper_val <- .evaluate_objective_single(dat_vec, form_current(upper), other_mat, extra_weights = extra_weights)
-  lower_val <- .evaluate_objective_single(dat_vec, form_current(lower), other_mat, extra_weights = extra_weights)
+  upper_val <- .evaluate_objective_single(dat_vec, form_current(upper), other_mat, extra_weights = extra_weights, scalar = scalar)
+  lower_val <- .evaluate_objective_single(dat_vec, form_current(lower), other_mat, extra_weights = extra_weights, scalar = scalar)
 
   upper_val_org <- upper_val; lower_val_org <- lower_val
   mid_val <- 2*max(upper_val, lower_val);
 
   # stage 1: do at least a few iterations first
   while(iter <= 6){
-    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, extra_weights = extra_weights)
+    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, extra_weights = extra_weights, scalar = scalar)
 
     if(lower_val <= upper_val){
       upper <- mid; upper_val <- mid_val
@@ -204,7 +210,7 @@
 
   # stage 2: ensure that the stepsize actually decreases the obj val
   while(iter <= max_iter & mid_val > min(upper_val_org, lower_val_org)){
-    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, extra_weights = extra_weights)
+    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, extra_weights = extra_weights, scalar = scalar)
 
     if(lower_val <= upper_val){
       upper <- mid; upper_val <- mid_val

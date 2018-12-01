@@ -97,18 +97,21 @@ dat_impute <- t(impute_res$estimate)
 
 # now try all the different factorization methods, either on dat or dat_impute
 # SVD
+print(paste0(Sys.time(), ": SVD"))
 tmp <- svd(dat_impute)
 res_svd <- tmp$u[,1:2] %*% diag(sqrt(tmp$d[1:2]))
 
 save.image("../results/factorization_results.RData")
 
 # ICA
+print(paste0(Sys.time(), ": ICA"))
 tmp <- ica::icafast(dat_impute, nc = 2)
 res_ica <- tmp$S
 
 save.image("../results/factorization_results.RData")
 
 # our method
+print(paste0(Sys.time(), ": Our method"))
 max_val <- 10
 tmp <- singlecell:::.initialization(dat_impute, family = "gaussian", max_val = max_val,
                                      k = 3)
@@ -120,11 +123,13 @@ res_our <- singlecell:::.fit_factorization(dat_impute, tmp$u_mat, tmp$v_mat,
 save.image("../results/factorization_results.RData")
 
 # VAMF
+print(paste0(Sys.time(), ": VAMF"))
 res_vamf <- vamf:::vamf(t(dat), 2, log2trans=T)$factors
 
 save.image("../results/factorization_results.RData")
 
 # zinbwave
+print(paste0(Sys.time(), ": ZINB"))
 dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat)))
 res_zinb <- zinbwave(dat_se, K = 2)
 
