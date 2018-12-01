@@ -16,75 +16,119 @@ cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
 gene_pop <- matrix(c(20,90, 25,100,
                      90,20, 100,25)/50, nrow = 2, ncol = 4, byrow = T)
 distr_func = function(x){stats::rnorm(1, 4/x, sd = 2/x)}
-n_each = 50
-d_each = 100
-sigma = 0.05
-total = 150
 
-#construct the cell information
-h <- nrow(cell_pop)
-cell_mat <- do.call(rbind, lapply(1:h, function(x){
-  pos <- stats::runif(n_each)
-  cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = sigma),
-        pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = sigma))
-}))
-n <- nrow(cell_mat)
-k <- ncol(cell_mat)
+.data_generator <- function(cell_pop, gene_pop,
+                            distr_func = function(x){stats::rnorm(1, 4/x, sd = 2/x)},
+                            n_each = 50, d_each = 100, sigma = 0.05, total = 150){
+  #construct the cell information
+  h <- nrow(cell_pop)
+  cell_mat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_each)
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = sigma),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = sigma))
+  }))
+  n <- nrow(cell_mat)
+  k <- ncol(cell_mat)
 
-# construct the gene information
+  # construct the gene information
 
-g <- nrow(gene_pop)
-gene_mat <- do.call(rbind, lapply(1:g, function(x){
-  pos <- stats::runif(d_each)
-  cbind(pos*gene_pop[x,1] + (1-pos)*gene_pop[x,3] + stats::rnorm(d_each, sd = sigma),
-        pos*gene_pop[x,2] + (1-pos)*gene_pop[x,4] + stats::rnorm(d_each, sd = sigma))
-}))
-d <- nrow(gene_mat)
+  g <- nrow(gene_pop)
+  gene_mat <- do.call(rbind, lapply(1:g, function(x){
+    pos <- stats::runif(d_each)
+    cbind(pos*gene_pop[x,1] + (1-pos)*gene_pop[x,3] + stats::rnorm(d_each, sd = sigma),
+          pos*gene_pop[x,2] + (1-pos)*gene_pop[x,4] + stats::rnorm(d_each, sd = sigma))
+  }))
+  d <- nrow(gene_mat)
 
-# form observations
-gram_mat <- cell_mat %*% t(gene_mat) #natural parameter
-svd_res <- svd(gram_mat)
-cell_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
-gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+  # form observations
+  gram_mat <- cell_mat %*% t(gene_mat) #natural parameter
+  svd_res <- svd(gram_mat)
+  cell_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+  gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 
-res <- singlecell:::.reparameterize(cell_mat, gene_mat)
-cell_mat <- res$u_mat; gene_mat <- res$v_mat
+  res <- singlecell:::.reparameterize(cell_mat, gene_mat)
+  cell_mat <- res$u_mat; gene_mat <- res$v_mat
 
-obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
-for(i in 1:n){
-  for(j in 1:d){
-    obs_mat[i,j] <- distr_func(max(gram_mat[i,j], 1e-4))
+  obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
+  for(i in 1:n){
+    for(j in 1:d){
+      obs_mat[i,j] <- distr_func(max(gram_mat[i,j], 1e-4))
+    }
   }
+
+  obs_mat[obs_mat < 0] <- 0
+  obs_mat2 <- obs_mat
+
+  # now do something more dramatic with dropout
+  obs_mat3 <- obs_mat2
+  .dropped_indices <- function(x, total){
+    vec <- 1:length(x)
+    samp <- sample(vec, size = total, replace = T, prob = x)
+    setdiff(vec, unique(samp))
+  }
+
+  total_vec <- rep(total, nrow(obs_mat3))
+  for(i in 1:nrow(obs_mat3)){
+    idx <- .dropped_indices(obs_mat3[i,], total = total_vec[i])
+    obs_mat3[i,idx] <- 0
+  }
+
+  list(dat = obs_mat3, dat_nodropout = obs_mat2,
+       cell_mat = cell_mat, gene_mat = gene_mat,
+       gram_mat = gram_mat, n_each = n_each, d_each = d_each,
+       h = h, g = g, k = k)
 }
 
-obs_mat[obs_mat < 0] <- 0
-obs_mat2 <- obs_mat
 
-# now do something more dramatic with dropout
-obs_mat3 <- obs_mat2
-.dropped_indices <- function(x, total){
-  vec <- 1:length(x)
-  samp <- sample(vec, size = total, replace = T, prob = x)
-  setdiff(vec, unique(samp))
-}
+##########
 
-total_vec <- rep(total, nrow(obs_mat3))
-for(i in 1:nrow(obs_mat3)){
-  idx <- .dropped_indices(obs_mat3[i,], total = total_vec[i])
-  obs_mat3[i,idx] <- 0
-}
-length(which(obs_mat3 == 0))/prod(dim(obs_mat3))
-quantile(obs_mat3)
+set.seed(10)
+n_each <- 50
+d_each <- 120
+sigma <- 0.05
+total <- 250
+obj <- .data_generator(cell_pop, gene_pop, n_each = n_each, d_each = d_each,
+                       sigma = sigma, total = total)
+dat <- obj$dat
+impute_res <- SAVER::saver(t(dat))
+dat_impute <- t(impute_res$estimate)
 
-######xx
+############
 
-obs_mat4 <- pmin(obs_mat3, 10)
-obs_mat4 <- round(exp(obs_mat4))-1
-quantile(obs_mat4)
-quantile(obs_mat4[obs_mat4>0])
+# now try all the different factorization methods, either on dat or dat_impute
+# SVD
+tmp <- svd(dat_impute)
+res_svd <- tmp$u[,1:2] %*% diag(sqrt(tmp$d[1:2]))
 
-impute_res <- SAVER::saver(t(obs_mat4))
-zz <- t(impute_res$estimate)
-zz <- log(zz+1)
-plot(as.numeric(zz), as.numeric(obs_mat2), asp = T)
+save.image("../results/factorization_results.RData")
+
+# ICA
+tmp <- ica::icafast(dat_impute, nc = 2)
+res_ica <- tmp$S
+
+save.image("../results/factorization_results.RData")
+
+# our method
+max_val <- 10
+tmp <- singlecell:::.initialization(dat_impute, family = "gaussian", max_val = max_val,
+                                     k = 3)
+res_our <- singlecell:::.fit_factorization(dat_impute, tmp$u_mat, tmp$v_mat,
+                                       max_val = max_val, family = "gaussian", verbose = T,
+                                       max_iter = 25, reparameterize = T,
+                                       return_path = F, cores = 10)
+
+save.image("../results/factorization_results.RData")
+
+# VAMF
+res_vamf <- vamf:::vamf(t(dat), 2, log2trans=T)$factors
+
+save.image("../results/factorization_results.RData")
+
+# zinbwave
+dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat)))
+res_zinb <- zinbwave(dat_se, K = 2)
+
+save.image("../results/factorization_results.RData")
+
+
 

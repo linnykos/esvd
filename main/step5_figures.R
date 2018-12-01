@@ -1,17 +1,18 @@
 load("../results/step4_clustering.RData")
 
-u_mat <- res$u_mat[,1:k]
+u_mat <- res$u_mat[,c(2,1,3)]
 col_vec <- cluster_labels
 col_vec[which(is.na(col_vec))] <- rgb(0,0,0)
 
-col_template <- c(rgb(227,73,86, maxColorValue=255), #red
+col_template <- c(rgb(144,113,38, maxColorValue=255), #brown
                   rgb(0,0,0),
-                  rgb(100,100,200, maxColorValue=255), #purple
-                  rgb(238,204,17, maxColorValue=255), #goldenrod
                   rgb(149,219,144, maxColorValue=255), #green
+                  rgb(227,73,86, maxColorValue=255), #red
+                  rgb(100,100,200, maxColorValue=255), #purple
                   rgb(40,225,201, maxColorValue=255), #turqouise
                   rgb(100,140,252, maxColorValue=255), #blue
-                  rgb(255,152,41, maxColorValue=255) #orange
+                  rgb(255,152,41, maxColorValue=255), #orange
+                  rgb(238,204,17, maxColorValue=255) #goldenrod
 )
 
 for(i in 1:max(cluster_labels, na.rm = T)){
@@ -22,13 +23,13 @@ for(i in 1:max(cluster_labels, na.rm = T)){
 
 # plot cell trajectories
 combn_mat <- utils::combn(3, 2)
-mid_vec <- apply(res$u_mat, 2, function(x){mean(range(x))})[1:3]
-rg <- max(apply(res$u_mat, 2, function(x){diff(range(x))})[1:3])
+mid_vec <- apply(u_mat, 2, function(x){mean(range(x))})[1:3]
+rg <- max(apply(u_mat, 2, function(x){diff(range(x))})[1:3])
 lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
 
-png("../figure/main/latent_cluster.png", height = 1800, width = 2400, res = 300, units = "px")
-par(mfcol = c(3,4), mar = c(0.5,0.5,0.5,0.5))
-for(k in 1:length(curves$lineages)){
+png("../figure/main/latent_cluster.png", height = 1500, width = 2400, res = 300, units = "px")
+par(mfcol = c(3,length(curves$lineages)), mar = c(0.5,0.5,0.5,0.5))
+for(k in c(2,1,4,3,5)){
   idx <- which(cluster_labels %in% curves$lineages[[k]])
 
   for(i in 1:ncol(combn_mat)){
@@ -48,8 +49,8 @@ graphics.off()
 
 # trajectories
 combn_mat <- utils::combn(3, 2)
-mid_vec <- apply(res$u_mat, 2, function(x){mean(range(x))})[1:3]
-rg <- max(apply(res$u_mat, 2, function(x){diff(range(x))})[1:3])
+mid_vec <- apply(u_mat, 2, function(x){mean(range(x))})[1:3]
+rg <- max(apply(u_mat, 2, function(x){diff(range(x))})[1:3])
 lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
 
 png("../figure/main/trajectory.png", height = 800, width = 2400, res = 300, units = "px")

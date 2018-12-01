@@ -60,7 +60,7 @@ gene_pop <- matrix(c(20,90, 25,100,
 
   list(dat = obs_mat, cell_mat = cell_mat, gene_mat = gene_mat,
        gram_mat = gram_mat, n_each = n_each, d_each = d_each,
-       h = h, g = g, k = k, A = res$A)
+       h = h, g = g, k = k)
 }
 #############
 

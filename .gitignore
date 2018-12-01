@@ -21,3 +21,5 @@ cache
 _files
 *_files*
 data/
+*.RData
+.RData
