@@ -84,11 +84,44 @@ for(i in 1:length(scalar_vec)){
 
 save.image("../results/gaussian_scalar.RData")
 
-# for(j in 1:length(res_list)){
-#   plot(res_list[[j]]$u_mat[,1], res_list[[j]]$u_mat[,2],
-#        col = c(1:4)[rep(1:4, each = 50)], asp = T, pch = 16,
-#        main = j)
-# }
+for(j in 1:length(res_list)){
+  plot(res_list[[j]]$u_mat[,1], res_list[[j]]$u_mat[,2],
+       col = c(1:4)[rep(1:4, each = 50)], asp = T, pch = 16,
+       main = j)
+}
+
+####
+
+for(j in 1:length(res_list)){
+  zz <- 4/(res_list[[j]]$u_mat %*% t(res_list[[j]]$v_mat))
+  plot(as.numeric(zz), as.numeric(zz-obj$dat), pch = 16, col = rgb(0,0,0,0.1),
+       asp = T, main = j)
+}
 
 
+####
+
+dat_vec <- as.numeric(obj$dat)
+dat_vec <- (dat_vec-min(dat_vec))/diff(range(dat_vec))
+
+
+for(k in 1:length(res_list)){
+  our_pred_mat <- 4/(res_list[[k]]$u_mat %*% t(res_list[[k]]$v_mat))
+  n <- nrow(res_list[[k]]$u_mat)
+  d <- nrow(res_list[[k]]$v_mat)
+
+  our_simulated_dat <- matrix(NA, n, d)
+  for(i in 1:n){
+    for(j in 1:d){
+      our_simulated_dat[i,j] <- stats::rnorm(1, our_pred_mat[i,j], sd = our_pred_mat[i,j]/scalar_vec[k])
+    }
+  }
+
+  our_simulated_vec <- as.numeric(our_simulated_dat)
+  our_simulated_vec <- (our_simulated_vec-min(our_simulated_vec))/diff(range(our_simulated_vec))
+
+  plot(sort(dat_vec), sort(our_simulated_vec), asp = T, pch = 16,
+       col = rgb(0,0,0,0.1), main = k)
+  lines(c(0,1), c(0,1), col = "red", lwd = 2)
+}
 
