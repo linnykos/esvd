@@ -2,7 +2,7 @@ rm(list=ls())
 load("../results/wasserstein_simulation.RData")
 
 #forbenius_loss <- sapply(1:length(res), function(i){
-loss_mat <- sapply(1:length(res), function(i){
+loss_mat <- lapply(1:length(res), function(i){
   print(i)
   sapply(1:trials, function(y){
     if(length(res[[i]][[y]]) == 1) return(rep(NA,2))
@@ -21,11 +21,27 @@ loss_mat <- sapply(1:length(res), function(i){
 
 save.image("../results/wasserstein_simulation_values.RData")
 
-forbenius_vec <- sapply(loss_mat, function(x){
-  median(x[1,], na.rm = T)
+forbenius_bound <- sapply(loss_mat, function(x){
+  stats::quantile(x[1,], na.rm = T, probs = c(0.25, 0.5, 0.75))
 })
-bound_vec <- apply(forbenius_loss, 2, stats::quantile, na.rm = T,
-                   probs = c(0.25,0.75))
-plot(paramMat[,"n"], forbenius_vec, ylim = range(bound_vec))
-points(paramMat[,"n"], bound_vec[1,], col = "red", pch = 16)
-points(paramMat[,"n"], bound_vec[2,], col = "blue", pch = 16)
+
+wasserstein_bound <- sapply(loss_mat, function(x){
+  stats::quantile(x[2,], na.rm = T,probs = c(0.25, 0.5, 0.75))
+})
+
+png("../figure/simulation/wasserstein.png", height = 1100, width = 2400, res = 300, units = "px")
+par(mfrow = c(1,2), mar = c(4,4,4,0.5))
+plot(paramMat[,"n"]*4, forbenius_bound[2,], ylim = range(forbenius_bound),
+     pch = 16, xlab = "n", ylab = "Forbenius loss",
+     main = "Forbenius loss for cells")
+lines(paramMat[,"n"]*4, forbenius_bound[2,], lwd = 2)
+Hmisc::errbar(paramMat[,"n"]*4, forbenius_bound[2,], yplus = forbenius_bound[3,],
+              yminus = forbenius_bound[1,], add = T)
+
+plot(paramMat[,"n"]*4, forbenius_bound[2,], ylim = range(forbenius_bound),
+     pch = 16, xlab = "n", ylab = "Wasserstein loss",
+     main = "Wasserstein loss for cells")
+lines(paramMat[,"n"]*4, forbenius_bound[2,], lwd = 2)
+Hmisc::errbar(paramMat[,"n"]*4, forbenius_bound[2,], yplus = forbenius_bound[3,],
+              yminus = forbenius_bound[1,], add = T)
+graphics.off()

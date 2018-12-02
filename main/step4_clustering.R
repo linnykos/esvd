@@ -1,4 +1,4 @@
-load("../results/step3_factorization_logged.RData")
+load("../results/step3_factorization.RData")
 
 k <- 3
 u_mat <- res$u_mat[,1:k]; u_mat <- u_mat[,c(2,1,3)]
