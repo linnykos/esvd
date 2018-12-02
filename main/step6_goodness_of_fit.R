@@ -72,3 +72,35 @@ graphics.off()
 #
 #   ks.test(as.numeric(dat_impute_log), as.numeric(simulated_dat))$statistic
 # })
+
+############################
+
+load("../results/step3_factorization_logged_tmp.RData")
+dat_vec <- as.numeric(dat_impute)
+dat_vec <- (dat_vec-min(dat_vec))/diff(range(dat_vec))
+
+res_list <- res_list[which(sapply(res_list, length) > 0)]
+for(k in 1:length(res_list)){
+  set.seed(10)
+  print(k)
+  our_pred_mat <- 4/(res_list[[k]]$u_mat %*% t(res_list[[k]]$v_mat))
+  n <- nrow(res_list[[k]]$u_mat)
+  d <- nrow(res_list[[k]]$v_mat)
+
+  our_simulated_dat <- matrix(NA, n, d)
+  for(i in 1:n){
+    for(j in 1:d){
+      our_simulated_dat[i,j] <- stats::rnorm(1, our_pred_mat[i,j], sd = our_pred_mat[i,j]/scalar_vec[k])
+    }
+  }
+
+  our_simulated_vec <- as.numeric(our_simulated_dat)
+  our_simulated_vec <- (our_simulated_vec-min(our_simulated_vec))/diff(range(our_simulated_vec))
+
+  png(paste0("../figure/main/distribution_", k, ".png"), height = 2000, width = 2000, res = 300, units = "px")
+  plot(sort(dat_vec), sort(our_simulated_vec), asp = T, pch = 16,
+       col = rgb(0,0,0,0.1), main = k)
+  lines(c(0,1), c(0,1), col = "red", lwd = 2)
+  graphics.off()
+}
+
