@@ -75,13 +75,13 @@ graphics.off()
 
 ############################
 
-load("../results/step3_factorization_logged_tmp.RData")
+load("../results/step3_factorization_tmp.RData")
 dat_vec <- as.numeric(dat_impute)
 dat_vec <- (dat_vec-min(dat_vec))/diff(range(dat_vec))
 
 res_list <- res_list[which(sapply(res_list, length) > 0)]
 for(k in 1:length(res_list)){
-  set.seed(10)
+  set.seed(20)
   print(k)
   our_pred_mat <- 4/(res_list[[k]]$u_mat %*% t(res_list[[k]]$v_mat))
   n <- nrow(res_list[[k]]$u_mat)
