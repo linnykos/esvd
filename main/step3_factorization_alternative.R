@@ -23,7 +23,8 @@ for(i in 1:nrow(idx)){
 }
 idx <- which(is.na(dat_impute_NA))
 
-res_naive <- softImpute::softImpute(dat_impute_NA, rank.max = 5, lambda = 30)
+lambda0_val <- softImpute::lambda0(dat_impute_NA)
+res_naive <- softImpute::softImpute(dat_impute_NA, rank.max = 5, lambda = min(30, lambda0_val/100))
 pred_naive <- res_naive$u %*% diag(res_naive$d) %*% t(res_naive$v)
 
 # plot(pred_mat[idx], dat_impute[idx], pch = 16, asp = T, col = rgb(0,0,0,0.2))
