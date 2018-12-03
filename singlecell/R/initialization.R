@@ -5,7 +5,8 @@
 
   # complete the matrix
   if(any(is.na(dat))){
-    res <- softImpute::softImpute(dat_impute, rank.max = k, lambda = 30)
+    lambda0_val <- softImpute::lambda0(dat)
+    res <- softImpute::softImpute(dat, rank.max = k, lambda = min(30, lambda0_val/100))
     pred_naive <- res$u %*% diag(res$d) %*% t(res$v)
     dat[which(is.na(dat))] <- pred_naive[which(is.na(dat))]
   }
