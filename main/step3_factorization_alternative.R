@@ -1,5 +1,14 @@
 load("../results/step1_imputing.RData")
 
+max_val <- 1000
+scalar_vec <- c(0.1, 0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 8, 10, 100)
+res_list <- vector("list", length(scalar_vec))
+
+mean_val <- mean(dat_impute)
+dat_impute <- t(apply(dat_impute, 1, function(x){x/sum(x)}))
+dat_impute <- dat_impute * mean_val/mean(dat_impute)
+
+
 ## generate some missing values
 
 set.seed(10)
