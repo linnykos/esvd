@@ -334,7 +334,7 @@ test_that(".fit_factorization works with Gaussian and missing values", {
 
 test_that(".fit_factorization gives similar results if only one value is missing", {
   set.seed(10)
-  dat <- abs(matrix(rnorm(20), nrow = 5, ncol = 4))
+  dat <- abs(matrix(rexp(100), nrow = 10, ncol = 10))
 
   dat2 <- dat; dat2[2,1] <- NA
   dat3 <- dat
@@ -344,11 +344,13 @@ test_that(".fit_factorization gives similar results if only one value is missing
 
   init <- .initialization(dat, max_val = 100, family = "gaussian")
   res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                            max_val = 100, max_iter = 100, family = "gaussian")
+                            max_val = 100, max_iter = 100, family = "gaussian",
+                            verbose = T)
 
   init2 <- .initialization(dat2, max_val = 100, family = "gaussian")
   res2 <- .fit_factorization(dat2, u_mat = init2$u_mat, v_mat = init2$v_mat,
-                            max_val = 100, max_iter = 100, family = "gaussian")
+                            max_val = 100, max_iter = 100, family = "gaussian",
+                            verbose = T)
 
   init3 <- .initialization(dat3, max_val = 100, family = "gaussian")
   res3 <- .fit_factorization(dat3, u_mat = init3$u_mat, v_mat = init3$v_mat,
