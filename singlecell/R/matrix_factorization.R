@@ -105,7 +105,7 @@
 #########
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
-                          extra_weights = rep(1, nrow(dat)), scalar = scalar, parallelized = F){
+                          extra_weights = rep(1, nrow(dat)), scalar = 2, parallelized = F){
   stopifnot(length(class(dat)) == 2)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
@@ -150,7 +150,7 @@
 
 .optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100,
                           max_val = NA, extra_weights = rep(1, nrow(other_mat)),
-                          scalar = scalar){
+                          scalar = 2){
   stopifnot(length(which(!is.na(dat_vec))) > 0)
   stopifnot(length(extra_weights) == nrow(other_mat))
 
@@ -159,30 +159,29 @@
   next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights,
                                          scalar = scalar)
   iter <- 1
+  idx <- which(!is.na(dat_vec))
 
   while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
     current_obj <- next_obj
 
     grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
-    step_vec <- .frank_wolfe(grad_vec, other_mat, which(!is.na(dat_vec)),
+    step_vec <- .frank_wolfe(grad_vec, other_mat, idx = idx,
                              direction = direction, other_bound = max_val)
     step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
     current_vec <- (1-step_size)*current_vec + step_size*step_vec
 
     next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
 
+    stopifnot(all(abs(other_mat %*% current_vec)[idx] <= abs(max_val)+1e-6))
     iter <- iter + 1
   }
-
-  idx <- which(!is.na(dat_vec))
-  stopifnot(all(abs(other_mat %*% current_vec)[idx] <= abs(max_val)+1e-6))
 
   current_vec
 }
 
 .binary_search <- function(dat_vec, current_vec, step_vec, other_mat,
                            max_iter = 100, extra_weights = rep(1, nrow(other_mat)),
-                           scalar = scalar){
+                           scalar = 2){
   form_current <- function(s){
     stopifnot(0<=s, s<=1)
     (1-s)*current_vec + s*step_vec
