@@ -10,7 +10,7 @@ dat_impute <- dat_impute * mean_val/mean(dat_impute)
 
 
 ## generate some missing values
-
+n <- nrow(dat_impute); d <- ncol(dat_impute)
 set.seed(10)
 idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
   cbind(x, sample(1:d, 4))
