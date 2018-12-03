@@ -1,4 +1,24 @@
-zz <- svd(dat)
-k <- 4
-u_mat <- zz$u[,1:k] %*% diag(sqrt(zz$d[1:k]))
-plot(u_mat[,1], u_mat[,2], pch = 16)
+set.seed(10)
+load("../results/step1_imputing.RData")
+
+n <- nrow(dat_impute); d <- ncol(dat_impute)
+set.seed(10)
+missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
+  cbind(x, sample(1:d, 4))
+}))), do.call(rbind, (lapply(1:d, function(x){
+  cbind(sample(1:n, 4), d)
+}))))
+
+dat_impute_NA <- dat_impute
+for(i in 1:nrow(missing_idx)){
+  dat_impute_NA[missing_idx[i,1], missing_idx[i,2]] <- NA
+}
+missing_idx <- which(is.na(dat_impute_NA))
+
+lambda0_val <- softImpute::lambda0(dat_impute_NA)
+res_naive <- softImpute::softImpute(dat_impute_NA, rank.max = 5, lambda = min(30, lambda0_val/100))
+pred_naive <- res_naive$u %*% diag(res_naive$d) %*% t(res_naive$v)
+
+rm(list = c("n", "d", "lambda0_val"))
+print(paste0(Sys.time(), ": Finished naive SVD"))
+save.image("../results/step2_naiveSVD.RData")
