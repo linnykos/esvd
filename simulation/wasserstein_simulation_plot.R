@@ -38,10 +38,10 @@ lines(paramMat[,"n"]*4, forbenius_bound[2,], lwd = 2)
 Hmisc::errbar(paramMat[,"n"]*4, forbenius_bound[2,], yplus = forbenius_bound[3,],
               yminus = forbenius_bound[1,], add = T)
 
-plot(paramMat[,"n"]*4, forbenius_bound[2,], ylim = range(forbenius_bound),
+plot(paramMat[,"n"]*4, wasserstein_bound[2,], ylim = range(wasserstein_bound),
      pch = 16, xlab = "n", ylab = "Wasserstein loss",
      main = "Wasserstein loss for cells")
-lines(paramMat[,"n"]*4, forbenius_bound[2,], lwd = 2)
-Hmisc::errbar(paramMat[,"n"]*4, forbenius_bound[2,], yplus = forbenius_bound[3,],
-              yminus = forbenius_bound[1,], add = T)
+lines(paramMat[,"n"]*4, wasserstein_bound[2,], lwd = 2)
+Hmisc::errbar(paramMat[,"n"]*4, wasserstein_bound[2,], yplus = wasserstein_bound[3,],
+              yminus = wasserstein_bound[1,], add = T)
 graphics.off()

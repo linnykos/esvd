@@ -1,12 +1,18 @@
 .initialization <- function(dat, k = 2, family = "exponential",
                             extra_weights = rep(1, nrow(dat)),
                             max_val = NA, verbose = F, ...){
-  stopifnot(length(which(is.na(dat))) == 0)
   stopifnot(length(extra_weights) == nrow(dat))
+
+  # complete the matrix
+  if(any(is.na(dat))){
+    res <- softImpute::softImpute(dat_impute, rank.max = k, lambda = 30)
+    pred_naive <- res$u %*% diag(res$d) %*% t(res$v)
+    dat[which(is.na(dat))] <- pred_naive[which(is.na(dat))]
+  }
 
   idx <- which(dat == 0)
   min_val <- min(dat[which(dat > 0)])
-  dat[which(dat == 0)] <- min_val/2
+  dat[which(dat <= 0)] <- min_val/2
   direction <- .dictate_direction(family)
   dat2 <- dat
   for(i in 1:nrow(dat2)){
