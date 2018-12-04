@@ -4,14 +4,13 @@
 #' @param k positive integer
 #' @param family either \code{"gaussian"}, \code{"exponential"} or \code{"poisson"}
 #' @param extra_weights vector of weights, of length \code{n}
-#' @param scalar positive numeric for the Gaussian family
 #' @param max_val maximum value of the inner product (with the correct sign)
 #' @param verbose boolean
 #'
 #' @return list
 #' @export
 initialization <- function(dat, k = 2, family = "exponential",
-                            extra_weights = rep(1, nrow(dat)), scalar = 1,
+                            extra_weights = rep(1, nrow(dat)),
                             max_val = NA, verbose = F){
   stopifnot(length(extra_weights) == nrow(dat))
 

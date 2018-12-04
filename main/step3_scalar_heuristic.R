@@ -5,21 +5,26 @@ k <- 5
 max_val <- 2000
 scalar_vec <- c(1, 1.5, 1.75, 2, 2.25, 2.5, 3)
 res_list <- vector("list", length(scalar_vec))
+extra_weight <- apply(dat_impute, 1, mean)
 
 for(i in 1:length(scalar_vec)){
-  init <- singlecell::initialization(dat_impute_NA, family = "gaussian", scalar = scalar_vec[i],
+  init <- singlecell::initialization(dat_impute_NA, family = "gaussian", extra_weight = extra_weight,
                                        k = k, max_val = max_val)
   res_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                   family = "gaussian",  reparameterize = T,
+                                                   family = "gaussian", reparameterize = T,
                                                    max_iter = 25, max_val = max_val,
-                                                   scalar = scalar_vec[i],
+                                                   scalar = scalar_vec[i], extra_weight = extra_weight,
                                                    return_path = F, cores = 15,
                                                    verbose = T)
   save.image("../results/step3_scalar_heuristic_tmp.RData")
 }
 
 quality_vec <- sapply(res_list, function(x){
-  pred_mat <- 4/(x$u_mat %*% t(x$v_mat))
+  pred_mat <- 1/(x$u_mat %*% t(x$v_mat))
+  pred_mat <- t(sapply(1:nrow(pred_mat), function(x){
+    pred_mat[x,] * extra_weight[x]
+  }))
+
   mat <- cbind(dat_impute[idx], pred_mat[idx])
 
   pca_res <- stats::princomp(mat)
