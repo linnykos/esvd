@@ -15,10 +15,11 @@ for(i in 1:nrow(missing_idx)){
 }
 missing_idx <- which(is.na(dat_impute_NA))
 
+k <- 5
 lambda0_val <- softImpute::lambda0(dat_impute_NA)
-res_naive <- softImpute::softImpute(dat_impute_NA, rank.max = 5, lambda = min(30, lambda0_val/100))
+res_naive <- softImpute::softImpute(dat_impute_NA, rank.max = k, lambda = min(30, lambda0_val/100))
 pred_naive <- res_naive$u %*% diag(res_naive$d) %*% t(res_naive$v)
 
-rm(list = c("n", "d", "lambda0_val"))
+rm(list = c("n", "d", "lambda0_val", "impute_res", "idx"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
 save.image("../results/step2_naive_svd.RData")

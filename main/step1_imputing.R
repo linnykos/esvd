@@ -14,10 +14,6 @@ dim(dat)
 impute_res <- SAVER::saver(t(dat), ncores = 10)
 dat_impute <- t(impute_res$estimate)
 
-mean_val <- mean(dat_impute)
-dat_impute <- t(apply(dat_impute, 1, function(x){x/sum(x)}))
-dat_impute <- dat_impute * mean_val/mean(dat_impute)
-
-rm(list = c("idx1", "idx2"))
+rm(list = c("idx1", "idx2", "idx"))
 print(paste0(Sys.time(), ": Finished imputing"))
 save.image("../results/step1_imputing.RData")
