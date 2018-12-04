@@ -267,7 +267,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 #'
 #' @return vector
 .frank_wolfe <- function(grad_vec, other_mat,
-                         tol = 0.0001, direction = "<=", other_bound = NA){
+                         tol = 0.001, direction = "<=", other_bound = NA){
 
   k <- length(grad_vec)
   other_direction <- ifelse(direction == "<=", ">=", "<=")
