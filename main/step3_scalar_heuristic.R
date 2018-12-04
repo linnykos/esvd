@@ -15,7 +15,7 @@ for(i in 1:length(scalar_vec)){
                                                    scalar = scalar_vec[i],
                                                    return_path = F, cores = 15,
                                                    verbose = T)
-  save.image("../results/step2b_scalar_heuristic_tmp.RData")
+  save.image("../results/step3_scalar_heuristic_tmp.RData")
 }
 
 quality_vec <- sapply(res_list, function(x){
