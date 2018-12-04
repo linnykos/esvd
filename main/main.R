@@ -1,3 +1,6 @@
+rm(list=ls())
+set.seed(10)
+
 source("../main/step0_screening.R")
 source("../main/step1_imputing.R")
 source("../main/step2_naive_svd.R")
