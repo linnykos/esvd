@@ -29,8 +29,7 @@
 
   # project v back into positive space based on u
   for(j in 1:nrow(v_mat)){
-    res <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])),
-                                direction = direction, other_bound = max_val)
+    res <- .projection_l1(v_mat[j,], u_mat, direction = direction, other_bound = max_val)
     if(attr(res, "status") != 0) break()
     v_mat[j,] <- as.numeric(res)
   }
@@ -43,8 +42,8 @@
     u_mat <- pmax(u_mat, 1e-3)
 
     for(j in 1:nrow(v_mat)){
-      v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, which(!is.na(dat[,j])),
-                                  direction = direction, other_bound = max_val)
+      v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, direction = direction,
+                                  other_bound = max_val)
     }
   }
 
@@ -72,22 +71,19 @@
 #'
 #' @param current_vec vector
 #' @param other_mat matrix
-#' @param idx row indices for other_mat
 #' @param tol numeric
 #' @param direction character
 #' @param other_bound numeric
 #'
 #' @return
-.projection_l1 <- function(current_vec, other_mat, idx = 1:nrow(other_mat),
+.projection_l1 <- function(current_vec, other_mat,
                            tol = 0.001, direction = "<=", other_bound = NA){
-  if(length(idx) == 0) return(current_vec)
   stopifnot(ncol(other_mat) == length(current_vec))
   stopifnot(is.na(other_bound) || (direction == "<=" & other_bound < 0) ||
               (direction == ">=" & other_bound > 0))
 
   k <- length(current_vec)
   d <- nrow(other_mat)
-  other_mat <- other_mat[idx,,drop = F]
   other_direction <- ifelse(direction == "<=", ">=", "<=")
 
   objective_in <- c(rep(1,k), rep(0, k))

@@ -326,7 +326,7 @@ test_that(".fit_factorization works with Gaussian and missing values", {
 
     pred_mat <- res$u_mat %*% t(res$v_mat)
 
-    all(pred_mat[which(!is.na(dat))] <= 1e-6)
+    all(pred_mat <= 100+1e-6) & all(pred_mat > 0)
   })
 
   expect_true(all(bool_vec))
@@ -344,21 +344,35 @@ test_that(".fit_factorization gives similar results if only one value is missing
 
   init <- .initialization(dat, max_val = 100, family = "gaussian")
   res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                            max_val = 100, max_iter = 100, family = "gaussian",
-                            verbose = T)
+                            max_val = 100, max_iter = 100, family = "gaussian")
 
   init2 <- .initialization(dat2, max_val = 100, family = "gaussian")
   res2 <- .fit_factorization(dat2, u_mat = init2$u_mat, v_mat = init2$v_mat,
-                            max_val = 100, max_iter = 100, family = "gaussian",
-                            verbose = T)
+                            max_val = 100, max_iter = 100, family = "gaussian")
 
   init3 <- .initialization(dat3, max_val = 100, family = "gaussian")
   res3 <- .fit_factorization(dat3, u_mat = init3$u_mat, v_mat = init3$v_mat,
                              max_val = 100, max_iter = 100, family = "gaussian")
 
-
   expect_true(.l2norm(res$u_mat - res2$u_mat) < .l2norm(res$u_mat - res3$u_mat))
 })
+
+test_that(".fit_factorization respects contraints for all values, even the missing ones", {
+  set.seed(10)
+  dat <- abs(matrix(rexp(100), nrow = 10, ncol = 10))
+  for(i in 1:nrow(dat)){
+    dat[i, sample(1:ncol(dat), 2)] <- NA
+  }
+
+  init <- .initialization(dat, max_val = 100, family = "gaussian")
+  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                             max_val = 100, max_iter = 25, family = "gaussian")
+
+  pred_mat <- res$u_mat %*% t(res$v_mat)
+
+  expect_true(all(pred_mat > 0))
+})
+
 
 test_that(".fit_factorization can roughly recover the all 1's matrix", {
   trials <- 10

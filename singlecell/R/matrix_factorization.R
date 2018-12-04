@@ -159,20 +159,18 @@
   next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights,
                                          scalar = scalar)
   iter <- 1
-  idx <- which(!is.na(dat_vec))
-
   while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
     current_obj <- next_obj
 
     grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
-    step_vec <- .frank_wolfe(grad_vec, other_mat, idx = idx,
+    step_vec <- .frank_wolfe(grad_vec, other_mat,
                              direction = direction, other_bound = max_val)
     step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
     current_vec <- (1-step_size)*current_vec + step_size*step_vec
 
     next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
 
-    stopifnot(all(abs(other_mat %*% current_vec)[idx] <= abs(max_val)+1e-6))
+    stopifnot(all(abs(other_mat %*% current_vec) <= abs(max_val)+1e-6))
     iter <- iter + 1
   }
 
@@ -252,11 +250,10 @@
 #' @param other_bound numeric
 #'
 #' @return vector
-.frank_wolfe <- function(grad_vec, other_mat, idx = 1:nrow(other_mat),
+.frank_wolfe <- function(grad_vec, other_mat,
                          tol = 0.0001, direction = "<=", other_bound = NA){
 
   k <- length(grad_vec)
-  other_mat <- other_mat[idx,,drop = F]
   other_direction <- ifelse(direction == "<=", ">=", "<=")
   objective_in <- grad_vec
   constr_mat <- other_mat
