@@ -5,7 +5,7 @@
 \title{Estimate the slingshot curves}
 \usage{
 .get_curves(dat, cluster_labels, lineages, shrink = 1, thresh = 0.001,
-  max_iter = 15, b = 1)
+  max_iter = 15, b = 1, upscale_vec = NA)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}
@@ -23,6 +23,8 @@ the cluster labels are consecutive positive integers from 1 to
 \item{max_iter}{maximum number of iterations}
 
 \item{b}{parameter for the kernel function (when smoothing)}
+
+\item{upscale_vec}{vector of positive numbers, one for each cluster}
 }
 \value{
 a list of \code{principal_curve} objects

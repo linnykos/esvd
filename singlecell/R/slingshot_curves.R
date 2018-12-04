@@ -9,10 +9,13 @@
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
 #' @param knn positive integer, possibly \code{NA}
+#' @param remove_outlier boolean
+#' @param percentage percentage dictating which points are considered outliers
 #' @param shrink shrinkage factor
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
 #' @param b parameter for the kernel function (when smoothing)
+#' @param upscale_vec vector of positive numbers, one for each cluster
 #'
 #' @return a list containing the lineages under \code{lineages},
 #' the list of curves as \code{principal_curve} objects under
@@ -44,6 +47,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
 #' @param b parameter for the kernel function (when smoothing)
+#' @param upscale_vec vector of positive numbers, one for each cluster
 #'
 #' @return a list of \code{principal_curve} objects
 .get_curves <- function(dat, cluster_labels, lineages, shrink = 1,

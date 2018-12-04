@@ -4,19 +4,24 @@
 \alias{.get_lineages}
 \title{Estimate the lineages (via Slingshot)}
 \usage{
-.get_lineages(dat, cluster_labels, starting_cluster, knn = NA)
+.get_lineages(dat, cluster_labels, starting_cluster, knn = NA,
+  remove_outlier = T, percentage = 0.05)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}
 
 \item{cluster_labels}{vector of cluster labels, where
 the cluster labels are consecutive positive integers from 1 to
-\code{max(cluster_labels)}}
+\code{max(cluster_labels, na.rm = T)}. Can include \code{NA}}
 
 \item{starting_cluster}{the "origin" cluster that all the lineages will start
 from}
 
 \item{knn}{positive integer, possibly \code{NA}}
+
+\item{remove_outlier}{boolean}
+
+\item{percentage}{percentage dictating which points are considered outliers}
 }
 \value{
 A list of cluster indices, with \code{starting_cluster} starting as

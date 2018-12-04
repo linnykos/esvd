@@ -6,7 +6,7 @@ test_that(".optimize_row works", {
   set.seed(20)
   dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
 
-  res <- .initialization(dat)
+  res <- initialization(dat)
   u_mat <- res$u_mat
   v_mat <- res$v_mat
   i <- 1
@@ -26,7 +26,7 @@ test_that(".optimize_row actually lowers the objective", {
     set.seed(x*10)
     dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
 
-    res <- .initialization(dat, max_val = -100)
+    res <- initialization(dat, max_val = -100)
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     i <- sample(1:10, 1)
@@ -52,7 +52,7 @@ test_that(".optimize_row works the other way", {
     set.seed(x*10)
     dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
 
-    res <- .initialization(dat, max_val = -100)
+    res <- initialization(dat, max_val = -100)
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     j <- sample(1:4, 1)
@@ -75,7 +75,7 @@ test_that(".optimize_row respects an upper bound", {
   set.seed(20)
   dat <- matrix(rexp(40), nrow = 10, ncol = 4)
 
-  res <- .initialization(dat, max_val = -5, family = "exponential")
+  res <- initialization(dat, max_val = -5, family = "exponential")
   u_mat <- res$u_mat
   v_mat <- res$v_mat
   i <- 1
@@ -98,7 +98,7 @@ test_that(".optimize_mat works", {
   dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
   class(dat) <- c("exponential", class(dat))
 
-  res <- .initialization(dat, max_val = -100)
+  res <- initialization(dat, max_val = -100)
   u_mat <- res$u_mat
   v_mat <- res$v_mat
 
@@ -114,7 +114,7 @@ test_that(".optimize_mat works with parallelization", {
   dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
   class(dat) <- c("exponential", class(dat))
 
-  res <- .initialization(dat, max_val = -100)
+  res <- initialization(dat, max_val = -100)
   u_mat <- res$u_mat
   v_mat <- res$v_mat
 
@@ -135,7 +135,7 @@ test_that(".optimize_mat keeps the negative constraint", {
     class(dat) <- c("exponential", class(dat))
     bool <- sample(c(T, F), 1)
 
-    res <- .initialization(dat, max_val = -100)
+    res <- initialization(dat, max_val = -100)
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     if(bool){
@@ -163,7 +163,7 @@ test_that(".optimize_mat keeps the positive constraint", {
     class(dat) <- c("gaussian", class(dat))
     bool <- sample(c(T, F), 1)
 
-    res <- .initialization(dat, family = "gaussian", max_val = 100)
+    res <- initialization(dat, family = "gaussian", max_val = 100)
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     if(bool){
@@ -192,7 +192,7 @@ test_that(".optimize_mat lowers the objective value", {
     class(dat) <- c("exponential", class(dat))
     bool <- sample(c(T, F), 1)
 
-    res <- .initialization(dat, max_val = -100)
+    res <- initialization(dat, max_val = -100)
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     obj1 <- .evaluate_objective(dat, u_mat, v_mat)
@@ -227,14 +227,14 @@ test_that(".frank_wolfe is able to solve the following LP", {
 
 ######################
 
-## .fit_factorization is correct
+## fit_factorization is correct
 
-test_that(".fit_factorization works", {
+test_that("fit_factorization works", {
   set.seed(10)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
-  init <- .initialization(dat, max_val = -100)
+  init <- initialization(dat, max_val = -100)
 
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             max_val = -100)
 
   expect_true(is.list(res))
@@ -244,12 +244,12 @@ test_that(".fit_factorization works", {
   expect_true(ncol(res$v_mat) == 2)
 })
 
-test_that(".fit_factorization works for Gaussian with scalar setting", {
+test_that("fit_factorization works for Gaussian with scalar setting", {
   set.seed(10)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
 
-  init <- .initialization(dat, family = "gaussian", scalar = 3, max_val = 100)
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  init <- initialization(dat, family = "gaussian", scalar = 3, max_val = 100)
+  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "gaussian",
                             max_val = 100, scalar = 3)
 
@@ -260,12 +260,12 @@ test_that(".fit_factorization works for Gaussian with scalar setting", {
   expect_true(ncol(res$v_mat) == 2)
 })
 
-test_that(".fit_factorization for Gaussian with scalar setting respects max_val", {
+test_that("fit_factorization for Gaussian with scalar setting respects max_val", {
   set.seed(10)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
 
-  init <- .initialization(dat, family = "gaussian", scalar = 100, max_val = 5)
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  init <- initialization(dat, family = "gaussian", scalar = 100, max_val = 5)
+  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "gaussian",
                             max_val = 5, scalar = 100)
 
@@ -276,13 +276,13 @@ test_that(".fit_factorization for Gaussian with scalar setting respects max_val"
   expect_true(ncol(res$v_mat) == 2)
 })
 
-test_that(".fit_factorization for Gaussian with scalar and extra_weights", {
+test_that("fit_factorization for Gaussian with scalar and extra_weights", {
   set.seed(10)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
   extra_weights <- rowSums(dat)
 
-  init <- .initialization(dat, family = "gaussian", scalar = 2, max_val = 5)
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  init <- initialization(dat, family = "gaussian", scalar = 2, max_val = 5)
+  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "gaussian", extra_weights = extra_weights,
                             max_val = 5, scalar = 2)
 
@@ -294,12 +294,12 @@ test_that(".fit_factorization for Gaussian with scalar and extra_weights", {
 })
 
 
-test_that(".fit_factorization works with missing values", {
+test_that("fit_factorization works with missing values", {
   set.seed(5)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
-  init <- .initialization(dat, max_val = -100)
+  init <- initialization(dat, max_val = -100)
 
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             max_val = -100)
 
   expect_true(is.list(res))
@@ -309,15 +309,15 @@ test_that(".fit_factorization works with missing values", {
   expect_true(ncol(res$v_mat) == 2)
 })
 
-test_that(".fit_factorization preserves the positive entries", {
+test_that("fit_factorization preserves the positive entries", {
   trials <- 10
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
-    init <- .initialization(dat, max_val = -100)
+    init <- initialization(dat, max_val = -100)
 
-    res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+    res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                               max_val = -100)
 
     pred_mat <- res$u_mat %*% t(res$v_mat)
@@ -329,16 +329,16 @@ test_that(".fit_factorization preserves the positive entries", {
 
 })
 
-test_that(".fit_factorization works with Gaussian and missing values", {
+test_that("fit_factorization works with Gaussian and missing values", {
   trials <- 10
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
     dat[sample(1:prod(dim(dat)),3)] <- NA
-    init <- .initialization(dat, max_val = 100, family = "gaussian")
+    init <- initialization(dat, max_val = 100, family = "gaussian")
 
-    res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+    res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                               max_val = 100, max_iter = 3, family = "gaussian")
 
     pred_mat <- res$u_mat %*% t(res$v_mat)
@@ -349,7 +349,7 @@ test_that(".fit_factorization works with Gaussian and missing values", {
   expect_true(all(bool_vec))
 })
 
-test_that(".fit_factorization gives similar results if only one value is missing", {
+test_that("fit_factorization gives similar results if only one value is missing", {
   set.seed(10)
   dat <- abs(matrix(rexp(100), nrow = 10, ncol = 10))
 
@@ -359,30 +359,30 @@ test_that(".fit_factorization gives similar results if only one value is missing
     dat3[i, sample(1:ncol(dat3), 2)] <- NA
   }
 
-  init <- .initialization(dat, max_val = 100, family = "gaussian")
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  init <- initialization(dat, max_val = 100, family = "gaussian")
+  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             max_val = 100, max_iter = 100, family = "gaussian")
 
-  init2 <- .initialization(dat2, max_val = 100, family = "gaussian")
-  res2 <- .fit_factorization(dat2, u_mat = init2$u_mat, v_mat = init2$v_mat,
+  init2 <- initialization(dat2, max_val = 100, family = "gaussian")
+  res2 <- fit_factorization(dat2, u_mat = init2$u_mat, v_mat = init2$v_mat,
                             max_val = 100, max_iter = 100, family = "gaussian")
 
-  init3 <- .initialization(dat3, max_val = 100, family = "gaussian")
-  res3 <- .fit_factorization(dat3, u_mat = init3$u_mat, v_mat = init3$v_mat,
+  init3 <- initialization(dat3, max_val = 100, family = "gaussian")
+  res3 <- fit_factorization(dat3, u_mat = init3$u_mat, v_mat = init3$v_mat,
                              max_val = 100, max_iter = 100, family = "gaussian")
 
   expect_true(.l2norm(res$u_mat - res2$u_mat) < .l2norm(res$u_mat - res3$u_mat))
 })
 
-test_that(".fit_factorization respects contraints for all values, even the missing ones", {
+test_that("fit_factorization respects contraints for all values, even the missing ones", {
   set.seed(10)
   dat <- abs(matrix(rexp(100), nrow = 10, ncol = 10))
   for(i in 1:nrow(dat)){
     dat[i, sample(1:ncol(dat), 2)] <- NA
   }
 
-  init <- .initialization(dat, max_val = 100, family = "gaussian")
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  init <- initialization(dat, max_val = 100, family = "gaussian")
+  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                              max_val = 100, max_iter = 25, family = "gaussian")
 
   pred_mat <- res$u_mat %*% t(res$v_mat)
@@ -391,15 +391,15 @@ test_that(".fit_factorization respects contraints for all values, even the missi
 })
 
 
-test_that(".fit_factorization can roughly recover the all 1's matrix", {
+test_that("fit_factorization can roughly recover the all 1's matrix", {
   trials <- 10
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
     dat <- abs(matrix(rexp(100), nrow = 10, ncol = 10))
-    init <- .initialization(dat, max_val = -100)
+    init <- initialization(dat, max_val = -100)
 
-    fit <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+    fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                           max_iter = 5, max_val = -100)
 
     res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat)
@@ -415,7 +415,7 @@ test_that(".fit_factorization can roughly recover the all 1's matrix", {
   expect_true(all(bool_vec))
 })
 
-test_that(".fit_factorization works with non-trivial extra_weights", {
+test_that("fit_factorization works with non-trivial extra_weights", {
   set.seed(10)
   u_mat <- cbind(c(rep(0.1, 5), rep(0.5, 5)), c(rep(0.3, 5), rep(1, 5)))
   v_mat <- cbind(c(rep(0.5, 2), rep(0.2, 2)), c(rep(0.1, 2), rep(1, 2)))
@@ -429,10 +429,10 @@ test_that(".fit_factorization works with non-trivial extra_weights", {
   }
 
   extra_weights <- rowSums(dat)/ncol(dat)
-  init <- .initialization(dat, family = "poisson", max_val = 100,
+  init <- initialization(dat, family = "poisson", max_val = 100,
                           extra_weights = extra_weights)
 
-  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             max_iter = 5, max_val = 100,
                             extra_weights = extra_weights,
                             family = "poisson")
@@ -440,7 +440,7 @@ test_that(".fit_factorization works with non-trivial extra_weights", {
   expect_true(is.list(res))
 })
 
-test_that(".fit_factorization shrinks the inner products when extra_weights > 1 are used", {
+test_that("fit_factorization shrinks the inner products when extra_weights > 1 are used", {
   set.seed(10)
   u_mat <- cbind(c(rep(0.1, 5), rep(0.5, 5)), c(rep(0.3, 5), rep(1, 5)))
   v_mat <- cbind(c(rep(0.5, 2), rep(0.2, 2)), c(rep(0.1, 2), rep(1, 2)))
@@ -454,17 +454,17 @@ test_that(".fit_factorization shrinks the inner products when extra_weights > 1 
   }
 
   extra_weights <- rowSums(dat)/ncol(dat)
-  init1 <- .initialization(dat, family = "poisson", max_val = 100,
+  init1 <- initialization(dat, family = "poisson", max_val = 100,
                           extra_weights = extra_weights)
 
-  res1 <- .fit_factorization(dat, u_mat = init1$u_mat, v_mat = init1$v_mat,
+  res1 <- fit_factorization(dat, u_mat = init1$u_mat, v_mat = init1$v_mat,
                             max_iter = 5, max_val = 100,
                             extra_weights = extra_weights,
                             family = "poisson")
 
-  init2 <- .initialization(dat, family = "poisson", max_val = 100)
+  init2 <- initialization(dat, family = "poisson", max_val = 100)
 
-  res2 <- .fit_factorization(dat, u_mat = init2$u_mat, v_mat = init2$v_mat,
+  res2 <- fit_factorization(dat, u_mat = init2$u_mat, v_mat = init2$v_mat,
                              max_iter = 5, max_val = 100,
                              family = "poisson")
 

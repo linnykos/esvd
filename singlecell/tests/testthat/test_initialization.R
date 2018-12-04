@@ -1,12 +1,12 @@
 context("Test initialization")
 
-## .initialization is correct
+## initialization is correct
 
-test_that(".initialization works", {
+test_that("initialization works", {
   set.seed(10)
   dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
 
-  res <- .initialization(dat)
+  res <- initialization(dat)
 
   expect_true(is.list(res))
   expect_true(ncol(res$u_mat) == ncol(res$v_mat))
@@ -14,7 +14,7 @@ test_that(".initialization works", {
   expect_true(nrow(res$v_mat) == ncol(dat))
 })
 
-test_that(".initialization works off of an imputed matrix", {
+test_that("initialization works off of an imputed matrix", {
   set.seed(10)
   dat <- abs(rbind(MASS::mvrnorm(5, rep(0, 5), diag(5)),
                    MASS::mvrnorm(5, rep(10, 5), 2*diag(5))))
@@ -25,7 +25,7 @@ test_that(".initialization works off of an imputed matrix", {
   drop_idx <- which(is.na(dat2))
   dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
 
-  res <- .initialization(dat2)
+  res <- initialization(dat2)
 
   expect_true(is.list(res))
   expect_true(ncol(res$u_mat) == ncol(res$v_mat))
@@ -33,7 +33,7 @@ test_that(".initialization works off of an imputed matrix", {
   expect_true(nrow(res$v_mat) == ncol(dat))
 })
 
-test_that(".initialization gives negative predictions", {
+test_that("initialization gives negative predictions", {
   set.seed(10)
   dat <- abs(rbind(MASS::mvrnorm(5, rep(0, 5), diag(5)),
                    MASS::mvrnorm(5, rep(10, 5), 2*diag(5))))
@@ -44,20 +44,20 @@ test_that(".initialization gives negative predictions", {
   drop_idx <- which(is.na(dat2))
   dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
 
-  res <- .initialization(dat2)
+  res <- initialization(dat2)
   pred_mat <- res$u_mat %*% t(res$v_mat)
 
   expect_true(all(pred_mat[which(!is.na(dat))] <= 1e-6))
 })
 
-test_that(".initialization can catch hard cases", {
+test_that("initialization can catch hard cases", {
   # here, I think the low-rank U_mat's column space does not include ANY
   ## point that are all positive...
 
   set.seed(10*2)
   dat <- abs(matrix(rpois(25, 2), nrow = 5, ncol = 5))
   class(dat) <- c("poisson", class(dat)[length(class(dat))])
-  init <- .initialization(dat, family = "poisson", max_val = 100)
+  init <- initialization(dat, family = "poisson", max_val = 100)
 
   expect_true(length(init) == 2)
 })
@@ -103,7 +103,7 @@ test_that(".projection_l1 maintains less than 0", {
 
     dat <- abs(matrix(rexp(40, 1), nrow = 10, ncol = 4))
 
-    res <- .initialization(dat, max_val = -100)
+    res <- initialization(dat, max_val = -100)
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     prod_mat <- u_mat %*% t(v_mat)
@@ -122,7 +122,7 @@ test_that(".projection_l1 maintains greater than 0", {
 
     dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
 
-    res <- .initialization(dat, family = "gaussian", max_val = 100)
+    res <- initialization(dat, family = "gaussian", max_val = 100)
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     prod_mat <- u_mat %*% t(v_mat)

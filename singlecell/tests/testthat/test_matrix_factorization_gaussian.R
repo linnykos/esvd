@@ -271,16 +271,16 @@ test_that(".evaluate_objective_single yields a smaller value under truth", {
 #######################
 
 
-test_that(".fit_factorization is appropriate for gaussians", {
+test_that("fit_factorization is appropriate for gaussians", {
   trials <- 10
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
     dat <- abs(matrix(rnorm(25, 2, 1), nrow = 5, ncol = 5))
     class(dat) <- c("gaussian", class(dat)[length(class(dat))])
-    init <- .initialization(dat, family = "gaussian")
+    init <- initialization(dat, family = "gaussian")
 
-    fit <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+    fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                               max_iter = 5, max_val = 100,
                               family = "gaussian")
 

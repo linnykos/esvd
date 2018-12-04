@@ -4,15 +4,13 @@
 \alias{.projection_l1}
 \title{L1 projection of the product of two vectors to become nonpositive}
 \usage{
-.projection_l1(current_vec, other_mat, idx = 1:nrow(other_mat),
-  tol = 0.001, direction = "<=", other_bound = NA)
+.projection_l1(current_vec, other_mat, tol = 0.001, direction = "<=",
+  other_bound = NA)
 }
 \arguments{
 \item{current_vec}{vector}
 
 \item{other_mat}{matrix}
-
-\item{idx}{row indices for other_mat}
 
 \item{tol}{numeric}
 

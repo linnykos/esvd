@@ -264,16 +264,16 @@ test_that(".evaluate_objective_single yields a smaller value under truth", {
 
 #########################
 
-test_that(".fit_factorization is appropriate for poisson", {
+test_that("fit_factorization is appropriate for poisson", {
   trials <- 10
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
     dat <- abs(matrix(rpois(25, 2), nrow = 5, ncol = 5))
     class(dat) <- c("poisson", class(dat)[length(class(dat))])
-    init <- .initialization(dat, family = "poisson", max_val = 100)
+    init <- initialization(dat, family = "poisson", max_val = 100)
 
-    fit <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+    fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                               max_iter = 5, max_val = 100,
                               family = "poisson")
 

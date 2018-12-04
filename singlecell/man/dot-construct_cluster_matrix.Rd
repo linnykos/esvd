@@ -9,7 +9,7 @@
 \arguments{
 \item{cluster_labels}{vector of cluster labels, where
 the cluster labels are consecutive positive integers from 1 to
-\code{max(cluster_labels)}}
+\code{max(cluster_labels, na.rm = T)}. Can include \code{NA}}
 }
 \value{
 A 0-1 matrix with \code{length(cluster_labels)} rows

@@ -1,4 +1,22 @@
-.fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
+#' Fit the factorization
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
+#' @param u_mat initial factorization, of size \code{n} by \code{k}
+#' @param v_mat initial factorization, of size \code{d} by \code{k}
+#' @param max_val maximum value of the inner product (with the correct sign)
+#' @param family either \code{"gaussian"}, \code{"exponential"} or \code{"poisson"}
+#' @param reparameterize boolean
+#' @param extra_weights vector of weights, of length \code{n}
+#' @param scalar positive numeric for the Gaussian family
+#' @param tol small positive number to dictate the convergence of the objective function
+#' @param max_iter maximum number of iterations for the algorithm
+#' @param verbose boolean
+#' @param return_path boolean
+#' @param cores positive integer
+#'
+#' @return list
+#' @export
+fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
                                family = "exponential",
                                reparameterize = T,
                                extra_weights = rep(1, nrow(dat)),
@@ -243,7 +261,6 @@
 #'
 #' @param grad_vec vector
 #' @param other_mat matrix
-#' @param idx row indices for other_mat
 #' @param tol numierc
 #' @param direction character
 #' @param other_bound numeric

@@ -1,6 +1,6 @@
 dbscan <- function(dat, neighbor_count = 10, upper_cutoff = 14,
                    size_cutoff = 19){
-  dist_mat <- as.matrix(dist(dat))
+  dist_mat <- as.matrix(stats::dist(dat))
   min_dist <- stats::quantile(apply(dist_mat, 1, function(x){
     stats::quantile(x, 0.05)
   }), 0.75)

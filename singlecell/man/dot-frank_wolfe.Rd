@@ -4,15 +4,13 @@
 \alias{.frank_wolfe}
 \title{Frank wolfe linear program}
 \usage{
-.frank_wolfe(grad_vec, other_mat, idx = 1:nrow(other_mat), tol = 1e-04,
-  direction = "<=", other_bound = NA)
+.frank_wolfe(grad_vec, other_mat, tol = 1e-04, direction = "<=",
+  other_bound = NA)
 }
 \arguments{
 \item{grad_vec}{vector}
 
 \item{other_mat}{matrix}
-
-\item{idx}{row indices for other_mat}
 
 \item{tol}{numierc}
 

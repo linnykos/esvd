@@ -1,6 +1,18 @@
-.initialization <- function(dat, k = 2, family = "exponential",
+#' Initialization for matrix factorization
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
+#' @param k positive integer
+#' @param family either \code{"gaussian"}, \code{"exponential"} or \code{"poisson"}
+#' @param extra_weights vector of weights, of length \code{n}
+#' @param scalar positive numeric for the Gaussian family
+#' @param max_val maximum value of the inner product (with the correct sign)
+#' @param verbose boolean
+#'
+#' @return list
+#' @export
+initialization <- function(dat, k = 2, family = "exponential",
                             extra_weights = rep(1, nrow(dat)), scalar = 1,
-                            max_val = NA, verbose = F, ...){
+                            max_val = NA, verbose = F){
   stopifnot(length(extra_weights) == nrow(dat))
 
   # complete the matrix
@@ -19,7 +31,7 @@
   for(i in 1:nrow(dat2)){
     dat2[i,] <- dat2[i,]/extra_weights[i]
   }
-  dat2 <- .mean_transformation(dat2, family, ...)
+  dat2 <- .mean_transformation(dat2, family)
 
   svd_res <- svd(dat2)
 
