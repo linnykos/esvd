@@ -276,6 +276,23 @@ test_that(".fit_factorization for Gaussian with scalar setting respects max_val"
   expect_true(ncol(res$v_mat) == 2)
 })
 
+test_that(".fit_factorization for Gaussian with scalar and extra_weights", {
+  set.seed(10)
+  dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
+  extra_weights <- rowSums(dat)
+
+  init <- .initialization(dat, family = "gaussian", scalar = 2, max_val = 5)
+  res <- .fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                            family = "gaussian", extra_weights = extra_weights,
+                            max_val = 5, scalar = 2)
+
+  expect_true(is.list(res))
+  expect_true(nrow(res$u_mat) == nrow(dat))
+  expect_true(nrow(res$v_mat) == ncol(dat))
+  expect_true(ncol(res$u_mat) == 2)
+  expect_true(ncol(res$v_mat) == 2)
+})
+
 
 test_that(".fit_factorization works with missing values", {
   set.seed(5)

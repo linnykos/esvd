@@ -8,7 +8,6 @@
                                cores = NA){
   if(!is.na(cores)) doMC::registerDoMC(cores = cores)
   stopifnot(length(which(dat > 0)) > 0)
-  stopifnot(family == "poisson" | all(extra_weights == 1))
   stopifnot(all(extra_weights > 0))
   stopifnot(length(which(dat < 0)) == 0)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),

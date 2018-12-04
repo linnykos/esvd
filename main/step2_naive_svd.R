@@ -21,4 +21,4 @@ pred_naive <- res_naive$u %*% diag(res_naive$d) %*% t(res_naive$v)
 
 rm(list = c("n", "d", "lambda0_val"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
-save.image("../results/step2_naiveSVD.RData")
+save.image("../results/step2_naive_svd.RData")

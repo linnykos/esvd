@@ -18,6 +18,7 @@ test_that(".gradient_vec works", {
   expect_true(length(res) == 2)
 })
 
+
 test_that(".gradient_vec works for the other direction", {
   set.seed(8)
   dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
@@ -51,6 +52,30 @@ test_that(".gradient_vec satisfies the gradient definition", {
 
     res <- .evaluate_objective_single(dat_vec, u_vec, v_mat)
     res2 <- .evaluate_objective_single(dat_vec, u_vec2, v_mat)
+
+    res2 >= res + as.numeric(grad %*% (u_vec2 - u_vec)) - 1e-6
+  })
+
+  expect_true(all(bool_vec))
+})
+
+test_that(".gradient_vec satisfies the gradient definition with a scalar and weight", {
+  trials <- 100
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(x)
+    dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+    u_vec <- abs(rnorm(2))
+    u_vec2 <- abs(rnorm(2))
+    v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
+
+    i <- sample(1:10, 1)
+    dat_vec <- dat[i,]
+    class(dat_vec) <- c("gaussian", class(dat_vec)[length(class(dat_vec))])
+    grad <- .gradient_vec(dat_vec, u_vec, v_mat, scalar = 4, extra_weights = 1:nrow(v_mat))
+
+    res <- .evaluate_objective_single(dat_vec, u_vec, v_mat, scalar = 4, extra_weights = 1:nrow(v_mat))
+    res2 <- .evaluate_objective_single(dat_vec, u_vec2, v_mat, scalar = 4, extra_weights = 1:nrow(v_mat))
 
     res2 >= res + as.numeric(grad %*% (u_vec2 - u_vec)) - 1e-6
   })
@@ -119,7 +144,7 @@ test_that(".evaluate_objective is correct for rank 1", {
 
   for(i in 1:nrow(u_mat)){
     for(j in 1:nrow(v_mat)){
-      dat[i,j] <- stats::rnorm(1, mean = 4/pred_mat[i,j], sd = 2/pred_mat[i,j])
+      dat[i,j] <- stats::rnorm(1, mean = 1/pred_mat[i,j], sd = 1/(2*pred_mat[i,j]))
     }
   }
 

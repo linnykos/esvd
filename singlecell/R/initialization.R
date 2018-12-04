@@ -1,5 +1,5 @@
 .initialization <- function(dat, k = 2, family = "exponential",
-                            extra_weights = rep(1, nrow(dat)),
+                            extra_weights = rep(1, nrow(dat)), scalar = 1,
                             max_val = NA, verbose = F, ...){
   stopifnot(length(extra_weights) == nrow(dat))
 

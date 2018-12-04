@@ -10,12 +10,11 @@
   direction
 }
 
-.mean_transformation <- function(dat, family = "exponential", tol = 1e-3,
-                                 scalar = 2){
+.mean_transformation <- function(dat, family = "exponential", tol = 1e-3){
   if(family == "exponential"){
     dat <- -1/dat
   } else if(family == "gaussian"){
-    dat <- scalar^2/dat
+    dat <- 1/dat
   } else if(family == "poisson"){
     dat <- log(dat + tol)
   } else {
