@@ -91,12 +91,13 @@ set.seed(10)
 n_each <- 50
 d_each <- 120
 sigma <- 0.01
-total <- 250
+total <- 100
 obj <- .data_generator(cell_pop, gene_pop, n_each = n_each, d_each = d_each,
                        sigma = sigma, total = total)
 dat <- obj$dat
 impute_res <- SAVER::saver(t(dat))
 dat_impute <- t(impute_res$estimate)
+k <- 3
 
 ############
 
@@ -104,13 +105,13 @@ dat_impute <- t(impute_res$estimate)
 # SVD
 print(paste0(Sys.time(), ": SVD"))
 tmp <- svd(dat_impute)
-res_svd <- tmp$u[,1:2] %*% diag(sqrt(tmp$d[1:2]))
+res_svd <- tmp$u[,1:k] %*% diag(sqrt(tmp$d[1:k]))
 
 save.image("../results/factorization_results.RData")
 
 # ICA
 print(paste0(Sys.time(), ": ICA"))
-tmp <- ica::icafast(dat_impute, nc = 2)
+tmp <- ica::icafast(dat_impute, nc = k)
 res_ica <- tmp$S
 
 save.image("../results/factorization_results.RData")
@@ -119,10 +120,9 @@ save.image("../results/factorization_results.RData")
 print(paste0(Sys.time(), ": Our method"))
 
 max_val <- 10
-scalar_vec <- c(0.1, 0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 8, 10, 100)
+scalar_val <- 2
 extra_weight <- apply(dat_impute, 1, mean)
 
-k <- 3
 res_our_list <- vector("list", length(scalar_vec))
 for(i in 1:length(scalar_vec)){
   init <- singlecell::initialization(dat_impute, family = "gaussian", scalar = scalar_vec[i],
@@ -130,26 +130,13 @@ for(i in 1:length(scalar_vec)){
   res_our_list[[i]] <- singlecell::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
                                                    family = "gaussian",  reparameterize = T,
                                                    max_iter = 25, max_val = max_val,
-                                                   scalar = scalar_vec[i], extra_weight = extra_weight,
+                                                   scalar = scalar_val, extra_weight = extra_weight,
                                                    return_path = F, cores = 15,
                                                    verbose = T)
   save.image("../results/factorization_results.RData")
 }
 
-k <- 3
-res_pure_list <- vector("list", length(scalar_vec))
-for(i in 1:length(scalar_vec)){
-  init <- singlecell::initialization(obj$dat, family = "gaussian", scalar = scalar_vec[i],
-                                     k = k, max_val = max_val)
-  res_our_list[[i]] <- singlecell::fit_factorization(obj$dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                     family = "gaussian",  reparameterize = T,
-                                                     max_iter = 25, max_val = max_val,
-                                                     scalar = scalar_vec[i], extra_weight = extra_weight,
-                                                     return_path = F, cores = 15,
-                                                     verbose = T)
-  save.image("../results/factorization_results.RData")
-}
-
+scalar_vec <- c(0.1, 0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 8, 10, 100)
 missing_idx <- sample(1:prod(dim(dat_impute)), round(0.01*prod(dim(dat_impute))))
 dat_impute_NA <- dat_impute
 dat_impute_NA[missing_idx] <- NA
@@ -167,18 +154,48 @@ for(i in 1:length(scalar_vec)){
   save.image("../results/factorization_results.RData")
 }
 
+# select the scalar_val
+
+.l2norm <- function(x){sqrt(sum(x^2))}
+quality_vec <- sapply(res_our_NA_list, function(x){
+  pred_mat <- 1/(x$u_mat %*% t(x$v_mat))
+  pred_mat <- t(sapply(1:nrow(pred_mat), function(x){
+    pred_mat[x,] * extra_weight[x]
+  }))
+
+  mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
+  pca_res <- stats::princomp(mat)
+  diag_vec <- c(1,1); diag_vec <- diag_vec/.l2norm(diag_vec)
+
+  acos(diag_vec %*% pca_res$loadings[,1])
+})
+
+scalar_val <- scalar_vec[which.min(quality_vec)]
+
+init <- singlecell::initialization(dat_impute, family = "gaussian", scalar = scalar_vec[i],
+                                   k = k, max_val = max_val)
+res_our <- singlecell::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
+                                         family = "gaussian",  reparameterize = T,
+                                         max_iter = 25, max_val = max_val,
+                                         scalar = scalar_val, extra_weight = extra_weight,
+                                         return_path = F, cores = 15,
+                                         verbose = T)
+
 save.image("../results/factorization_results.RData")
+
 
 # # VAMF
 # print(paste0(Sys.time(), ": VAMF"))
-# res_vamf <- vamf:::vamf(t(dat), 2, log2trans=T)$factors
+# tmp <- vamf:::vamf(t(dat), k, log2trans=T)
+# res_vamf <- tmp$factors
 #
 # save.image("../results/factorization_results_tmp.RData")
 #
-# zinbwave
+# # zinbwave
 # print(paste0(Sys.time(), ": ZINB"))
 # dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat)))
-# res_zinb <- zinbwave::zinbwave(dat_se, K = 2)
+# tmp <- zinbwave::zinbwave(dat_se, K = k, maxiter.optimize = 100)
+# res_zinb <- tmp@reducedDims$zinbwave
 #
 # save.image("../results/factorization_results_tmp.RData")
 #
