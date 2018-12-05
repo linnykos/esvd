@@ -4,7 +4,7 @@ load("../results/factorization_results.RData")
 plot(obj$cell_mat[,1], obj$cell_mat[,2], asp = T,
      pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 
-k <- 8
+k <- 6
 plot(res_our_list[[k]]$u_mat[,1], res_our_list[[k]]$u_mat[,2], asp = T,
      pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 
