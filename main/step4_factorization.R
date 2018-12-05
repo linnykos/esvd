@@ -10,5 +10,6 @@ res_our <- singlecell::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat =
                                                  return_path = F, cores = 15,
                                                  verbose = T)
 
+rm(list = c("dat_impute_NA"))
 print(paste0(Sys.time(), ": Finished factorizing"))
 save.image(paste0("../results/step4_factorization", suffix, ".RData"))

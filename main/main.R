@@ -1,8 +1,8 @@
 rm(list=ls())
 set.seed(10)
 
-suffix <- "_poisson"
-family <- "poisson"
+suffix <- ""
+family <- "gaussian"
 
 # source("../main/step0_screening.R")
 # source("../main/step1_imputing.R")

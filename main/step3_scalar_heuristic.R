@@ -1,8 +1,7 @@
 set.seed(10)
 load("../results/step2_naive_svd.RData")
 
-# max_val <- 2000
-max_val <- 8
+max_val <- 5000
 scalar_vec <- c(0.5, 1, 1.5, 1.75, 2, 2.25, 2.5, 3, 5)
 res_list <- vector("list", length(scalar_vec))
 extra_weight <- apply(dat_impute, 1, mean)
@@ -19,12 +18,12 @@ for(i in 1:length(scalar_vec)){
   save.image(paste0("../results/step3_scalar_heuristic", suffix, "_tmp.RData"))
 }
 
+.l2norm <- function(x){sqrt(sum(x^2))}
 quality_vec <- sapply(res_list, function(x){
-  pred_mat <- x$u_mat %*% t(x$v_mat)
+  pred_mat <- 1/(x$u_mat %*% t(x$v_mat))
   pred_mat <- t(sapply(1:nrow(pred_mat), function(x){
     pred_mat[x,] * extra_weight[x]
   }))
-  pred_mat <- exp(pred_mat)
 
   mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
 
