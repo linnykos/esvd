@@ -10,10 +10,10 @@ colnames(paramMat) <- c("n", "d")
 
 # setup
 cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
-                     40,10, 60,80, 60,80, 100,25)/75,
+                     40,10, 60,80, 60,80, 100,25)/100,
                    nrow = 4, ncol = 4, byrow = T)
 gene_pop <- matrix(c(20,90, 25,100,
-                     90,20, 100,25)/75, nrow = 2, ncol = 4, byrow = T)
+                     90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
 
 .data_generator <- function(cell_pop, gene_pop,
                             n_each = 50, d_each = 100, sigma = 0.05,
@@ -90,7 +90,7 @@ gene_pop <- matrix(c(20,90, 25,100,
 set.seed(10)
 n_each <- 50
 d_each <- 120
-sigma <- 0.05
+sigma <- 0.01
 total <- 250
 obj <- .data_generator(cell_pop, gene_pop, n_each = n_each, d_each = d_each,
                        sigma = sigma, total = total)
