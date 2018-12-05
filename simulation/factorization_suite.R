@@ -130,6 +130,23 @@ for(i in 1:length(scalar_vec)){
   save.image("../results/factorization_results.RData")
 }
 
+missing_idx <- sample(1:prod(dim(dat_impute)), round(0.01*prod(dim(dat_impute))))
+dat_impute_NA <- dat_impute
+dat_impute_NA[missing_idx] <- NA
+
+res_our_NA_list <- vector("list", length(scalar_vec))
+for(i in 1:length(scalar_vec)){
+  init <- singlecell::initialization(dat_impute_NA, family = "gaussian", scalar = scalar_vec[i],
+                                     k = 2, max_val = max_val)
+  res_our_NA_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                                                     family = "gaussian",  reparameterize = T,
+                                                     max_iter = 25, max_val = max_val,
+                                                     scalar = scalar_vec[i], extra_weight = extra_weight,
+                                                     return_path = F, cores = 15,
+                                                     verbose = T)
+  save.image("../results/factorization_results.RData")
+}
+
 save.image("../results/factorization_results.RData")
 
 # # VAMF
