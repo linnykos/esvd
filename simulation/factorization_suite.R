@@ -94,13 +94,13 @@ rule <- function(vec){
 }
 
 criterion <- function(dat, vec, y){
-  tmp <- svd(dat_impute)
+  tmp <- svd(dat)
   res_svd <- tmp$u[,1:k] %*% diag(sqrt(tmp$d[1:k]))
 
-  tmp <- ica::icafast(dat_impute, nc = k)
+  tmp <- ica::icafast(dat, nc = k)
   res_ica <- tmp$S
 
-  extra_weight <- apply(dat_impute, 1, mean)
+  extra_weight <- apply(dat, 1, mean)
 
   init <- singlecell::initialization(dat, family = "gaussian", max_val = vec["max_val"],
                                        k = vec["k"])
@@ -114,6 +114,9 @@ criterion <- function(dat, vec, y){
   list(res_svd = res_svd, res_ica = res_ica, res_our = res_our)
 }
 
+# set.seed(1); criterion(rule(paramMat[1,]), paramMat[1,], 1)
+
+############
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
