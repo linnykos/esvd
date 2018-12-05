@@ -119,9 +119,9 @@ extra_weight <- apply(dat_impute, 1, mean)
 
 res_our_list <- vector("list", length(scalar_vec))
 for(i in 1:length(scalar_vec)){
-  init <- singlecell:::.initialization(dat_impute, family = "gaussian", scalar = scalar_vec[i],
+  init <- singlecell::initialization(dat_impute, family = "gaussian", scalar = scalar_vec[i],
                                        k = 2, max_val = max_val)
-  res_our_list[[i]] <- singlecell:::.fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
+  res_our_list[[i]] <- singlecell::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
                                                    family = "gaussian",  reparameterize = T,
                                                    max_iter = 25, max_val = max_val,
                                                    scalar = scalar_vec[i], extra_weight = extra_weight,
@@ -136,14 +136,14 @@ save.image("../results/factorization_results.RData")
 # print(paste0(Sys.time(), ": VAMF"))
 # res_vamf <- vamf:::vamf(t(dat), 2, log2trans=T)$factors
 #
-# save.image("../results/factorization_results.RData")
-
+# save.image("../results/factorization_results_tmp.RData")
+#
 # # zinbwave
 # print(paste0(Sys.time(), ": ZINB"))
 # dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat)))
-# res_zinb <- zinbwave(dat_se, K = 2)
+# res_zinb <- zinbwave::zinbwave(dat_se, K = 2)
 #
-# save.image("../results/factorization_results.RData")
-
-
-
+# save.image("../results/factorization_results_tmp.RData")
+#
+#
+#
