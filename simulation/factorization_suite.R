@@ -2,9 +2,9 @@ rm(list=ls())
 library(simulation)
 library(singlecell)
 
-paramMat <- cbind(round(exp(seq(log(10), log(200), length.out = 10))),
-                  round(exp(seq(log(20), log(400), length.out = 10))))
-colnames(paramMat) <- c("n", "d")
+paramMat <- cbind(50, 120, 0.05, 100, 3, 2, 10)
+colnames(paramMat) <- c("n", "d", "sigma", "total", "k", "scalar", "max_val")
+trials <- 5
 
 ################
 
@@ -84,105 +84,44 @@ gene_pop <- matrix(c(20,90, 25,100,
        h = h, g = g, k = k)
 }
 
-
-##########
-
-set.seed(10)
-n_each <- 50
-d_each <- 120
-sigma <- 0.01
-total <- 100
-obj <- .data_generator(cell_pop, gene_pop, n_each = n_each, d_each = d_each,
-                       sigma = sigma, total = total)
-dat <- obj$dat
-impute_res <- SAVER::saver(t(dat))
-dat_impute <- t(impute_res$estimate)
-k <- 3
-
 ############
 
-# now try all the different factorization methods, either on dat or dat_impute
-# SVD
-print(paste0(Sys.time(), ": SVD"))
-tmp <- svd(dat_impute)
-res_svd <- tmp$u[,1:k] %*% diag(sqrt(tmp$d[1:k]))
-
-save.image("../results/factorization_results.RData")
-
-# ICA
-print(paste0(Sys.time(), ": ICA"))
-tmp <- ica::icafast(dat_impute, nc = k)
-res_ica <- tmp$S
-
-save.image("../results/factorization_results.RData")
-
-# our method
-print(paste0(Sys.time(), ": Our method"))
-
-max_val <- 10
-scalar_val <- 2
-extra_weight <- apply(dat_impute, 1, mean)
-
-res_our_list <- vector("list", length(scalar_vec))
-for(i in 1:length(scalar_vec)){
-  init <- singlecell::initialization(dat_impute, family = "gaussian", scalar = scalar_vec[i],
-                                       k = k, max_val = max_val)
-  res_our_list[[i]] <- singlecell::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                   family = "gaussian",  reparameterize = T,
-                                                   max_iter = 25, max_val = max_val,
-                                                   scalar = scalar_val, extra_weight = extra_weight,
-                                                   return_path = F, cores = 15,
-                                                   verbose = T)
-  save.image("../results/factorization_results.RData")
+rule <- function(vec){
+  obj <- .data_generator(cell_pop, gene_pop, n_each = vec["n"], d_each = vec["d"],
+                         sigma = vec["sigma"], scalar = vec["scalar"], total = vec["total"])
+  impute_res <- SAVER::saver(t(obj$dat))
+  t(impute_res$estimate)
 }
 
-scalar_vec <- c(0.1, 0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 8, 10, 100)
-missing_idx <- sample(1:prod(dim(dat_impute)), round(0.01*prod(dim(dat_impute))))
-dat_impute_NA <- dat_impute
-dat_impute_NA[missing_idx] <- NA
+criterion <- function(dat, vec, y){
+  tmp <- svd(dat_impute)
+  res_svd <- tmp$u[,1:k] %*% diag(sqrt(tmp$d[1:k]))
 
-res_our_NA_list <- vector("list", length(scalar_vec))
-for(i in 1:length(scalar_vec)){
-  init <- singlecell::initialization(dat_impute_NA, family = "gaussian", scalar = scalar_vec[i],
-                                     k = k, max_val = max_val)
-  res_our_NA_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                     family = "gaussian",  reparameterize = T,
-                                                     max_iter = 25, max_val = max_val,
-                                                     scalar = scalar_vec[i], extra_weight = extra_weight,
-                                                     return_path = F, cores = 15,
-                                                     verbose = T)
-  save.image("../results/factorization_results.RData")
+  tmp <- ica::icafast(dat_impute, nc = k)
+  res_ica <- tmp$S
+
+  extra_weight <- apply(dat_impute, 1, mean)
+
+  init <- singlecell::initialization(dat, family = "gaussian", max_val = vec["max_val"],
+                                       k = vec["k"])
+  res_our <- singlecell::fit_factorization(dat, init$u_mat, init$v_mat,
+                                         max_val = vec["max_val"],
+                                         family = "gaussian", verbose = F,
+                                         max_iter = 25, reparameterize = T,
+                                         extra_weight = extra_weight, scalar = vec["scalar"],
+                                         return_path = F)
+
+  list(res_svd = res_svd, res_ica = res_ica, res_our = res_our)
 }
 
-# select the scalar_val
 
-.l2norm <- function(x){sqrt(sum(x^2))}
-quality_vec <- sapply(res_our_NA_list, function(x){
-  pred_mat <- 1/(x$u_mat %*% t(x$v_mat))
-  pred_mat <- t(sapply(1:nrow(pred_mat), function(x){
-    pred_mat[x,] * extra_weight[x]
-  }))
-
-  mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
-  pca_res <- stats::princomp(mat)
-  diag_vec <- c(1,1); diag_vec <- diag_vec/.l2norm(diag_vec)
-
-  acos(diag_vec %*% pca_res$loadings[,1])
-})
-
-scalar_val <- scalar_vec[which.min(quality_vec)]
-
-init <- singlecell::initialization(dat_impute, family = "gaussian", scalar = scalar_vec[i],
-                                   k = k, max_val = max_val)
-res_our <- singlecell::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
-                                         family = "gaussian",  reparameterize = T,
-                                         max_iter = 25, max_val = max_val,
-                                         scalar = scalar_val, extra_weight = extra_weight,
-                                         return_path = F, cores = 15,
-                                         verbose = T)
+res <- simulation::simulation_generator(rule = rule, criterion = criterion,
+                                        paramMat = paramMat, trials = trials,
+                                        cores = 15, as_list = T,
+                                        filepath = "../results/factorization_results_tmp.RData",
+                                        verbose = T)
 
 save.image("../results/factorization_results.RData")
-
 
 # # VAMF
 # print(paste0(Sys.time(), ": VAMF"))
