@@ -95,13 +95,14 @@ rule <- function(vec){
 
 criterion <- function(dat, vec, y){
   tmp <- svd(dat)
-  res_svd <- tmp$u[,1:k] %*% diag(sqrt(tmp$d[1:k]))
+  res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
 
-  tmp <- ica::icafast(dat, nc = k)
+  tmp <- ica::icafast(dat, nc = vec["k"])
   res_ica <- tmp$S
 
   extra_weight <- apply(dat, 1, mean)
 
+  print("Starting our factorization")
   init <- singlecell::initialization(dat, family = "gaussian", max_val = vec["max_val"],
                                        k = vec["k"])
   res_our <- singlecell::fit_factorization(dat, init$u_mat, init$v_mat,
@@ -109,7 +110,7 @@ criterion <- function(dat, vec, y){
                                          family = "gaussian", verbose = F,
                                          max_iter = 25, reparameterize = T,
                                          extra_weight = extra_weight, scalar = vec["scalar"],
-                                         return_path = F)
+                                         return_path = F, cores = 15)
 
   list(res_svd = res_svd, res_ica = res_ica, res_our = res_our)
 }
@@ -120,7 +121,7 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = 15, as_list = T,
+                                        cores = 1, as_list = T,
                                         filepath = "../results/factorization_results_tmp.RData",
                                         verbose = T)
 
