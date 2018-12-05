@@ -5,21 +5,19 @@ library(singlecell)
 paramMat <- cbind(round(exp(seq(log(10), log(200), length.out = 10))),
                   round(exp(seq(log(20), log(400), length.out = 10))))
 colnames(paramMat) <- c("n", "d")
-trials <- 50
 
 ################
 
 # setup
 cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
-                     40,10, 60,80, 60,80, 100,25)/50,
+                     40,10, 60,80, 60,80, 100,25)/75,
                    nrow = 4, ncol = 4, byrow = T)
 gene_pop <- matrix(c(20,90, 25,100,
-                     90,20, 100,25)/50, nrow = 2, ncol = 4, byrow = T)
-distr_func = function(x){stats::rnorm(1, 4/x, sd = 2/x)}
+                     90,20, 100,25)/75, nrow = 2, ncol = 4, byrow = T)
 
 .data_generator <- function(cell_pop, gene_pop,
-                            distr_func = function(x){stats::rnorm(1, 4/x, sd = 2/x)},
-                            n_each = 50, d_each = 100, sigma = 0.05, total = 150){
+                            n_each = 50, d_each = 100, sigma = 0.05,
+                            scalar = 2, total = 150){
   #construct the cell information
   h <- nrow(cell_pop)
   cell_mat <- do.call(rbind, lapply(1:h, function(x){
@@ -49,10 +47,16 @@ distr_func = function(x){stats::rnorm(1, 4/x, sd = 2/x)}
   res <- singlecell:::.reparameterize(cell_mat, gene_mat)
   cell_mat <- res$u_mat; gene_mat <- res$v_mat
 
+  extra_weight <- rmutil::rlaplace(nrow(cell_mat), m = 11, s = 0.5)
+  pred_mat <- 1/(cell_mat %*% t(gene_mat))
+  pred_mat <- t(sapply(1:nrow(pred_mat), function(x){
+    pred_mat[x,] * extra_weight[x]
+  }))
+
   obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- distr_func(max(gram_mat[i,j], 1e-4))
+      obs_mat[i,j] <- round(rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar))
     }
   }
 
@@ -74,8 +78,9 @@ distr_func = function(x){stats::rnorm(1, 4/x, sd = 2/x)}
   }
 
   list(dat = obs_mat3, dat_nodropout = obs_mat2,
+       extra_weight = extra_weight,
        cell_mat = cell_mat, gene_mat = gene_mat,
-       gram_mat = gram_mat, n_each = n_each, d_each = d_each,
+       gram_mat = cell_mat %*% t(gene_mat), n_each = n_each, d_each = d_each,
        h = h, g = g, k = k)
 }
 
@@ -155,7 +160,7 @@ save.image("../results/factorization_results.RData")
 #
 # save.image("../results/factorization_results_tmp.RData")
 #
-# # zinbwave
+# zinbwave
 # print(paste0(Sys.time(), ": ZINB"))
 # dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat)))
 # res_zinb <- zinbwave::zinbwave(dat_se, K = 2)
