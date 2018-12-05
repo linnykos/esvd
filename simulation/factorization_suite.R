@@ -115,6 +115,7 @@ print(paste0(Sys.time(), ": Our method"))
 
 max_val <- 10
 scalar_vec <- c(0.1, 0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 8, 10, 100)
+extra_weight <- apply(dat_impute, 1, mean)
 
 res_our_list <- vector("list", length(scalar_vec))
 for(i in 1:length(scalar_vec)){
@@ -123,7 +124,7 @@ for(i in 1:length(scalar_vec)){
   res_our_list[[i]] <- singlecell:::.fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
                                                    family = "gaussian",  reparameterize = T,
                                                    max_iter = 25, max_val = max_val,
-                                                   scalar = scalar_vec[i],
+                                                   scalar = scalar_vec[i], extra_weight = extra_weight,
                                                    return_path = F, cores = 15,
                                                    verbose = T)
   save.image("../results/factorization_results.RData")
