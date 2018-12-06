@@ -16,6 +16,11 @@ plot(zz$res_ica[,1], zz$res_ica[,2], asp = T,
 # compare predicted mean to true mean
 set.seed(10)
 vec <- paramMat[1,]
+obj <- .data_generator(cell_pop, gene_pop, n_each = vec["n"], d_each = vec["d"],
+                       sigma = vec["sigma"], scalar = vec["scalar"], total = vec["total"])
+true_mean <- 1/obj$gram_mat
+pred_mean <- 1/(res[[1]][[1]]$res_our$u_mat %*% t(res[[1]][[1]]$res_our$v_mat))
+plot(true_mean, pred_mean, asp = T)
 
 ########
 

@@ -10,7 +10,7 @@
   stopifnot(all(pred_mat > 0))
   extra_mat <- t(sapply(1:nrow(dat), function(x){rep(extra_weights[x], ncol(dat))}))
 
-  sum(-log(pred_mat[idx]) + log(extra_mat[idx]) -
+  sum(-log(pred_mat[idx]) -
         pred_mat[idx]*dat[idx]*scalar^2/extra_mat[idx] +
         pred_mat[idx]^2*dat[idx]^2*scalar^2/(2*extra_mat[idx]^2))
 }
@@ -21,7 +21,7 @@
   idx <- which(!is.na(dat_vec))
   stopifnot(all(pred_vec[idx] > 0))
 
-  sum(-log(pred_vec[idx]) + log(extra_weights[idx]) -
+  sum(-log(pred_vec[idx]) -
         pred_vec[idx]*dat_vec[idx]*scalar^2/extra_weights[idx] +
         pred_vec[idx]^2*dat_vec[idx]^2*scalar^2/(2*extra_weights[idx]^2))
 }
