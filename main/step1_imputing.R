@@ -14,11 +14,11 @@ dat <- dat[,idx]
 dim(dat)
 
 dropout_mat <- singlecell::dropout(dat)
-zero_mat <- singlecell::find_true_zeros(dropout_mat, num_neighbors = 50)
+zero_mat <- singlecell::find_true_zeros(dropout_mat, num_neighbors = 200)
 idx <- which(is.na(zero_mat))
 
 dat_impute <- singlecell::scImpute(dat, drop_idx = idx, Kcluster = 5,
-                                     verbose = F, weight = 1)
+                                     verbose = T, weight = 1)
 
 rm(list = c("idx1", "idx2", "idx"))
 print(paste0(Sys.time(), ": Finished imputing"))
