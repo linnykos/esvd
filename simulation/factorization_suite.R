@@ -10,7 +10,7 @@ trials <- 2
 
 # setup
 cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
-                     40,10, 60,80, 60,80, 140,60)/100,
+                     40,10, 60,80, 60,80, 140,60)/10,
                    nrow = 4, ncol = 4, byrow = T)
 gene_pop <- matrix(c(20,90, 25,100,
                      90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
@@ -47,7 +47,8 @@ gene_pop <- matrix(c(20,90, 25,100,
   res <- singlecell:::.reparameterize(cell_mat, gene_mat)
   cell_mat <- res$u_mat; gene_mat <- res$v_mat
 
-  extra_weight <- rmutil::rlaplace(nrow(cell_mat), m = 11, s = 0.5)
+  # extra_weight <- rmutil::rlaplace(nrow(cell_mat), m = 11, s = 0.5)
+  extra_weight <- rep(1, nrow(cell_mat))
   pred_mat <- 1/(cell_mat %*% t(gene_mat))
   pred_mat <- t(sapply(1:nrow(pred_mat), function(x){
     pred_mat[x,] * extra_weight[x]
@@ -56,7 +57,8 @@ gene_pop <- matrix(c(20,90, 25,100,
   obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- round(rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar))
+      # obs_mat[i,j] <- round(rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar))
+      obs_mat[i,j] <- rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar)
     }
   }
 
@@ -127,7 +129,8 @@ criterion <- function(dat, vec, y){
   tmp <- ica::icafast(dat, nc = vec["k"])
   res_ica <- tmp$S
 
-  extra_weight <- apply(dat, 1, mean)
+  # extra_weight <- apply(dat, 1, mean)
+  extra_weight <- rep(1, nrow(dat))
 
   print("Starting our factorization")
   init <- singlecell::initialization(dat, family = "gaussian", max_val = vec["max_val"],
