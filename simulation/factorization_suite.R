@@ -129,8 +129,8 @@ criterion <- function(dat, vec, y){
   tmp <- ica::icafast(dat, nc = vec["k"])
   res_ica <- tmp$S
 
-  # extra_weight <- apply(dat, 1, mean)
-  extra_weight <- rep(10, nrow(dat))
+  extra_weight <- apply(dat, 1, mean)
+  # extra_weight <- rep(10, nrow(dat))
 
   print("Starting our factorization")
   init <- singlecell::initialization(dat, family = "gaussian", max_val = vec["max_val"],
