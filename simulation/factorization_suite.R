@@ -89,6 +89,27 @@ gene_pop <- matrix(c(20,90, 25,100,
 rule <- function(vec){
   obj <- .data_generator(cell_pop, gene_pop, n_each = vec["n"], d_each = vec["d"],
                          sigma = vec["sigma"], scalar = vec["scalar"], total = vec["total"])
+
+  dat <- obj$dat
+  dropout_mat <- singlecell:::.dropout(dat)
+  zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 50)
+  idx1 <- intersect(which(dat == 0), which(obj$dat_nodropout != 0))
+
+  dat_impute <- singlecell:::.scImpute(dat, idx1, Kcluster = 4,
+                                       verbose = T, weight = 1)
+
+  dat_impute
+
+#   idx1 <- intersect(which(dat == 0), which(obj$dat_nodropout != 0))
+#   idx2 <- which(is.na(zero_mat))
+#   idx3 <- which(dropout_mat == 0)
+#   length(intersect(idx1, idx2))/length(unique(c(idx1, idx2)))
+#
+#   plot(obj$dat_nodropout[which(dat == 0)], dat_impute[which(dat == 0)], asp = T,
+#        pch = 16, col = rgb(0,0,0,0.1))
+#   plot(obj$dat_nodropout[which(is.na(zero_mat))], dat_impute[which(is.na(zero_mat))], asp = T,
+#        pch = 16, col = rgb(0,0,0,0.1))
+
   # impute_res <- SAVER::saver(t(obj$dat))
   # new_dat <- t(impute_res$estimate)
   # dat <- obj$dat
@@ -96,7 +117,6 @@ rule <- function(vec){
   #
   # dat[which(dat == 0)] <- new_dat[which(dat == 0)]
   # dat
-  obj$dat
 }
 
 criterion <- function(dat, vec, y){
@@ -114,7 +134,7 @@ criterion <- function(dat, vec, y){
   res_our <- singlecell::fit_factorization(dat, init$u_mat, init$v_mat,
                                          max_val = vec["max_val"],
                                          family = "gaussian", verbose = F,
-                                         max_iter = 100, reparameterize = T,
+                                         max_iter = 25, reparameterize = T,
                                          extra_weight = extra_weight, scalar = vec["scalar"],
                                          return_path = F, cores = 15)
 
