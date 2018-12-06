@@ -1,7 +1,7 @@
 set.seed(10)
 load("../results/step0_screening.RData")
 
-extra_weights <- apply(dat, 1, mean)
+extra_weight <- apply(dat, 1, mean)
 
 res_hvg <- descend::findHVG(res_descend, threshold = 12)
 length(res_hvg$HVG.genes)
