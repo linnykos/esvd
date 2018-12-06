@@ -2,7 +2,7 @@ rm(list=ls())
 load("../results/factorization_results.RData")
 
 zz <- res[[1]][[1]]
-plot(zz$res_our$u_mat[,1], zz$res_our$u_mat[,2], asp = T,
+plot(res_our$u_mat[,1], res_our$u_mat[,3], asp = T,
      pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n"])])
 
 plot(zz$res_svd[,1], zz$res_svd[,2], asp = T,

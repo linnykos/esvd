@@ -10,7 +10,7 @@ trials <- 2
 
 # setup
 cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
-                     40,10, 60,80, 60,80, 100,25)/100,
+                     40,10, 60,80, 60,80, 140,60)/100,
                    nrow = 4, ncol = 4, byrow = T)
 gene_pop <- matrix(c(20,90, 25,100,
                      90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
@@ -91,12 +91,13 @@ rule <- function(vec){
                          sigma = vec["sigma"], scalar = vec["scalar"], total = vec["total"])
 
   dat <- obj$dat
+  # dat2 <- dat; dat2 <- t(apply(dat, 1, function(x){x/sum(x)}))
   dropout_mat <- singlecell:::.dropout(dat)
   zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 50)
   idx1 <- intersect(which(dat == 0), which(obj$dat_nodropout != 0))
 
   dat_impute <- singlecell:::.scImpute(dat, idx1, Kcluster = 4,
-                                       verbose = T, weight = 1)
+                                       verbose = F, weight = 1)
 
   dat_impute
 
