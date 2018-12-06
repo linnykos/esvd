@@ -92,13 +92,13 @@ rule <- function(vec){
   obj <- .data_generator(cell_pop, gene_pop, n_each = vec["n"], d_each = vec["d"],
                          sigma = vec["sigma"], scalar = vec["scalar"], total = vec["total"])
 
-  dat <- obj$dat
-  dropout_mat <- singlecell:::.dropout(dat)
-  zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 50)
-  idx <- which(is.na(zero_mat))
-
-  dat_impute <- singlecell:::.scImpute(dat, drop_idx = idx, Kcluster = 4,
-                                       verbose = F, weight = 1)
+  # dat <- obj$dat
+  # dropout_mat <- singlecell:::.dropout(dat)
+  # zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 50)
+  # idx <- which(is.na(zero_mat))
+  #
+  # dat_impute <- singlecell:::.scImpute(dat, drop_idx = idx, Kcluster = 4,
+  #                                      verbose = F, weight = 1)
   #
   # dat_impute
 
@@ -112,8 +112,8 @@ rule <- function(vec){
 #   plot(obj$dat_nodropout[which(is.na(zero_mat))], dat_impute[which(is.na(zero_mat))], asp = T,
 #        pch = 16, col = rgb(0,0,0,0.1))
 
-  # impute_res <- SAVER::saver(t(obj$dat))
-  # t(impute_res$estimate)
+  impute_res <- SAVER::saver(t(obj$dat))
+  t(impute_res$estimate)
   # dat <- obj$dat
   # plot(obj$dat_nodropout[which(dat == 0)], new_dat[which(dat == 0)], asp = T)
   #
@@ -128,8 +128,8 @@ criterion <- function(dat, vec, y){
   tmp <- ica::icafast(dat, nc = vec["k"])
   res_ica <- tmp$S
 
-  extra_weight <- apply(dat, 1, mean)
-  # extra_weight <- rep(10, nrow(dat))
+  # extra_weight <- apply(dat, 1, mean)
+  extra_weight <- rep(10, nrow(dat))
 
   print("Starting our factorization")
   init <- singlecell::initialization(dat, family = "gaussian", max_val = vec["max_val"],
