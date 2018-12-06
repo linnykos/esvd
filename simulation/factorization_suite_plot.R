@@ -1,12 +1,23 @@
 rm(list=ls())
 load("../results/factorization_results.RData")
 
+zz <- res[[1]][[1]]
+plot(zz$res_our$u_mat[,1], zz$res_our$u_mat[,3], asp = T,
+     pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n"])])
+
+plot(zz$res_svd[,1], zz$res_svd[,2], asp = T,
+     pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n"])])
+
+plot(zz$res_ica[,1], zz$res_ica[,2], asp = T,
+     pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n"])])
+
+########
+
 plot(obj$cell_mat[,1], obj$cell_mat[,2], asp = T,
      pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 
 k <- 6
-plot(res_our_list[[k]]$u_mat[,1], res_our_list[[k]]$u_mat[,2], asp = T,
-     pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
+
 
 k <- 6
 pred_mat <- 1/(res_our_NA_list[[k]]$u_mat %*% t(res_our_NA_list[[k]]$v_mat))
