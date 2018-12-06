@@ -4,7 +4,6 @@ load("../results/step2_naive_svd.RData")
 max_val <- 5000
 scalar_vec <- c(0.5, 1, 1.5, 1.75, 2, 2.25, 2.5, 3, 5)
 res_list <- vector("list", length(scalar_vec))
-extra_weight <- apply(dat_impute, 1, mean)
 
 for(i in 1:length(scalar_vec)){
   init <- singlecell::initialization(dat_impute_NA, family = family, extra_weight = extra_weight,

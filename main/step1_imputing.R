@@ -1,6 +1,8 @@
 set.seed(10)
 load("../results/step0_screening.RData")
 
+extra_weights <- apply(dat, 1, mean)
+
 res_hvg <- descend::findHVG(res_descend, threshold = 12)
 length(res_hvg$HVG.genes)
 
@@ -11,8 +13,12 @@ idx <- sort(unique(c(idx1, idx2)))
 dat <- dat[,idx]
 dim(dat)
 
-impute_res <- SAVER::saver(t(dat), ncores = 10)
-dat_impute <- t(impute_res$estimate)
+dropout_mat <- singlecell:::.dropout(dat)
+zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 50)
+idx <- which(is.na(zero_mat))
+
+dat_impute <- singlecell:::.scImpute(dat, drop_idx = idx, Kcluster = 5,
+                                     verbose = F, weight = 1)
 
 rm(list = c("idx1", "idx2", "idx"))
 print(paste0(Sys.time(), ": Finished imputing"))
