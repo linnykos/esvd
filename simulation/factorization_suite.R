@@ -2,7 +2,7 @@ rm(list=ls())
 library(simulation)
 library(singlecell)
 
-paramMat <- cbind(50, 120, 0.05, 250, 3, 2, 10)
+paramMat <- cbind(50, 120, 0.01, 250, 3, 2, 10)
 colnames(paramMat) <- c("n", "d", "sigma", "total", "k", "scalar", "max_val")
 trials <- 2
 
@@ -89,8 +89,14 @@ gene_pop <- matrix(c(20,90, 25,100,
 rule <- function(vec){
   obj <- .data_generator(cell_pop, gene_pop, n_each = vec["n"], d_each = vec["d"],
                          sigma = vec["sigma"], scalar = vec["scalar"], total = vec["total"])
-  impute_res <- SAVER::saver(t(obj$dat))
-  t(impute_res$estimate)
+  # impute_res <- SAVER::saver(t(obj$dat))
+  # new_dat <- t(impute_res$estimate)
+  # dat <- obj$dat
+  # plot(obj$dat_nodropout[which(dat == 0)], new_dat[which(dat == 0)], asp = T)
+  #
+  # dat[which(dat == 0)] <- new_dat[which(dat == 0)]
+  # dat
+  obj$dat
 }
 
 criterion <- function(dat, vec, y){
@@ -108,7 +114,7 @@ criterion <- function(dat, vec, y){
   res_our <- singlecell::fit_factorization(dat, init$u_mat, init$v_mat,
                                          max_val = vec["max_val"],
                                          family = "gaussian", verbose = F,
-                                         max_iter = 25, reparameterize = T,
+                                         max_iter = 100, reparameterize = T,
                                          extra_weight = extra_weight, scalar = vec["scalar"],
                                          return_path = F, cores = 15)
 
