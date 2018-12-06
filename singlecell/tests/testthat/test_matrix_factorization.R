@@ -248,7 +248,7 @@ test_that("fit_factorization works for Gaussian with scalar setting", {
   set.seed(10)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
 
-  init <- initialization(dat, family = "gaussian", scalar = 3, max_val = 100)
+  init <- initialization(dat, family = "gaussian", max_val = 100)
   res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "gaussian",
                             max_val = 100, scalar = 3)
@@ -264,7 +264,7 @@ test_that("fit_factorization for Gaussian with scalar setting respects max_val",
   set.seed(10)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
 
-  init <- initialization(dat, family = "gaussian", scalar = 100, max_val = 5)
+  init <- initialization(dat, family = "gaussian", max_val = 5)
   res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "gaussian",
                             max_val = 5, scalar = 100)
@@ -281,7 +281,7 @@ test_that("fit_factorization for Gaussian with scalar and extra_weights", {
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
   extra_weights <- rowSums(dat)
 
-  init <- initialization(dat, family = "gaussian", scalar = 2, max_val = 5)
+  init <- initialization(dat, family = "gaussian", max_val = 5)
   res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "gaussian", extra_weights = extra_weights,
                             max_val = 5, scalar = 2)

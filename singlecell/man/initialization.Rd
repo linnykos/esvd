@@ -5,8 +5,7 @@
 \title{Initialization for matrix factorization}
 \usage{
 initialization(dat, k = 2, family = "exponential",
-  extra_weights = rep(1, nrow(dat)), scalar = 1, max_val = NA,
-  verbose = F)
+  extra_weights = rep(1, nrow(dat)), max_val = NA, verbose = F)
 }
 \arguments{
 \item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}
@@ -16,8 +15,6 @@ initialization(dat, k = 2, family = "exponential",
 \item{family}{either \code{"gaussian"}, \code{"exponential"} or \code{"poisson"}}
 
 \item{extra_weights}{vector of weights, of length \code{n}}
-
-\item{scalar}{positive numeric for the Gaussian family}
 
 \item{max_val}{maximum value of the inner product (with the correct sign)}
 

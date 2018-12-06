@@ -1,19 +1,14 @@
-.calculate_weight <- function (x, param) {
-  pz1 <- param[["proportion"]] * likelihood(param[["class1"]], x)
-  pz2 <- (1 - param[["proportion"]]) * likelihood(param[["class2"]], x)
-  pz <- pz1/(pz1 + pz2)
-  pz[pz1 == 0] <- 0
-
-  cbind(pz, 1 - pz)
-}
-
-.log_likelihood <- function(x, param){
-  sum(log10(param[["proportion"]] * likelihood(param[["class1"]], x) +
-              (1-param[["proportion"]]) * likelihood(param[["class2"]], x)))
-}
-
-.em_mixture <- function(x, mixture = "gamma.tgaussian",
-                       min_val = 0, max_iter = 100){
+#' EM mixture for modeling dropout
+#'
+#' @param x vector
+#' @param mixture family, represented by a string
+#' @param min_val minimum value used for initialization
+#' @param max_iter maximum iteration for EM algorithm
+#'
+#' @return parameter object
+#' @export
+em_mixture <- function(x, mixture = "gamma.tgaussian",
+                        min_val = 0, max_iter = 100){
   param <- .initialize_mixture(x, mixture, min_val)
   max_prop <- param[["proportion"]]
 
@@ -30,7 +25,7 @@
     param["proportion"] <- min(sum(wt[, 1])/nrow(wt), max_prop)
     param[["class1"]] <- estimate_parameter(param[["class1"]], x2, wt[,1])
     param[["class2"]] <- estimate_parameter(param[["class2"]], x, wt[,2],
-                                                 min_mean = max(0, compute_mean(param[["class1"]])))
+                                            min_mean = max(0, compute_mean(param[["class1"]])))
 
     #see if converged
     loglik <- .log_likelihood(x2, param)
@@ -41,6 +36,20 @@
   }
 
   param
+}
+
+.calculate_weight <- function (x, param) {
+  pz1 <- param[["proportion"]] * likelihood(param[["class1"]], x)
+  pz2 <- (1 - param[["proportion"]]) * likelihood(param[["class2"]], x)
+  pz <- pz1/(pz1 + pz2)
+  pz[pz1 == 0] <- 0
+
+  cbind(pz, 1 - pz)
+}
+
+.log_likelihood <- function(x, param){
+  sum(log10(param[["proportion"]] * likelihood(param[["class1"]], x) +
+              (1-param[["proportion"]]) * likelihood(param[["class2"]], x)))
 }
 
 .initialize_mixture <- function(x, mixture, min_val){

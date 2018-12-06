@@ -4,7 +4,7 @@
 \alias{.frank_wolfe}
 \title{Frank wolfe linear program}
 \usage{
-.frank_wolfe(grad_vec, other_mat, tol = 1e-04, direction = "<=",
+.frank_wolfe(grad_vec, other_mat, tol = 0.001, direction = "<=",
   other_bound = NA)
 }
 \arguments{

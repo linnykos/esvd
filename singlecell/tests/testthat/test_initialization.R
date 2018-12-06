@@ -23,7 +23,7 @@ test_that("initialization works off of an imputed matrix", {
     dat2[i, sample(1:5, 1)] <- NA
   }
   drop_idx <- which(is.na(dat2))
-  dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
+  dat2 <- scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
 
   res <- initialization(dat2)
 
@@ -42,7 +42,7 @@ test_that("initialization gives negative predictions", {
     dat2[i, sample(1:5, 1)] <- NA
   }
   drop_idx <- which(is.na(dat2))
-  dat2 <- .scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
+  dat2 <- scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
 
   res <- initialization(dat2)
   pred_mat <- res$u_mat %*% t(res$v_mat)

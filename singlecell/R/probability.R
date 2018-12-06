@@ -43,11 +43,11 @@ compute_mean.tgaussian <- function(obj){
 #########
 
 initialize.exponential <- function(x){
-  structure(c(rate = 200), class = "exponential")
+  structure(c(rate = 2), class = "exponential")
 }
 
 initialize.gamma <- function(x){
-  structure(c(shape = 1, rate = 200), class = "gamma")
+  structure(c(shape = 1, rate = 2), class = "gamma")
 }
 
 initialize.gaussian <- function(x, min_val = 0){
@@ -77,6 +77,8 @@ estimate_parameter.gamma <- function(obj, x, weight = rep(1, length(x)), ...) {
 
   tp_s <- sum(weight)
   tp_t <- sum(weight * x)
+  if(tp_t <= 1e-6) return(structure(c(shape = 1, rate = 200), class = "gamma"))
+
   tp_u <- sum(weight * log(x))
   tp_v <- -tp_u / tp_s - log(tp_s / tp_t)
   if (tp_v <= 0){

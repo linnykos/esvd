@@ -1,14 +1,49 @@
 rm(list=ls())
-x=1
-set.seed(x*10)
-dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
-class(dat) <- c("gaussian", class(dat))
-bool <- sample(c(T, F), 1)
+load("../results/tmp.RData")
+i=182
+.em_mixture(dat[,i], mixture = "gamma.tgaussian", min_val = 0)
 
-res <- .initialization(dat, family = "gaussian", max_val = 100)
-u_mat <- res$u_mat
-v_mat <- res$v_mat
+############
 
-# res <- .optimize_mat(dat, v_mat, u_mat, bool, max_val = 100)
+x = dat[,i]
+mixture = "gamma.tgaussian"
+min_val = 0
+max_iter = 100
 
-left = bool
+param <- .initialize_mixture(x, mixture, min_val)
+max_prop <- param[["proportion"]]
+
+x2 <- .jitter_zeros(x)
+eps <- 10
+iter <- 0
+loglik_old <- 0
+#
+# while(eps > 0.5) {
+#   print(iter)
+#   #E-step
+#   wt <- .calculate_weight(x2, param)
+#
+#   #M-step
+#   param["proportion"] <- min(sum(wt[, 1])/nrow(wt), max_prop)
+#   param[["class1"]] <- estimate_parameter(param[["class1"]], x2, wt[,1])
+#   param[["class2"]] <- estimate_parameter(param[["class2"]], x, wt[,2],
+#                                           min_mean = max(0, compute_mean(param[["class1"]])))
+#
+#   #see if converged
+#   loglik <- .log_likelihood(x2, param)
+#   eps <- (loglik - loglik_old)^2
+#   loglik_old <- loglik
+#   iter <- iter + 1
+#   if (iter > max_iter) break()
+# }
+
+############
+
+print(iter)
+#E-step
+wt <- .calculate_weight(x2, param)
+
+#M-step
+param["proportion"] <- min(sum(wt[, 1])/nrow(wt), max_prop)
+param[["class1"]] <- estimate_parameter(param[["class1"]], x2, wt[,1])
+

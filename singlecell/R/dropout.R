@@ -1,8 +1,14 @@
-.dropout <- function(dat){
+#' Determine which entries are candidates for dropout
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
+#'
+#' @return a 0-1 matrix where 0 indicates entries that are dropout candidates
+#' @export
+dropout <- function(dat){
   idx <- which(colSums(dat) != 0)
 
   dropout_res <- lapply(idx, function(i){
-    .em_mixture(dat[,i])
+    em_mixture(dat[,i], mixture = "gamma.tgaussian", min_val = 0)
   })
 
   dropout_idx <- lapply(1:length(idx), function(i){

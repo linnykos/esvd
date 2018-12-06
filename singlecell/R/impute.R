@@ -1,6 +1,43 @@
 ## Many of the following functions are attributed to scImpute:
 ##  https://github.com/Vivianstats/scImpute
 
+#' scImpute algorithm
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
+#' @param drop_idx inidices of \code{dat} to impute
+#' @param Kcluster number of clusters
+#' @param min_size minimum size of a cluster
+#' @param verbose boolean
+#' @param weight 0-1 weight factor, where numbers closer to 1 means to rely on newly imputed values
+#'
+#' @return \code{n} by \code{d} matrix
+#' @export
+scImpute <- function(dat, drop_idx, Kcluster, min_size = 5, verbose = F,
+                      weight = 0.5){
+  stopifnot(length(which(is.na(dat))) == 0)
+  if(length(drop_idx) == 0) return(dat)
+
+  neigh_vec <- .find_neighbors_impute(dat, Kcluster = Kcluster)
+  neigh_list <- lapply(1:Kcluster, function(k){which(neigh_vec == k)})
+  stopifnot(all(sapply(neigh_list, length) >= min_size))
+
+  dat2 <- dat
+  dat2[drop_idx] <- NA
+
+  for(k in neigh_list){
+    for(i in 1:length(k)){
+      if(verbose && i %% floor(length(k)/10) == 0) cat('*')
+      keep_idx <- which(!is.na(dat2[k[i],]))
+      dat2[k[i],] <- .nnls_impute(dat[k[i],], dat[setdiff(k, k[i]),,drop = F], keep_idx,
+                                  weight = weight)
+    }
+    if(verbose) cat('\n')
+  }
+
+  dat2
+}
+
+
 .nnls_impute <- function(cell_vec, neigh_mat, B_vec,
                          max_vec = apply(neigh_mat, 2, max),
                          weight = 1, with_intercept = T){
@@ -40,32 +77,6 @@
 
   (1-weight)*cell_vec + weight*cell_vec2
 }
-
-.scImpute <- function(dat, drop_idx, Kcluster, min_size = 5, verbose = F,
-                      weight = 0.5){
-  stopifnot(length(which(is.na(dat))) == 0)
-  if(length(drop_idx) == 0) return(dat)
-
-  neigh_vec <- .find_neighbors_impute(dat, Kcluster = Kcluster)
-  neigh_list <- lapply(1:Kcluster, function(k){which(neigh_vec == k)})
-  stopifnot(all(sapply(neigh_list, length) >= min_size))
-
-  dat2 <- dat
-  dat2[drop_idx] <- NA
-
-  for(k in neigh_list){
-    for(i in 1:length(k)){
-      if(verbose && i %% floor(length(k)/10) == 0) cat('*')
-      keep_idx <- which(!is.na(dat2[k[i],]))
-      dat2[k[i],] <- .nnls_impute(dat[k[i],], dat[setdiff(k, k[i]),,drop = F], keep_idx,
-                                  weight = weight)
-    }
-    if(verbose) cat('\n')
-  }
-
-  dat2
-}
-
 
 .find_neighbors_impute <- function(dat, var_thres = 0.6, Kcluster = 2){
   stopifnot(length(which(is.na(dat))) == 0)

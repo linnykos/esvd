@@ -117,9 +117,9 @@ test_that(".nnls_impute does not get stuck in a loop", {
 
 ######################
 
-## .scImpute is correct
+## scImpute is correct
 
-test_that(".scImpute works", {
+test_that("scImpute works", {
   set.seed(10)
   dat <- abs(rbind(MASS::mvrnorm(5, rep(0, 5), diag(5)),
                    MASS::mvrnorm(5, rep(10, 5), 2*diag(5))))
@@ -129,7 +129,7 @@ test_that(".scImpute works", {
   }
   drop_idx <- which(is.na(dat2))
 
-  res <- .scImpute(dat, drop_idx = drop_idx, Kcluster = 2, min_size = 3)
+  res <- scImpute(dat, drop_idx = drop_idx, Kcluster = 2, min_size = 3)
 
   expect_true(nrow(res) == nrow(dat))
   expect_true(ncol(res) == ncol(res))
