@@ -1,15 +1,11 @@
-.find_neighbor <- function(mat, i, num_neighbors){
-  row_vec <- c(1:nrow(mat))[-i]
-  idx_me <- which(mat[i,] == 0)
-  vec <- sapply(row_vec, function(x){
-    idx_other <- which(mat[x,] == 0)
-    length(intersect(idx_me, idx_other))/length(unique(c(idx_me, idx_other)))
-  })
-
-  row_vec[order(vec, decreasing = T)[1:num_neighbors]]
-}
-
-.find_true_zeros <- function(dropout_mat, num_neighbors = NA){
+#' Finding the true zeros
+#'
+#' @param dropout_mat a \code{n} by \code{d} matrix
+#' @param num_neighbors number of neighbors
+#'
+#' @return a 0-1-NA matrix of size \code{n} by \code{d}
+#' @export
+find_true_zeros <- function(dropout_mat, num_neighbors = NA){
   if(is.na(num_neighbors)) num_neighbors <- ceiling(nrow(dropout_mat)/10)
 
   neighbor_list <- lapply(1:nrow(dropout_mat), function(x){
@@ -27,3 +23,16 @@
 
   zero_mat
 }
+
+
+.find_neighbor <- function(mat, i, num_neighbors){
+  row_vec <- c(1:nrow(mat))[-i]
+  idx_me <- which(mat[i,] == 0)
+  vec <- sapply(row_vec, function(x){
+    idx_other <- which(mat[x,] == 0)
+    length(intersect(idx_me, idx_other))/length(unique(c(idx_me, idx_other)))
+  })
+
+  row_vec[order(vec, decreasing = T)[1:num_neighbors]]
+}
+

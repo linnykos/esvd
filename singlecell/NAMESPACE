@@ -2,6 +2,7 @@
 
 export(dropout)
 export(em_mixture)
+export(find_true_zeros)
 export(fit_factorization)
 export(initialization)
 export(scImpute)
