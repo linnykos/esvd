@@ -30,8 +30,8 @@ cluster_mat <- .construct_cluster_matrix(cluster_labels)
 centers <- .compute_cluster_center(u_mat, cluster_mat)
 
 png("../figure/main/latent_cluster.png", height = 1500, width = 1900, res = 300, units = "px")
-par(mfcol = c(3,4), mar = c(0.5,0.5,0.5,0.5))
-for(k in c(2,1,4,5)){
+par(mfcol = c(3,length(curves$lineages)), mar = c(0.5,0.5,0.5,0.5))
+for(k in 1:length(curves$lineages)){
   idx <- which(cluster_labels %in% curves$lineages[[k]])
 
   for(i in 1:ncol(combn_mat)){
