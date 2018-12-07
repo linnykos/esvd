@@ -4,7 +4,7 @@ library(singlecell)
 
 paramMat <- cbind(50, 120, 0.01, 150, 3, 2, 10)
 colnames(paramMat) <- c("n", "d", "sigma", "total", "k", "scalar", "max_val")
-trials <- 1
+trials <- 50
 
 ################
 
@@ -29,7 +29,6 @@ gene_pop <- matrix(c(20,90, 25,100,
   k <- ncol(cell_mat)
 
   # construct the gene information
-
   g <- nrow(gene_pop)
   gene_mat <- do.call(rbind, lapply(1:g, function(x){
     pos <- stats::runif(d_each)
@@ -47,7 +46,6 @@ gene_pop <- matrix(c(20,90, 25,100,
   res <- singlecell:::.reparameterize(cell_mat, gene_mat)
   cell_mat <- res$u_mat; gene_mat <- res$v_mat
 
-  # extra_weight <- rmutil::rlaplace(nrow(cell_mat), m = 11, s = 0.5)
   extra_weight <- rep(1, nrow(cell_mat))
   pred_mat <- 1/(cell_mat %*% t(gene_mat))
   pred_mat <- t(sapply(1:nrow(pred_mat), function(x){
@@ -57,13 +55,12 @@ gene_pop <- matrix(c(20,90, 25,100,
   obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
   for(i in 1:n){
     for(j in 1:d){
-      # obs_mat[i,j] <- round(rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar))
       obs_mat[i,j] <- rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar)
     }
   }
 
   obs_mat[obs_mat < 0] <- 0
-  obs_mat2 <- round(exp(obs_mat*12)-1)
+  obs_mat2 <- round(exp(obs_mat*14)-1)
   # length(which(obs_mat2 > 5000))/prod(dim(obs_mat2))
   obs_mat2[obs_mat2 > 5000] <- 5000
   # quantile(obs_mat2)
@@ -107,13 +104,6 @@ rule <- function(vec){
 }
 
 criterion <- function(dat, vec, y){
-  # tmp <- svd(dat)
-  # res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
-
-  # tmp <- ica::icafast(dat, nc = vec["k"])
-  # res_ica <- tmp$S
-
-  # extra_weight <- apply(dat, 1, mean)
   extra_weight <- rep(1, nrow(dat$dat_impute))
 
   print("Starting our factorization")
@@ -126,7 +116,6 @@ criterion <- function(dat, vec, y){
                                          extra_weight = extra_weight, scalar = vec["scalar"],
                                          return_path = F, cores = 15)
 
-  # list(res_svd = res_svd, res_ica = res_ica, res_our = res_our)
   list(res_our = res_our)
 }
 
@@ -141,6 +130,15 @@ res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         verbose = T)
 
 save.image("../results/factorization_results.RData")
+
+# tmp <- svd(dat)
+# res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
+
+# tmp <- ica::icafast(dat, nc = vec["k"])
+# res_ica <- tmp$S
+
+# extra_weight <- apply(dat, 1, mean)
+# list(res_svd = res_svd, res_ica = res_ica, res_our = res_our)
 
 # # VAMF
 # print(paste0(Sys.time(), ": VAMF"))
