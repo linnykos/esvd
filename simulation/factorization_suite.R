@@ -63,8 +63,10 @@ gene_pop <- matrix(c(20,90, 25,100,
   }
 
   obs_mat[obs_mat < 0] <- 0
-  obs_mat2 <- round(exp(obs_mat*8)-1)
+  obs_mat2 <- round(exp(obs_mat*12)-1)
+  # length(which(obs_mat2 > 5000))/prod(dim(obs_mat2))
   obs_mat2[obs_mat2 > 5000] <- 5000
+  # quantile(obs_mat2)
 
   # now do something more dramatic with dropout
   obs_mat3 <- obs_mat2
