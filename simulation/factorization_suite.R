@@ -123,7 +123,7 @@ criterion <- function(dat, vec, y){
                                          return_path = F, cores = 15)
 
   list(res_svd = res_svd, res_ica = res_ica, res_our = res_our, dat = dat$dat,
-       dat_impute = dat$dat_impute, cell_mat = obj$cell_mat)
+       dat_impute = dat$dat_impute, cell_mat = dat$cell_mat)
 }
 
 # set.seed(1); criterion(rule(paramMat[1,]), paramMat[1,], 1)
