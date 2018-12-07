@@ -104,6 +104,12 @@ rule <- function(vec){
 }
 
 criterion <- function(dat, vec, y){
+  tmp <- svd(dat$dat_impute)
+  res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
+
+  tmp <- ica::icafast(dat$dat_impute, nc = vec["k"])
+  res_ica <- tmp$S
+
   extra_weight <- rep(1, nrow(dat$dat_impute))
 
   print("Starting our factorization")
@@ -116,7 +122,8 @@ criterion <- function(dat, vec, y){
                                          extra_weight = extra_weight, scalar = vec["scalar"],
                                          return_path = F, cores = 15)
 
-  list(res_our = res_our)
+  list(res_svd = res_svd, res_ica = res_ica, res_our = res_our, dat = dat$dat,
+       dat_impute = dat$dat_impute)
 }
 
 # set.seed(1); criterion(rule(paramMat[1,]), paramMat[1,], 1)
@@ -131,14 +138,10 @@ res <- simulation::simulation_generator(rule = rule, criterion = criterion,
 
 save.image("../results/factorization_results.RData")
 
-# tmp <- svd(dat)
-# res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
 
-# tmp <- ica::icafast(dat, nc = vec["k"])
-# res_ica <- tmp$S
 
 # extra_weight <- apply(dat, 1, mean)
-# list(res_svd = res_svd, res_ica = res_ica, res_our = res_our)
+#
 
 # # VAMF
 # print(paste0(Sys.time(), ": VAMF"))
