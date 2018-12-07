@@ -100,7 +100,7 @@ rule <- function(vec){
   dat_impute <- singlecell::scImpute(dat, drop_idx = idx, Kcluster = 4,
                                        verbose = F, weight = 1)
 
-  list(dat = obj$dat, dat_impute = dat_impute)
+  list(dat = obj$dat, dat_impute = dat_impute, cell_mat = obj$cell_mat)
 }
 
 criterion <- function(dat, vec, y){
@@ -123,7 +123,7 @@ criterion <- function(dat, vec, y){
                                          return_path = F, cores = 15)
 
   list(res_svd = res_svd, res_ica = res_ica, res_our = res_our, dat = dat$dat,
-       dat_impute = dat$dat_impute)
+       dat_impute = dat$dat_impute, cell_mat = obj$cell_mat)
 }
 
 # set.seed(1); criterion(rule(paramMat[1,]), paramMat[1,], 1)
