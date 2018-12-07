@@ -47,7 +47,7 @@ initialize.exponential <- function(x){
 }
 
 initialize.gamma <- function(x){
-  structure(c(shape = 1, rate = 2), class = "gamma")
+  structure(c(shape = 1, rate = 5), class = "gamma")
 }
 
 initialize.gaussian <- function(x, min_val = 0){
