@@ -250,11 +250,14 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
 .clean_curve <- function(pcurve, W_vec, sample_idx = NA){
   stopifnot(class(pcurve) == "principal_curve")
   stopifnot(!is.matrix(W_vec))
+  stopifnot(length(which(W_vec > 0)) == length(pcurve$lambda))
 
   # force non-negative distances
   pcurve$dist_ind <- abs(pcurve$dist_ind)
   # force pseudotime to start at 0
   pcurve$lambda <- pcurve$lambda - min(pcurve$lambda, na.rm=TRUE)
+  pcurve$lambda_long <- rep(0, length(W_vec))
+  pcurve$lambda_long[which(W_vec > 0)] <- pcurve$lambda
   pcurve$W <- W_vec
   pcurve$idx <- sample_idx
 
@@ -376,7 +379,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
 #'
 #' @return vector
 .percent_shrinkage <- function(pcurve, common_idx){
-  lambda <- pcurve$lambda
+  lambda <- pcurve$lambda_long
 
   dens <- stats::density(0, bw = 1, kernel = "cosine")
   surv <- list(x = dens$x, y = (sum(dens$y) - cumsum(dens$y))/sum(dens$y))
@@ -385,7 +388,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
     pct_l <- rep(0, length(lambda))
   } else {
     surv$x <- .scale_vector(surv$x, lower = box_vals[1], upper = box_vals[5])
-    pct_l <- stats::approx(surv$x, surv$y, lambda, rule = 2)$y
+    pct_l <- stats::approx(surv$x, surv$y, pcurve$lambda, rule = 2)$y
   }
 
   pct_l
