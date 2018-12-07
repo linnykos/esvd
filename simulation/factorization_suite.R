@@ -48,7 +48,7 @@ gene_pop <- matrix(c(20,90, 25,100,
   cell_mat <- res$u_mat; gene_mat <- res$v_mat
 
   # extra_weight <- rmutil::rlaplace(nrow(cell_mat), m = 11, s = 0.5)
-  extra_weight <- rep(10, nrow(cell_mat))
+  extra_weight <- rep(1, nrow(cell_mat))
   pred_mat <- 1/(cell_mat %*% t(gene_mat))
   pred_mat <- t(sapply(1:nrow(pred_mat), function(x){
     pred_mat[x,] * extra_weight[x]
@@ -57,13 +57,14 @@ gene_pop <- matrix(c(20,90, 25,100,
   obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- round(rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar))
-      # obs_mat[i,j] <- rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar)
+      # obs_mat[i,j] <- round(rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar))
+      obs_mat[i,j] <- rnorm(1, pred_mat[i,j], pred_mat[i,j]/scalar)
     }
   }
 
   obs_mat[obs_mat < 0] <- 0
-  obs_mat2 <- obs_mat
+  obs_mat2 <- round(exp(obs_mat*8)-1)
+  obs_mat2[obs_mat2 > 5000] <- 5000
 
   # now do something more dramatic with dropout
   obs_mat3 <- obs_mat2
@@ -75,7 +76,7 @@ gene_pop <- matrix(c(20,90, 25,100,
 
   total_vec <- rep(total, nrow(obs_mat3))
   for(i in 1:nrow(obs_mat3)){
-    idx <- .dropped_indices(obs_mat3[i,], total = total_vec[i])
+    idx <- .dropped_indices(obs_mat[i,], total = total_vec[i])
     obs_mat3[i,idx] <- 0
   }
 
@@ -91,39 +92,40 @@ gene_pop <- matrix(c(20,90, 25,100,
 rule <- function(vec){
   obj <- .data_generator(cell_pop, gene_pop, n_each = vec["n"], d_each = vec["d"],
                          sigma = vec["sigma"], scalar = vec["scalar"], total = vec["total"])
-
   dat <- obj$dat
-  dropout_mat <- singlecell:::.dropout(dat)
-  zero_mat <- singlecell:::.find_true_zeros(dropout_mat, num_neighbors = 50)
+  dat <- log(dat+1)
+  dropout_mat <- singlecell::dropout(dat)
+  zero_mat <- singlecell::find_true_zeros(dropout_mat, num_neighbors = 50)
   idx <- which(is.na(zero_mat))
 
-  dat_impute <- singlecell:::.scImpute(dat, drop_idx = idx, Kcluster = 4,
+  dat_impute <- singlecell::scImpute(dat, drop_idx = idx, Kcluster = 4,
                                        verbose = F, weight = 1)
 
-  dat_impute
+  list(dat = obj$dat, dat_impute = dat_impute)
 }
 
 criterion <- function(dat, vec, y){
-  tmp <- svd(dat)
-  res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
+  # tmp <- svd(dat)
+  # res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
 
-  tmp <- ica::icafast(dat, nc = vec["k"])
-  res_ica <- tmp$S
+  # tmp <- ica::icafast(dat, nc = vec["k"])
+  # res_ica <- tmp$S
 
   # extra_weight <- apply(dat, 1, mean)
-  extra_weight <- rep(10, nrow(dat))
+  extra_weight <- rep(1, nrow(dat$dat_impute))
 
   print("Starting our factorization")
-  init <- singlecell::initialization(dat, family = "gaussian", max_val = vec["max_val"],
+  init <- singlecell::initialization(dat$dat_impute, family = "gaussian", max_val = vec["max_val"],
                                        k = vec["k"])
-  res_our <- singlecell::fit_factorization(dat, init$u_mat, init$v_mat,
+  res_our <- singlecell::fit_factorization(dat$dat_impute, init$u_mat, init$v_mat,
                                          max_val = vec["max_val"],
                                          family = "gaussian", verbose = F,
                                          max_iter = 25, reparameterize = T,
                                          extra_weight = extra_weight, scalar = vec["scalar"],
                                          return_path = F, cores = 15)
 
-  list(res_svd = res_svd, res_ica = res_ica, res_our = res_our)
+  # list(res_svd = res_svd, res_ica = res_ica, res_our = res_our)
+  list(res_our = res_our)
 }
 
 # set.seed(1); criterion(rule(paramMat[1,]), paramMat[1,], 1)

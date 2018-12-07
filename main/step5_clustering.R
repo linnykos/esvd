@@ -3,14 +3,11 @@ load("../results/step4_factorization.RData")
 k_select <- 3
 u_mat <- res_our$u_mat[,1:k_select]
 
-u_mat <- apply(u_mat, 2, function(x){(x-mean(x))/sd(x)})
-
 cluster_labels <- singlecell::dbscan(u_mat, neighbor_count = 10, upper_cutoff = 14,
                      size_cutoff = 20)
 
-# upscale_vec <- max(table(cluster_labels))/table(cluster_labels)
-curves <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = 6, b = 1, shrink = 1,
-                    upscale_vec = upscale_vec)
+upscale_vec <- max(table(cluster_labels))/table(cluster_labels)
+curves <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = 4, b = 0.5, shrink = 1)
 
 print(paste0(Sys.time(), ": Finished clustering"))
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
@@ -23,7 +20,6 @@ plot(u_mat[,1], u_mat[,2], asp = T, pch = 16, col = col_vec)
 plot(u_mat[,1], u_mat[,3], asp = T, pch = 16, col = col_vec)
 plot(u_mat[,2], u_mat[,3], asp = T, pch = 16, col = col_vec)
 c(length(is.na(cluster_labels)), table(cluster_labels))
-
 
 # k <- 1
 # par(mfrow = c(1,3))

@@ -2,7 +2,7 @@ set.seed(10)
 load("../results/step2_naive_svd.RData")
 
 max_val <- 5000
-scalar_vec <- c(0.5, 1, 1.5, 1.75, 2, 2.25, 2.5, 3, 5)
+scalar_vec <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100)
 res_list <- vector("list", length(scalar_vec))
 
 for(i in 1:length(scalar_vec)){
@@ -25,11 +25,12 @@ quality_vec <- sapply(res_list, function(x){
   }))
 
   mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
-
-  # plot(mat[,1], mat[,2], asp = T, pch = 16, col = rgb(0,0,0,0.2)); lines(c(0,1e6), c(0,1e6), col = "red", lwd = 2)
+  mat <- mat[which(mat[,1] <= 1800),]
 
   pca_res <- stats::princomp(mat)
   diag_vec <- c(1,1); diag_vec <- diag_vec/.l2norm(diag_vec)
+
+  # plot(mat[,1], mat[,2], asp = T, pch = 16, col = rgb(0,0,0,0.2)); lines(c(0,1e6), c(0,1e6), col = "red", lwd = 2); lines(c(0, 1e6), c(0, 1e6*pca_res$loadings[2,1]/pca_res$loadings[1,1]), col = "blue", lwd = 2, lty = 2)
 
   acos(diag_vec %*% pca_res$loadings[,1])
 })

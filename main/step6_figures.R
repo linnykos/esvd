@@ -29,7 +29,7 @@ lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
 cluster_mat <- .construct_cluster_matrix(cluster_labels)
 centers <- .compute_cluster_center(u_mat, cluster_mat)
 
-png("../figure/main/latent_cluster.png", height = 1500, width = 1900, res = 300, units = "px")
+png("../figure/main/latent_cluster.png", height = 1200, width = 1900, res = 300, units = "px")
 par(mfcol = c(3,length(curves$lineages)), mar = c(0.5,0.5,0.5,0.5))
 for(k in 1:length(curves$lineages)){
   idx <- which(cluster_labels %in% curves$lineages[[k]])
@@ -67,15 +67,15 @@ rg <- max(apply(u_mat, 2, function(x){diff(range(x))})[1:3])
 lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
 
 png("../figure/main/trajectory.png", height = 1000, width = 2000, res = 300, units = "px")
-par(mfrow = c(1,2), mar = c(4,4,0.5,0.5))
-for(i in 1:2){
+par(mfrow = c(1,3), mar = c(4,4,0.5,0.5))
+for(i in 1:3){
   idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
   plot(u_mat[,idx1], u_mat[,idx2], pch = 16, col = rgb(0.85,0.85,0.85),
        asp = T, cex = 1.3, xlim = lim_list[[idx1]], ylim = lim_list[[idx2]],
        xlab = paste0("Latent dimension ", idx1),
        ylab = paste0("Latent dimension ", idx2))
 
-  for(k in c(2,1,4,5)){
+  for(k in 1:length(curves$lineages)){
     ord <- curves$curves[[k]]$ord
     lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3.5,
           col = "white")
@@ -85,7 +85,6 @@ for(i in 1:2){
 
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   centers <- .compute_cluster_center(u_mat, cluster_mat)
-  centers <- centers[-5,]
   points(centers[,idx1], centers[,idx2], col = "white", pch = 16, cex = 2.25)
   points(centers[,idx1], centers[,idx2], col = col_template[-5], pch = 16, cex = 2)
 }
