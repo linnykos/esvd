@@ -109,7 +109,7 @@ mat <- cbind(dat_impute[missing_idx], pred_naive[missing_idx])
 naive_pca <- stats::princomp(mat)
 naive_angle <- as.numeric(acos(diag_vec %*% naive_pca$loadings[,1]))
 
-rad <- 500
+rad <- 1000
 
 png("../figure/main/diagnostic.png", height = 1200, width = 2200, res = 300, units = "px")
 par(mfrow = c(1,2), mar = c(4,4,4,0.5))

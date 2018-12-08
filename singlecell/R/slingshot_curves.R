@@ -77,13 +77,15 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
 
   W <- .initialize_weight_matrix(cluster_mat, lineages)
 
-  ### determine curve hierarchy
-  avg_order <- .initialize_curve_hierarchy(lineages, cluster_vec)
-
   ### initial curves are piecewise linear paths through the tree
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
   res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
   pcurve_list <- res$pcurve_list; D <- res$D
+
+  if(length(lineages) == 1) return(pcurve_list)
+
+  ### determine curve hierarchy
+  avg_order <- .initialize_curve_hierarchy(lineages, cluster_vec)
 
   ### track distances between curves and data points to determine convergence
   dist_new <- sum(abs(D[W>0]))
