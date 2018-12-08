@@ -18,6 +18,24 @@ for(i in 1:max(cluster_labels, na.rm = T)){
   col_vec[col_vec == i] <- col_template[i]
 }
 
+col_template_svd <- c( rgb(227,73,86, maxColorValue=255), #red
+                       rgb(149,219,144, maxColorValue=255), #green
+                       rgb(100,140,252, maxColorValue=255), #blue
+                       rgb(100,100,200, maxColorValue=255), #purple
+                       rgb(238,204,17, maxColorValue=255), #goldenrod
+                  rgb(0,0,0),
+                  rgb(40,225,201, maxColorValue=255), #turqouise
+                  rgb(255,152,41, maxColorValue=255), #orange
+                  rgb(144,113,38, maxColorValue=255) #brown
+)
+
+col_vec_svd <- cluster_labels_svd
+col_vec_svd[which(is.na(col_vec_svd))] <- rgb(0,0,0)
+
+for(i in 1:max(cluster_labels_svd, na.rm = T)){
+  col_vec_svd[col_vec_svd == i] <- col_template_svd[i]
+}
+
 ########################
 
 # plot cell trajectories
@@ -66,14 +84,15 @@ mid_vec <- apply(u_mat, 2, function(x){mean(range(x))})[1:3]
 rg <- max(apply(u_mat, 2, function(x){diff(range(x))})[1:3])
 lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
 
-png("../figure/main/trajectory.png", height = 800, width = 2400, res = 300, units = "px")
-par(mfrow = c(1,3), mar = c(4,4,0.5,0.5))
+png("../figure/main/trajectory.png", height = 800, width = 2100, res = 300, units = "px")
+par(mfrow = c(1,3), mar = c(4,4,4,0.5))
 for(i in 1:3){
   idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
   plot(u_mat[,idx1], u_mat[,idx2], pch = 16, col = rgb(0.85,0.85,0.85,1),
        asp = T, cex = 1, xlim = lim_list[[idx1]], ylim = lim_list[[idx2]],
        xlab = paste0("Latent dimension ", idx1),
-       ylab = paste0("Latent dimension ", idx2))
+       ylab = paste0("Latent dimension ", idx2),
+       main = ifelse(i == 2, "Embedding for\nCurved Gaussian model", ""))
 
   for(k in 1:length(curves$lineages)){
     ord <- curves$curves[[k]]$ord
@@ -90,29 +109,36 @@ for(i in 1:3){
 }
 graphics.off()
 
+###################
 
-# trajectories
-png("../figure/main/trajectory_13.png", height = 1200, width = 1500, res = 300, units = "px")
-par(mar = c(4,4,0.5,0.5))
-for(i in 2){
+# trajectories for svd
+combn_mat <- utils::combn(3, 2)
+mid_vec <- apply(u_mat_svd, 2, function(x){mean(range(x))})[1:3]
+rg <- max(apply(u_mat_svd, 2, function(x){diff(range(x))})[1:3])
+lim_list <- lapply(1:3, function(x){mid_vec[x]+c(-1,1)*rg/2})
+
+png("../figure/main/trajectory_svd.png", height = 800, width = 2100, res = 300, units = "px")
+par(mfrow = c(1,3), mar = c(4,4,4,0.5))
+for(i in 1:3){
   idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
-  plot(u_mat[,idx1], u_mat[,idx2], pch = 16, col = rgb(0.85,0.85,0.85,1),
+  plot(u_mat_svd[,idx1], u_mat_svd[,idx2], pch = 16, col = rgb(0.85,0.85,0.85,1),
        asp = T, cex = 1, xlim = lim_list[[idx1]], ylim = lim_list[[idx2]],
        xlab = paste0("Latent dimension ", idx1),
-       ylab = paste0("Latent dimension ", idx2))
+       ylab = paste0("Latent dimension ", idx2),
+       main = ifelse(i == 2, "Embedding for Gaussian\nmodel with fixed variance", ""))
 
-  for(k in 1:length(curves$lineages)){
-    ord <- curves$curves[[k]]$ord
-    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3.5,
+  for(k in 1:length(curves_svd$lineages)){
+    ord <- curves_svd$curves[[k]]$ord
+    lines(curves_svd$curves[[k]]$s[ord, idx1], curves_svd$curves[[k]]$s[ord, idx2], lwd = 3.5,
           col = "white")
-    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3,
+    lines(curves_svd$curves[[k]]$s[ord, idx1], curves_svd$curves[[k]]$s[ord, idx2], lwd = 3,
           col = "black")
   }
 
-  cluster_mat <- .construct_cluster_matrix(cluster_labels)
-  centers <- .compute_cluster_center(u_mat, cluster_mat)
+  cluster_mat <- .construct_cluster_matrix(cluster_labels_svd)
+  centers <- .compute_cluster_center(u_mat_svd, cluster_mat)
   points(centers[,idx1], centers[,idx2], col = "white", pch = 16, cex = 1.75)
-  points(centers[,idx1], centers[,idx2], col = col_template, pch = 16, cex = 1.5)
+  points(centers[,idx1], centers[,idx2], col = col_template_svd, pch = 16, cex = 1.5)
 }
 graphics.off()
 

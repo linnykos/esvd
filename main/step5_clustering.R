@@ -1,5 +1,13 @@
 load("../results/step4_factorization.RData")
 
+.b_estimate <- function(mat, cluster_labels){
+  uniq_val <- sort(unique(cluster_labels))
+  mean(sapply(uniq_val, function(x){
+    idx <- which(cluster_labels == x)
+    stats::princomp(mat[idx,])$sdev[1]
+  }))/4
+}
+
 k_select <- 3
 u_mat <- res_our$u_mat[,1:k_select]
 
@@ -9,18 +17,44 @@ cluster_labels <- singlecell::dbscan(u_mat, neighbor_count = 10, upper_cutoff = 
 length(which(is.na(cluster_labels)))/length(cluster_labels)
 
 upscale_vec <- max(table(cluster_labels))/table(cluster_labels)
-curves_list <- vector("list", length = length(table(cluster_labels)))
-for(i in 1:length(table(cluster_labels))){
-  curves_list[[i]] <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = i, b = 0.5, shrink = 1)
-}
+# curves_list <- vector("list", length = length(table(cluster_labels)))
+# for(i in 1:length(table(cluster_labels))){
+#   curves_list[[i]] <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = i, b = 0.5, shrink = 1)
+# }
+# sapply(curves_list, function(x){length(x$lineages)})
+# curves <- curves_list[[which.min(sapply(curves_list, function(x){length(x$lineages)}))]]
 
-
-curves <- curves_list[[which.min(sapply(curves_list, function(x){length(x$lineages)}))]]
-#curves <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = 4, b = 0.5, shrink = 1)
+curves <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = 4, b = 0.5, shrink = 1,
+                                upscale_vec = upscale_vec)
 
 sapply(curves$lineages, function(x){
   length(which(cluster_labels %in% x))/length(cluster_labels)
 })
+
+
+###################
+
+# SVD embedding
+u_mat_svd <- res_naive$u[,1:k_select] %*% sqrt(diag(res_naive$d[1:k_select]))
+
+cluster_labels_svd <- singlecell::dbscan(u_mat_svd, neighbor_count = 10, upper_cutoff = 14,
+                                     size_cutoff = 45)
+table(cluster_labels_svd)
+
+col_vec <- cluster_labels_svd; col_vec[is.na(cluster_labels_svd)] <- 0; col_vec <- col_vec+1
+plot(u_mat_svd[,1], u_mat_svd[,2], asp = T, pch = 16, col = col_vec)
+
+# curves_list_svd <- vector("list", length = length(table(cluster_labels_svd)))
+# for(i in 1:length(table(cluster_labels_svd))){
+#   curves_list_svd[[i]] <-  .get_lineages(u_mat_svd, cluster_labels_svd, starting_cluster = i,
+#                                          knn = NA, remove_outlier = F)
+# }
+#
+# sapply(curves_list_svd, function(x){length(x)})
+
+b_est <- .b_estimate(u_mat_svd, cluster_labels_svd)
+curves_svd <- singlecell::slingshot(u_mat_svd, cluster_labels_svd, starting_cluster = 3,
+                                    b = b_est, shrink = 1)
 
 print(paste0(Sys.time(), ": Finished clustering"))
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
