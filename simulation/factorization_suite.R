@@ -2,7 +2,7 @@ rm(list=ls())
 library(simulation)
 library(singlecell)
 
-paramMat <- cbind(50, 120, 0.01, 80, 3, 2, 10)
+paramMat <- cbind(50, 120, 0.01, 150, 3, 2, 10)
 colnames(paramMat) <- c("n", "d", "sigma", "total", "k", "scalar", "max_val")
 trials <- 50
 
