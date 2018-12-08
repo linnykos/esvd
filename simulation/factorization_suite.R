@@ -2,7 +2,7 @@ rm(list=ls())
 library(simulation)
 library(singlecell)
 
-paramMat <- cbind(50, 120, 0.01, 150, 3, 2, 10)
+paramMat <- cbind(50, 120, 0.01, 80, 3, 2, 10)
 colnames(paramMat) <- c("n", "d", "sigma", "total", "k", "scalar", "max_val")
 trials <- 50
 
@@ -118,7 +118,7 @@ criterion <- function(dat, vec, y){
   res_our <- singlecell::fit_factorization(dat$dat_impute, init$u_mat, init$v_mat,
                                          max_val = vec["max_val"],
                                          family = "gaussian", verbose = F,
-                                         max_iter = 25, reparameterize = T,
+                                         max_iter = 50, reparameterize = T,
                                          extra_weight = extra_weight, scalar = vec["scalar"],
                                          return_path = F, cores = 15)
 
