@@ -387,7 +387,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
   surv <- list(x = dens$x, y = (sum(dens$y) - cumsum(dens$y))/sum(dens$y))
   box_vals <- graphics::boxplot(lambda[common_idx], plot = FALSE)$stats
   if(box_vals[1] == box_vals[5]){
-    pct_l <- rep(0, length(lambda))
+    pct_l <- rep(0, length(pcurve$lambda))
   } else {
     surv$x <- .scale_vector(surv$x, lower = box_vals[1], upper = box_vals[5])
     pct_l <- stats::approx(surv$x, surv$y, pcurve$lambda, rule = 2)$y
@@ -437,6 +437,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
   n <- nrow(pcurve$s)
   p <- ncol(pcurve$s)
 
+  stopifnot(length(pct) == length(pcurve$lambda))
+  # pct <- pct[which(pcurve$lambda_long > 0)]
   lambda <- pcurve$lambda
   s <- sapply(1:p, function(i){
     orig <- pcurve$s[,i]

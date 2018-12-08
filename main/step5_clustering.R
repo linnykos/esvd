@@ -6,8 +6,21 @@ u_mat <- res_our$u_mat[,1:k_select]
 cluster_labels <- singlecell::dbscan(u_mat, neighbor_count = 10, upper_cutoff = 14,
                      size_cutoff = 20)
 
+length(which(is.na(cluster_labels)))/length(cluster_labels)
+
 upscale_vec <- max(table(cluster_labels))/table(cluster_labels)
-curves <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = 4, b = 0.5, shrink = 1)
+curves_list <- vector("list", length = length(table(cluster_labels)))
+for(i in 1:length(table(cluster_labels))){
+  curves_list[[i]] <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = i, b = 0.5, shrink = 1)
+}
+
+
+curves <- curves_list[[which.min(sapply(curves_list, function(x){length(x$lineages)}))]]
+#curves <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = 4, b = 0.5, shrink = 1)
+
+sapply(curves$lineages, function(x){
+  length(which(cluster_labels %in% x))/length(cluster_labels)
+})
 
 print(paste0(Sys.time(), ": Finished clustering"))
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))

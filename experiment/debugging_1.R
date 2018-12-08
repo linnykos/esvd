@@ -1,25 +1,26 @@
 rm(list=ls())
-load("../results/factorization_results.RData")
+load("../results/step4_factorization.RData")
 
-x = 2
-cluster_labels <- c(1:4)[rep(1:4, each = paramMat[1,"n"])]
-b_est <- .b_estimate(res[[1]][[x]]$res_svd[,1:2], cluster_labels)
-# svd_lineage <- singlecell::slingshot(res[[1]][[x]]$res_svd[,1:2], cluster_labels, 1, knn = NA,
-#                                      b = b_est)
+k_select <- 3
+u_mat <- res_our$u_mat[,1:k_select]
 
-#######################
+cluster_labels <- singlecell::dbscan(u_mat, neighbor_count = 10, upper_cutoff = 14,
+                                     size_cutoff = 20)
 
-dat = res[[1]][[x]]$res_svd[,1:2]
-starting_cluster = 1
+i <- 3
+# curves <- singlecell::slingshot(u_mat, cluster_labels, starting_cluster = i, b = 0.5, shrink = 1)
+
+#################
+dat <- u_mat
 knn = NA
 remove_outlier = T
 percentage = 0.05
 shrink = 1
 thresh = 0.001
 max_iter = 15
-b = b_est
+b = 1
 upscale_vec = NA
-
+starting_cluster = i
 lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
                           knn = knn, remove_outlier = remove_outlier,
                           percentage = percentage)
@@ -52,3 +53,142 @@ s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
 res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
 pcurve_list <- res$pcurve_list; D <- res$D
 
+if(length(lineages) == 1) return(pcurve_list)
+
+### determine curve hierarchy
+avg_order <- .initialize_curve_hierarchy(lineages, cluster_vec)
+
+### track distances between curves and data points to determine convergence
+dist_new <- sum(abs(D[W>0]))
+dist_old <- Inf
+
+iter <- 1
+
+dist_old <- dist_new
+
+### predict each dimension as a function of lambda (pseudotime)
+s_list <- lapply(1:num_lineage, function(lin){
+  sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
+  .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], b = b)
+})
+
+res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+pcurve_list <- res$pcurve_list; D <- res$D
+dist_new <- sum(D[W>0], na.rm=TRUE)
+
+avg_curve_list <- vector("list", length(avg_order))
+names(avg_curve_list) <- paste0("Average", 1:length(avg_order))
+pct_shrink <- vector("list", length(avg_order))
+
+### determine average curves and amount of shrinkage
+for (i in 1:length(avg_order)) {
+  to_avg_curves <- lapply(avg_order[[i]], function(n_element){
+    if(grepl('Lineage', n_element)){
+      pcurve_list[[n_element]]
+    } else {
+      avg_curve_list[[n_element]]
+    }
+  })
+
+  avg <- .construct_average_curve(to_avg_curves, dat)
+  avg_curve_list[[i]] <- avg
+
+  # find the indicies shared by all the curves
+  common_ind <- which(rowMeans(sapply(to_avg_curves, function(crv){ crv$W > 0 })) == 1)
+  pct_shrink[[i]] <- lapply(to_avg_curves, function(curve) {
+    .percent_shrinkage(curve, common_ind)
+  })
+
+  pct_shrink[[i]] <- .check_shrinkage(pct_shrink[[i]])
+}
+
+for(i in rev(1:length(avg_curve_list))){
+  avg_curve <- avg_curve_list[[i]]
+  to_shrink_list <-  lapply(avg_order[[i]], function(n_element){
+    if(grepl('Lineage', n_element)){
+      pcurve_list[[n_element]]
+    } else {
+      avg_curve_list[[n_element]]
+    }
+  })
+
+  shrunk_list <- lapply(1:length(to_shrink_list),function(j){
+    pcurve <- to_shrink_list[[j]]
+    .shrink_to_avg(pcurve, avg_curve,
+                   pct_shrink[[i]][[j]] * shrink, dat)
+  })
+
+  for(j in 1:length(avg_order[[i]])){
+    ns <- avg_order[[i]][[j]]
+    if(grepl('Lineage', ns)){
+      pcurve_list[[ns]] <- shrunk_list[[j]]
+    } else {
+      avg_curve_list[[ns]] <- shrunk_list[[j]]
+    }
+  }
+}
+
+iter <- iter + 1
+
+#########
+# plot
+plot(dat[,1], dat[,2], asp = T, pch = 16, col = rgb(0,0,0,0.1))
+for(i in 1:length(pcurve_list)){
+  ord <- pcurve_list[[i]]$ord
+  lines(pcurve_list[[i]]$s[ord, 1], pcurve_list[[i]]$s[ord, 2], lwd = 3.5,
+        col = "black")
+}
+
+######################
+
+dist_old <- dist_new
+### predict each dimension as a function of lambda (pseudotime)
+s_list <- lapply(1:num_lineage, function(lin){
+  sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
+  .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], b = b)
+})
+
+res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+pcurve_list <- res$pcurve_list; D <- res$D
+dist_new <- sum(D[W>0], na.rm=TRUE)
+
+avg_curve_list <- vector("list", length(avg_order))
+names(avg_curve_list) <- paste0("Average", 1:length(avg_order))
+pct_shrink <- vector("list", length(avg_order))
+
+### determine average curves and amount of shrinkage
+for (i in 1:length(avg_order)) {
+  to_avg_curves <- lapply(avg_order[[i]], function(n_element){
+    if(grepl('Lineage', n_element)){
+      pcurve_list[[n_element]]
+    } else {
+      avg_curve_list[[n_element]]
+    }
+  })
+
+  avg <- .construct_average_curve(to_avg_curves, dat)
+  avg_curve_list[[i]] <- avg
+
+  # find the indicies shared by all the curves
+  common_ind <- which(rowMeans(sapply(to_avg_curves, function(crv){ crv$W > 0 })) == 1)
+  pct_shrink[[i]] <- lapply(to_avg_curves, function(curve) {
+    .percent_shrinkage(curve, common_ind)
+  })
+
+  pct_shrink[[i]] <- .check_shrinkage(pct_shrink[[i]])
+}
+
+i = 1
+avg_curve <- avg_curve_list[[i]]
+to_shrink_list <-  lapply(avg_order[[i]], function(n_element){
+  if(grepl('Lineage', n_element)){
+    pcurve_list[[n_element]]
+  } else {
+    avg_curve_list[[n_element]]
+  }
+})
+
+j = 1
+pcurve <- to_shrink_list[[j]]
+.shrink_to_avg(pcurve, avg_curve,
+               pct_shrink[[i]][[j]] * shrink, dat)

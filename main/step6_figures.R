@@ -90,6 +90,33 @@ for(i in 1:3){
 }
 graphics.off()
 
+
+# trajectories
+png("../figure/main/trajectory_13.png", height = 1200, width = 1500, res = 300, units = "px")
+par(mar = c(4,4,0.5,0.5))
+for(i in 2){
+  idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
+  plot(u_mat[,idx1], u_mat[,idx2], pch = 16, col = rgb(0.85,0.85,0.85,1),
+       asp = T, cex = 1, xlim = lim_list[[idx1]], ylim = lim_list[[idx2]],
+       xlab = paste0("Latent dimension ", idx1),
+       ylab = paste0("Latent dimension ", idx2))
+
+  for(k in 1:length(curves$lineages)){
+    ord <- curves$curves[[k]]$ord
+    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3.5,
+          col = "white")
+    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3,
+          col = "black")
+  }
+
+  cluster_mat <- .construct_cluster_matrix(cluster_labels)
+  centers <- .compute_cluster_center(u_mat, cluster_mat)
+  points(centers[,idx1], centers[,idx2], col = "white", pch = 16, cex = 1.75)
+  points(centers[,idx1], centers[,idx2], col = col_template, pch = 16, cex = 1.5)
+}
+graphics.off()
+
+
 #############
 
 # plot the diagnostic
