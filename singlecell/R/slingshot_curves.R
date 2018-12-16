@@ -82,7 +82,16 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
   res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
   pcurve_list <- res$pcurve_list; D <- res$D
 
-  if(length(lineages) == 1) return(pcurve_list)
+  if(length(lineages) == 1) {
+    s_list <- lapply(1:num_lineage, function(lin){
+      sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
+      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], b = b)
+    })
+
+    res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+    pcurve_list <- res$pcurve_list; D <- res$D
+    return(pcurve_list)
+  }
 
   ### determine curve hierarchy
   avg_order <- .initialize_curve_hierarchy(lineages, cluster_vec)

@@ -1,6 +1,15 @@
 rm(list=ls())
 load("../results/wasserstein_simulation.RData")
 
+#####################
+
+# zz <- res[[10]][[1]]$u_mat %*% t(res[[10]][[1]]$v_mat)
+# tmpu <- svd(zz); tmpu <- (nrow(res[[10]][[1]]$u_mat)/nrow(res[[10]][[1]]$v_mat))^(1/4)*tmpu$u %*% diag(sqrt(tmpu$d))
+# eigen_val <- eigen(stats::cov(tmpu))$values
+# #only 2 eigenvalues
+# eigen_val <- eigen_val[1:2]
+# range(log(eigen_val)/(-log(c(1.01,2))))
+
 #forbenius_loss <- sapply(1:length(res), function(i){
 loss_mat <- lapply(1:length(res), function(i){
   print(i)
@@ -28,6 +37,13 @@ forbenius_bound <- sapply(loss_mat, function(x){
 wasserstein_bound <- sapply(loss_mat, function(x){
   stats::quantile(x[2,], na.rm = T,probs = c(0.25, 0.5, 0.75))
 })
+
+#########################
+
+# figure out hypothetical bounds
+vec1 <- forbenius_bound[2,]
+vec2 <- 4*paramMat[,"n"]
+range(-log(vec1)/log(vec2))
 
 png("../figure/simulation/wasserstein.png", height = 1100, width = 2400, res = 300, units = "px")
 par(mfrow = c(1,2), mar = c(4,4,4,0.5))
