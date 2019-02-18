@@ -1,10 +1,10 @@
 rm(list=ls())
 library(descend)
-load("../../SOUPR/data/zeisel.rda")
+load("../../raw_data/marques.RData")
 
-dat <- zeisel$counts
+dat <- marques$counts
 
-idx <- grep("oligodendrocytes", zeisel$cell.info$cell.type)
+idx <- grep("(MO)|(MF)", marques$cell.info$cell.type)
 dat <- dat[idx,]
 dim(dat)
 
@@ -21,6 +21,7 @@ v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
 res_list <- vector("list", lvls)
 
 for(i in 1:lvls){
+  print(paste0(Sys.time(), ": Finished SCPA ", i))
   res_list[[i]] <- PMA::SPC(dat, sumabsv = v_seq[i], K = k, trace = F)
 }
 
