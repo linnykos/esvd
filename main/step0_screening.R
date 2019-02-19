@@ -4,7 +4,13 @@ load("../../raw_data/marques.RData")
 
 dat <- marques$counts
 
-idx <- grep("MO", marques$cell.info$cell.type)
+cell_types <- unique(marques$cell.info$cell.type)
+cell_types <- cell_types[-which(cell_types %in% c("OPC", "PPR"))]
+
+idx <- unlist(lapply(cell_types, function(x){
+  tmp <- which(marques$cell.info$cell.type == x)
+  sample(tmp, round(length(tmp)/5))
+}))
 dat <- dat[idx,]
 dim(dat)
 
@@ -16,7 +22,7 @@ dim(dat)
 
 # try a series of SPCAs
 k <- 5
-lvls <- 20
+lvls <- 5
 v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
 res_list <- vector("list", lvls)
 
@@ -24,7 +30,7 @@ spca_func <- function(i){
   PMA::SPC(dat, sumabsv = v_seq[i], K = k, trace = F)
 }
 
-doMC::registerDoMC(cores = 18)
+doMC::registerDoMC(cores = 5)
 res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
 print("Finished SPC")
