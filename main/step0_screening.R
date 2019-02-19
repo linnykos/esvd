@@ -20,10 +20,12 @@ lvls <- 20
 v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
 res_list <- vector("list", lvls)
 
-doMC::registerDoMC(cores = 18)
-res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), function(i){
+spca_func <- function(i){
   PMA::SPC(dat, sumabsv = v_seq[i], K = k, trace = F)
-})
+}
+
+doMC::registerDoMC(cores = 18)
+res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
 print("Finished SPC")
 
