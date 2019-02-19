@@ -25,6 +25,8 @@ res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), function(i){
   PMA::SPC(dat, sumabsv = v_seq[i], K = k, trace = F)
 })
 
+print("Finished SPC")
+
 # run DESCEND
 res_descend <- descend::runDescend(t(dat), n.cores = 10)
 
