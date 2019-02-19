@@ -18,6 +18,8 @@ scImpute <- function(dat, drop_idx, Kcluster, min_size = 5, verbose = F,
   if(length(drop_idx) == 0) return(dat)
 
   neigh_vec <- .find_neighbors_impute(dat, Kcluster = Kcluster)
+  if(verbose) print("Finished finding neighbors")
+
   neigh_list <- lapply(1:Kcluster, function(k){which(neigh_vec == k)})
   stopifnot(all(sapply(neigh_list, length) >= min_size))
 

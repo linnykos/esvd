@@ -2,15 +2,29 @@
 #'
 #' @param dropout_mat a \code{n} by \code{d} matrix
 #' @param num_neighbors number of neighbors
+#' @param verbose boolean
 #'
 #' @return a 0-1-NA matrix of size \code{n} by \code{d}
 #' @export
-find_true_zeros <- function(dropout_mat, num_neighbors = NA){
+find_true_zeros <- function(dropout_mat, num_neighbors = NA, cores = NA,
+                            verbose = F){
   if(is.na(num_neighbors)) num_neighbors <- ceiling(nrow(dropout_mat)/10)
 
-  neighbor_list <- lapply(1:nrow(dropout_mat), function(x){
-    .find_neighbor(dropout_mat, x, num_neighbors)
-  })
+  if(!is.na(cores)){
+    doMC::registerDoMC(cores = cores)
+    tmp_func <- function(x){
+      if(verbose & x %% floor(nrow(dropout_mat)/10) == 0) cat('*')
+      singlecell:::.find_neighbor(dropout_mat, x, num_neighbors)
+    }
+
+    neighbor_list <- foreach::"%dopar%"(foreach::foreach(i = 1:nrow(dropout_mat)),
+                                        tmp_func(i))
+  } else {
+    neighbor_list <- lapply(1:nrow(dropout_mat), function(x){
+      if(verbose & x %% floor(nrow(dropout_mat)/10) == 0) cat('*')
+      .find_neighbor(dropout_mat, x, num_neighbors)
+    })
+  }
 
   zero_mat <- dropout_mat
   for(i in 1:nrow(dropout_mat)){

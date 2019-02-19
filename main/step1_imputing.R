@@ -7,7 +7,9 @@ extra_weight <- rep(1, nrow(dat))
 res_hvg <- descend::findHVG(res_descend, threshold = 12)
 length(res_hvg$HVG.genes)
 
-idx1 <- sort(unlist(apply(res_list[[5]]$v, 2, function(x){which(x != 0)})))
+# t(sapply(res_list, function(x){c(length(sort(unlist(apply(x$v, 2, function(y){which(y != 0)})))),
+#                                x$prop.var.explained[5])}))
+idx1 <- sort(unlist(apply(res_list[[7]]$v, 2, function(x){which(x != 0)})))
 idx2 <- which(colnames(dat) %in% res_hvg$HVG.genes)
 idx <- sort(unique(c(idx1, idx2)))
 
@@ -20,6 +22,7 @@ dim(dat)
 dropout_mat <- singlecell::dropout(dat)
 zero_mat <- singlecell::find_true_zeros(dropout_mat, num_neighbors = 200)
 idx <- which(is.na(zero_mat))
+# c(table(zero_mat), sum(is.na(zero_mat)))/prod(dim(zero_mat))
 
 dat_impute <- singlecell::scImpute(dat, drop_idx = idx, Kcluster = 5,
                                      verbose = T, weight = 1)
