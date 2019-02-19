@@ -7,11 +7,11 @@ dat <- marques$counts
 cell_types <- unique(marques$cell.info$cell.type)
 cell_types <- cell_types[-which(cell_types %in% c("OPC", "PPR"))]
 
-idx <- unlist(lapply(cell_types, function(x){
+cell_idx <- unlist(lapply(cell_types, function(x){
   tmp <- which(marques$cell.info$cell.type == x)
   sample(tmp, round(length(tmp)/5))
 }))
-dat <- dat[idx,]
+dat <- dat[cell_idx,]
 dim(dat)
 
 # remove genes with too many 0's
