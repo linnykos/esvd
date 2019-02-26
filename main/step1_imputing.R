@@ -4,15 +4,16 @@ load("../results/step0_screening.RData")
 reweight_factor <- rowSums(dat)
 extra_weight <- rep(1, nrow(dat))
 
-res_hvg <- descend::findHVG(res_descend, threshold = 12)
-length(res_hvg$HVG.genes)
+# res_hvg <- descend::findHVG(res_descend, threshold = 12)
+# length(res_hvg$HVG.genes)
+#
+# # t(sapply(res_list, function(x){c(length(sort(unlist(apply(x$v, 2, function(y){which(y != 0)})))), x$prop.var.explained[5])}))
+# idx1 <- sort(unlist(apply(res_list[[9]]$v, 2, function(x){which(x != 0)})))
+# idx2 <- which(colnames(dat) %in% res_hvg$HVG.genes)
+# idx <- sort(unique(c(idx1, idx2)))
+#
+# dat <- dat[,idx]
 
-# t(sapply(res_list, function(x){c(length(sort(unlist(apply(x$v, 2, function(y){which(y != 0)})))), x$prop.var.explained[5])}))
-idx1 <- sort(unlist(apply(res_list[[9]]$v, 2, function(x){which(x != 0)})))
-idx2 <- which(colnames(dat) %in% res_hvg$HVG.genes)
-idx <- sort(unique(c(idx1, idx2)))
-
-dat <- dat[,idx]
 dat <- t(sapply(1:nrow(dat), function(i){dat[i,]/reweight_factor[i]}))
 dat <- log(dat+1)
 dat <- dat * 10/mean(dat)
