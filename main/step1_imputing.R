@@ -21,15 +21,16 @@ dim(dat)
 
 print(paste0(Sys.time(), ": Starting to determine dropout"))
 
-dropout_mat <- singlecell::dropout(dat)
-zero_mat <- singlecell::find_true_zeros(dropout_mat, num_neighbors = 200)
-idx <- which(is.na(zero_mat))
-# c(table(zero_mat), sum(is.na(zero_mat)))/prod(dim(zero_mat))
-
-print(paste0(Sys.time(), ": Starting to impute"))
-
-dat_impute <- singlecell::scImpute(dat, drop_idx = idx, Kcluster = 5,
-                                     verbose = T, weight = 1)
+# dropout_mat <- singlecell::dropout(dat)
+# zero_mat <- singlecell::find_true_zeros(dropout_mat, num_neighbors = 200)
+# idx <- which(is.na(zero_mat))
+# # c(table(zero_mat), sum(is.na(zero_mat)))/prod(dim(zero_mat))
+#
+# print(paste0(Sys.time(), ": Starting to impute"))
+#
+# dat_impute <- singlecell::scImpute(dat, drop_idx = idx, Kcluster = 5,
+#                                      verbose = T, weight = 1)
+dat_impute <- dat
 
 # png("../figure/main/data.png", height = 2400, width = 1000, res = 300, units = "px")
 # par(mar = rep(0.5, 4))
