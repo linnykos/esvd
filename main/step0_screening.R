@@ -1,4 +1,3 @@
-rm(list=ls())
 library(descend)
 load("../../raw_data/marques.RData")
 
