@@ -1,6 +1,5 @@
 rm(list=ls())
 set.seed(10)
-library(descend)
 load("../../raw_data/marques.RData")
 
 dat <- marques$counts
@@ -22,3 +21,7 @@ gene_vec <- sort(unique(as.vector(gene_mat)))
 gene_idx <- which(colnames(dat) %in% gene_vec)
 dat <- dat[,gene_idx]
 dim(dat)
+
+res <- VIPER::VIPER(as.data.frame(t(dat)), num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
+             report = FALSE, outdir = NULL, prefix = NULL)
+save.image("../experiment/Week33_marques_viper.RData")
