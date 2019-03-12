@@ -33,11 +33,10 @@ our_list <- vector("list", trials)
 for(i in 1:trials){
   set.seed(10*i)
   downsample_list[[i]] <- singlecell::downsample(dat)
-
   tmp <- as.data.frame(t(downsample_list[[i]]$dat))
-  viper_list[[i]] <- VIPER::VIPER(tmp, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
-                      report = FALSE, outdir = NULL, prefix = NULL)
-  save.image("Week33_downsample.RData")
+  # viper_list[[i]] <- VIPER::VIPER(tmp, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
+  #                     report = FALSE, outdir = NULL, prefix = NULL)
+  # save.image("Week33_downsample.RData")
 
   write.csv(tmp, paste0("Week33_downsample_", i, ".csv"))
   scimpute::scimpute(count_path = paste0("Week33_downsample_", i, ".csv"),
