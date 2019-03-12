@@ -26,3 +26,22 @@ zz <- as.data.frame(t(dat))
 res <- VIPER::VIPER(zz, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
              report = FALSE, outdir = NULL, prefix = NULL)
 save.image("../experiment/Week33_marques_viper.RData")
+
+###############################
+
+#postprocess
+load("../experiment/Week33_marques_viper.RData")
+load("../data/marker_genes.Rda")
+gene_vec <- as.vector(gene_mat)
+gene_vec <- gene_vec[!duplicated(gene_vec)]
+column_vec <- colnames(dat)[which(colnames(dat) %in% gene_vec)]
+gene_vec <- gene_vec[which(gene_vec %in% colnames(dat))]
+reordered_idx <- order(column_vec)[rank(gene_vec)]
+
+dat_impute <- t(res$imputed)
+dat_impute <- dat_impute[,reordered_idx]
+
+png("../figure/experiment/Week33_marques_viper.png", height = 1800, width = 1000, res = 300, units = "px")
+par(mar = rep(0.5, 4))
+.plot_singlecell(dat_impute)
+graphics.off()

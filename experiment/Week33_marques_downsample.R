@@ -18,10 +18,19 @@ dim(dat)
 # gene_mat <- readxl::read_excel("../../raw_data/Marques_genes.xlsx", range = "B3:Y53")
 # gene_mat <- as.matrix(gene_mat)
 load("../data/marker_genes.Rda")
-gene_vec <- sort(unique(as.vector(gene_mat)))
+gene_vec <- as.vector(gene_mat)
+gene_vec <- gene_vec[!duplicated(gene_vec)]
 gene_idx <- which(colnames(dat) %in% gene_vec)
 dat <- dat[,gene_idx]
+
+column_vec <- colnames(dat)[which(colnames(dat) %in% gene_vec)]
+gene_vec <- gene_vec[which(gene_vec %in% colnames(dat))]
+reordered_idx <- order(column_vec)[rank(gene_vec)]
+dat <- dat[,reordered_idx]
 dim(dat)
+
+zz <- apply(dat, 2, function(x){length(which(x!=0))})
+dat <- dat[,which(zz > 30)]
 
 ###############
 
@@ -31,24 +40,25 @@ viper_list <- vector("list", trials)
 our_list <- vector("list", trials)
 
 for(i in 1:trials){
+  print(i)
   set.seed(10*i)
-  downsample_list[[i]] <- singlecell::downsample(dat)
+  downsample_list[[i]] <- singlecell::downsample(dat, downsample_rate = 0.05, dropoff_rate = 0.05)
   tmp <- as.data.frame(t(downsample_list[[i]]$dat))
-  # viper_list[[i]] <- VIPER::VIPER(tmp, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
-  #                     report = FALSE, outdir = NULL, prefix = NULL)
-  # save.image("Week33_downsample.RData")
-
-  write.csv(tmp, paste0("Week33_downsample_", i, ".csv"))
-  scImpute::scimpute(count_path = paste0("Week33_downsample_", i, ".csv"),
-           infile = "csv", outfile = "csv",
-           out_dir = paste0("Week33_scimpute_", i),
-           drop_thre = 0.5, Kcluster = 6, ncores = 1)
-
-  dat <- log(downsample_list[[i]]$dat+1)
-  dropout_mat <- singlecell::dropout(dat)
-  zero_mat <- singlecell::find_true_zeros(dropout_mat, num_neighbors = 200)
-  idx <- which(is.na(zero_mat))
-  our_list[[i]] <- singlecell::scImpute(dat, drop_idx = idx, Kcluster = 6,
-                                       verbose = T, weight = 1)
+  viper_list[[i]] <- VIPER::VIPER(tmp, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
+                      report = FALSE, outdir = NULL, prefix = NULL)
   save.image("Week33_downsample.RData")
+
+#   write.csv(tmp, paste0("Week33_downsample_", i, ".csv"))
+#   scImpute::scimpute(count_path = paste0("Week33_downsample_", i, ".csv"),
+#            infile = "csv", outfile = "csv",
+#            out_dir = paste0("Week33_scimpute_", i),
+#            drop_thre = 0.5, Kcluster = 6, ncores = 1)
+#
+#   dat <- log(downsample_list[[i]]$dat+1)
+#   dropout_mat <- singlecell::dropout(dat)
+#   zero_mat <- singlecell::find_true_zeros(dropout_mat, num_neighbors = 200)
+#   idx <- which(is.na(zero_mat))
+#   our_list[[i]] <- singlecell::scImpute(dat, drop_idx = idx, Kcluster = 6,
+#                                        verbose = T, weight = 1)
+#   save.image("Week33_downsample.RData")
 }
