@@ -34,7 +34,7 @@ for(i in 1:trials){
   downsample_list[[i]] <- singlecell::downsample(dat)
 
   tmp <- as.data.frame(t(downsample_list[[i]]$dat))
-  res <- VIPER::VIPER(tmp, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
+  viper_list[[i]] <- VIPER::VIPER(tmp, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
                       report = FALSE, outdir = NULL, prefix = NULL)
   save.image("Week33_downsample.RData")
 
