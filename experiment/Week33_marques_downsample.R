@@ -39,7 +39,7 @@ for(i in 1:trials){
   # save.image("Week33_downsample.RData")
 
   write.csv(tmp, paste0("Week33_downsample_", i, ".csv"))
-  scimpute::scimpute(count_path = paste0("Week33_downsample_", i, ".csv"),
+  scImpute::scimpute(count_path = paste0("Week33_downsample_", i, ".csv"),
            infile = "csv", outfile = "csv",
            out_dir = paste0("Week33_scimpute_", i),
            drop_thre = 0.5, Kcluster = 6, ncores = 1)
