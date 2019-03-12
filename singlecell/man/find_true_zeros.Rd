@@ -4,12 +4,15 @@
 \alias{find_true_zeros}
 \title{Finding the true zeros}
 \usage{
-find_true_zeros(dropout_mat, num_neighbors = NA)
+find_true_zeros(dropout_mat, num_neighbors = NA, cores = NA,
+  verbose = F)
 }
 \arguments{
 \item{dropout_mat}{a \code{n} by \code{d} matrix}
 
 \item{num_neighbors}{number of neighbors}
+
+\item{verbose}{boolean}
 }
 \value{
 a 0-1-NA matrix of size \code{n} by \code{d}

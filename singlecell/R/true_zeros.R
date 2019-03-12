@@ -2,6 +2,7 @@
 #'
 #' @param dropout_mat a \code{n} by \code{d} matrix
 #' @param num_neighbors number of neighbors
+#' @param cores number of cores, can be \code{NA}
 #' @param verbose boolean
 #'
 #' @return a 0-1-NA matrix of size \code{n} by \code{d}
@@ -14,7 +15,7 @@ find_true_zeros <- function(dropout_mat, num_neighbors = NA, cores = NA,
     doMC::registerDoMC(cores = cores)
     tmp_func <- function(x){
       if(verbose & x %% floor(nrow(dropout_mat)/10) == 0) cat('*')
-      singlecell:::.find_neighbor(dropout_mat, x, num_neighbors)
+      .find_neighbor(dropout_mat, x, num_neighbors)
     }
 
     neighbor_list <- foreach::"%dopar%"(foreach::foreach(i = 1:nrow(dropout_mat)),
