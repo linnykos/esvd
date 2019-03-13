@@ -42,7 +42,7 @@ our_list <- vector("list", trials)
 for(i in 1:trials){
   print(i)
   set.seed(10*i)
-  downsample_list[[i]] <- singlecell::downsample(dat, downsample_rate = 0.05, dropoff_rate = 0.05)
+  downsample_list[[i]] <- singlecell::downsample(dat, downsample_rate = 0.01, dropoff_rate = 0.01)
   tmp <- as.data.frame(t(downsample_list[[i]]$dat))
   viper_list[[i]] <- VIPER::VIPER(tmp, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
                       report = FALSE, outdir = NULL, prefix = NULL)

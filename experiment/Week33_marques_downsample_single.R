@@ -29,18 +29,18 @@ reordered_idx <- order(column_vec)[rank(gene_vec)]
 dat <- dat[,reordered_idx]
 dim(dat)
 
-png("../figure/experiment/Week33_marques.png", height = 1800, width = 1000, res = 300, units = "px")
-par(mar = rep(0.5, 4))
-.plot_singlecell(dat)
-graphics.off()
+# png("../figure/experiment/Week33_marques.png", height = 1800, width = 1000, res = 300, units = "px")
+# par(mar = rep(0.5, 4))
+# .plot_singlecell(dat)
+# graphics.off()
 
 zz <- apply(dat, 2, function(x){length(which(x!=0))})
 dat <- dat[,which(zz > 30)]
 
-png("../figure/experiment/Week33_marques.png", height = 1800, width = 1000, res = 300, units = "px")
-par(mar = rep(0.5, 4))
-.plot_singlecell(dat)
-graphics.off()
+# png("../figure/experiment/Week33_marques.png", height = 1800, width = 1000, res = 300, units = "px")
+# par(mar = rep(0.5, 4))
+# .plot_singlecell(dat)
+# graphics.off()
 
 ###############
 
@@ -50,7 +50,7 @@ viper_list <- vector("list", trials)
 our_list <- vector("list", trials)
 i <- 1
 set.seed(10*i)
-downsample_list[[i]] <- singlecell::downsample(dat, downsample_rate = 0.3, dropoff_rate = 0.2)
+downsample_list[[i]] <- singlecell::downsample(dat, downsample_rate = 0.01, dropoff_rate = 0.01)
 
 png("../figure/experiment/Week33_marques_downsample.png", height = 1800, width = 1000, res = 300, units = "px")
 par(mar = rep(0.5, 4))
@@ -61,6 +61,7 @@ quantile(apply(downsample_list[[i]]$dat, 2, function(x){length(which(x!=0))}))
 quantile(apply(downsample_list[[i]]$dat, 1, function(x){length(which(x!=0))}))
 
 tmp <- as.data.frame(t(downsample_list[[i]]$dat))
+library(VIPER)
 viper_list[[i]] <- VIPER(tmp, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
                     report = FALSE, outdir = NULL, prefix = NULL)
 #                    selection = "simplified_expectation")
