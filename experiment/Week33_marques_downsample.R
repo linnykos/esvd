@@ -1,5 +1,6 @@
 rm(list=ls())
 set.seed(10)
+library(VIPER)
 load("../../raw_data/marques.RData")
 
 dat <- marques$counts
@@ -44,7 +45,7 @@ for(i in 1:trials){
   set.seed(10*i)
   downsample_list[[i]] <- singlecell::downsample(dat, downsample_rate = 0.01, dropoff_rate = 0.01)
   tmp <- as.data.frame(t(downsample_list[[i]]$dat))
-  viper_list[[i]] <- VIPER::VIPER(tmp, num = 5000, percentage.cutoff = 0.1, minbool = FALSE, alpha = 1,
+  viper_list[[i]] <- VIPER(tmp, num = 5000, percentage.cutoff = 0.5, minbool = FALSE, alpha = 1,
                       report = FALSE, outdir = NULL, prefix = NULL)
   save.image("Week33_downsample.RData")
 
