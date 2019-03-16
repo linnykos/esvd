@@ -45,15 +45,15 @@ for(i in 1:trials){
   set.seed(10*i)
   downsample_list[[i]] <- singlecell::downsample(dat, downsample_rate = 0.01, dropoff_rate = 0.01)
   tmp <- as.data.frame(t(downsample_list[[i]]$dat))
-  viper_list[[i]] <- VIPER(tmp, num = 5000, percentage.cutoff = 0.5, minbool = FALSE, alpha = 1,
+  viper_list[[i]] <- VIPER(tmp, num = 5000, percentage.cutoff = 0.75, minbool = FALSE, alpha = 1,
                       report = FALSE, outdir = NULL, prefix = NULL)
   save.image("Week33_downsample.RData")
 
-#   write.csv(tmp, paste0("Week33_downsample_", i, ".csv"))
-#   scImpute::scimpute(count_path = paste0("Week33_downsample_", i, ".csv"),
-#            infile = "csv", outfile = "csv",
-#            out_dir = paste0("Week33_scimpute_", i),
-#            drop_thre = 0.5, Kcluster = 6, ncores = 1)
+  write.csv(tmp, paste0("Week33_downsample_", i, ".csv"))
+  scImpute::scimpute(count_path = paste0("Week33_downsample_", i, ".csv"),
+           infile = "csv", outfile = "csv",
+           out_dir = paste0("Week33_scimpute_", i),
+           drop_thre = 0.5, Kcluster = 6, ncores = 1)
 #
 #   dat <- log(downsample_list[[i]]$dat+1)
 #   dropout_mat <- singlecell::dropout(dat)
