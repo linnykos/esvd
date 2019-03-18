@@ -1,36 +1,20 @@
 set.seed(10)
 load("../results/step0_screening.RData")
 
-reweight_factor <- rowSums(dat)
-extra_weight <- rep(1, nrow(dat))
-
-# res_hvg <- descend::findHVG(res_descend, threshold = 12)
-# length(res_hvg$HVG.genes)
-#
-# # t(sapply(res_list, function(x){c(length(sort(unlist(apply(x$v, 2, function(y){which(y != 0)})))), x$prop.var.explained[5])}))
-# idx1 <- sort(unlist(apply(res_list[[9]]$v, 2, function(x){which(x != 0)})))
-# idx2 <- which(colnames(dat) %in% res_hvg$HVG.genes)
-# idx <- sort(unique(c(idx1, idx2)))
-#
-# dat <- dat[,idx]
-
-dat <- t(sapply(1:nrow(dat), function(i){dat[i,]/reweight_factor[i]}))
-dat <- log(dat+1)
-dat <- dat * 10/mean(dat)
-dim(dat)
-
 print(paste0(Sys.time(), ": Starting to determine dropout"))
+library(VIPER)
+tmp <- as.data.frame(t(dat))
+viper_res <- VIPER(tmp, num = 5000, percentage.cutoff = 0.75, minbool = FALSE, alpha = 1,
+                   report = FALSE, outdir = NULL, prefix = NULL)
 
-# dropout_mat <- singlecell::dropout(dat)
-# zero_mat <- singlecell::find_true_zeros(dropout_mat, num_neighbors = 200)
-# idx <- which(is.na(zero_mat))
-# # c(table(zero_mat), sum(is.na(zero_mat)))/prod(dim(zero_mat))
-#
-# print(paste0(Sys.time(), ": Starting to impute"))
-#
-# dat_impute <- singlecell::scImpute(dat, drop_idx = idx, Kcluster = 5,
-#                                      verbose = T, weight = 1)
-dat_impute <- dat
+dat_impute <- t(viper_res$imputed)
+
+reweight_factor <- rowSums(dat_impute)
+extra_weight <- rep(1, nrow(dat_impute))
+dat_impute <- t(sapply(1:nrow(dat_impute), function(i){dat_impute[i,]/reweight_factor[i]}))
+dat_impute <- log(dat_impute+1)
+dat_impute <- dat_impute * 10/mean(dat_impute)
+dim(dat_impute)
 
 # png("../figure/main/data.png", height = 2400, width = 1000, res = 300, units = "px")
 # par(mar = rep(0.5, 4))
@@ -42,6 +26,6 @@ dat_impute <- dat
 # singlecell:::.plot_singlecell(dat_impute)
 # graphics.off()
 
-rm(list = c("idx1", "idx2", "idx", "res_descend", "res_list", "v_seq", "k"))
+rm(list = c("idx1", "idx2", "idx", "res_descend", "res_list", "v_seq", "k", "tmp"))
 print(paste0(Sys.time(), ": Finished imputing"))
 save.image("../results/step1_imputing.RData")
