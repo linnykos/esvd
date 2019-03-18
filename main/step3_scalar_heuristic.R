@@ -42,14 +42,14 @@ print(paste0(Sys.time(), ": Finished scalar heuristic"))
 save.image(paste0("../results/step3_scalar_heuristic", suffix, ".RData"))
 
 
-# for(i in 1:length(res_list)){
-#   plot(4/pred_mat[idx], dat_impute[idx], asp = T, main = i, pch = 16,
-#        col = rgb(0,0,0,0.2))
-#   lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
-# }
+# idx <- which.min(quality_vec)
+# pred_mat <- 1/(res_list[[idx]]$u_mat %*% t(res_list[[idx]]$v_mat))
+# plot(pred_mat[missing_idx], dat_impute[missing_idx], asp = T, pch = 16,
+#      col = rgb(0,0,0,0.2))
+# lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
 # ############
 #
-# plot(pred_naive[idx], dat_impute[idx], asp = T, main = i, pch = 16,
+# plot(pred_naive[missing_idx], dat_impute[missing_idx], asp = T, pch = 16,
 #      col = rgb(0,0,0,0.2))
 # lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
 

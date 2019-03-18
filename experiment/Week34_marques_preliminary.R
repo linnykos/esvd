@@ -2,6 +2,23 @@ rm(list=ls())
 load("../results/step3_scalar_heuristic.RData")
 plot(quality_vec) # uh oh... not looking great...
 
+# svd (huh... doesn't look that bad)
+plot(pred_naive[missing_idx], dat_impute[missing_idx], asp = T, pch = 16,
+     col = rgb(0,0,0,0.2))
+lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
+
+idx <- which.min(quality_vec)
+for(i in 1:length(res_list)){
+  pred_mat <- 1/(res_list[[i]]$u_mat %*% t(res_list[[i]]$v_mat))
+  plot(pred_mat[missing_idx], dat_impute[missing_idx], asp = T, main = i,pch = 16,
+       col = rgb(0,0,0,0.2))
+  lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
+}
+
+
+
+###########################
+
 rm(list=ls())
 load("../results/step4_factorization.RData")
 cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
