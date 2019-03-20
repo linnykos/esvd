@@ -24,15 +24,16 @@ load("../results/step4_factorization.RData")
 cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
 # keep only the first two letters
 cell_type_vec <- as.character(sapply(cell_type_vec, function(x){substr(x,1,2)}))
-col_idx <- as.numeric(as.factor(cell_type_vec))
+col_idx <- c(rgb(0,0,0,0.3), rgb(1,0,0,0.3), rgb(0,1,0,0.3), rgb(0,0,1,0.3),
+             rgb(0,0,0,0.3), rgb(0,0,0,0.3))[as.numeric(as.factor(cell_type_vec))]
 
 num_cell <- length(unique(cell_type_vec))
-i1 <- 1; i2 <- 3
+i1 <- 1; i2 <- 2
 xlim <- range(res_our$u_mat[,i1])
 ylim <- range(res_our$u_mat[,i2])
 par(mfrow = c(2,3))
 for(i in 1:6){
-  idx <- which(col_idx == i)
+  idx <- which(as.numeric(as.factor(cell_type_vec)) == i)
   plot(res_our$u_mat[idx,i1], res_our$u_mat[idx,i2], asp = T, pch = 16,
        col = col_idx[idx], xlim = xlim, ylim = ylim)
 
