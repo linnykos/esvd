@@ -14,22 +14,27 @@ cell_idx <- unlist(lapply(cell_types, function(x){
 dat <- dat[cell_idx,]
 dim(dat)
 
-# use the predetermined set of genes
-load("../data/marker_genes.Rda")
-gene_vec <- as.vector(gene_mat)
-gene_vec <- gene_vec[!duplicated(gene_vec)]
-gene_idx <- which(colnames(dat) %in% gene_vec)
-dat <- dat[,gene_idx]
-
-column_vec <- colnames(dat)[which(colnames(dat) %in% gene_vec)]
-gene_vec <- gene_vec[which(gene_vec %in% colnames(dat))]
-reordered_idx <- order(column_vec)[rank(gene_vec)]
-dat <- dat[,reordered_idx]
-dim(dat)
-
 # # remove genes with too many 0's
 zz <- apply(dat, 2, function(x){length(which(x!=0))})
 dat <- dat[,which(zz > 30)]
+
+# try a series of SPCAs
+k <- 5
+lvls <- 20
+v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
+res_list <- vector("list", lvls)
+
+spca_func <- function(i){
+  PMA::SPC(dat, sumabsv = v_seq[i], K = k, trace = F)
+}
+
+doMC::registerDoMC(cores = 15)
+res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
+
+print("Finished SPC")
+
+# run DESCEND
+res_descend <- descend::runDescend(t(dat), n.cores = 10)
 
 rm(list = c("idx", "zz", "k", "lvls", "reorder_idx", "column_vec"))
 print(paste0(Sys.time(), ": Finished screening"))
