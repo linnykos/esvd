@@ -1,7 +1,7 @@
 rm(list=ls())
 set.seed(10)
 
-suffix <- ""
+suffix <- "_spca"
 family <- "gaussian"
 
 # source("../main/step0_screening.R")
