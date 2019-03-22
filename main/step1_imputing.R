@@ -13,7 +13,7 @@ dat <- dat[,idx]
 print(paste0(Sys.time(), ": Starting to determine dropout"))
 library(VIPER)
 tmp <- as.data.frame(t(dat))
-viper_res <- VIPER(tmp, num = 5000, percentage.cutoff = 0.75, minbool = FALSE, alpha = 1,
+viper_res <- VIPER(tmp, num = 5000, minbool = FALSE, alpha = 1,
                    report = FALSE, outdir = NULL, prefix = NULL)
 
 dat_impute <- t(viper_res$imputed)
