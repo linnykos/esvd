@@ -1,4 +1,4 @@
-load("../results/step5_clustering.RData")
+load(paste0("../results/step5_clustering", suffix, ".RData"))
 
 col_vec <- cluster_labels
 col_vec[which(is.na(col_vec))] <- rgb(0,0,0)

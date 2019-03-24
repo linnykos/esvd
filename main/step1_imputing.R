@@ -1,5 +1,5 @@
 set.seed(10)
-load("../results/step0_screening.RData")
+load(paste0("../results/step0_screening", suffix, ".RData"))
 
 res_hvg <- descend::findHVG(res_descend, threshold = 50)
 length(res_hvg$HVG.genes)
@@ -38,4 +38,4 @@ dim(dat_impute)
 
 rm(list = c("idx1", "idx2", "idx", "res_descend", "res_list", "v_seq", "k", "tmp"))
 print(paste0(Sys.time(), ": Finished imputing"))
-save.image("../results/step1_imputing.RData")
+save.image(paste0("../results/step1_imputing", suffix, ".RData"))

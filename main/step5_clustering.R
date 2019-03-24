@@ -1,4 +1,4 @@
-load("../results/step4_factorization.RData")
+load(paste0("../results/step4_factorization", suffix, ".RData"))
 
 .b_estimate <- function(mat, cluster_labels){
   uniq_val <- sort(unique(cluster_labels))

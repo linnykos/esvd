@@ -1,5 +1,5 @@
 set.seed(10)
-load("../results/step1_imputing.RData")
+load(paste0("../results/step1_imputing", suffix, ".RData"))
 
 n <- nrow(dat_impute); d <- ncol(dat_impute)
 set.seed(10)
@@ -22,4 +22,4 @@ pred_naive <- res_naive$u %*% diag(res_naive$d) %*% t(res_naive$v)
 
 rm(list = c("n", "d", "lambda0_val", "res_hvg"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
-save.image("../results/step2_naive_svd.RData")
+save.image(paste0("../results/step2_naive_svd", suffix, ".RData"))

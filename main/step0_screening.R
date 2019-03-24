@@ -38,4 +38,4 @@ res_descend <- descend::runDescend(t(dat), n.cores = 10)
 
 rm(list = c("idx", "zz", "k", "lvls", "reorder_idx", "column_vec"))
 print(paste0(Sys.time(), ": Finished screening"))
-save.image("../results/step0_screening.RData")
+save.image(paste0("../results/step0_screening", suffix, ".RData"))
