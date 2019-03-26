@@ -21,15 +21,12 @@
 #' the list of curves as \code{principal_curve} objects under
 #' \code{curves} and the clustering matrix under \code{cluster_mat}
 #' @export
-slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
-                      remove_outlier = T, percentage = 0.05,
+slingshot <- function(dat, cluster_labels, starting_cluster,
+                      cluster_group_list = NA,
                       shrink = 1, thresh = 0.001, max_iter = 15, b = 1,
                       upscale_vec = NA){
-  cluster_mat <- .construct_cluster_matrix(cluster_labels)
-
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
-                            knn = knn, remove_outlier = remove_outlier,
-                            percentage = percentage)
+                            cluster_group_list = cluster_group_list)
   curves <- .get_curves(dat, cluster_labels, lineages, shrink = shrink,
                         thresh = thresh, max_iter = max_iter, b = b, upscale_vec = upscale_vec)
 
@@ -483,4 +480,45 @@ slingshot <- function(dat, cluster_labels, starting_cluster, knn = NA,
 
   stopifnot(!any(is.na(cluster_labels)))
   cluster_labels
+}
+
+#' Construst cluster matrix from cluster labels
+#'
+#' @param cluster_labels  vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels, na.rm = T)}. Can include \code{NA}
+#'
+#' @return A 0-1 matrix with \code{length(cluster_labels)} rows
+#' and \code{max(cluster_labels)} columns
+.construct_cluster_matrix <- function(cluster_labels){
+  idx <- !is.na(cluster_labels)
+  stopifnot(all(cluster_labels[idx] > 0), all(cluster_labels[idx] %% 1 == 0))
+  stopifnot(length(unique(cluster_labels[idx])) == max(cluster_labels[idx]))
+
+  k <- max(cluster_labels, na.rm = T)
+  n <- length(cluster_labels)
+
+  mat <- sapply(1:k, function(x){
+    tmp <- rep(0, n)
+    tmp[which(cluster_labels == x)] <- 1
+    tmp
+  })
+
+  colnames(mat) <- seq_len(k)
+  mat
+}
+
+#' Compute the cluster centers
+#'
+#' @param dat a \code{n} by \code{d} matrix
+#' @param cluster_mat a 0-1 matrix that is \code{n} by \code{k}
+#'
+#' @return a \code{k} by \code{d} matrix
+.compute_cluster_center <- function(dat, cluster_mat){
+  mat <- t(sapply(1:ncol(cluster_mat), function(x){
+    idx <- which(cluster_mat[,x] == 1)
+    colMeans(dat[idx,,drop=F])
+  }))
+  rownames(mat) <- colnames(cluster_mat)
+  mat
 }

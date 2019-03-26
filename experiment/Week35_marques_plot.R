@@ -201,6 +201,13 @@ for(j in 1:len){
 
     points(res_our$u_mat[idx[idx_j],i1], res_our$u_mat[idx[idx_j],i2], pch = 16,
            col = col_vec[j], cex = 1.5)
+
+    mean_vec <- colMeans(res_our$u_mat[idx[idx_j],c(i1, i2)])
+    ellipse_points <- .compute_ellipse_points(mean_vec,
+                                              stats::cov(res_our$u_mat[idx[idx_j],c(i1, i2)]),
+                                              scale_factor = 2)
+    points(mean_vec[1], mean_vec[2], pch = 16)
+    lines(ellipse_points[,1], ellipse_points[,2])
   }
 }
 graphics.off()
@@ -231,6 +238,13 @@ for(j in 1:len){
 
     points(res_our$u_mat[idx[idx_j],i1], res_our$u_mat[idx[idx_j],i2], pch = 16,
            col = col_vec[j], cex = 1.5)
+
+    mean_vec <- colMeans(res_our$u_mat[idx[idx_j],c(i1, i2)])
+    ellipse_points <- .compute_ellipse_points(mean_vec,
+                                              stats::cov(res_our$u_mat[idx[idx_j],c(i1, i2)]),
+                                              scale_factor = 2)
+    points(mean_vec[1], mean_vec[2], pch = 16)
+    lines(ellipse_points[,1], ellipse_points[,2])
   }
 }
 graphics.off()
@@ -261,6 +275,13 @@ for(j in c(2,1,6)){
 
     points(res_our$u_mat[idx[idx_j],i1], res_our$u_mat[idx[idx_j],i2], pch = 16,
            col = col_vec[j], cex = 1.5)
+
+    mean_vec <- colMeans(res_our$u_mat[idx[idx_j],c(i1, i2)])
+    ellipse_points <- .compute_ellipse_points(mean_vec,
+                                              stats::cov(res_our$u_mat[idx[idx_j],c(i1, i2)]),
+                                              scale_factor = 2)
+    points(mean_vec[1], mean_vec[2], pch = 16)
+    lines(ellipse_points[,1], ellipse_points[,2])
   }
 }
 graphics.off()
@@ -290,34 +311,13 @@ for(j in c(3,4,5)){
 
     points(res_our$u_mat[idx[idx_j],i1], res_our$u_mat[idx[idx_j],i2], pch = 16,
            col = col_vec[j], cex = 1.5)
+
+    mean_vec <- colMeans(res_our$u_mat[idx[idx_j],c(i1, i2)])
+    ellipse_points <- .compute_ellipse_points(mean_vec,
+                                              stats::cov(res_our$u_mat[idx[idx_j],c(i1, i2)]),
+                                              scale_factor = 2)
+    points(mean_vec[1], mean_vec[2], pch = 16)
+    lines(ellipse_points[,1], ellipse_points[,2])
   }
 }
-graphics.off()
-
-
-###########################
-
-# plot the SVD embedding
-svd_res <- svd(dat_impute)
-u_mat <- svd_res$u[,1:2]%*%diag(svd_res$d[1:2])
-
-alpha_val <- 1
-col_idx <- c(rgb(238/255,204/255,17/255,alpha_val), #goldenrod
-             rgb(227/255,73/255,86/255,alpha_val), #red
-             rgb(100/255,140/255,252/255,alpha_val), #blue
-             rgb(129/255,199/255,124/255,alpha_val), #green
-             rgb(238/255,204/255,17/255,alpha_val),
-             rgb(238/255,204/255,17/255,alpha_val))[as.numeric(as.factor(cell_type_vec))]
-
-cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
-cell_type_vec <- as.character(sapply(cell_type_vec, function(x){substr(x,1,2)}))
-plot(u_mat[,1], u_mat[,2], pch = 16, col = col_idx, asp = T) #looks garbage
-plot(res_our$u_mat[,1], res_our$u_mat[,2], pch = 16, col = col_idx, asp = T)
-
-set.seed(10)
-tsne_res <- tsne::tsne(dat_impute, perplexity = 30, k = 2)
-
-png("../figure/experiment/Week35_marques_tsne.png", height = 1200, width = 1200, res = 300, units = "px")
-plot(tsne_res[,1], tsne_res[,2], pch = 16, col = col_idx, asp = T,
-     xlab = "Latent dimension 1", ylab = "Latent dimension 2")
 graphics.off()

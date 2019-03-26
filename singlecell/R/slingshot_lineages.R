@@ -25,132 +25,88 @@
 #'
 #' @return A list of cluster indices, with \code{starting_cluster} starting as
 #' its first element
-.get_lineages <- function(dat, cluster_labels, starting_cluster, knn = NA,
-                          remove_outlier = T, percentage = 0.05){
-  ### formatting
-  cluster_mat <- .construct_cluster_matrix(cluster_labels)
-  k <- ncol(cluster_mat)
-  stopifnot(is.matrix(dat), nrow(dat) == nrow(cluster_mat))
+.get_lineages <- function(dat, cluster_labels, starting_cluster, cluster_group_list = NA){
+  stopifnot(!is.list(cluster_group_list) || starting_cluster %in% cluster_group_list[[1]])
 
-  ### get the connectivity matrix
-  centers <- .compute_cluster_center(dat, cluster_mat)
-  dat_augment <- rbind(centers, dat)
-
-  ### construct the k-nearest neighbor graph
-  knn_graph <- .determine_knn(dat_augment, knn)
-
-  if(remove_outlier){
-    idx <- .remove_outliers(knn_graph, cluster_labels, percentage = percentage)
-    knn_graph <- .determine_knn(dat_augment[c(1:k, idx+k),], knn)
-  }
+  ### construct the distance matrix
+  dist_mat <- .compute_cluster_distances(dat, cluster_labels)
 
   ### construct the spt
-  spt_graph <- .construct_spt(knn_graph, k = k, starting_cluster = starting_cluster)
+  g <- .construct_graph_hierarchy(dist_mat, cluster_labels = cluster_labels,
+                                  cluster_group_list = cluster_group_list)
 
   ### identify lineages (paths through trees)
-  lineages <- .construct_lineages(spt_graph, starting_cluster = starting_cluster)
+  lineages <- .construct_lineages(g, starting_cluster = starting_cluster)
 
   lineages
 }
 
 #############
 
-#' Construst cluster matrix from cluster labels
-#'
-#' @param cluster_labels  vector of cluster labels, where
-#' the cluster labels are consecutive positive integers from 1 to
-#' \code{max(cluster_labels, na.rm = T)}. Can include \code{NA}
-#'
-#' @return A 0-1 matrix with \code{length(cluster_labels)} rows
-#' and \code{max(cluster_labels)} columns
-.construct_cluster_matrix <- function(cluster_labels){
-  idx <- !is.na(cluster_labels)
-  stopifnot(all(cluster_labels[idx] > 0), all(cluster_labels[idx] %% 1 == 0))
-  stopifnot(length(unique(cluster_labels[idx])) == max(cluster_labels[idx]))
-
-  k <- max(cluster_labels, na.rm = T)
-  n <- length(cluster_labels)
-
-  mat <- sapply(1:k, function(x){
-    tmp <- rep(0, n)
-    tmp[which(cluster_labels == x)] <- 1
-    tmp
-  })
-
-  colnames(mat) <- seq_len(k)
-  mat
+.covariance_distance <- function(mean_vec1, cov_mat1, mean_vec2, cov_mat2){
+  as.numeric(t(mean_vec1 - mean_vec2) %*% solve(cov_mat1 + cov_mat2) %*% (mean_vec1 - mean_vec2))
 }
 
-#' Compute the cluster centers
-#'
-#' @param dat a \code{n} by \code{d} matrix
-#' @param cluster_mat a 0-1 matrix that is \code{n} by \code{k}
-#'
-#' @return a \code{k} by \code{d} matrix
-.compute_cluster_center <- function(dat, cluster_mat){
-  mat <- t(sapply(1:ncol(cluster_mat), function(x){
-    idx <- which(cluster_mat[,x] == 1)
-    colMeans(dat[idx,,drop=F])
-  }))
-  rownames(mat) <- colnames(cluster_mat)
-  mat
-}
+.compute_cluster_distances <- function(dat, cluster_labels){
+  k <- max(cluster_labels)
+  dist_mat <- matrix(0, k, k)
 
-#' Construct the K-nearest neighbor graph based on Euclidean distance
-#'
-#' @param dat a \code{n} by \code{d} matrix
-#' @param knn positive integer
-#'
-#' @return \code{igraph} graph object
-.construct_knn_graph <- function(dat, knn = 5){
-  n <- nrow(dat)
-  dist_mat <- as.matrix(stats::dist(dat, method = "euclidean"))
-  adj_mat <- sapply(1:n, function(x){
-    vec <- dist_mat[,x]; vec[x] <- Inf
-    idx <- order(vec, decreasing = F)[1:knn]
-    adj_vec <- rep(0, n)
-    adj_vec[idx] <- 1
-    adj_vec
-  })
+  for(i in 1:(k-1)){
+    for(j in (i+1):k){
+      idx1 <- which(cluster_labels == i)
+      idx2 <- which(cluster_labels == j)
 
-  adj_mat <- ceiling((adj_mat + t(adj_mat))/2)
-  igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
-}
+      mean_vec1 <- colMeans(dat[idx1,])
+      mean_vec2 <- colMeans(dat[idx2,])
 
-#' Construct the shortest path tree graph from KNN graph
-#'
-#' This is currently hard-coded to work for only one \code{starting_cluster}.
-#'
-#' Note: The squaring of \code{dist_mat} is arbitrary, currently used to
-#' encourage paths through other clusters.
-#'
-#' @param knn_graph \code{igraph} object
-#' @param k positive integer for number of clusters
-#' @param starting_cluster the "origin" cluster that all the lineages will start
-#' from
-#'
-#' @return \code{igraph} object representing the shortest path tree
-.construct_spt <- function(knn_graph, k, starting_cluster){
-  stopifnot(starting_cluster <= k)
+      cov_mat1 <- stats::cov(dat[idx1,])
+      cov_mat2 <- stats::cov(dat[idx2,])
 
-  # construct distance graph
-  dist_mat <- igraph::distances(knn_graph, v = 1:k, to = 1:k, mode = "all")
-  dist_mat[is.infinite(dist_mat)] <- 0
-  dist_mat <- dist_mat^2
-  dist_graph <- igraph::graph_from_adjacency_matrix(dist_mat, weighted = T,
-                                                    mode = "undirected")
-
-  # enumerate shortest paths and then make it into a graph
-  lis <- igraph::shortest_paths(dist_graph, from = starting_cluster, output = "vpath")
-  adj_mat <- matrix(0, k, k)
-  for(vpath in lis$vpath){
-    if(length(vpath) == 1) next()
-    for(i in 2:length(vpath)){
-      adj_mat[vpath[i-1], vpath[i]] <- 1
+      dist_mat[i,j] <- .covariance_distance(mean_vec1, cov_mat1, mean_vec2, cov_mat2)
+      dist_mat[j,i] <- dist_mat[i,j]
     }
   }
-  adj_mat <- ceiling((adj_mat + t(adj_mat))/2)
-  igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected")
+
+  dist_mat
+}
+
+.construct_graph_hierarchy <- function(dist_mat, cluster_labels, cluster_group_list,
+               starting_cluster = 1){
+
+  n <- nrow(dist_mat)
+  k <- length(cluster_group_list)
+  g <- igraph::graph.empty(n = n, directed = T)
+
+  # add edges within each group
+  for(i in 1:k){
+    m <- length(cluster_group_list[[i]])
+
+    if(m > 1){
+      combn_mat <- utils::combn(m, 2)
+      for(j in 1:ncol(combn_mat)){
+        idx1 <- cluster_group_list[[i]][combn_mat[1,j]]
+        idx2 <- cluster_group_list[[i]][combn_mat[2,j]]
+
+        g <- igraph::add_edges(g, edges = matrix(c(idx1, idx2, idx2, idx1), 2, 2),
+                               attr = list(weight = dist_mat[idx1, idx2]))
+      }
+    }
+  }
+
+  # add edges between groups
+  for(i in 1:(k-1)){
+    edge_mat <- as.matrix(expand.grid(cluster_group_list[[i]], cluster_group_list[[i+1]]))
+    for(j in 1:nrow(edge_mat)){
+      idx1 <- edge_mat[j,1]
+      idx2 <- edge_mat[j,2]
+
+      g <- igraph::add_edges(g, edges = c(idx1, idx2),
+                             attr = list(weight = dist_mat[idx1, idx2]))
+    }
+  }
+
+  #cbind(igraph::as_edgelist(g, names = T), igraph::edge_attr(g, "weight", index = E(g)))
+  g
 }
 
 #' Construct the lineages
@@ -162,73 +118,49 @@
 #' @param starting_cluster positive integer
 #'
 #' @return a list
-.construct_lineages <- function(spt_graph, starting_cluster){
-  # find all leaf nodes (aside from starting_cluster) and trace its path
-  deg_vec <- igraph::degree(spt_graph)
-  leaf_idx <- which(deg_vec == 1)
-  leaf_idx <- leaf_idx[!leaf_idx %in% starting_cluster]
+.construct_lineages <- function(g, starting_cluster){
+  path_list <- igraph::shortest_paths(g, from = starting_cluster,
+                                     output = "vpath")$vpath
 
-  stopifnot(length(leaf_idx) > 0)
-  lineages <- igraph::shortest_paths(spt_graph, from = starting_cluster,
-                                     to = leaf_idx, output = "vpath")$vpath
+  lineages <- .find_all_unique_paths(path_list)
+
   for(i in 1:length(lineages)){
     lineages[[i]] <- as.numeric(lineages[[i]])
   }
 
-  names(lineages) <- paste('Lineage',seq_along(lineages),sep='')
+  names(lineages) <- paste('Lineage' ,seq_along(lineages), sep='')
 
   lineages
 }
 
-#' Remove outliers based on shortest path centrality
-#'
-#' This function relies on the specific format of \code{graph}.
-#' Specifically, the first \code{max(cluster_labels, na.rm=T)} nodes
-#' in \code{graph} correspond to the clutser centers and are not
-#' reflected with \code{cluster_labels}
-#'
-#' @param graph \code{igraph} object
-#' @param cluster_labels vector of cluster labels, where
-#' the cluster labels are consecutive positive integers from 1 to
-#' \code{max(cluster_labels, na.rm = T)}. Can include \code{NA}
-#' @param percentage percentage of vertices to remove that have
-#' a cluster label
-#'
-#' @return indices (of the original dataset, reflected by \code{cluster_labels})
-#' that should be kept
-.remove_outliers <- function(graph, cluster_labels, percentage = 0.05){
-  stopifnot(class(graph) == "igraph")
-  centrality <- igraph::betweenness(graph)
+.find_all_unique_paths <- function(path_list){
+  len <- length(path_list)
 
-  k <- max(cluster_labels, na.rm = T)
+  bool_vec <- sapply(1:len, function(x){
+    !any(sapply(path_list[-x], function(y){
+      all(path_list[[x]] %in% y)
+    }))
+  })
 
-  # remove outliers based on IQR
-  iqr_mat <- do.call(rbind, lapply(1:k, function(x){
-    idx <- which(cluster_labels == x)
-    iqr_val <- stats::IQR(centrality[idx+k])
-    med_val <- stats::median(centrality[idx+k])
-
-    cbind(idx, x, (centrality[idx+k]-med_val)/iqr_val)
-  }))
-  iqr_mat <- iqr_mat[order(iqr_mat[,ncol(iqr_mat)], decreasing = T),]
-  n <- nrow(iqr_mat)
-  remove_percentage <- round(percentage * n)
-
-  iqr_mat[-c(1:remove_percentage),1]
+  path_list[which(bool_vec)]
 }
 
-.determine_knn <- function(dat_augment, knn){
-  if(is.na(knn)){
-    knn <- 1
-    while(TRUE){
-      knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
-      if(igraph::components(knn_graph)$no == 1) break()
-      knn <- knn + 1
-    }
-  } else {
-    knn_graph <- .construct_knn_graph(dat_augment, knn = knn)
-    stopifnot(igraph::components(knn_graph)$no == 1)
-  }
+.compute_ellipse_points <- function(mean_vec, cov_mat, scale_factor = 1){
+  eig <- eigen(cov_mat)
+  alpha <- atan(eig$vectors[2,1]/eig$vectors[1,1])
+  if(alpha < 0) alpha <- alpha + 2*pi
 
-  knn_graph
+  a <- sqrt(eig$values[1])*scale_factor
+  b <- sqrt(eig$values[2])*scale_factor
+
+  theta_grid <- seq(0, 2*pi, length.out = 100)
+  ellipse_x <- a*cos(theta_grid)
+  ellipse_y <- b*sin(theta_grid)
+
+  R <- matrix(c(cos(alpha), -sin(alpha), sin(alpha), cos(alpha)), 2, 2)
+  val <- cbind(ellipse_x, ellipse_y) %*% R
+
+  val <- t(apply(val, 1, function(x){x + mean_vec}))
 }
+
+
