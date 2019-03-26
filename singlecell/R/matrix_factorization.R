@@ -46,15 +46,19 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   while((is.na(tol) | abs(current_obj - next_obj) > tol) & length(obj_vec) < max_iter){
     current_obj <- next_obj
 
+    if(reparameterize){
+      v_mat <- svd(v_mat)$u
+    }
+
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, extra_weights = extra_weights,
-                           scalar = scalar, !is.na(cores))
-    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, extra_weights = extra_weights,
                            scalar = scalar, !is.na(cores))
 
     if(reparameterize){
-      tmp <- .reparameterize(u_mat, v_mat)
-      u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
+      u_mat <- svd(u_mat)$u
     }
+
+    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, extra_weights = extra_weights,
+                           scalar = scalar, !is.na(cores))
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights, scalar = scalar)
 
@@ -69,17 +73,6 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
   list(u_mat = u_mat, v_mat = v_mat, obj_vec = obj_vec, res_list = res_list)
-}
-
-.reparameterize <- function(u_mat, v_mat){
-  stopifnot(ncol(u_mat) == ncol(v_mat))
-  k <- ncol(u_mat)
-  pred_mat <- u_mat %*% t(v_mat)
-  svd_res <- svd(pred_mat)
-  if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
-  u_mat <- svd_res$u[,1:k] %*% diag(diag_vec)
-  v_mat <- svd_res$v[,1:k] %*% diag(diag_vec)
-  list(u_mat = u_mat, v_mat = v_mat)
 }
 
 #########
