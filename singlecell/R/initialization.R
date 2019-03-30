@@ -169,6 +169,8 @@ initialization <- function(dat, k = 2, family = "exponential",
     }
   }
 
+  if(direction == ">=") stopifnot(all(u_mat %*% t(v_mat) >= 0)) else stopifnot(all(u_mat %*% t(v_mat) <= 0))
+
   list(u_mat = u_mat, v_mat = v_mat)
 }
 
@@ -213,7 +215,7 @@ initialization <- function(dat, k = 2, family = "exponential",
     constr_lb <- rep(tol, d)
     if(all(is.na(other_bound))) constr_ub <- rep(Inf, d) else constr_ub <- rep(other_bound, d)
   }
-  constr_lb <- c(constr_lb, current_vec, -current_vec)
+  constr_lb <- c(constr_lb, rep(-Inf, 2*k))
   constr_ub <- c(constr_ub, rep(Inf, 2*k))
 
   if(all(is.na(other_bound))){
