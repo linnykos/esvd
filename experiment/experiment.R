@@ -1,5 +1,5 @@
 rm(list=ls())
-set.seed(190)
+set.seed(10)
 dat <- abs(matrix(rexp(40, 1), nrow = 10, ncol = 4))
 # res <- initialization(dat, max_val = -100, max_iter = 5)
 
@@ -32,17 +32,17 @@ iter <- 1
 new_obj <- .evaluate_objective_mat(dat, pred_mat)
 old_obj <- Inf
 
-# while(abs(new_obj - old_obj) > tol & iter < max_iter){
-#   print(iter)
-#   old_obj <- new_obj
-#   gradient_mat <- .gradient_mat(dat, pred_mat)
-#   new_mat <- .adaptive_gradient_step(dat, pred_mat, gradient_mat, k = k,
-#                                      max_val = max_val, direction = direction)
-#
-#   new_obj <- .evaluate_objective_mat(dat, new_mat)
-#   pred_mat <- new_mat
-#   iter <- iter + 1
-# }
+while(abs(new_obj - old_obj) > tol & iter < max_iter){
+  print(iter)
+  old_obj <- new_obj
+  gradient_mat <- .gradient_mat(dat, pred_mat)
+  new_mat <- .adaptive_gradient_step(dat, pred_mat, gradient_mat, k = k,
+                                     max_val = max_val, direction = direction)
+
+  new_obj <- .evaluate_objective_mat(dat, new_mat)
+  pred_mat <- new_mat
+  iter <- iter + 1
+}
 
 ############
 
@@ -65,41 +65,25 @@ while(TRUE){
 
   new_obj <- .evaluate_objective_mat(dat, new_mat)
 
+  print(paste0(init_obj, " : ", new_obj))
+
   if(new_obj < init_obj) break() else stepsize <- stepsize/stepdown_factor
   iter <- iter + 1
   if(iter > max_iter) stop("Adaptive gradient initialization failed")
 }
-res <- .svd_projection(pred_mat - stepsize*gradient_mat, k = k, factors = T)
 
 ################
 
+res <- .svd_projection(pred_mat - stepsize*gradient_mat, k = k, factors = T)
 u_mat = res$u_mat
 v_mat = res$v_mat
-range(u_mat %*% t(v_mat))
-verbose = T
-for(j in 1:nrow(v_mat)){
-  res <- .projection_l1(v_mat[j,], u_mat, direction = direction, other_bound = max_val)
-  if(attr(res, "status") != 0) break()
-  v_mat[j,] <- as.numeric(res)
-}
-range(u_mat %*% t(v_mat))
 
-if(attr(res, "status") != 0){
-  if(verbose) warning("Had to use some janky fixes")
-  if(length(which(u_mat < 0)) > length(which(u_mat > 0))) {
-    u_mat <- -u_mat; v_mat <- -v_mat
-  }
-  if(direction == ">=") u_mat <- pmax(u_mat, 0.01) else u_mat <- pmin(u_mat, -0.01)
+j=1
+res <- .projection_l1(v_mat[j,], u_mat, direction = direction, other_bound = max_val)
 
-  j = 3
-  # v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, direction = direction,
-  #                             other_bound = max_val, tol = 0.1)
-}
-
-#########################
 current_vec = v_mat[j,]
 other_mat = u_mat
-tol = 0.1
+tol = 0.001
 other_bound = max_val
 
 stopifnot(ncol(other_mat) == length(current_vec))

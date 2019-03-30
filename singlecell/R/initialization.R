@@ -149,7 +149,8 @@ initialization <- function(dat, k = 2, family = "exponential",
 }
 
 .ensure_feasibility <- function(u_mat, v_mat, direction, max_val = NA,
-                              verbose = F){
+                                verbose = F){
+
   for(j in 1:nrow(v_mat)){
     res <- .projection_l1(v_mat[j,], u_mat, direction = direction, other_bound = max_val)
     if(attr(res, "status") != 0) break()
@@ -215,7 +216,7 @@ initialization <- function(dat, k = 2, family = "exponential",
     constr_lb <- rep(tol, d)
     if(all(is.na(other_bound))) constr_ub <- rep(Inf, d) else constr_ub <- rep(other_bound, d)
   }
-  constr_lb <- c(constr_lb, rep(-Inf, 2*k))
+  constr_lb <- c(constr_lb, current_vec, -current_vec)
   constr_ub <- c(constr_ub, rep(Inf, 2*k))
 
   if(all(is.na(other_bound))){
