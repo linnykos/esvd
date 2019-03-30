@@ -1,6 +1,43 @@
 context("Test initialization")
 
+## .matrix_completion is correct
+
+test_that(".matrix_completion works", {
+  set.seed(10)
+  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+  dat[sample(1:prod(dim(dat)), 10)] <- NA
+  res <- .matrix_completion(dat, k = 2)
+
+  expect_true(is.matrix(res))
+  expect_true(all(dim(res) == dim(dat)))
+})
+
+#####
+
 ## .svd_projection is correct
+
+test_that(".svd_projection works", {
+  set.seed(10)
+  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+  res <- .svd_projection(dat, k = 2)
+
+  expect_true(is.matrix(res))
+  expect_true(all(dim(res) == dim(dat)))
+})
+
+test_that(".svd_projection works with factors", {
+  set.seed(10)
+  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+  res <- .svd_projection(dat, k = 2, factors = T)
+
+  expect_true(is.list(res))
+  expect_true(length(res) == 2)
+  expect_true(all(names(res) == c("u_mat", "v_mat")))
+  expect_true(all(dim(res$u_mat) == c(nrow(dat), 2)))
+  expect_true(all(dim(res$v_mat) == c(ncol(dat), 2)))
+})
+
+############
 
 ## .adaptive_gradient_step is correct
 
