@@ -114,6 +114,17 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
 #########
 
+.reparameterize <- function(u_mat, v_mat){
+  stopifnot(ncol(u_mat) == ncol(v_mat))
+  k <- ncol(u_mat)
+  pred_mat <- u_mat %*% t(v_mat)
+  svd_res <- svd(pred_mat)
+  if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
+  u_mat <- svd_res$u[,1:k] %*% diag(diag_vec)
+  v_mat <- svd_res$v[,1:k] %*% diag(diag_vec)
+  list(u_mat = u_mat, v_mat = v_mat)
+}
+
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
                           extra_weights = rep(1, nrow(dat)), scalar = 2, parallelized = F){
   stopifnot(length(class(dat)) == 2)

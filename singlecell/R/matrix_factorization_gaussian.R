@@ -39,3 +39,14 @@
   if(is.matrix(tmp)) rowSums(tmp) else sum(tmp)
 }
 
+.evaluate_objective_mat.gaussian <- function(dat, theta_mat, scalar = 2, ...){
+  idx <- which(!is.na(dat))
+  sum(-log(theta_mat[idx]) - (-scalar^2*dat[idx]*theta_mat[idx] + scalar^2*dat[idx]^2*theta_mat[idx]^2))
+}
+
+.gradient_mat.gaussian <- function(dat, theta_mat, scalar = 2, ...){
+  idx <- which(!is.na(dat))
+  sum(-1/(theta_mat[idx]) + scalar^2*dat[idx] - scalar^2*dat[idx]^2*theta_mat[idx])
+}
+
+
