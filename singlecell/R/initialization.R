@@ -161,7 +161,7 @@ initialization <- function(dat, k = 2, family = "exponential",
     if(length(which(u_mat < 0)) > length(which(u_mat > 0))) {
       u_mat <- -u_mat; v_mat <- -v_mat
     }
-    u_mat <- pmax(u_mat, 1e-3)
+    if(direction == ">=") u_mat <- pmax(u_mat, 1e-3) else u_mat <- pmin(u_mat, -1e-3)
 
     for(j in 1:nrow(v_mat)){
       v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, direction = direction,
