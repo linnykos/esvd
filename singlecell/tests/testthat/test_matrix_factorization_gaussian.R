@@ -347,7 +347,7 @@ test_that(".gradient_mat.gaussian works", {
   pred_mat <- u_mat %*% t(v_mat)
   class(dat) <- c("gaussian", class(dat)[length(class(dat))])
 
-  res <- .gradient_mat.gaussian(dat, pred_mat)
+  res <- .gradient_mat(dat, pred_mat)
 
   expect_true(is.numeric(res))
   expect_true(is.matrix(res))
@@ -364,7 +364,7 @@ test_that(".gradient_mat.gaussian is a proper gradient", {
     pred_mat2 <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
 
     class(dat) <- c("gaussian", class(dat)[length(class(dat))])
-    grad <-  .gradient_mat.gaussian(dat, pred_mat, scalar = 2)
+    grad <-  .gradient_mat(dat, pred_mat, scalar = 2)
 
     res <- .evaluate_objective_mat(dat, pred_mat, scalar = 2)
     res2 <- .evaluate_objective_mat(dat, pred_mat2, scalar = 2)
