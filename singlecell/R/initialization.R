@@ -13,31 +13,19 @@ initialization <- function(dat, k = 2, family = "exponential",
                             extra_weights = rep(1, nrow(dat)),
                             max_val = NA,
                            max_iter = 50, tol = 1e-3,
-                           verbose = F){
+                           verbose = F, ...){
   stopifnot(length(extra_weights) == nrow(dat))
 
   # initialize
+  dat <- .matrix_completion(dat, k = k)
   if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
 
   # projected gradient descent
-  n <- nrow(dat); d <- ncol(dat)
-  theta_mat <- matrix(0, n, d)
-  iter <- 1
-  new_obj <- .evaluate_objective_mat(dat, theta_mat, scalar = scalar)
-  old_obj <- Inf
-
-  while(abs(new_obj - old_obj) > tol & iter < max_iter){
-    old_obj <- new_obj
-    gradient_mat <- .gradient_mat(dat, theta_mat, scalar = scalar)
-    new_mat <- .adaptive_gradient_step(dat, theta_mat, gradient_mat, k = k,
-                                       scalar = scalar)
-
-    new_obj <- .evaluate_objective_mat(dat, new_mat, scalar = scalar)
-    theta_mat <- new_mat
-  }
+  pred_mat <- .projected_gradient_descent(dat, k = k, max_iter = max_iter,
+                                          tol = tol, ...)
 
   # svd decompose
-  res <- .svd_projection(theta_mat, k = k)
+  res <- .svd_projection(pred_mat, k = k)
   u_mat <- res$u_mat; v_mat <- res$v_mat
 
   # project v back into positive space based on u
@@ -57,6 +45,37 @@ initialization <- function(dat, k = 2, family = "exponential",
 
 ##################################
 
+.matrix_completion <- function(dat, k = 2){
+  if(any(is.na(dat))){
+    lambda0_val <- softImpute::lambda0(dat)
+    res <- softImpute::softImpute(dat, rank.max = k, lambda = min(30, lambda0_val/100))
+    pred_naive <- res$u %*% diag(res$d) %*% t(res$v)
+    dat[which(is.na(dat))] <- pred_naive[which(is.na(dat))]
+  }
+
+  dat
+}
+
+.projected_gradient_descent <- function(dat, k = 2,
+                                        max_iter = 50, tol = 1e-3, ...){
+  n <- nrow(dat); d <- ncol(dat)
+  pred_mat <- matrix(0, n, d)
+  iter <- 1
+  new_obj <- .evaluate_objective_mat(dat, pred_mat, ...)
+  old_obj <- Inf
+
+  while(abs(new_obj - old_obj) > tol & iter < max_iter){
+    old_obj <- new_obj
+    gradient_mat <- .gradient_mat(dat, pred_mat, ...)
+    new_mat <- .adaptive_gradient_step(dat, pred_mat, gradient_mat, k = k, ...)
+
+    new_obj <- .evaluate_objective_mat(dat, new_mat, ...)
+    pred_mat <- new_mat
+  }
+
+  pred_mat
+}
+
 .svd_projection <- function(mat, k, factors = F){
   res <- svd(mat)
 
@@ -74,17 +93,16 @@ initialization <- function(dat, k = 2, family = "exponential",
   }
 }
 
-.adaptive_gradient_step <- function(dat, theta_mat, gradient_mat, k,
-                                    scalar = 2,
+.adaptive_gradient_step <- function(dat, pred_mat, gradient_mat, k,
                                     stepsize_init = 100, stepdown_factor = 2,
-                                    max_iter = 20){
+                                    max_iter = 20, ...){
   stepsize <- stepsize_init
-  init_obj <- .evaluate_objective_mat(dat, theta_mat, scalar = scalar)
+  init_obj <- .evaluate_objective_mat(dat, pred_mat, ...)
   iter <- 1
 
   while(TRUE){
-    new_mat <- .svd_projection(theta_mat - stepsize*gradient_mat)
-    new_obj <- .evaluate_objective_mat(dat, new_mat, scalar = scalar)
+    new_mat <- .svd_projection(pred_mat - stepsize*gradient_mat)
+    new_obj <- .evaluate_objective_mat(dat, new_mat, ...)
 
     if(new_obj < init_obj) return() else stepsize <- stepsize/stepdown_factor
     iter <- iter + 1

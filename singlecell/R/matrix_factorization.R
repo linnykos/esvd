@@ -77,43 +77,6 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
 #########
 
-.evaluate_objective <- function (dat, u_mat, v_mat, ...) {
-  stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
-            ncol(u_mat) == ncol(v_mat))
-
-  UseMethod(".evaluate_objective")
-}
-
-.evaluate_objective.default <- function(dat, u_mat, v_mat, ...){
-  .evaluate_objective.exponential(dat, u_mat, v_mat, ...)
-}
-
-.evaluate_objective_single <- function (dat_vec, current_vec, other_mat, ...) {
-  stopifnot(!is.matrix(dat_vec))
-  stopifnot(length(current_vec) == ncol(other_mat))
-  stopifnot(length(dat_vec) == nrow(other_mat))
-
-  UseMethod(".evaluate_objective_single")
-}
-
-.evaluate_objective_single.default <- function(dat_vec, current_vec, other_mat, ...){
-  .evaluate_objective_single.exponential(dat_vec, current_vec, other_mat, ...)
-}
-
-.gradient_vec <- function (dat_vec, current_vec, other_mat, ...) {
-  stopifnot(!is.matrix(dat_vec))
-  stopifnot(length(current_vec) == ncol(other_mat))
-  stopifnot(length(dat_vec) == nrow(other_mat))
-
-  UseMethod(".gradient_vec")
-}
-
-.gradient_vec.default <- function(dat_vec, current_vec, other_mat, ...){
-  .gradient_vec.exponential(dat_vec, current_vec, other_mat, ...)
-}
-
-#########
-
 .reparameterize <- function(u_mat, v_mat){
   stopifnot(ncol(u_mat) == ncol(v_mat))
   k <- ncol(u_mat)

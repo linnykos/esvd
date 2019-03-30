@@ -1,49 +1,28 @@
 rm(list=ls())
-load("../results/step4_factorization_spca.RData")
-dat <- res_our$u_mat
-starting_cluster <- 1
+set.seed(10)
+dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+dat[sample(1:prod(dim(dat)), 10)] <- NA
+u_mat <- abs(matrix(rnorm(20), nrow = 10, ncol = 2))
+v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
+pred_mat <- u_mat %*% t(v_mat)
+class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+scalar = 2
 
-cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
-cell_type_vec <- as.factor(cell_type_vec)
-cluster_labels <- as.numeric(cell_type_vec)
-order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
-cluster_group_list <- lapply(order_vec, function(x){
-  grep(paste0("^", x), levels(cell_type_vec))
-})
+idx <- which(!is.na(dat))
 
-dist_mat <- .compute_cluster_distances(dat, cluster_labels)
-starting_cluster <- cluster_group_list[[1]][1]
+res1 <- sum(-log(pred_mat[idx]) -
+      pred_mat[idx]*dat[idx]*scalar^2 +
+      pred_mat[idx]^2*dat[idx]^2*scalar^2)
 
-lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
-                          cluster_group_list = cluster_group_list)
+pred_mat2 <- pred_mat
+############
 
-intersect_1 <- setdiff(lineages[[1]], lineages[[2]])
-intersect_2 <- setdiff(lineages[[2]], lineages[[1]])
-factor_vec <- rep(1, length(cell_type_vec))
-factor_vec[which(cluster_labels %in% intersect_1)] <- 2
-factor_vec[which(cluster_labels %in% intersect_2)] <- 3
+extra_weights = rep(1, nrow(dat))
+pred_mat <- u_mat %*% t(v_mat)
+idx <- which(!is.na(dat))
+stopifnot(all(pred_mat > 0))
+extra_mat <- t(sapply(1:nrow(dat), function(x){rep(extra_weights[x], ncol(dat))}))
 
-# let's try a 3d plot
-car::scatter3d(x = res_our$u_mat[,1], y = res_our$u_mat[,2], z = res_our$u_mat[,3],
-               surface=FALSE, groups = as.factor(factor_vec))
-
-
-##################
-shrink = 1
-thresh = 0.001
-max_iter = 15
-b = 1
-upscale_vec = NA
-curves <- .get_curves(dat, cluster_labels, lineages, shrink = shrink,
-                      thresh = thresh, max_iter = max_iter, b = b, upscale_vec = upscale_vec)
-
-idx1 <- 2; idx2 <- 3
-plot(res_our$u_mat[,idx1], res_our$u_mat[,idx2], asp = T, col = "gray", pch = 16)
-
-for(k in 1:2){
-  ord <- curves[[k]]$ord
-  lines(curves[[k]]$s[ord, idx1], curves[[k]]$s[ord, idx2], lwd = 3.5,
-        col = "white")
-  lines(curves[[k]]$s[ord, idx1], curves[[k]]$s[ord, idx2], lwd = 3,
-        col = "black")
-}
+res2 <- sum(-log(pred_mat[idx]) -
+      pred_mat[idx]*dat[idx]*scalar^2/extra_mat[idx] +
+      pred_mat[idx]^2*dat[idx]^2*scalar^2/(2*extra_mat[idx]^2))

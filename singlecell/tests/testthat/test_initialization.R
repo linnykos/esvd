@@ -1,66 +1,10 @@
 context("Test initialization")
 
-## initialization is correct
+## .svd_projection is correct
 
-test_that("initialization works", {
-  set.seed(10)
-  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+## .adaptive_gradient_step is correct
 
-  res <- initialization(dat)
-
-  expect_true(is.list(res))
-  expect_true(ncol(res$u_mat) == ncol(res$v_mat))
-  expect_true(nrow(res$u_mat) == nrow(dat))
-  expect_true(nrow(res$v_mat) == ncol(dat))
-})
-
-test_that("initialization works off of an imputed matrix", {
-  set.seed(10)
-  dat <- abs(rbind(MASS::mvrnorm(5, rep(0, 5), diag(5)),
-                   MASS::mvrnorm(5, rep(10, 5), 2*diag(5))))
-  dat2 <- dat
-  for(i in 1:nrow(dat2)){
-    dat2[i, sample(1:5, 1)] <- NA
-  }
-  drop_idx <- which(is.na(dat2))
-  dat2 <- scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
-
-  res <- initialization(dat2)
-
-  expect_true(is.list(res))
-  expect_true(ncol(res$u_mat) == ncol(res$v_mat))
-  expect_true(nrow(res$u_mat) == nrow(dat))
-  expect_true(nrow(res$v_mat) == ncol(dat))
-})
-
-test_that("initialization gives negative predictions", {
-  set.seed(10)
-  dat <- abs(rbind(MASS::mvrnorm(5, rep(0, 5), diag(5)),
-                   MASS::mvrnorm(5, rep(10, 5), 2*diag(5))))
-  dat2 <- dat
-  for(i in 1:nrow(dat2)){
-    dat2[i, sample(1:5, 1)] <- NA
-  }
-  drop_idx <- which(is.na(dat2))
-  dat2 <- scImpute(dat, drop_idx, Kcluster = 2, min_size = 3)
-
-  res <- initialization(dat2)
-  pred_mat <- res$u_mat %*% t(res$v_mat)
-
-  expect_true(all(pred_mat[which(!is.na(dat))] <= 1e-6))
-})
-
-test_that("initialization can catch hard cases", {
-  # here, I think the low-rank U_mat's column space does not include ANY
-  ## point that are all positive...
-
-  set.seed(10*2)
-  dat <- abs(matrix(rpois(25, 2), nrow = 5, ncol = 5))
-  class(dat) <- c("poisson", class(dat)[length(class(dat))])
-  init <- initialization(dat, family = "poisson", max_val = 100)
-
-  expect_true(length(init) == 2)
-})
+## .ensure_feasibility is correct
 
 ####################
 

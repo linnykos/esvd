@@ -297,3 +297,82 @@ test_that("fit_factorization is appropriate for gaussians", {
   expect_true(all(bool_vec))
 
 })
+
+#########
+
+## .evaluate_objective_mat.gaussian is correct
+
+test_that(".evaluate_objective_mat.gaussian works", {
+  set.seed(20)
+  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+  dat[sample(1:prod(dim(dat)), 10)] <- NA
+  u_mat <- abs(matrix(rnorm(20), nrow = 10, ncol = 2))
+  v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
+  pred_mat <- u_mat %*% t(v_mat)
+  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+
+  res <- .evaluate_objective_mat(dat, pred_mat)
+
+  expect_true(is.numeric(res))
+  expect_true(!is.matrix(res))
+  expect_true(length(res) == 1)
+  expect_true(!is.nan(res))
+})
+
+test_that(".evaluate_objective_mat is the same as .evaluate_objective", {
+  set.seed(10)
+  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+  dat[sample(1:prod(dim(dat)), 10)] <- NA
+  u_mat <- abs(matrix(rnorm(20), nrow = 10, ncol = 2))
+  v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
+  pred_mat <- u_mat %*% t(v_mat)
+  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+
+  res <- .evaluate_objective_mat(dat, pred_mat, scalar = 2)
+  res2 <- .evaluate_objective(dat, u_mat, v_mat, scalar = 2)
+
+  expect_true(abs(res - res2) <= 1e-6)
+})
+
+
+#########
+
+## .gradient_mat.gaussian is correct
+
+test_that(".gradient_mat.gaussian works", {
+  set.seed(20)
+  dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+  u_mat <- abs(matrix(rnorm(20), nrow = 10, ncol = 2))
+  v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
+  pred_mat <- u_mat %*% t(v_mat)
+  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+
+  res <- .gradient_mat.gaussian(dat, pred_mat)
+
+  expect_true(is.numeric(res))
+  expect_true(is.matrix(res))
+  expect_true(all(dim(res) == dim(dat)))
+})
+
+test_that(".gradient_mat.gaussian is a proper gradient", {
+  trials <- 500
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(x)
+    dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+    pred_mat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+    pred_mat2 <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
+
+    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    grad <-  .gradient_mat.gaussian(dat, pred_mat, scalar = 2)
+
+    res <- .evaluate_objective_mat(dat, pred_mat, scalar = 2)
+    res2 <- .evaluate_objective_mat(dat, pred_mat2, scalar = 2)
+
+    res2 >= res + t(as.numeric(grad))%*%as.numeric(pred_mat2 - pred_mat) - 1e-6
+  })
+
+  expect_true(all(bool_vec))
+})
+
+
