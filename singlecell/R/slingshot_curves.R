@@ -25,10 +25,11 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                       upscale_vec = NA){
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
                             cluster_group_list = cluster_group_list)
+
   curves <- .get_curves(dat, cluster_labels, lineages, shrink = shrink,
                         thresh = thresh, max_iter = max_iter, b = b, upscale_vec = upscale_vec)
 
-  list(lineages = lineages, curves = curves, cluster_mat = cluster_mat)
+  list(lineages = lineages, curves = curves)
 }
 
 #' Estimate the slingshot curves

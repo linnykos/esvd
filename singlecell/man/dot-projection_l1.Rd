@@ -28,3 +28,6 @@ such that: s_i >= u_i - z_i for i from 1 to k,
            V %*% z_k <= tol elementwise (for entire vector of length d)
            s_i >= 0 for i from 1 to k
 }
+\details{
+The status codes for the solver are at https://www.coin-or.org/Doxygen/Clp/classClpModel.html#a938d943303494e698dce0681fafe39f8
+}

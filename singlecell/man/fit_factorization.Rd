@@ -5,9 +5,9 @@
 \title{Fit the factorization}
 \usage{
 fit_factorization(dat, u_mat, v_mat, max_val = NA,
-  family = "exponential", reparameterize = T, extra_weights = rep(1,
-  nrow(dat)), scalar = 2, tol = 0.001, max_iter = 100, verbose = F,
-  return_path = F, cores = NA)
+  family = "exponential", reparameterize = T, scalar = 2,
+  tol = 0.001, max_iter = 100, verbose = F, return_path = F,
+  cores = NA)
 }
 \arguments{
 \item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}
@@ -18,11 +18,9 @@ fit_factorization(dat, u_mat, v_mat, max_val = NA,
 
 \item{max_val}{maximum value of the inner product (with the correct sign)}
 
-\item{family}{either \code{"gaussian"}, \code{"exponential"} or \code{"poisson"}}
+\item{family}{either \code{"gaussian"} or \code{"exponential"}}
 
 \item{reparameterize}{boolean}
-
-\item{extra_weights}{vector of weights, of length \code{n}}
 
 \item{scalar}{positive numeric for the Gaussian family}
 

@@ -6,7 +6,7 @@ test_that(".initialize_weight_matrix works", {
   set.seed(10)
   cluster_labels <- sample(1:10, 200, replace = T)
   dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
 
   res <- .initialize_weight_matrix(cluster_mat, lineages)
@@ -33,7 +33,7 @@ test_that(".initialize_curve_hierarchy works for a more complicated case", {
   set.seed(10)
   cluster_labels <- sample(1:10, 200, replace = T)
   dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_vec <- 1:10
 
   res <- .initialize_curve_hierarchy(lineages, cluster_vec)
@@ -49,7 +49,7 @@ test_that(".initial_curve_fit works", {
   set.seed(10)
   cluster_labels <- rep(1:5, each = 20)
   dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -74,7 +74,7 @@ test_that(".smoother_func works", {
   set.seed(10)
   cluster_labels <- rep(1:5, each = 20)
   dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -98,7 +98,7 @@ test_that(".construct_average_curve works", {
   set.seed(10)
   cluster_labels <- rep(1:5, each = 20)
   dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -121,7 +121,7 @@ test_that(".refine_curve_fit works", {
   set.seed(10)
   cluster_labels <- rep(1:5, each = 20)
   dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -146,7 +146,7 @@ test_that(".percent_shrinkage works", {
   set.seed(10)
   cluster_labels <- rep(1:5, each = 20)
   dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -168,7 +168,7 @@ test_that(".percent_shrinkage computes a shrinkage for all indices, even outlier
   set.seed(10)
   cluster_labels <- rep(1:5, each = 20)
   dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -191,7 +191,7 @@ test_that(".percent_shrinkage respects the order of lambda", {
   set.seed(20)
   cluster_labels <- rep(1:5, each = 20)
   dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -216,7 +216,7 @@ test_that(".shrink_to_avg works", {
   set.seed(20)
   cluster_labels <- rep(1:5, each = 20)
   dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
   centers <- .compute_cluster_center(dat, cluster_mat)
@@ -256,7 +256,7 @@ test_that(".get_curves works", {
           pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
   }))
   cluster_labels <- rep(1:4, each = 50)
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
 
   res <- .get_curves(dat, cluster_labels, lineages)
 
@@ -272,7 +272,7 @@ test_that(".get_curves works for a harder example", {
   set.seed(20)
   cluster_labels <- rep(1:5, each = 20)
   dat <- MASS::mvrnorm(100, rep(0, 2), diag(2))
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
 
   res <- .get_curves(dat, cluster_labels, lineages)
 
@@ -297,7 +297,7 @@ test_that(".get_curves finds reasonable curves", {
           pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
   }))
   cluster_labels <- rep(1:4, each = 50)
-  lineages <- .get_lineages(dat, cluster_labels, knn = NA, starting_cluster = 1)
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
 
   res <- .get_curves(dat, cluster_labels, lineages)
 
@@ -331,8 +331,8 @@ test_that("slingshot works", {
   res <- slingshot(dat, cluster_labels, starting_cluster = 1)
 
   expect_true(is.list(res))
-  expect_true(length(res) == 3)
-  expect_true(all(names(res) == c("lineages", "curves", "cluster_mat")))
+  expect_true(length(res) == 2)
+  expect_true(all(names(res) == c("lineages", "curves")))
 
   #plot(dat[,1], dat[,2], asp = T)
   #for(i in 1:length(res$curves)){lines(res$curves[[i]], col = i+1, lwd = 2)}
@@ -355,16 +355,16 @@ test_that("slingshot can give sensible lambdas", {
   cluster_labels <- rep(1:4, each = 50)
   res <- slingshot(dat, cluster_labels, starting_cluster = 1)
 
-  bool_vec <- all(sapply(1:length(res$lineages), function(x){
+  bool_vec <- sapply(1:length(res$lineages), function(x){
     lin <- res$lineages[[x]]
     all(sapply(1:(length(lin)-1), function(y){
-      idx1 <- which(res$cluster_mat[,lin[y]] == 1)
-      idx2 <- which(res$cluster_mat[,lin[y+1]] == 1)
+      idx1 <- which(cluster_labels == lin[y])
+      idx2 <- which(cluster_labels == lin[y+1])
 
       mean(res$curves[[x]]$lambda[which(res$curves[[x]]$idx %in% idx1)]) <
         mean(res$curves[[x]]$lambda[which(res$curves[[x]]$idx %in% idx2)])
     }))
-  }))
+  })
 
   expect_true(all(bool_vec))
 })
@@ -378,21 +378,8 @@ test_that("slingshot works with an artifical example", {
   res <- slingshot(dat, cluster_labels, starting_cluster = 1)
 
   expect_true(is.list(res))
-  expect_true(length(res) == 3)
-  expect_true(all(names(res) == c("lineages", "curves", "cluster_mat")))
-})
-
-test_that("slingshot works with NAs", {
-  set.seed(10)
-  cluster_labels <- sample(1:10, 200, replace = T)
-  cluster_labels[sample(1:200, 50)] <- NA
-  dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
-
-  res <- slingshot(dat, cluster_labels, starting_cluster = 1)
-
-  expect_true(is.list(res))
-  expect_true(length(res) == 3)
-  expect_true(all(names(res) == c("lineages", "curves", "cluster_mat")))
+  expect_true(length(res) == 2)
+  expect_true(all(names(res) == c("lineages", "curves")))
 })
 
 ############
@@ -402,16 +389,6 @@ test_that("slingshot works with NAs", {
 test_that(".construct_cluster_matrix works", {
   set.seed(10)
   res <- .construct_cluster_matrix(sample(1:10, 200, replace = T))
-
-  expect_true(all(dim(res) == c(200,10)))
-  expect_true(all(sort(unique(as.numeric(res))) == c(0,1)))
-})
-
-test_that(".construct_cluster_matrix works with NAs", {
-  set.seed(10)
-  vec <- sample(1:10, 200, replace = T)
-  vec[sample(1:200, 50)] <- NA
-  res <- .construct_cluster_matrix(vec)
 
   expect_true(all(dim(res) == c(200,10)))
   expect_true(all(sort(unique(as.numeric(res))) == c(0,1)))

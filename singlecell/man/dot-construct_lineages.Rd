@@ -4,10 +4,10 @@
 \alias{.construct_lineages}
 \title{Construct the lineages}
 \usage{
-.construct_lineages(spt_graph, starting_cluster)
+.construct_lineages(g, starting_cluster)
 }
 \arguments{
-\item{spt_graph}{\code{igraph} object}
+\item{g}{\code{igraph} object}
 
 \item{starting_cluster}{positive integer}
 }

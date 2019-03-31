@@ -4,9 +4,9 @@
 \alias{slingshot}
 \title{Use slingshot to estimate the cell development trajectories}
 \usage{
-slingshot(dat, cluster_labels, starting_cluster, knn = NA,
-  remove_outlier = T, percentage = 0.05, shrink = 1,
-  thresh = 0.001, max_iter = 15, b = 1, upscale_vec = NA)
+slingshot(dat, cluster_labels, starting_cluster, cluster_group_list = NA,
+  shrink = 1, thresh = 0.001, max_iter = 15, b = 1,
+  upscale_vec = NA)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}
@@ -18,11 +18,7 @@ the cluster labels are consecutive positive integers from 1 to
 \item{starting_cluster}{the "origin" cluster that all the lineages will start
 from}
 
-\item{knn}{positive integer, possibly \code{NA}}
-
-\item{remove_outlier}{boolean}
-
-\item{percentage}{percentage dictating which points are considered outliers}
+\item{cluster_group_list}{list denoting the hierarchy and order of the clusters}
 
 \item{shrink}{shrinkage factor}
 

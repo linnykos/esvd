@@ -4,7 +4,7 @@
 #' @param u_mat initial factorization, of size \code{n} by \code{k}
 #' @param v_mat initial factorization, of size \code{d} by \code{k}
 #' @param max_val maximum value of the inner product (with the correct sign)
-#' @param family either \code{"gaussian"}, \code{"exponential"} or \code{"poisson"}
+#' @param family either \code{"gaussian"} or \code{"exponential"}
 #' @param reparameterize boolean
 #' @param scalar positive numeric for the Gaussian family
 #' @param tol small positive number to dictate the convergence of the objective function

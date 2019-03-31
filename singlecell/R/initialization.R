@@ -2,10 +2,13 @@
 #'
 #' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
 #' @param k positive integer
-#' @param family either \code{"gaussian"}, \code{"exponential"} or \code{"poisson"}
+#' @param family either \code{"gaussian"} or \code{"exponential"}
 #' @param extra_weights vector of weights, of length \code{n}
 #' @param max_val maximum value of the inner product (with the correct sign)
+#' @param max_iter numeric
+#' @param tol numeric
 #' @param verbose boolean
+#' @param ... extra arguments
 #'
 #' @return list
 #' @export
@@ -127,6 +130,8 @@ initialization <- function(dat, k = 2, family = "exponential",
 #' @param pred_mat \code{n} by \code{d} matrix
 #' @param gradient_mat \code{n} by \code{d} matrix
 #' @param k numeric
+#' @param max_val numeric or \code{NA}
+#' @param direction "<=" or ">="
 #' @param stepsize_init numeric
 #' @param stepdown_factor numeric
 #' @param max_iter numeric

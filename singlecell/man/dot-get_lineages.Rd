@@ -4,24 +4,20 @@
 \alias{.get_lineages}
 \title{Estimate the lineages (via Slingshot)}
 \usage{
-.get_lineages(dat, cluster_labels, starting_cluster, knn = NA,
-  remove_outlier = T, percentage = 0.05)
+.get_lineages(dat, cluster_labels, starting_cluster,
+  cluster_group_list = NA)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}
 
 \item{cluster_labels}{vector of cluster labels, where
 the cluster labels are consecutive positive integers from 1 to
-\code{max(cluster_labels, na.rm = T)}. Can include \code{NA}}
+\code{max(cluster_labels)}. Cannot include \code{NA}}
 
 \item{starting_cluster}{the "origin" cluster that all the lineages will start
 from}
 
-\item{knn}{positive integer, possibly \code{NA}}
-
-\item{remove_outlier}{boolean}
-
-\item{percentage}{percentage dictating which points are considered outliers}
+\item{cluster_group_list}{list denoting the hierarchy and order of the clusters}
 }
 \value{
 A list of cluster indices, with \code{starting_cluster} starting as
@@ -34,11 +30,6 @@ Note: I removed the functionality to explicitly label a ending cluster
 \details{
 Note: I removed the Omega parameter, which, to my understanding,
 controls if a lineage (i.e. tree) is split into two separate lineages.
-Currently, the only way for a forest to occur is if the KNN graph is
-naturally disconnected.
-
-Note: Currently, this code is hard-coded to work for only a fully connected
-KNN graph.
 
 Code adapted from https://github.com/kstreet13/slingshot.
 }

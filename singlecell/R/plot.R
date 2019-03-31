@@ -42,3 +42,36 @@
 
 .rotate <- function(mat){t(mat)[,nrow(mat):1]}
 
+#' Compute the points of the ellipse on a two-dimensional plot
+#'
+#' Function is for plotting purposes only
+#'
+#' @param mean_vec 2-dimensional vector
+#' @param cov_mat 2 by 2 PSD matrix
+#' @param scale_factor scaling factor to determine the size of ellipse
+#'
+#' @return matrix
+.compute_ellipse_points <- function(mean_vec, cov_mat, scale_factor = 1){
+  stopifnot(length(mean_vec) == 2, all(dim(cov_mat) == c(2,2)))
+  stopifnot(sum(abs(cov_mat - t(cov_mat))) <= 1e-6)
+
+  eig <- eigen(cov_mat)
+  alpha <- atan(eig$vectors[2,1]/eig$vectors[1,1])
+  if(alpha < 0) alpha <- alpha + 2*pi
+
+  a <- sqrt(eig$values[1])*scale_factor
+  b <- sqrt(eig$values[2])*scale_factor
+
+  theta_grid <- seq(0, 2*pi, length.out = 100)
+  ellipse_x <- a*cos(theta_grid)
+  ellipse_y <- b*sin(theta_grid)
+
+  R <- matrix(c(cos(alpha), -sin(alpha), sin(alpha), cos(alpha)), 2, 2)
+  val <- cbind(ellipse_x, ellipse_y) %*% R
+
+  t(apply(val, 1, function(x){x + mean_vec}))
+}
+
+
+
+
