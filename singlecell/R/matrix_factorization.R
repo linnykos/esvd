@@ -6,7 +6,6 @@
 #' @param max_val maximum value of the inner product (with the correct sign)
 #' @param family either \code{"gaussian"}, \code{"exponential"} or \code{"poisson"}
 #' @param reparameterize boolean
-#' @param extra_weights vector of weights, of length \code{n}
 #' @param scalar positive numeric for the Gaussian family
 #' @param tol small positive number to dictate the convergence of the objective function
 #' @param max_iter maximum number of iterations for the algorithm
@@ -19,14 +18,12 @@
 fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
                                family = "exponential",
                                reparameterize = T,
-                               extra_weights = rep(1, nrow(dat)),
                                scalar = 2,
                                tol = 1e-3, max_iter = 100,
                                verbose = F, return_path = F,
                                cores = NA){
   if(!is.na(cores)) doMC::registerDoMC(cores = cores)
   stopifnot(length(which(dat > 0)) > 0)
-  stopifnot(all(extra_weights > 0))
   stopifnot(length(which(dat < 0)) == 0)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
             ncol(u_mat) == ncol(v_mat))
@@ -38,7 +35,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   dat[which(dat == 0)] <- min_val/2
 
   current_obj <- Inf
-  next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights, scalar = scalar)
+  next_obj <- .evaluate_objective(dat, u_mat, v_mat, scalar = scalar)
   obj_vec <- c(next_obj)
   if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
   if(return_path) res_list <- list(list(u_mat = u_mat, v_mat = v_mat)) else res_list <- NA
@@ -47,20 +44,22 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     current_obj <- next_obj
 
     if(reparameterize){
-      v_mat <- svd(v_mat)$u
+      svd_res <- .svd_projection(u_mat%*%t(v_mat), k = k, factors = T, v_alone = T)
+      u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
     }
 
-    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, extra_weights = extra_weights,
+    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val,
                            scalar = scalar, !is.na(cores))
 
     if(reparameterize){
-      u_mat <- svd(u_mat)$u
+      svd_res <- .svd_projection(u_mat%*%t(v_mat), k = k, factors = T, u_alone = T)
+      u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
     }
 
-    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, extra_weights = extra_weights,
+    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val,
                            scalar = scalar, !is.na(cores))
 
-    next_obj <- .evaluate_objective(dat, u_mat, v_mat, extra_weights = extra_weights, scalar = scalar)
+    next_obj <- .evaluate_objective(dat, u_mat, v_mat, scalar = scalar)
 
 
     if(verbose) print(paste0("Iter ", length(obj_vec), ": Decrease is ", current_obj - next_obj))
@@ -89,7 +88,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 }
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
-                          extra_weights = rep(1, nrow(dat)), scalar = 2, parallelized = F){
+                          scalar = 2, parallelized = F){
   stopifnot(length(class(dat)) == 2)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
@@ -102,12 +101,12 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   if(parallelized){
     func <- function(i){
       if(left) {
-        dat_vec <- dat[i,]; extra_vec <- rep(extra_weights[i], nrow(other_mat))
+        dat_vec <- dat[i,]
       } else {
-        dat_vec <- dat[,i]; extra_vec <- extra_weights
+        dat_vec <- dat[,i]
       }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
-      .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val, extra_weights = extra_vec,
+      .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val,
                     scalar = scalar)
     }
 
@@ -117,14 +116,13 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   } else {
     for(i in 1:nrow(current_mat)){
       if(left) {
-        dat_vec <- dat[i,]; extra_vec <- rep(extra_weights[i], nrow(other_mat))
+        dat_vec <- dat[i,]
       } else {
-        dat_vec <- dat[,i]; extra_vec <- extra_weights
+        dat_vec <- dat[,i]
       }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
       if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
                                                                 other_mat, max_val = max_val,
-                                                                extra_weights = extra_vec,
                                                                 scalar = scalar)
     }
   }
@@ -133,26 +131,24 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 }
 
 .optimize_row <- function(dat_vec, current_vec, other_mat, max_iter = 100,
-                          max_val = NA, extra_weights = rep(1, nrow(other_mat)),
-                          scalar = 2){
+                          max_val = NA, scalar = 2){
   stopifnot(length(which(!is.na(dat_vec))) > 0)
-  stopifnot(length(extra_weights) == nrow(other_mat))
 
   direction <- .dictate_direction(class(dat_vec)[1])
   current_obj <- Inf
-  next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights,
+  next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat,
                                          scalar = scalar)
   iter <- 1
   while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
     current_obj <- next_obj
 
-    grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
+    grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, scalar = scalar)
     step_vec <- .frank_wolfe(grad_vec, other_mat,
                              direction = direction, other_bound = max_val)
-    step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
+    step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, scalar = scalar)
     current_vec <- (1-step_size)*current_vec + step_size*step_vec
 
-    next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, extra_weights = extra_weights, scalar = scalar)
+    next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, scalar = scalar)
 
     stopifnot(all(abs(other_mat %*% current_vec) <= abs(max_val)+1e-6))
     iter <- iter + 1
@@ -162,8 +158,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 }
 
 .binary_search <- function(dat_vec, current_vec, step_vec, other_mat,
-                           max_iter = 100, extra_weights = rep(1, nrow(other_mat)),
-                           scalar = 2){
+                           max_iter = 100, scalar = 2){
   form_current <- function(s){
     stopifnot(0<=s, s<=1)
     (1-s)*current_vec + s*step_vec
@@ -172,15 +167,15 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   upper <- 1; lower <- 0; mid <- 0.5
   iter <- 1
 
-  upper_val <- .evaluate_objective_single(dat_vec, form_current(upper), other_mat, extra_weights = extra_weights, scalar = scalar)
-  lower_val <- .evaluate_objective_single(dat_vec, form_current(lower), other_mat, extra_weights = extra_weights, scalar = scalar)
+  upper_val <- .evaluate_objective_single(dat_vec, form_current(upper), other_mat, scalar = scalar)
+  lower_val <- .evaluate_objective_single(dat_vec, form_current(lower), other_mat, scalar = scalar)
 
   upper_val_org <- upper_val; lower_val_org <- lower_val
   mid_val <- 2*max(upper_val, lower_val);
 
   # stage 1: do at least a few iterations first
   while(iter <= 6){
-    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, extra_weights = extra_weights, scalar = scalar)
+    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, scalar = scalar)
 
     if(lower_val <= upper_val){
       upper <- mid; upper_val <- mid_val
@@ -194,7 +189,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
   # stage 2: ensure that the stepsize actually decreases the obj val
   while(iter <= max_iter & mid_val > min(upper_val_org, lower_val_org)){
-    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, extra_weights = extra_weights, scalar = scalar)
+    mid_val <- .evaluate_objective_single(dat_vec, form_current(mid), other_mat, scalar = scalar)
 
     if(lower_val <= upper_val){
       upper <- mid; upper_val <- mid_val

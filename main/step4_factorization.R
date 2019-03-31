@@ -1,12 +1,12 @@
 set.seed(10)
 load(paste0("../results/step3_scalar_heuristic", suffix, ".RData"))
 
-init <- singlecell::initialization(dat_impute, family = family, extra_weight = extra_weight,
+init <- singlecell::initialization(dat_impute, family = family,
                                      k = k, max_val = max_val)
 res_our <- singlecell::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
                                                  family = family,  reparameterize = T,
                                                  max_iter = 100, max_val = max_val,
-                                                 scalar = scalar_val, extra_weight = extra_weight,
+                                                 scalar = scalar_val,
                                                  return_path = F, cores = 15,
                                                  verbose = T)
 

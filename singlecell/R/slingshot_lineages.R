@@ -19,9 +19,7 @@
 #' \code{max(cluster_labels, na.rm = T)}. Can include \code{NA}
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
-#' @param knn positive integer, possibly \code{NA}
-#' @param remove_outlier boolean
-#' @param percentage percentage dictating which points are considered outliers
+#' @param cluster_group_list list denoting the hierarchy and order of the clusters
 #'
 #' @return A list of cluster indices, with \code{starting_cluster} starting as
 #' its first element

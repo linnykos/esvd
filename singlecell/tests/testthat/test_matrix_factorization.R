@@ -276,24 +276,6 @@ test_that("fit_factorization for Gaussian with scalar setting respects max_val",
   expect_true(ncol(res$v_mat) == 2)
 })
 
-test_that("fit_factorization for Gaussian with scalar and extra_weights", {
-  set.seed(10)
-  dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
-  extra_weights <- rowSums(dat)
-
-  init <- initialization(dat, family = "gaussian", max_val = 5)
-  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                            family = "gaussian", extra_weights = extra_weights,
-                            max_val = 5, scalar = 2)
-
-  expect_true(is.list(res))
-  expect_true(nrow(res$u_mat) == nrow(dat))
-  expect_true(nrow(res$v_mat) == ncol(dat))
-  expect_true(ncol(res$u_mat) == 2)
-  expect_true(ncol(res$v_mat) == 2)
-})
-
-
 test_that("fit_factorization works with missing values", {
   set.seed(5)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
@@ -413,62 +395,6 @@ test_that("fit_factorization can roughly recover the all 1's matrix", {
   set.seed(10)
 
   expect_true(all(bool_vec))
-})
-
-test_that("fit_factorization works with non-trivial extra_weights", {
-  set.seed(10)
-  u_mat <- cbind(c(rep(0.1, 5), rep(0.5, 5)), c(rep(0.3, 5), rep(1, 5)))
-  v_mat <- cbind(c(rep(0.5, 2), rep(0.2, 2)), c(rep(0.1, 2), rep(1, 2)))
-  s_vec <- c(5:15)
-
-  dat <- matrix(0, nrow = 10, ncol = 4)
-  for(i in 1:10){
-    for(j in 1:4){
-      dat[i,j] <- stats::rpois(1, lambda = s_vec[i]*exp(u_mat[i,]%*%v_mat[j,]))
-    }
-  }
-
-  extra_weights <- rowSums(dat)/ncol(dat)
-  init <- initialization(dat, family = "poisson", max_val = 100,
-                          extra_weights = extra_weights)
-
-  res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                            max_iter = 5, max_val = 100,
-                            extra_weights = extra_weights,
-                            family = "poisson")
-
-  expect_true(is.list(res))
-})
-
-test_that("fit_factorization shrinks the inner products when extra_weights > 1 are used", {
-  set.seed(10)
-  u_mat <- cbind(c(rep(0.1, 5), rep(0.5, 5)), c(rep(0.3, 5), rep(1, 5)))
-  v_mat <- cbind(c(rep(0.5, 2), rep(0.2, 2)), c(rep(0.1, 2), rep(1, 2)))
-  s_vec <- rep(100, nrow(u_mat))
-
-  dat <- matrix(0, nrow = 10, ncol = 4)
-  for(i in 1:10){
-    for(j in 1:4){
-      dat[i,j] <- stats::rpois(1, lambda = s_vec[i]*exp(u_mat[i,]%*%v_mat[j,]))
-    }
-  }
-
-  extra_weights <- rowSums(dat)/ncol(dat)
-  init1 <- initialization(dat, family = "poisson", max_val = 100,
-                          extra_weights = extra_weights)
-
-  res1 <- fit_factorization(dat, u_mat = init1$u_mat, v_mat = init1$v_mat,
-                            max_iter = 5, max_val = 100,
-                            extra_weights = extra_weights,
-                            family = "poisson")
-
-  init2 <- initialization(dat, family = "poisson", max_val = 100)
-
-  res2 <- fit_factorization(dat, u_mat = init2$u_mat, v_mat = init2$v_mat,
-                             max_iter = 5, max_val = 100,
-                             family = "poisson")
-
-  expect_true(all(exp(res2$u_mat %*% t(res2$v_mat)) >= exp(res1$u_mat %*% t(res1$v_mat))))
 })
 
 ####################

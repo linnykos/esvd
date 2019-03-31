@@ -89,7 +89,8 @@ initialization <- function(dat, k = 2, family = "exponential",
   res$u_mat %*% t(res$v_mat)
 }
 
-.svd_projection <- function(mat, k, factors = F){
+.svd_projection <- function(mat, k, factors = F,
+                            u_alone = F, v_alone = F){
   res <- svd(mat)
 
   if(k == 1){
@@ -99,8 +100,16 @@ initialization <- function(dat, k = 2, family = "exponential",
   }
 
   if(factors){
-    list(u_mat = res$u[,1:k,drop = F]%*%sqrt(diag_mat),
-         v_mat = res$v[,1:k,drop = F]%*%sqrt(diag_mat))
+    if(u_alone){
+      list(u_mat = res$u[,1:k,drop = F],
+           v_mat = res$v[,1:k,drop = F]%*%diag_mat)
+    } else if(v_alone) {
+      list(u_mat = res$u[,1:k,drop = F]%*%diag_mat,
+           v_mat = res$v[,1:k,drop = F])
+    } else {
+      list(u_mat = res$u[,1:k,drop = F]%*%sqrt(diag_mat),
+           v_mat = res$v[,1:k,drop = F]%*%sqrt(diag_mat))
+    }
   } else {
     res$u[,1:k,drop = F] %*% diag_mat %*% t(res$v[,1:k,drop = F])
   }

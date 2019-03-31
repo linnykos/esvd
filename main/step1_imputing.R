@@ -20,7 +20,6 @@ print(paste0(Sys.time(), ": Starting to determine dropout"))
 dat_impute <- dat
 
 reweight_factor <- rowSums(dat_impute)
-extra_weight <- rep(1, nrow(dat_impute))
 dat_impute <- t(sapply(1:nrow(dat_impute), function(i){dat_impute[i,]/reweight_factor[i]}))
 # dat_impute <- log(dat_impute+1)
 dat_impute <- dat_impute * 10/mean(dat_impute)

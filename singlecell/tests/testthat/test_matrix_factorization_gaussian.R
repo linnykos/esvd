@@ -72,10 +72,10 @@ test_that(".gradient_vec satisfies the gradient definition with a scalar and wei
     i <- sample(1:10, 1)
     dat_vec <- dat[i,]
     class(dat_vec) <- c("gaussian", class(dat_vec)[length(class(dat_vec))])
-    grad <- .gradient_vec(dat_vec, u_vec, v_mat, scalar = 4, extra_weights = 1:nrow(v_mat))
+    grad <- .gradient_vec(dat_vec, u_vec, v_mat, scalar = 4)
 
-    res <- .evaluate_objective_single(dat_vec, u_vec, v_mat, scalar = 4, extra_weights = 1:nrow(v_mat))
-    res2 <- .evaluate_objective_single(dat_vec, u_vec2, v_mat, scalar = 4, extra_weights = 1:nrow(v_mat))
+    res <- .evaluate_objective_single(dat_vec, u_vec, v_mat, scalar = 4)
+    res2 <- .evaluate_objective_single(dat_vec, u_vec2, v_mat, scalar = 4)
 
     res2 >= res + as.numeric(grad %*% (u_vec2 - u_vec)) - 1e-6
   })

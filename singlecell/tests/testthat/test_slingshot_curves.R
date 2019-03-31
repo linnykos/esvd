@@ -395,6 +395,42 @@ test_that("slingshot works with NAs", {
   expect_true(all(names(res) == c("lineages", "curves", "cluster_mat")))
 })
 
+############
+
+## .construct_cluster_matrix is correct
+
+test_that(".construct_cluster_matrix works", {
+  set.seed(10)
+  res <- .construct_cluster_matrix(sample(1:10, 200, replace = T))
+
+  expect_true(all(dim(res) == c(200,10)))
+  expect_true(all(sort(unique(as.numeric(res))) == c(0,1)))
+})
+
+test_that(".construct_cluster_matrix works with NAs", {
+  set.seed(10)
+  vec <- sample(1:10, 200, replace = T)
+  vec[sample(1:200, 50)] <- NA
+  res <- .construct_cluster_matrix(vec)
+
+  expect_true(all(dim(res) == c(200,10)))
+  expect_true(all(sort(unique(as.numeric(res))) == c(0,1)))
+})
+
+###########
+
+## .compute_cluster_center is correct
+
+test_that(".compute_cluster_center works", {
+  set.seed(10)
+  cluster_mat <- .construct_cluster_matrix(sample(1:10, 200, replace = T))
+  dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
+
+  res <- .compute_cluster_center(dat, cluster_mat)
+
+  expect_true(all(dim(res) == c(10,5)))
+})
+
 
 
 

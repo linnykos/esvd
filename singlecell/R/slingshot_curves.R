@@ -8,9 +8,7 @@
 #' \code{max(cluster_labels)}
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
-#' @param knn positive integer, possibly \code{NA}
-#' @param remove_outlier boolean
-#' @param percentage percentage dictating which points are considered outliers
+#' @param cluster_group_list list denoting the hierarchy and order of the clusters
 #' @param shrink shrinkage factor
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
@@ -461,25 +459,6 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   pcurve <- .clean_curve(pcurve, W_vec, sample_idx)
 
   pcurve
-}
-
-.fill_in_labels <- function(dat, cluster_labels){
-  if(!any(is.na(cluster_labels))) return(cluster_labels)
-  stopifnot(!all(is.na(cluster_labels)))
-
-  dist_mat <- as.matrix(stats::dist(dat))
-  idx <- which(is.na(cluster_labels))
-  dist_mat <- dist_mat[idx, -idx]
-  cluster_labels_short <- cluster_labels[-idx]
-
-  assign_vec <- apply(dist_mat, 1, function(x){
-    cluster_labels_short[which.min(x)]
-  })
-
-  cluster_labels[idx] <- assign_vec
-
-  stopifnot(!any(is.na(cluster_labels)))
-  cluster_labels
 }
 
 #' Construst cluster matrix from cluster labels

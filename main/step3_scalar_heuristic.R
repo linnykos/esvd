@@ -6,12 +6,12 @@ scalar_vec <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100)
 res_list <- vector("list", length(scalar_vec))
 
 for(i in 1:length(scalar_vec)){
-  init <- singlecell::initialization(dat_impute_NA, family = family, extra_weight = extra_weight,
+  init <- singlecell::initialization(dat_impute_NA, family = family,
                                        k = k, max_val = max_val)
   res_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                                    family = family, reparameterize = T,
                                                    max_iter = 25, max_val = max_val,
-                                                   scalar = scalar_vec[i], extra_weight = extra_weight,
+                                                   scalar = scalar_vec[i],
                                                    return_path = F, cores = 15,
                                                    verbose = T)
   save.image(paste0("../results/step3_scalar_heuristic", suffix, "_tmp.RData"))
@@ -20,9 +20,6 @@ for(i in 1:length(scalar_vec)){
 .l2norm <- function(x){sqrt(sum(x^2))}
 quality_vec <- sapply(res_list, function(x){
   pred_mat <- 1/(x$u_mat %*% t(x$v_mat))
-  pred_mat <- t(sapply(1:nrow(pred_mat), function(x){
-    pred_mat[x,] * extra_weight[x]
-  }))
 
   mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
   # mat <- mat[which(mat[,1] <= 1800),]
