@@ -176,7 +176,6 @@ test_that(".projection_l1 maintains less than 0", {
   trials <- 50
 
   bool_vec <- sapply(1:trials, function(x){
-    print(x)
     set.seed(10*x)
 
     dat <- abs(matrix(rexp(40, 1), nrow = 10, ncol = 4))
@@ -200,7 +199,7 @@ test_that(".projection_l1 maintains greater than 0", {
 
     dat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
 
-    res <- initialization(dat, family = "gaussian", max_val = 100)
+    res <- initialization(dat, family = "gaussian", max_val = 100, max_iter = 5)
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     prod_mat <- u_mat %*% t(v_mat)

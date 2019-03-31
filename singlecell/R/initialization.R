@@ -151,23 +151,34 @@ initialization <- function(dat, k = 2, family = "exponential",
 .ensure_feasibility <- function(u_mat, v_mat, direction, max_val = NA,
                                 verbose = F){
 
+  v_mat2 <- v_mat
+
   for(j in 1:nrow(v_mat)){
     res <- .projection_l1(v_mat[j,], u_mat, direction = direction, other_bound = max_val)
     if(attr(res, "status") != 0) break()
-    v_mat[j,] <- as.numeric(res)
+    v_mat2[j,] <- as.numeric(res)
   }
 
+  # deal with errors if any
   if(attr(res, "status") != 0){
     if(verbose) warning("Had to use some janky fixes")
     if(length(which(u_mat < 0)) > length(which(u_mat > 0))) {
       u_mat <- -u_mat; v_mat <- -v_mat
     }
-    if(direction == ">=") u_mat <- pmax(u_mat, 1e-3) else u_mat <- pmin(u_mat, -1e-3)
+    if(direction == ">=") {
+      u_mat <- pmax(u_mat, 1e-3)
+      if(!is.na(max_val)) u_mat <- pmin(u_mat, max_val)
+    } else {
+      u_mat <- pmin(u_mat, -1e-3)
+      if(!is.na(max_val)) u_mat <- pmax(u_mat, max_val)
+    }
 
     for(j in 1:nrow(v_mat)){
       v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, direction = direction,
                                   other_bound = max_val)
     }
+  } else {
+    v_mat <- v_mat2
   }
 
   if(direction == ">=") stopifnot(all(u_mat %*% t(v_mat) >= 0)) else stopifnot(all(u_mat %*% t(v_mat) <= 0))
@@ -186,6 +197,8 @@ initialization <- function(dat, k = 2, family = "exponential",
 #'            s_i >= -(u_i - z_i) for i from 1 to k,
 #'            V %*% z_k <= tol elementwise (for entire vector of length d)
 #'            s_i >= 0 for i from 1 to k
+#'
+#' The status codes for the solver are at https://www.coin-or.org/Doxygen/Clp/classClpModel.html#a938d943303494e698dce0681fafe39f8
 #'
 #' @param current_vec vector
 #' @param other_mat matrix

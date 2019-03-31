@@ -247,6 +247,7 @@ test_that("fit_factorization is appropriate for exponential", {
   trials <- 10
 
   bool_vec <- sapply(1:trials, function(x){
+    print(x)
     set.seed(10*x)
     dat <- abs(matrix(rexp(25, 1/2), nrow = 5, ncol = 5))
     class(dat) <- c("exponential", class(dat)[length(class(dat))])
