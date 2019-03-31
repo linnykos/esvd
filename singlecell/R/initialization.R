@@ -3,7 +3,6 @@
 #' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
 #' @param k positive integer
 #' @param family either \code{"gaussian"} or \code{"exponential"}
-#' @param extra_weights vector of weights, of length \code{n}
 #' @param max_val maximum value of the inner product (with the correct sign)
 #' @param max_iter numeric
 #' @param tol numeric
@@ -13,11 +12,9 @@
 #' @return list
 #' @export
 initialization <- function(dat, k = 2, family = "exponential",
-                           extra_weights = rep(1, nrow(dat)),
                            max_val = NA,
                            max_iter = 10, tol = 1e-3,
                            verbose = F, ...){
-  stopifnot(length(extra_weights) == nrow(dat))
   direction <- .dictate_direction(family)
 
   # initialize
