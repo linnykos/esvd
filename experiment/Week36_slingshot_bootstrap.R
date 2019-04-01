@@ -23,7 +23,7 @@ func <- function(x){
     dat2[idx,] <- dat[idx2,]
   }
 
-  slingshot(dat, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+  singlecell::slingshot(dat, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
             cluster_group_list = cluster_group_list, verbose = F,
             b = max(apply(dat, 2, function(x){diff(range(x))}))/10)
 }
