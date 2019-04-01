@@ -33,4 +33,5 @@ trials <- 100
 doMC::registerDoMC(cores = 15)
 res_list <- foreach::"%dopar%"(foreach::foreach(x = 1:trials), func(x))
 
-save.image("../experiments/Week36_slingshot_bootstrap.RData")
+save.image("tmp.RData")
+save.image("../experiment/Week36_slingshot_bootstrap.RData")
