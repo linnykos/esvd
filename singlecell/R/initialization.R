@@ -145,7 +145,7 @@ initialization <- function(dat, k = 2, family = "exponential",
   while(iter > max_iter){
     res <- pred_mat - stepsize*gradient_mat
     new_mat <- .project_rank_feasibility(res, direction = direction,
-                               max_val = max_val, verbose = F)
+                               max_val = max_val)
 
     if(!any(is.na(new_mat))){
       new_obj <- .evaluate_objective_mat(dat, new_mat, ...)
@@ -164,7 +164,7 @@ initialization <- function(dat, k = 2, family = "exponential",
 # alternating projection heuristic to find intersection of two sets
 .project_rank_feasibility <- function(mat, k, direction, max_val = NA,
                                       max_iter = 50,
-                                      give_warning = T){
+                                      give_warning = F){
   if(!is.na(max_val)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
   iter <- 1
   tol <- ifelse(direction == "<=", -1, 1)
@@ -176,7 +176,7 @@ initialization <- function(dat, k = 2, family = "exponential",
     if(direction == "<=") {
       if(all(mat < 0) && (is.na(max_val) || all(mat > max_val))) return(mat)
 
-      if(any(mat < 0)) tol <- min(tol, quantile(mat[mat < 0], probs = 0.95))
+      if(any(mat < 0)) tol <- min(tol, stats::quantile(mat[mat < 0], probs = 0.95))
       stopifnot(tol < 0)
       mat[mat > 0] <- tol
       if(!is.na(max_val)) mat[mat < max_val] <- max_val
@@ -184,7 +184,7 @@ initialization <- function(dat, k = 2, family = "exponential",
     if(direction == ">=") {
       if(all(mat > 0) && (is.na(max_val) || all(mat < max_val))) return(mat)
 
-      if(any(mat > 0)) tol <- max(tol, quantile(mat[mat > 0], probs = 0.05))
+      if(any(mat > 0)) tol <- max(tol, stats::quantile(mat[mat > 0], probs = 0.05))
       stopifnot(tol > 0)
       mat[mat < 0] <- tol
       if(!is.na(max_val)) mat[mat > max_val] <- max_val
@@ -210,7 +210,7 @@ initialization <- function(dat, k = 2, family = "exponential",
     max_val <- -max_val
   }
 
-  min_val <- quantile(mat[mat > 0], probs = 0.01)
+  min_val <- stats::quantile(mat[mat > 0], probs = 0.01)
   stopifnot(min_val > 0)
   mat[mat < 0] <- min_val
   if(!is.na(max_val)) mat[mat > max_val] <- max_val
