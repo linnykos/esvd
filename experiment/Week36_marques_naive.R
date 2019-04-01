@@ -143,8 +143,8 @@ cluster_group_list <- lapply(order_vec, function(x){
   grep(paste0("^", x), levels(cell_type_vec))
 })
 
-# curves <- slingshot(naive, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-#                                 cluster_group_list = cluster_group_list, verbose = T)
+curves <- slingshot(naive, cluster_labels, starting_cluster = cluster_group_list[[1]][1], cluster_group_list = cluster_group_list, verbose = T,
+                    b = max(apply(naive, 2, function(x){diff(range(x))}))/50)
 lineages <- .get_lineages(naive, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                           cluster_group_list = cluster_group_list)
 
@@ -166,3 +166,26 @@ curve_list <- lapply(1:trials, function(x){
 })
 
 # we need a way to get an confidence tube hm...
+
+#####################################
+
+combn_mat <- utils::combn(3, 2)
+par(mfrow = c(1,3), mar = c(4,4,4,0.5))
+for(i in 1:3){
+  idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
+  plot(naive[,idx1], naive[,idx2], pch = 16, col = rgb(0.85,0.85,0.85,1),
+       asp = T, cex = 1,
+       xlab = paste0("Latent dimension ", idx1),
+       ylab = paste0("Latent dimension ", idx2),
+       main = ifelse(i == 2, "Embedding for\nCurved Gaussian model", ""))
+
+  for(k in 1:length(curves$lineages)){
+    ord <- curves$curves[[k]]$ord
+    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3.5,
+          col = "white")
+    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3,
+          col = "black")
+  }
+}
+
+

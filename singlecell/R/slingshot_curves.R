@@ -14,6 +14,7 @@
 #' @param max_iter maximum number of iterations
 #' @param b parameter for the kernel function (when smoothing)
 #' @param upscale_vec vector of positive numbers, one for each cluster
+#' @param verbose boolean
 #'
 #' @return a list containing the lineages under \code{lineages},
 #' the list of curves as \code{principal_curve} objects under
@@ -29,7 +30,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   if(verbose) print("Starting to infer curves")
   curves <- .get_curves(dat, cluster_labels, lineages, shrink = shrink,
-                        thresh = thresh, max_iter = max_iter, b = b, upscale_vec = upscale_vec)
+                        thresh = thresh, max_iter = max_iter, b = b, upscale_vec = upscale_vec,
+                        verbose = verbose)
 
   list(lineages = lineages, curves = curves)
 }
@@ -77,6 +79,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   W <- .initialize_weight_matrix(cluster_mat, lineages)
 
   ### initial curves are piecewise linear paths through the tree
+  if(verbose) print("Starting to initialize curves")
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
   res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
   pcurve_list <- res$pcurve_list; D <- res$D
@@ -101,7 +104,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   iter <- 1
   while (abs((dist_old - dist_new) >= thresh * dist_old) && iter < max_iter){
-    if(verbose) cat('*')
+    if(verbose) print(paste0("On iteration ", iter))
     dist_old <- dist_new
 
     ### predict each dimension as a function of lambda (pseudotime)
@@ -110,11 +113,13 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
       .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], b = b)
     })
 
+    if(verbose) print("Refining curves")
     res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
     pcurve_list <- res$pcurve_list; D <- res$D
     dist_new <- sum(D[W>0], na.rm=TRUE)
 
     # shrink together lineages near shared clusters
+    if(verbose) print("Shrinking curves together")
     if(shrink > 0){
       avg_curve_list <- vector("list", length(avg_order))
       names(avg_curve_list) <- paste0("Average", 1:length(avg_order))
