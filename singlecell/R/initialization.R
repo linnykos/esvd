@@ -143,20 +143,60 @@ initialization <- function(dat, k = 2, family = "exponential",
   init_obj <- .evaluate_objective_mat(dat, pred_mat, ...)
   iter <- 1
 
-  while(TRUE){
-    res <- .svd_projection(pred_mat - stepsize*gradient_mat, k = k, factors = T)
-    res <- .ensure_feasibility(res$u_mat, res$v_mat, direction = direction,
+  while(iter > max_iter){
+    res <- pred_mat - stepsize*gradient_mat
+    new_mat <- .project_rank_feasibility(res, direction = direction,
                                max_val = max_val, verbose = F)
-    new_mat <- res$u_mat %*% t(res$v_mat)
 
-    new_obj <- .evaluate_objective_mat(dat, new_mat, ...)
+    if(!any(is.na(new_mat))){
+      new_obj <- .evaluate_objective_mat(dat, new_mat, ...)
 
-    if(new_obj < init_obj) break() else stepsize <- stepsize/stepdown_factor
+      if(new_obj < init_obj) return(new_mat)
+    }
+
+    stepsize <- stepsize/stepdown_factor
     iter <- iter + 1
-    if(iter > max_iter) stop("Adaptive gradient initialization failed")
   }
 
-  new_mat
+  # was not able to project
+  pred_mat
+}
+
+
+# alternating projection heuristic to find intersection of two sets
+.project_rank_feasibility <- function(mat, k, direction, max_val = NA,
+                                      max_iter = 50,
+                                      give_warning = T){
+  if(!is.na(max_val)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
+  iter <- 1
+  tol <- ifelse(direction == "<=", -1, 1)
+
+  while(iter < max_iter){
+    res <- .svd_projection(mat, k = k, factors = T)
+    mat <- res$u_mat %*% t(res$v_mat)
+
+    if(direction == "<=") {
+      if(all(mat < 0) && (is.na(max_val) || all(mat > max_val))) return(mat)
+
+      if(any(mat < 0)) tol <- min(tol, quantile(mat[mat < 0], probs = 0.95))
+      stopifnot(tol < 0)
+      mat[mat > 0] <- tol
+      if(!is.na(max_val)) mat[mat < max_val] <- max_val
+    }
+    if(direction == ">=") {
+      if(all(mat > 0) && (is.na(max_val) || all(mat < max_val))) return(mat)
+
+      if(any(mat > 0)) tol <- max(tol, quantile(mat[mat > 0], probs = 0.05))
+      stopifnot(tol > 0)
+      mat[mat < 0] <- tol
+      if(!is.na(max_val)) mat[mat > max_val] <- max_val
+    }
+
+    iter <- iter + 1
+  }
+
+  if(give_warning) warning(".project_rank_feasibility was not successful")
+  NA
 }
 
 .ensure_feasibility <- function(u_mat, v_mat, direction, max_val = NA,
