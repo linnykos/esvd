@@ -15,7 +15,8 @@ Imports:
     princurve,
     igraph,
     clplite,
-    softImpute
+    softImpute,
+    NMF
 Suggests:
     testthat
 RoxygenNote: 6.1.1

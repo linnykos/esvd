@@ -41,7 +41,7 @@ initialization <- function(dat, k = 2, family = "exponential",
 
 ##################################
 
-.matrix_completion <- function(dat, k = 2){
+.matrix_completion <- function(dat, k){
   if(any(is.na(dat))){
     lambda0_val <- softImpute::lambda0(dat)
     res <- softImpute::softImpute(dat, rank.max = k, lambda = min(30, lambda0_val/100))
@@ -50,6 +50,17 @@ initialization <- function(dat, k = 2, family = "exponential",
   }
 
   dat
+}
+
+.determine_initial_matrix <- function(dat, family, k, max_val = NA){
+  min_val <- min(dat[which(dat > 0)])
+  dat[which(dat <= 0)] <- min_val/2
+  pred_mat <- .mean_transformation(dat, family)
+  direction <- .dictate_direction(family)
+
+  class(pred_mat) <- "matrix" #bookeeping purposes
+  .nonnegative_matrix_factorization(pred_mat, k = k, direction = direction,
+                                    max_val = max_val)
 }
 
 .projected_gradient_descent <- function(dat, k = 2,
@@ -75,18 +86,6 @@ initialization <- function(dat, k = 2, family = "exponential",
   }
 
   pred_mat
-}
-
-.determine_initial_matrix <- function(dat, family, k, max_val = NA){
-  min_val <- min(dat[which(dat > 0)])
-  dat[which(dat <= 0)] <- min_val/2
-  pred_mat <- .mean_transformation(dat, family)
-  direction <- .dictate_direction(family)
-
-  res <- .svd_projection(pred_mat, k = k, factors = T)
-  res <- .ensure_feasibility(res$u_mat, res$v_mat, direction = direction,
-                      max_val = max_val, verbose = F)
-  res$u_mat %*% t(res$v_mat)
 }
 
 .svd_projection <- function(mat, k, factors = F,
@@ -162,7 +161,6 @@ initialization <- function(dat, k = 2, family = "exponential",
   pred_mat
 }
 
-
 # alternating projection heuristic to find intersection of two sets
 .project_rank_feasibility <- function(mat, k, direction, max_val = NA,
                                       max_iter = 50,
@@ -199,101 +197,51 @@ initialization <- function(dat, k = 2, family = "exponential",
   NA
 }
 
-.ensure_feasibility <- function(u_mat, v_mat, direction, max_val = NA,
-                                verbose = F){
+.nonnegative_matrix_factorization <- function(mat, k, direction, max_val = NA, tol = 1e-3){
+  if(!is.na(max_val)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
 
-  v_mat2 <- v_mat
+  # corner cases
+  if(direction == "<=" & all(mat > 0)) return(NA)
+  if(direction == ">=" & all(mat < 0)) return(NA)
 
-  for(j in 1:nrow(v_mat)){
-    res <- .projection_l1(v_mat[j,], u_mat, direction = direction, other_bound = max_val)
-    if(attr(res, "status") != 0) break()
-    v_mat2[j,] <- as.numeric(res)
+  # prepare the matrix
+  if(direction == "<=") {
+    mat <- -mat
+    max_val <- -max_val
   }
 
-  # deal with errors if any
-  if(attr(res, "status") != 0){
-    if(verbose) warning("Had to use some janky fixes")
-    if(length(which(u_mat < 0)) > length(which(u_mat > 0))) {
-      u_mat <- -u_mat; v_mat <- -v_mat
-    }
-    if(direction == ">=") {
-      u_mat <- pmax(u_mat, 1e-3)
-      if(!is.na(max_val)) u_mat <- pmin(u_mat, max_val)
-    } else {
-      u_mat <- pmin(u_mat, -1e-3)
-      if(!is.na(max_val)) u_mat <- pmax(u_mat, max_val)
+  min_val <- quantile(mat[mat > 0], probs = 0.01)
+  stopifnot(min_val > 0)
+  mat[mat < 0] <- min_val
+  if(!is.na(max_val)) mat[mat > max_val] <- max_val
+
+  # perform the nonnegative matrix factorization
+  stopifnot(all(mat > 0))
+  res <- NMF::nmf(mat, rank = k)
+
+  w_mat <- res@fit@W
+  h_mat <- res@fit@H
+  new_mat <- w_mat %*% h_mat
+
+  # enforce the max constraint by adjusting one matrix
+  idx <- unique(which(new_mat > max_val, arr.ind = T)[,2])
+  if(length(idx) > 0){
+    for(j in idx){
+      ratio <- max_val/max(new_mat[,j])
+      stopifnot(ratio <= 1)
+      h_mat[,j] <- h_mat[,j]*ratio
     }
 
-    for(j in 1:nrow(v_mat)){
-      v_mat[j,] <- .projection_l1(v_mat[j,], u_mat, direction = direction,
-                                  other_bound = max_val)
-    }
-  } else {
-    v_mat <- v_mat2
+    new_mat <- w_mat %*% h_mat
+    stopifnot(all(new_mat <= max_val + 1e-3))
   }
 
-  if(direction == ">=") stopifnot(all(u_mat %*% t(v_mat) >= 0)) else stopifnot(all(u_mat %*% t(v_mat) <= 0))
+  stopifnot(new_mat >= 0)
+  new_mat[new_mat < tol] <- tol
+  stopifnot(new_mat > 0)
 
-  list(u_mat = u_mat, v_mat = v_mat)
+  # return the matrix
+  if(direction == "<=") new_mat <- -new_mat
+
+  new_mat
 }
-
-
-#' L1 projection of the product of two vectors to become nonpositive
-#'
-#' Solves the linear program:
-#' Data: u_i (vector), i from 1 to k. V (matrix), with d rows and k columns.
-#' Variables: s_1 to s_k, z_1 to z_k
-#' Optimization problem: min s_1 + ... + s_k
-#' such that: s_i >= u_i - z_i for i from 1 to k,
-#'            s_i >= -(u_i - z_i) for i from 1 to k,
-#'            V %*% z_k <= tol elementwise (for entire vector of length d)
-#'            s_i >= 0 for i from 1 to k
-#'
-#' The status codes for the solver are at https://www.coin-or.org/Doxygen/Clp/classClpModel.html#a938d943303494e698dce0681fafe39f8
-#'
-#' @param current_vec vector
-#' @param other_mat matrix
-#' @param tol numeric
-#' @param direction character
-#' @param other_bound numeric
-#'
-#' @return
-.projection_l1 <- function(current_vec, other_mat,
-                           tol = 0.001, direction = "<=", other_bound = NA){
-  stopifnot(ncol(other_mat) == length(current_vec))
-  stopifnot(is.na(other_bound) || (direction == "<=" & other_bound < 0) ||
-              (direction == ">=" & other_bound > 0))
-
-  k <- length(current_vec)
-  d <- nrow(other_mat)
-  other_direction <- ifelse(direction == "<=", ">=", "<=")
-
-  objective_in <- c(rep(1,k), rep(0, k))
-  constr_mat <- cbind(matrix(0, nrow = nrow(other_mat),ncol = k), other_mat)
-  constr_mat <- rbind(constr_mat, cbind(diag(k), diag(k)))
-  constr_mat <- rbind(constr_mat, cbind(diag(k), -diag(k)))
-
-  if(direction == "<="){
-    constr_ub <- rep(-tol, d)
-    if(all(is.na(other_bound))) constr_lb <- rep(-Inf, d) else constr_lb <- rep(other_bound, d)
-  } else {
-    constr_lb <- rep(tol, d)
-    if(all(is.na(other_bound))) constr_ub <- rep(Inf, d) else constr_ub <- rep(other_bound, d)
-  }
-  constr_lb <- c(constr_lb, current_vec, -current_vec)
-  constr_ub <- c(constr_ub, rep(Inf, 2*k))
-
-  if(all(is.na(other_bound))){
-    var_ub <- rep(Inf, 2*k); var_lb <- c(rep(0, k), rep(-Inf, k))
-  } else {
-    var_ub <- c(rep(Inf, k), rep(abs(other_bound), k))
-    var_lb <- c(rep(0, k), rep(-abs(other_bound), k))
-  }
-
-  res <- clplite::clp_solve(objective_in, constr_mat, constr_lb, constr_ub, var_lb, var_ub, max = F)
-
-  vec <- res$solution[(k+1):(2*k)]
-  attr(vec, "status") <- res$status
-  vec
-}
-
