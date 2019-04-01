@@ -30,8 +30,17 @@ func <- function(x){
 
 # run in parallel
 trials <- 100
-doMC::registerDoMC(cores = 15)
-res_list <- foreach::"%dopar%"(foreach::foreach(x = 1:trials), func(x))
+res_list_naive <- foreach::"%dopar%"(foreach::foreach(x = 1:trials), func(x))
 
-save.image("tmp.RData")
+save.image("tmp2.RData")
 save.image("../experiment/Week36_slingshot_bootstrap.RData")
+
+##############
+
+dat <- res_our$u_mat[,1:3]
+res_list_our <- foreach::"%dopar%"(foreach::foreach(x = 1:trials), func(x))
+
+save.image("tmp2.RData")
+save.image("../experiment/Week36_slingshot_bootstrap.RData")
+
+
