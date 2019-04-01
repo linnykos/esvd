@@ -23,7 +23,7 @@
   stopifnot(all(cluster_labels > 0), all(cluster_labels %% 1 == 0), length(unique(cluster_labels)) == max(cluster_labels))
   if(all(!is.na(cluster_group_list))){
     tmp <- unlist(cluster_group_list)
-    stopifnot(length(tmp) == length(unique(tmp)), length(tmp) == length(cluster_labels))
+    stopifnot(length(tmp) == length(unique(tmp)), length(tmp) == length(unique(cluster_labels)))
   }
 
   ### construct the distance matrix
@@ -41,8 +41,14 @@
 
 #############
 
-.covariance_distance <- function(mean_vec1, cov_mat1, mean_vec2, cov_mat2){
-  as.numeric(t(mean_vec1 - mean_vec2) %*% solve(cov_mat1 + cov_mat2) %*% (mean_vec1 - mean_vec2))
+.covariance_distance <- function(mean_vec1, cov_mat1, mean_vec2, cov_mat2, tol = 0.1){
+  mat <- cov_mat1 + cov_mat2
+
+  eigen_res <- eigen(mat)
+  eigen_res$values[eigen_res$values < tol] <- tol
+  mat <- eigen_res$vectors %*% diag(1/eigen_res$values) %*% t(eigen_res$vectors)
+
+  as.numeric(t(mean_vec1 - mean_vec2) %*% mat %*% (mean_vec1 - mean_vec2))
 }
 
 .compute_cluster_distances <- function(dat, cluster_labels){
@@ -95,10 +101,14 @@
     # add edges within each group
     edge_mat1 <- lapply(1:k, function(i){
       m <- length(cluster_group_list[[i]])
-      combn_mat <- utils::combn(m, 2)
-      combn_mat[1,] <- cluster_group_list[[i]][combn_mat[1,]]
-      combn_mat[2,] <- cluster_group_list[[i]][combn_mat[2,]]
-      combn_mat <- cbind(combn_mat, combn_mat[c(2,1),]) #the reverse edges
+      if(m >= 2){
+        combn_mat <- utils::combn(m, 2)
+        combn_mat[1,] <- cluster_group_list[[i]][combn_mat[1,]]
+        combn_mat[2,] <- cluster_group_list[[i]][combn_mat[2,]]
+        combn_mat <- cbind(combn_mat, combn_mat[c(2,1),]) #the reverse edges
+      } else {
+        numeric(0)
+      }
     })
     edge_mat1 <- do.call(cbind, edge_mat1)
 

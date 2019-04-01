@@ -22,10 +22,12 @@
 slingshot <- function(dat, cluster_labels, starting_cluster,
                       cluster_group_list = NA,
                       shrink = 1, thresh = 0.001, max_iter = 15, b = 1,
-                      upscale_vec = NA){
+                      upscale_vec = NA, verbose = F){
+  if(verbose) print("Starting to infer lineages")
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
                             cluster_group_list = cluster_group_list)
 
+  if(verbose) print("Starting to infer curves")
   curves <- .get_curves(dat, cluster_labels, lineages, shrink = shrink,
                         thresh = thresh, max_iter = max_iter, b = b, upscale_vec = upscale_vec)
 
@@ -44,11 +46,12 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @param max_iter maximum number of iterations
 #' @param b parameter for the kernel function (when smoothing)
 #' @param upscale_vec vector of positive numbers, one for each cluster
+#' @param verbose boolean
 #'
 #' @return a list of \code{principal_curve} objects
 .get_curves <- function(dat, cluster_labels, lineages, shrink = 1,
                         thresh = 0.001, max_iter = 15, b = 1,
-                        upscale_vec = NA){
+                        upscale_vec = NA, verbose = F){
   stopifnot(shrink >= 0 & shrink <= 1)
 
   if(!any(is.na(upscale_vec))){
@@ -98,6 +101,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   iter <- 1
   while (abs((dist_old - dist_new) >= thresh * dist_old) && iter < max_iter){
+    if(verbose) cat('*')
     dist_old <- dist_new
 
     ### predict each dimension as a function of lambda (pseudotime)

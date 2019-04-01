@@ -33,6 +33,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   idx <- which(!is.na(dat))
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat == 0)] <- min_val/2
+  direction <- .dictate_direction(class(dat)[1])
 
   current_obj <- Inf
   next_obj <- .evaluate_objective(dat, u_mat, v_mat, scalar = scalar)
@@ -44,7 +45,9 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     current_obj <- next_obj
 
     if(reparameterize){
-      svd_res <- .svd_projection(u_mat%*%t(v_mat), k = k, factors = T, v_alone = T)
+      pred_mat <- u_mat%*%t(v_mat)
+      if(direction == "<=") stopifnot(all(pred_mat < 0)) else  stopifnot(all(pred_mat >= 0))
+      svd_res <- .svd_projection(pred_mat, k = k, factors = T, v_alone = T)
       u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
     }
 
@@ -52,7 +55,9 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
                            scalar = scalar, !is.na(cores))
 
     if(reparameterize){
-      svd_res <- .svd_projection(u_mat%*%t(v_mat), k = k, factors = T, u_alone = T)
+      pred_mat <- u_mat%*%t(v_mat)
+      if(direction == "<=") stopifnot(all(pred_mat < 0)) else  stopifnot(all(pred_mat >= 0))
+      svd_res <- .svd_projection(pred_mat, k = k, factors = T, u_alone = T)
       u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
     }
 
@@ -70,6 +75,8 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
   tmp <- .reparameterize(u_mat, v_mat)
   u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
+  pred_mat <- u_mat%*%t(v_mat)
+  if(direction == "<=") stopifnot(all(pred_mat < 0)) else  stopifnot(all(pred_mat >= 0))
 
   list(u_mat = u_mat, v_mat = v_mat, obj_vec = obj_vec, res_list = res_list)
 }
