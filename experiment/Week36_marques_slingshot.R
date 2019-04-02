@@ -21,7 +21,7 @@ for(i in 1:length(cluster_group_list)){
 
 slingshot_func <- function(dat){
   reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*.25
-  slingshot(dat/reduction_factor, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+  singlecell::slingshot(dat/reduction_factor, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
             cluster_group_list = cluster_group_list, verbose = T, b = 1,
             upscale_vec = upscale_vec)
 }
