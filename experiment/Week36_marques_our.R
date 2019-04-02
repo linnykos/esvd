@@ -16,7 +16,7 @@ set.seed(10)
 upscale_vec <- rep(NA, length(unique(cluster_labels)))
 size_vec <- sapply(cluster_group_list, function(x){length(which(cluster_labels %in% x))})
 for(i in 1:length(cluster_group_list)){
-  upscale_vec[cluster_group_list[[i]]] <- max(size_vec)/size_vec[i]
+  upscale_vec[cluster_group_list[[i]]] <- (max(size_vec)/size_vec[i])^(1/2)
 }
 
 # run slingshot
