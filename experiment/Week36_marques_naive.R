@@ -143,11 +143,11 @@ cluster_group_list <- lapply(order_vec, function(x){
   grep(paste0("^", x), levels(cell_type_vec))
 })
 
-reduction_factor <- max(apply(naive, 2, function(x){diff(range(x))}))*.15
+reduction_factor <- max(apply(naive, 2, function(x){diff(range(x))}))*.25
 curves <- slingshot(naive/reduction_factor, cluster_labels, starting_cluster = cluster_group_list[[1]][1], cluster_group_list = cluster_group_list, verbose = T,
                     b = 1)
-lineages <- .get_lineages(naive, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                          cluster_group_list = cluster_group_list)
+# lineages <- .get_lineages(naive, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+#                           cluster_group_list = cluster_group_list)
 
 # let's try bootstrapping a bit
 trials <- 100
@@ -192,7 +192,7 @@ for(k in 1:length(curves$curves)){
     idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
     plot(naive2[cell_idx,idx1], naive2[cell_idx,idx2], pch = 16, col = rgb(0.85,0.85,0.85,1),
          asp = T, cex = 1,
-         xlim = range_lis[,idx1], ylim = range_lis[,idx2],
+         xlim = range_mat[,idx1], ylim = range_mat[,idx2],
          xlab = paste0("Latent dimension ", idx1),
          ylab = paste0("Latent dimension ", idx2),
          main = ifelse(i == 2, paste0("Naive Lineage ", k), ""))

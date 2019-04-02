@@ -9,26 +9,52 @@ cluster_group_list <- lapply(order_vec, function(x){
   grep(paste0("^", x), levels(cell_type_vec))
 })
 
-u_mat <- res_our$u_mat
+d <- 3
+dat <- res_our$u_mat[,1:d]
+reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*.25
+set.seed(10)
+curves <- slingshot(dat/reduction_factor, cluster_labels, starting_cluster = cluster_group_list[[1]][1], cluster_group_list = cluster_group_list, verbose = T,
+                    b = 1)
 
-lineages <- .get_lineages(u_mat, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                          cluster_group_list = cluster_group_list)
 
-# let's try bootstrapping a bit
-trials <- 100
-curve_list <- lapply(1:trials, function(x){
-  print(x)
-  set.seed(10*x)
-  u_mat2 <- u_mat
-  for(i in 1:length(unique(cluster_labels))){
-    idx <- which(cluster_labels == i)
-    idx2 <- sample(idx, length(idx), replace = T)
-    u_mat2[idx,] <- u_mat[idx2,]
+dat2 <- dat/reduction_factor
+combn_mat <- utils::combn(d, 2)
+range_mat <- apply(dat2, 2, range)
+col_vec <- numeric(length(unique(cluster_labels)))
+alpha_val <- 1
+for(i in 1:3){
+  col_vec[cluster_group_list[[i]]] <- rgb(238/255,204/255,17/255,alpha_val)
+}
+col_vec[cluster_group_list[[4]]] <- rgb(129/255,199/255,124/255,alpha_val)
+col_vec[cluster_group_list[[5]]] <- rgb(227/255,73/255,86/255,alpha_val)
+col_vec[cluster_group_list[[6]]] <- rgb(100/255,140/255,252/255,alpha_val)
+cluster_center <- .compute_cluster_center(dat2, .construct_cluster_matrix(cluster_labels))
+
+png("../figure/experiment/Week36_marques_our_lineage.png", height = length(curves$curves)*2000/2.5, width = 2000, res = 300, units = "px")
+par(mfrow = c(length(curves$curves), ncol(combn_mat)), mar = c(4,4,4,0.5))
+for(k in 1:length(curves$curves)){
+  for(i in 1:ncol(combn_mat)){
+    cell_idx <- which(cluster_labels %in% curves$lineages[[k]])
+
+    idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
+    plot(dat2[cell_idx,idx1], dat2[cell_idx,idx2], pch = 16, col = rgb(0.85,0.85,0.85,1),
+         asp = T, cex = 1,
+         xlim = range_mat[,idx1], ylim = range_mat[,idx2],
+         xlab = paste0("Latent dimension ", idx1),
+         ylab = paste0("Latent dimension ", idx2),
+         main = ifelse(i == 2, paste0("Our Lineage ", k), ""))
+
+    # plot curves
+    ord <- curves$curves[[k]]$ord
+    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3.5,
+          col = "white")
+    lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3,
+          col = "black")
+
+    # plot points
+    points(cluster_center[curves$lineages[[k]], idx1],
+           cluster_center[curves$lineages[[k]], idx2], pch = 16,
+           col = col_vec[curves$lineages[[k]]], cex = 2)
   }
-
-  .get_lineages(u_mat2, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                cluster_group_list = cluster_group_list)
-
-})
-
-# we need a way to get an confidence tube hm...
+}
+graphics.off()
