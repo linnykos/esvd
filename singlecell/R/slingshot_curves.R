@@ -59,7 +59,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   if(!any(is.na(upscale_vec))){
     idx_all <- unlist(lapply(1:max(cluster_labels, na.rm = T), function(x){
       idx <- which(cluster_labels == x)
-      sample(idx, round(upscale_vec[x]*length(idx), replace = T)
+      sample(idx, round(upscale_vec[x]*length(idx)), replace = T)
     }))
     dat <- dat[idx_all,]
     cluster_labels <- cluster_labels[idx_all]
