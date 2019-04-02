@@ -16,15 +16,15 @@ set.seed(10)
 upscale_vec <- rep(NA, length(unique(cluster_labels)))
 size_vec <- sapply(cluster_group_list, function(x){length(which(cluster_labels %in% x))})
 for(i in 1:length(cluster_group_list)){
-  upscale_vec[cluster_group_list[[i]]] <- max(size_vec)/size_vec[i]*.3
+  upscale_vec[cluster_group_list[[i]]] <- max(size_vec)/size_vec[i]
 }
 
 # run slingshot
 curves <- singlecell::slingshot(dat/reduction_factor, cluster_labels, starting_cluster = cluster_group_list[[1]][1], cluster_group_list = cluster_group_list, verbose = T,
                     b = 1, upscale_vec = upscale_vec)
 save.image("tmp.RData")
-
 #
+# load("../experiment/tmp.RData")
 # dat2 <- dat/reduction_factor
 # combn_mat <- utils::combn(d, 2)
 # range_mat <- apply(dat2, 2, range)
