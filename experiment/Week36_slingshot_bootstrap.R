@@ -37,6 +37,7 @@ func <- function(x){
 }
 
 # run in parallel
+doMC::registerDoMC(cores = 15)
 trials <- 50
 res_list_naive <- foreach::"%dopar%"(foreach::foreach(x = 1:trials), func(x))
 
