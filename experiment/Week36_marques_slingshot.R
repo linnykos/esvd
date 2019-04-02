@@ -2,7 +2,7 @@ rm(list=ls())
 load("../results/step4_factorization_spca.RData")
 zz <- svd(dat)
 d <- 3
-naive <- zz$u[,1:d]%*%diag(zz$d[1:d])
+naive <- zz$u[,1:d]%*%diag(sqrt(zz$d[1:d]))
 u_mat <- res_our$u_mat[,1:d]
 
 cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
