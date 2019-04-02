@@ -143,8 +143,9 @@ cluster_group_list <- lapply(order_vec, function(x){
   grep(paste0("^", x), levels(cell_type_vec))
 })
 
-curves <- slingshot(naive, cluster_labels, starting_cluster = cluster_group_list[[1]][1], cluster_group_list = cluster_group_list, verbose = T,
-                    b = max(apply(naive, 2, function(x){diff(range(x))}))/50)
+reduction_factor <- max(apply(naive, 2, function(x){diff(range(x))}))*.15
+curves <- slingshot(naive/reduction_factor, cluster_labels, starting_cluster = cluster_group_list[[1]][1], cluster_group_list = cluster_group_list, verbose = T,
+                    b = 1)
 lineages <- .get_lineages(naive, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                           cluster_group_list = cluster_group_list)
 
@@ -169,23 +170,44 @@ curve_list <- lapply(1:trials, function(x){
 
 #####################################
 
+naive2 <- naive/reduction_factor
 combn_mat <- utils::combn(3, 2)
-par(mfrow = c(1,3), mar = c(4,4,4,0.5))
+range_mat <- apply(naive2, 2, range)
+col_vec <- numeric(length(unique(cluster_labels)))
+alpha_val <- 1
 for(i in 1:3){
-  idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
-  plot(naive[,idx1], naive[,idx2], pch = 16, col = rgb(0.85,0.85,0.85,1),
-       asp = T, cex = 1,
-       xlab = paste0("Latent dimension ", idx1),
-       ylab = paste0("Latent dimension ", idx2),
-       main = ifelse(i == 2, "Embedding for\nCurved Gaussian model", ""))
+  col_vec[cluster_group_list[[i]]] <- rgb(238/255,204/255,17/255,alpha_val)
+}
+col_vec[cluster_group_list[[4]]] <- rgb(129/255,199/255,124/255,alpha_val)
+col_vec[cluster_group_list[[5]]] <- rgb(227/255,73/255,86/255,alpha_val)
+col_vec[cluster_group_list[[6]]] <- rgb(100/255,140/255,252/255,alpha_val)
+cluster_center <- .compute_cluster_center(naive2, .construct_cluster_matrix(cluster_labels))
 
-  for(k in 1:length(curves$lineages)){
+png("../figure/experiment/Week36_marques_naive_lineage.png", height = length(curves$curves)*2000/2.5, width = 2000, res = 300, units = "px")
+par(mfrow = c(length(curves$curves),3), mar = c(4,4,4,0.5))
+for(k in 1:length(curves$curves)){
+  for(i in 1:3){
+    cell_idx <- which(cluster_labels %in% curves$lineages[[k]])
+
+    idx1 <- combn_mat[1,i]; idx2 <- combn_mat[2,i]
+    plot(naive2[cell_idx,idx1], naive2[cell_idx,idx2], pch = 16, col = rgb(0.85,0.85,0.85,1),
+         asp = T, cex = 1,
+         xlim = range_lis[,idx1], ylim = range_lis[,idx2],
+         xlab = paste0("Latent dimension ", idx1),
+         ylab = paste0("Latent dimension ", idx2),
+         main = ifelse(i == 2, paste0("Naive Lineage ", k), ""))
+
+    # plot curves
     ord <- curves$curves[[k]]$ord
     lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3.5,
           col = "white")
     lines(curves$curves[[k]]$s[ord, idx1], curves$curves[[k]]$s[ord, idx2], lwd = 3,
           col = "black")
+
+    # plot points
+    points(cluster_center[curves$lineages[[k]], idx1],
+           cluster_center[curves$lineages[[k]], idx2], pch = 16,
+           col = col_vec[curves$lineages[[k]]], cex = 2)
   }
 }
-
-
+graphics.off()
