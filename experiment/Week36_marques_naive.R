@@ -1,7 +1,7 @@
 rm(list=ls())
 load("../results/step4_factorization_spca.RData")
 zz <- svd(dat)
-naive <- zz$u[,1:3]%*%diag(zz$d[1:3])
+naive <- zz$u[,1:3]%*%diag(sqrt(zz$d[1:3]))
 
 cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
 # keep only the first two letters
@@ -31,8 +31,8 @@ for(x in 1:ncol(combn_mat)){
     idx <- which(as.numeric(as.factor(cell_type_vec)) == order_vec[i])
     plot(naive[-idx,i1], naive[-idx,i2], asp = T, pch = 16,
          col = rgb(0.8, 0.8, 0.8), xlim = xlim, ylim = ylim,
-         main = name_vec[i], xlab = paste0("Latent dimension ", i1),
-         ylab = paste0("Latent dimension ", i2))
+         main = name_vec[i], xlab = paste0("Naive latent dimension ", i1),
+         ylab = paste0("Naive latent dimension ", i2))
 
     lines(c(-100,100), rep(0,2), lwd = 2, lty = 2)
     lines(rep(0,2), c(-100,100), lwd = 2, lty = 2)
