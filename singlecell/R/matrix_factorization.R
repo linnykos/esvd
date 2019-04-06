@@ -97,7 +97,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 }
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
-                          scalar = 2, parallelized = F){
+                          scalar = 2, parallelized = F, verbose = T){
   stopifnot(length(class(dat)) == 2)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
@@ -124,6 +124,8 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
   } else {
     for(i in 1:nrow(current_mat)){
+      if(verbose) print(paste0("Working on index ", i, " for ", ifelse(left, "left", "right")))
+
       if(left) {
         dat_vec <- dat[i,]
       } else {
