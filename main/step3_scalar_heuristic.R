@@ -2,15 +2,16 @@ set.seed(10)
 load(paste0("../results/step2_naive_svd", suffix, ".RData"))
 
 max_val <- 5000
-scalar_vec <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100)
+scalar_vec <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 res_list <- vector("list", length(scalar_vec))
 
 for(i in 1:length(scalar_vec)){
+  print(paste0("Trying scalar value = ", scalar_vec[i]))
   init <- singlecell::initialization(dat_impute_NA, family = family,
                                        k = k, max_val = max_val)
   res_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                                    family = family, reparameterize = T,
-                                                   max_iter = 25, max_val = max_val,
+                                                   max_iter = 25, max_val = NA,
                                                    scalar = scalar_vec[i],
                                                    return_path = F, cores = 15,
                                                    verbose = T)

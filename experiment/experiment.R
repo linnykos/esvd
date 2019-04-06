@@ -1,27 +1,23 @@
 rm(list=ls())
-load("../results/step4_factorization_spca.RData")
+load("../results/step2_naive_svd_spca.RData")
 
-cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
-cell_type_vec <- as.factor(cell_type_vec)
-cluster_labels <- as.numeric(cell_type_vec)
-order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
-cluster_group_list <- lapply(order_vec, function(x){
-  grep(paste0("^", x), levels(cell_type_vec))
-})
+max_val <- 5000
+scalar_vec <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100)
+res_list <- vector("list", length(scalar_vec))
 
-d <- 3
-dat <- res_our$u_mat[,1:d]
-reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*.2
-set.seed(10)
-# curves <- slingshot(dat/reduction_factor, cluster_labels, starting_cluster = cluster_group_list[[1]][1], cluster_group_list = cluster_group_list, verbose = T,
-#                     b = 1)
+i <- 10
+print(paste0("Trying scalar value = ", scalar_vec[i]))
+init <- singlecell::initialization(dat_impute_NA, family = family,
+                                   k = k, max_val = max_val)
 
-############
+stopifnot(all(init$u_mat %*% t(init$v_mat) > 0))
+range(init$u_mat %*% t(init$v_mat) )
 
-dat = dat/reduction_factor
-shrink = 1
-thresh = 0.001
-max_iter = 15
-b = 1
-upscale_vec = NA
-verbose = F
+# res_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+#                                                family = family, reparameterize = T,
+#                                                max_iter = 25, max_val = max_val,
+#                                                scalar = scalar_vec[i],
+#                                                return_path = F, cores = 15,
+#                                                verbose = T)
+##########################
+
