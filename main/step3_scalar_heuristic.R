@@ -23,7 +23,6 @@ quality_vec <- sapply(res_list, function(x){
   pred_mat <- 1/(x$u_mat %*% t(x$v_mat))
 
   mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
-  # mat <- mat[which(mat[,1] <= 1800),]
 
   pca_res <- stats::princomp(mat)
   diag_vec <- c(1,1); diag_vec <- diag_vec/.l2norm(diag_vec)
