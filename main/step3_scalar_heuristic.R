@@ -11,7 +11,7 @@ for(i in 1:length(scalar_vec)){
                                        k = k, max_val = max_val)
   res_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                                    family = family, reparameterize = T,
-                                                   max_iter = 25, max_val = NA,
+                                                   max_iter = 25, max_val = max_val,
                                                    scalar = scalar_vec[i],
                                                    return_path = F, cores = 15,
                                                    verbose = T)

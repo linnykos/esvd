@@ -48,7 +48,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     if(direction == "<=") stopifnot(all(pred_mat < 0)) else  stopifnot(all(pred_mat >= 0))
 
     if(reparameterize){
-      svd_res <- .svd_projection(pred_mat, k = k, factors = T, v_alone = T)
+      svd_res <- .svd_projection(pred_mat, k = k, factors = T)
       u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
     }
 
@@ -59,7 +59,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     if(direction == "<=") stopifnot(all(pred_mat < 0)) else  stopifnot(all(pred_mat >= 0))
 
     if(reparameterize){
-      svd_res <- .svd_projection(pred_mat, k = k, factors = T, u_alone = T)
+      svd_res <- .svd_projection(pred_mat, k = k, factors = T)
       u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
     }
 
@@ -97,7 +97,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 }
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
-                          scalar = 2, parallelized = F, verbose = T){
+                          scalar = 2, parallelized = F, verbose = F){
   stopifnot(length(class(dat)) == 2)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
