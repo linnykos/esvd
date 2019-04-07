@@ -97,7 +97,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 }
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
-                          scalar = 2, parallelized = F, verbose = T){
+                          scalar = 2, parallelized = F, verbose = F){
   stopifnot(length(class(dat)) == 2)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
