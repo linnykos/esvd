@@ -13,12 +13,12 @@ init <- singlecell::initialization(dat_impute_NA, family = family,
 stopifnot(all(init$u_mat %*% t(init$v_mat) > 0))
 range(init$u_mat %*% t(init$v_mat) )
 
-res_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                               family = family, reparameterize = T,
-                                               max_iter = 25, max_val = NA,
-                                               scalar = scalar_vec[i],
-                                               return_path = F, cores = NA,
-                                               verbose = T)
+# res_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+#                                                family = family, reparameterize = T,
+#                                                max_iter = 25, max_val = NA,
+#                                                scalar = scalar_vec[i],
+#                                                return_path = F, cores = NA,
+#                                                verbose = T)
 ##########################
 
 dat = dat_impute_NA
@@ -78,7 +78,7 @@ if(left) {
   stopifnot(nrow(dat) == nrow(other_mat))
 }
 
-i = 93
+i = 139
 
 
 if(left) {
@@ -90,9 +90,9 @@ if(left) {
 current_vec <- current_mat[i,]
 
 class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
-if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
-                                                          other_mat, max_val = max_val,
-                                                          scalar = scalar)
+# if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
+#                                                           other_mat, max_val = max_val,
+#                                                           scalar = scalar)
 
 range(current_mat[i,]%*%t(other_mat))
 
@@ -107,26 +107,26 @@ current_obj <- Inf
 next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat,
                                        scalar = scalar)
 iter <- 1
-while(abs(current_obj - next_obj) > 1e-6 & iter < 2){
+#while(abs(current_obj - next_obj) > 1e-6 & iter < max_iter){
   current_obj <- next_obj
 
   grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, scalar = scalar)
   step_vec <- .frank_wolfe(grad_vec, other_mat,
                            direction = direction, other_bound = max_val)
-  step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, scalar = scalar)
-  current_vec <- (1-step_size)*current_vec + step_size*step_vec
-
-  next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, scalar = scalar)
-
-  if(!is.na(max_val)) stopifnot(all(abs(other_mat %*% current_vec) <= abs(max_val)+1e-6))
-  iter <- iter + 1
-}
-
-current_obj <- next_obj
-
-grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, scalar = scalar)
-range(current_vec%*%t(other_mat))
-
+#   step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, scalar = scalar)
+#   current_vec <- (1-step_size)*current_vec + step_size*step_vec
+#
+#   next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, scalar = scalar)
+#
+#   if(!is.na(max_val)) stopifnot(all(abs(other_mat %*% current_vec) <= abs(max_val)+1e-6))
+#   iter <- iter + 1
+# }
+#
+# current_obj <- next_obj
+#
+# grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, scalar = scalar)
+# range(current_vec%*%t(other_mat))
+#
 # step_vec <- .frank_wolfe(grad_vec, other_mat,
 #                          direction = direction, other_bound = max_val)
 
@@ -162,7 +162,7 @@ stopifnot(res$status == 0)
 ###############
 
 zz <- res$solution
-zz <- current_vec
+# zz <- current_vec
 
 all(constr_mat %*% zz >= constr_lb)
 # min(constr_mat %*% zz)

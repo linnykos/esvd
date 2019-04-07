@@ -2,7 +2,7 @@ set.seed(10)
 load(paste0("../results/step2_naive_svd", suffix, ".RData"))
 
 max_val <- 5000
-scalar_vec <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+scalar_vec <- c(1, 2, 3, 4, 5)
 res_list <- vector("list", length(scalar_vec))
 
 for(i in 1:length(scalar_vec)){
