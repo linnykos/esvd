@@ -5,7 +5,7 @@ max_val <- 5000
 scalar_vec <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100)
 res_list <- vector("list", length(scalar_vec))
 
-i <- 1
+i <- 10
 print(paste0("Trying scalar value = ", scalar_vec[i]))
 init <- singlecell::initialization(dat_impute_NA, family = family,
                                    k = k, max_val = max_val)
@@ -13,12 +13,12 @@ init <- singlecell::initialization(dat_impute_NA, family = family,
 stopifnot(all(init$u_mat %*% t(init$v_mat) > 0))
 range(init$u_mat %*% t(init$v_mat) )
 
-# res_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-#                                                family = family, reparameterize = T,
-#                                                max_iter = 25, max_val = NA,
-#                                                scalar = scalar_vec[i],
-#                                                return_path = F, cores = NA,
-#                                                verbose = T)
+res_list[[i]] <- singlecell::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                                               family = family, reparameterize = T,
+                                               max_iter = 25, max_val = NA,
+                                               scalar = scalar_vec[i],
+                                               return_path = F, cores = NA,
+                                               verbose = T)
 ##########################
 
 dat = dat_impute_NA
@@ -58,7 +58,7 @@ pred_mat <- u_mat%*%t(v_mat)
 if(direction == "<=") stopifnot(all(pred_mat < 0)) else  stopifnot(all(pred_mat >= 0))
 
 if(reparameterize){
-  svd_res <- .svd_projection(pred_mat, k = k, factors = T, v_alone = T)
+  svd_res <- .svd_projection(pred_mat, k = k, factors = T)
   u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
 }
 
@@ -78,7 +78,7 @@ if(left) {
   stopifnot(nrow(dat) == nrow(other_mat))
 }
 
-i = 163
+i = 93
 
 
 if(left) {
@@ -90,9 +90,9 @@ if(left) {
 current_vec <- current_mat[i,]
 
 class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
-# if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
-#                                                           other_mat, max_val = max_val,
-#                                                           scalar = scalar)
+if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
+                                                          other_mat, max_val = max_val,
+                                                          scalar = scalar)
 
 range(current_mat[i,]%*%t(other_mat))
 
