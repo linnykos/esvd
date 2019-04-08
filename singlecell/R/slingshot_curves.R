@@ -9,10 +9,10 @@
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
+#' @param reduction_percentage numeric
 #' @param shrink shrinkage factor
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
-#' @param b parameter for the kernel function (when smoothing)
 #' @param upscale_vec vector of positive numbers, one for each cluster
 #' @param verbose boolean
 #'
@@ -22,16 +22,27 @@
 #' @export
 slingshot <- function(dat, cluster_labels, starting_cluster,
                       cluster_group_list = NA,
-                      shrink = 1, thresh = 0.001, max_iter = 15, b = 1,
+                      reduction_percentage = 0.25,
+                      shrink = 1, thresh = 0.001, max_iter = 15,
                       upscale_vec = NA, verbose = F){
+
+  # adjust down
+  reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
+  dat2 <- dat/reduction_factor
+
   if(verbose) print("Starting to infer lineages")
-  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
+  lineages <- .get_lineages(dat2, cluster_labels, starting_cluster = starting_cluster,
                             cluster_group_list = cluster_group_list)
 
   if(verbose) print("Starting to infer curves")
-  curves <- .get_curves(dat, cluster_labels, lineages, shrink = shrink,
-                        thresh = thresh, max_iter = max_iter, b = b, upscale_vec = upscale_vec,
+  curves <- .get_curves(dat2, cluster_labels, lineages, shrink = shrink,
+                        thresh = thresh, max_iter = max_iter, upscale_vec = upscale_vec,
                         verbose = verbose)
+
+  # adjust up
+  for(k in 1:length(curves$curves)){
+    curves$curves[[k]]$s <- curves$curves[[k]]$s*reduction_factor
+  }
 
   list(lineages = lineages, curves = curves)
 }
@@ -46,13 +57,12 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @param shrink shrinkage factor
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
-#' @param b parameter for the kernel function (when smoothing)
 #' @param upscale_vec vector of positive numbers, one for each cluster
 #' @param verbose boolean
 #'
 #' @return a list of \code{principal_curve} objects
 .get_curves <- function(dat, cluster_labels, lineages, shrink = 1,
-                        thresh = 0.001, max_iter = 15, b = 1,
+                        thresh = 0.001, max_iter = 15,
                         upscale_vec = NA, verbose = F){
   stopifnot(shrink >= 0 & shrink <= 1)
 
@@ -87,7 +97,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   if(length(lineages) == 1) {
     s_list <- lapply(1:num_lineage, function(lin){
       sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
-      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], b = b)
+      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F])
     })
 
     res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
@@ -110,7 +120,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
     ### predict each dimension as a function of lambda (pseudotime)
     s_list <- lapply(1:num_lineage, function(lin){
       sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
-      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], b = b)
+      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F])
     })
 
     if(verbose) print("Refining curves")
@@ -331,16 +341,15 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @param lambda vector given by one component of the \code{pricipal_curve} object
 #' @param dat a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
 #' original dataset
-#' @param b kernel bandwith
 #'
 #' @return a smoothed \code{n} by \code{d} matrix
-.smoother_func <- function(lambda, dat, b = 1){
+.smoother_func <- function(lambda, dat){
   stopifnot(length(lambda) == nrow(dat))
   ord <- order(lambda, decreasing = F)
   lambda <- lambda[ord]
   dat <- dat[ord,]
 
-  kernel_func <- function(x, y){exp(-(x-y)^2/b)}
+  kernel_func <- function(x, y){exp(-(x-y)^2)}
 
   t(sapply(1:length(lambda), function(i){
     weights <- kernel_func(lambda[i], lambda)

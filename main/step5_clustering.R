@@ -9,7 +9,8 @@ cluster_group_list <- lapply(order_vec, function(x){
 })
 
 curves <- singlecell::slingshot(res_our$u_mat, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                                cluster_group_list = cluster_group_list)
+                                cluster_group_list = cluster_group_list,
+                                reduction_percentage = 0.25)
 
 rm(list = c("cell_type_vec"))
 print(paste0(Sys.time(), ": Finished clustering"))
