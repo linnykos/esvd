@@ -31,10 +31,10 @@ spca_func <- function(i){
 doMC::registerDoMC(cores = 15)
 res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
-print("Finished SPC")
+print(paste0(Sys.time(), ": Finished SPC"))
 
 # run DESCEND
-res_descend <- descend::runDescend(t(dat), n.cores = 10)
+res_descend <- descend::runDescend(t(dat), n.cores = 15)
 
 rm(list = c("idx", "zz", "k", "lvls", "reorder_idx", "column_vec"))
 print(paste0(Sys.time(), ": Finished screening"))
