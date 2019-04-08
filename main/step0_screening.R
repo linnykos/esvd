@@ -25,7 +25,9 @@ v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
 res_list <- vector("list", lvls)
 
 spca_func <- function(i){
-  PMA::SPC(dat, sumabsv = v_seq[i], K = k, trace = F)
+  res <- PMA::SPC(dat, sumabsv = v_seq[i], K = k, trace = F)
+  print(paste0("Finished SPC for level ", i))
+  res
 }
 
 doMC::registerDoMC(cores = 15)

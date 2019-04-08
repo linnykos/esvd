@@ -16,7 +16,7 @@ surf3D(x[idx,1:2], y[idx,1:2], z[idx,1:2], colvar = z[idx,1:2], colkey = FALSE)
 
 #############
 
-# let's try to make a tube?
+# let's try to make a straight tube?
 seq_vec <- seq(0, 2*pi, length.out = 20)
 x <- cos(seq_vec); y <- sin(seq_vec)
 x_mat <- do.call(cbind, lapply(1:10, function(i){x}))
@@ -24,3 +24,10 @@ y_mat <- do.call(cbind, lapply(1:10, function(i){y}))
 z_mat <- do.call(rbind, lapply(1:20, function(i){1:10}))
 
 surf3D(x_mat, y_mat, z_mat, colvar = z_mat, bty = "f")
+
+#############
+
+# now let's try a curved tube
+seq_vec <- seq(0, 4*pi, length.out = 100)
+x <- seq_vec; y <- cos(seq_vec)
+dat <- cbind(x,y,1)
