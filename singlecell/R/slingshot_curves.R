@@ -40,8 +40,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                         verbose = verbose)
 
   # adjust up
-  for(k in 1:length(curves$curves)){
-    curves$curves[[k]]$s <- curves$curves[[k]]$s*reduction_factor
+  for(k in 1:length(curves)){
+    curves[[k]]$s <- curves[[k]]$s*reduction_factor
   }
 
   list(lineages = lineages, curves = curves)
