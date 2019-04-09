@@ -19,7 +19,6 @@ bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
   stopifnot(!any(is.na(cluster_group_list)))
 
   func <- function(x){
-    reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*.25
     set.seed(10*x)
     dat2 <- dat
     for(i in 1:length(unique(cluster_labels))){
@@ -28,7 +27,7 @@ bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
       dat2[idx,] <- dat[idx2,]
     }
 
-    slingshot(dat2/reduction_factor, cluster_labels, starting_cluster = starting_cluster,
+    slingshot(dat2, cluster_labels, starting_cluster = starting_cluster,
               cluster_group_list = cluster_group_list, ...)
   }
 
