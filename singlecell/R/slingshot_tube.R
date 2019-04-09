@@ -33,6 +33,35 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list){
   list(sd_val = max(sd_vec), mat_list = mat_list)
 }
 
+construct_3d_tube <- function(dat, radius, len = 20){
+  stopifnot(nrow(dat) > 2)
+
+  n <- nrow(dat)
+  circle_list <- lapply(1:nrow(dat), function(x){
+    direction <- .find_adjacent_directions(dat, x)
+    res <- .find_basis_vectors(direction)
+    basis_vec1 <- res$vec1; basis_vec2 <- res$vec2
+
+    .construct_3d_circle(dat[x,], radius, basis_vec1, basis_vec2, len = len)
+  })
+
+  # apply the correction
+  for(i in 2:length(circle_list)){
+    circle_list[[i]] <- .find_correct_orientation(circle_list[[i-1]], circle_list[[i]])
+  }
+
+  # form the matrices
+  x_mat <- matrix(NA, nrow = nrow(circle_list[[1]]), ncol = length(circle_list))
+  y_mat <- x_mat; z_mat <- x_mat
+  for(i in 1:length(circle_list)){
+    x_mat[,i] <- circle_list[[i]][,1]
+    y_mat[,i] <- circle_list[[i]][,2]
+    z_mat[,i] <- circle_list[[i]][,3]
+  }
+
+  list(x_mat = x_mat, y_mat = y_mat, z_mat = z_mat)
+}
+
 #####################
 
 # try to compute the "radius" of uncertainty by conditioning on the same curves
@@ -108,7 +137,12 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list){
   x <- radius*cos(seq_vec)
   y <- radius*sin(seq_vec)
 
-  t(cbind(basis_vec1, basis_vec2) %*% rbind(x,y))
+  mat <- t(cbind(basis_vec1, basis_vec2) %*% rbind(x,y))
+  for(i in 1:nrow(mat)){
+    mat[i,] <- mat[i,]+dat_vec
+  }
+
+  mat
 }
 
 .construct_all_circles <- function(dat, radius, len = 20){
@@ -137,37 +171,35 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list){
     func(mat1[x,], mat2)
   })
 
-  anchor1a <- which.min(res[1,])
-  anchor1b <- res[2,anchor1a]
+  anchor1 <- which.min(res[1,])
+  anchor2 <- res[2,anchor1]
 
-  anchor2a <- ifelse(anchor1a == ncol(res), anchor1a - 1, anchor1a + 1)
-  anchor2b <- res[2,anchor2b]
-  stopifnot(abs(anchor1b - anchor2b) == 1) # how to deal w/ this if false?
+  direction_forward <- (length(which(diff(res[2,]) > 0)) > length(which(diff(res[2,]) < 0)))
 
   # forward direction
-  if(anchor2b > anchor1b){
-    mat2_new <- matrix(0, ncol = ncol(mat2), nrow = nrow(mat2))
-    mat2_new[anchor1a:n,] <- mat2[anchor1b:(n-anchor1a+1),]
-    mat2_new[1:anchor1a,] <- mat2[anchor1a:anchor1b,]
-  }
+  indices_list <- .subset_indices(n, anchor1, anchor2, direction_forward)
+  mat2[indices_list$to,] <- mat2[indices_list$from,]
+
+  mat2
 }
 
-.subset_indices <- function(n, anchor1a, anchor1b, direction_forward = T){
-  min_dist <- min(n - anchor1a + 1, n - anchor1b + 1)
-  missing_bool <- (anchor1a < anchor1b)
-  idx_set1 <- list(from = anchor1a:(anchor1a + min_dist - 1),
-                   to = anchor1b:(anchor1b + min_dist - 1))
-
-  if(missing_bool){
-    missing_dist <- (n - anchor1a + 1) - min_dist
-    stopifnot(missing_dist > 0)
-    idx_set2 <- list(from = (anchor1a + min_dist):n,
-                     to = 1:(missing_dist-1))
+.subset_indices <- function(n, anchor1, anchor2, direction_forward = T){
+  vec1 <- anchor1:(anchor1+n-1)
+  if(direction_forward){
+    vec2 <- anchor2:(anchor2+n-1)
   } else {
-    idx_set2 <- list(from = NA, to = NA)
+    vec2 <- anchor2:(anchor2-n+1)
   }
 
+  stopifnot(length(vec1) == n, length(vec2) ==n)
 
+  mat <- rbind(vec1, vec2)
+  mat[mat > n] <- mat[mat > n] - n
+  mat[mat < 1] <- mat[mat < 1] + n
+
+  stopifnot(all(mat >= 1), all(mat <= n))
+
+  list(to = mat[1,], from = mat[2,])
 }
 
 
