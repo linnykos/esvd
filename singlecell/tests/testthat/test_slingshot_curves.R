@@ -84,7 +84,7 @@ test_that(".smoother_func works", {
   pcurve_list <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)$pcurve_list
 
   sample_idx <- .determine_idx_lineage(lineages[[1]], cluster_mat)
-  res <- .smoother_func(pcurve_list[[1]]$lambda, dat[sample_idx,], b = 1)
+  res <- .smoother_func(pcurve_list[[1]]$lambda, dat[sample_idx,])
 
   expect_true(is.matrix(res))
   expect_true(all(dim(res) == dim(dat[sample_idx,])))

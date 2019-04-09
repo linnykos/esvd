@@ -4,15 +4,13 @@
 \alias{.smoother_func}
 \title{Smooth approximation based on lambdas}
 \usage{
-.smoother_func(lambda, dat, b = 1)
+.smoother_func(lambda, dat)
 }
 \arguments{
 \item{lambda}{vector given by one component of the \code{pricipal_curve} object}
 
 \item{dat}{a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
 original dataset}
-
-\item{b}{kernel bandwith}
 }
 \value{
 a smoothed \code{n} by \code{d} matrix

@@ -5,8 +5,8 @@
 \title{Use slingshot to estimate the cell development trajectories}
 \usage{
 slingshot(dat, cluster_labels, starting_cluster, cluster_group_list = NA,
-  shrink = 1, thresh = 0.001, max_iter = 15, b = 1,
-  upscale_vec = NA)
+  reduction_percentage = 0.25, shrink = 1, thresh = 0.001,
+  max_iter = 15, upscale_vec = NA, verbose = F)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}
@@ -20,15 +20,17 @@ from}
 
 \item{cluster_group_list}{list denoting the hierarchy and order of the clusters}
 
+\item{reduction_percentage}{numeric}
+
 \item{shrink}{shrinkage factor}
 
 \item{thresh}{parameter to determine convergence}
 
 \item{max_iter}{maximum number of iterations}
 
-\item{b}{parameter for the kernel function (when smoothing)}
-
 \item{upscale_vec}{vector of positive numbers, one for each cluster}
+
+\item{verbose}{boolean}
 }
 \value{
 a list containing the lineages under \code{lineages},
