@@ -16,7 +16,7 @@
 bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
                              cluster_group_list, trials = 100, cores = NA,
                              ...){
-  stopifnot(any(is.na(cluster_group_list)))
+  stopifnot(!any(is.na(cluster_group_list)))
 
   func <- function(x){
     reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*.25
