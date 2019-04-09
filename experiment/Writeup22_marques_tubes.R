@@ -1,5 +1,6 @@
 rm(list=ls())
-load("../results/step4_factorization_spca.RData")
+suffix <- "_spca"
+load(paste0("../results/step4_factorization", suffix, ".RData"))
 
 cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
 cell_type_vec <- as.factor(cell_type_vec)
@@ -9,11 +10,40 @@ cluster_group_list <- lapply(order_vec, function(x){
   grep(paste0("^", x), levels(cell_type_vec))
 })
 
-our_curves <- singlecell::slingshot(res_our$u_mat[,1:3], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                                cluster_group_list = cluster_group_list,
-                                verbose = T)
+p <- 3
+our_curves <- singlecell::slingshot(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                                    cluster_group_list = cluster_group_list,
+                                    verbose = F)
+
+save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 our_bootstrap_list <- singlecell::bootstrap_curves(res_our$u_mat[,1:3], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                                   cluster_group_list = cluster_group_list, trials = 100)
+                                                   cluster_group_list = cluster_group_list, trials = 100)
+
+save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 our_sd_val <- singlecell::compute_curve_sd(our_curves, our_bootstrap_list)
+
+save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+
+#########
+
+tmp <- svd(dat_impute)
+naive_embedding <- tmp$u[,1:p] %*% diag(sqrt(tmp$d[1:p]))
+naive_curves <- singlecell::slingshot(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                                      cluster_group_list = cluster_group_list,
+                                      verbose = F)
+
+save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+
+naive_bootstrap_list <- singlecell::bootstrap_curves(naive_curves, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                                                     cluster_group_list = cluster_group_list, trials = 100)
+
+save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+
+naive_sd_val <- singlecell::compute_curve_sd(naive_curves, naive_bootstrap_list)
+
+rm(list = c("cell_type_vec", "tmp"))
+print(paste0(Sys.time(), ": Finished clustering"))
+save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+
