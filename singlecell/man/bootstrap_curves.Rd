@@ -5,7 +5,7 @@
 \title{Bootstrap the curves via resampleing of each cluster}
 \usage{
 bootstrap_curves(dat, cluster_labels, starting_cluster, cluster_group_list,
-  trials = 100, ...)
+  trials = 100, cores = NA, ...)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}
@@ -20,6 +20,8 @@ from}
 \item{cluster_group_list}{list denoting the hierarchy and order of the clusters}
 
 \item{trials}{numeric}
+
+\item{cores}{numeric}
 
 \item{...}{additional parameters for \code{slingshot}}
 }

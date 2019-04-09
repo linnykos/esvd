@@ -18,11 +18,12 @@ our_curves <- singlecell::slingshot(res_our$u_mat[,1:p], cluster_labels, startin
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 our_bootstrap_list <- singlecell::bootstrap_curves(res_our$u_mat[,1:3], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                                                   cluster_group_list = cluster_group_list, trials = 100)
+                                                   cluster_group_list = cluster_group_list, trials = 100,
+                                                   cores = 15)
 
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
-our_sd_val <- singlecell::compute_curve_sd(our_curves, our_bootstrap_list)
+our_sd_val <- singlecell::compute_curve_sd(our_curves, our_bootstrap_list, cores = 15)
 
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
@@ -37,11 +38,12 @@ naive_curves <- singlecell::slingshot(naive_embedding, cluster_labels, starting_
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 naive_bootstrap_list <- singlecell::bootstrap_curves(naive_curves, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                                                     cluster_group_list = cluster_group_list, trials = 100)
+                                                     cluster_group_list = cluster_group_list, trials = 100,
+                                                     cores = 15)
 
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
-naive_sd_val <- singlecell::compute_curve_sd(naive_curves, naive_bootstrap_list)
+naive_sd_val <- singlecell::compute_curve_sd(naive_curves, naive_bootstrap_list, cores = 15)
 
 rm(list = c("cell_type_vec", "tmp"))
 print(paste0(Sys.time(), ": Finished clustering"))

@@ -4,12 +4,14 @@
 \alias{compute_curve_sd}
 \title{Compute the bootstrap uncertainty}
 \usage{
-compute_curve_sd(target_curve_list, bootstrap_curve_list)
+compute_curve_sd(target_curve_list, bootstrap_curve_list, cores = NA)
 }
 \arguments{
 \item{target_curve_list}{a list}
 
 \item{bootstrap_curve_list}{a list}
+
+\item{cores}{numeric}
 }
 \value{
 a numeric

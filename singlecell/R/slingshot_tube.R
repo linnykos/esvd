@@ -8,12 +8,14 @@
 #' from
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
 #' @param trials numeric
+#' @param cores numeric
 #' @param ... additional parameters for \code{slingshot}
 #'
 #' @return a list
 #' @export
 bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
-                             cluster_group_list, trials = 100, ...){
+                             cluster_group_list, trials = 100, cores = NA,
+                             ...){
   stopifnot(any(is.na(cluster_group_list)))
 
   func <- function(x){
@@ -30,26 +32,39 @@ bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
               cluster_group_list = cluster_group_list, ...)
   }
 
-  lapply(1:trials, func)
+  if(is.na(cores)){
+    lapply(1:trials, func)
+  } else {
+    x <- 0 #bookkeeping purposes
+    foreach::"%dopar%"(foreach::foreach(x = 1:trials), func(x))
+  }
 }
 
 #' Compute the bootstrap uncertainty
 #'
 #' @param target_curve_list a list
 #' @param bootstrap_curve_list a list
+#' @param cores numeric
 #'
 #' @return a numeric
 #' @export
-compute_curve_sd <- function(target_curve_list, bootstrap_curve_list){
+compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA){
   num_curves <- length(target_curve_list$lineages)
 
-  mat_list <- lapply(1:num_curves, function(i){
+  func <- function(i){
     print(paste0("Starting curve ", i))
     curve_mat <- target_curve_list$curves[[i]]$s[target_curve_list$curves[[i]]$ord,]
     curve_mat_collection <- .capture_curves(paste0(target_curve_list$lineages[[i]], collapse = "-"), bootstrap_curve_list)
 
     .compute_l2_curve(curve_mat, curve_mat_collection)
-  })
+  }
+
+  if(is.na(cores)){
+    mat_list <- lapply(1:num_curves, func)
+  } else {
+    i <- 0 #bookkeeping purposes
+    mat_list <- foreach::"%dopar%"(foreach::foreach(i = 1:num_curves), func(i))
+  }
 
   sd_vec <- sapply(mat_list, function(x){stats::median(apply(x, 2, max))})
 
