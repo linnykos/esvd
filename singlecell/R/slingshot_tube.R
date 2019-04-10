@@ -65,7 +65,11 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
     mat_list <- foreach::"%dopar%"(foreach::foreach(i = 1:num_curves), func(i))
   }
 
-  sd_vec <- sapply(mat_list, function(x){stats::median(apply(x, 2, max))})
+  sd_vec <- sapply(mat_list, function(x){
+    quantile(apply(x, 2, function(x){
+      quantile(x,probs = 0.95)
+    }), probs = 0.95)
+  })
 
   list(sd_val = max(sd_vec), mat_list = mat_list)
 }
