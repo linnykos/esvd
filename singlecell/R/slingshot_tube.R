@@ -18,6 +18,8 @@ bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
                              ...){
   stopifnot(!any(is.na(cluster_group_list)))
 
+  if(!is.na(cores)) doMC::registerDoMC(cores = cores)
+
   func <- function(x){
     set.seed(10*x)
     dat2 <- dat
@@ -49,6 +51,8 @@ bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
 #' @export
 compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA){
   num_curves <- length(target_curve_list$lineages)
+
+  if(!is.na(cores)) doMC::registerDoMC(cores = cores)
 
   func <- function(i){
     print(paste0("Starting curve ", i))
