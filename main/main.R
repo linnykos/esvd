@@ -3,6 +3,7 @@ set.seed(10)
 
 suffix <- "_spca"
 family <- "gaussian"
+ncores <- 15
 
 source("../main/step0_screening.R")
 source("../main/step1_imputing.R")

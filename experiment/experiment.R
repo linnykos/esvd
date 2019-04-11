@@ -1,33 +1,31 @@
 rm(list=ls())
-set.seed(10)
-cluster_labels <- sample(1:10, 200, replace = T)
-dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
-
-# res <- slingshot(dat, cluster_labels, starting_cluster = 1)
+load("../results/step5_clustering_spca.RData")
+x <- 1
+zz <- construct_3d_tube(our_curves$curves[[x]]$s, radius = our_sd_val$sd_val)
 
 ########
 
-starting_cluster = 1
-cluster_group_list = NA
-reduction_percentage = 0.25
-shrink = 1
-thresh = 0.001
-max_iter = 15
-upscale_vec = NA
-verbose = F
+x <- 1
+dat <- our_curves$curves[[x]]$s
+radius <- our_sd_val$sd_val
+len = 20
 
-reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
-dat2 <- dat/reduction_factor
+dat <- .remove_duplicate_rows(dat)
 
-if(verbose) print("Starting to infer lineages")
-lineages <- .get_lineages(dat2, cluster_labels, starting_cluster = starting_cluster,
-                          cluster_group_list = cluster_group_list)
+n <- nrow(dat)
+circle_list <- lapply(1:nrow(dat), function(x){
+  direction <- .find_adjacent_directions(dat, x)
+  res <- .find_basis_vectors(direction)
+  basis_vec1 <- res$vec1; basis_vec2 <- res$vec2
 
-if(verbose) print("Starting to infer curves")
-curves <- .get_curves(dat2, cluster_labels, lineages, shrink = shrink,
-                      thresh = thresh, max_iter = max_iter, upscale_vec = upscale_vec,
-                      verbose = verbose)
+  .construct_3d_circle(dat[x,], radius, basis_vec1, basis_vec2, len = len)
+})
 
-for(k in 1:length(curves)){
-  curves[[k]]$s <- curves[[k]]$s*reduction_factor
-}
+which(sapply(circle_list, function(x){any(is.nan(x))}))
+
+x = 45
+direction <- .find_adjacent_directions(dat, x)
+res <- .find_basis_vectors(direction)
+basis_vec1 <- res$vec1; basis_vec2 <- res$vec2
+
+.construct_3d_circle(dat[x,], radius, basis_vec1, basis_vec2, len = len)

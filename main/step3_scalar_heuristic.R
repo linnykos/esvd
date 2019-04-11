@@ -13,7 +13,7 @@ for(i in 1:length(scalar_vec)){
                                                    family = family, reparameterize = T,
                                                    max_iter = 25, max_val = max_val,
                                                    scalar = scalar_vec[i],
-                                                   return_path = F, cores = 15,
+                                                   return_path = F, cores = ncores,
                                                    verbose = T)
   save.image(paste0("../results/step3_scalar_heuristic", suffix, "_tmp.RData"))
 }

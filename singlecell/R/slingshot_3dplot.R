@@ -40,6 +40,9 @@ slingshot_3dplot <- function(dat, cluster_labels, bg_col_vec,
 construct_3d_tube <- function(dat, radius, len = 20){
   stopifnot(nrow(dat) > 2)
 
+  # remove duplicates
+  dat <- .remove_duplicate_rows(dat)
+
   n <- nrow(dat)
   circle_list <- lapply(1:nrow(dat), function(x){
     direction <- .find_adjacent_directions(dat, x)
@@ -64,6 +67,26 @@ construct_3d_tube <- function(dat, radius, len = 20){
   }
 
   list(x_mat = x_mat, y_mat = y_mat, z_mat = z_mat)
+}
+
+################
+
+.remove_duplicate_rows <- function(dat, tol = 1e-6){
+
+  while(TRUE){
+    n <- nrow(dat)
+    dist_vec1 <- sapply(1:(n-1), function(x){.l2norm(dat[x,]-dat[x+1,])})
+    dist_vec2 <- sapply(1:(n-2), function(x){.l2norm(dat[x,]-dat[x+2,])})
+
+    keep_idx <- intersect(c(1, which(dist_vec1 > tol)+1),
+                          c(1, 2, which(dist_vec2 > tol)+2))
+
+    if(length(keep_idx) == nrow(dat)) break()
+
+    dat <- dat[keep_idx,,drop=F]
+  }
+
+  dat
 }
 
 

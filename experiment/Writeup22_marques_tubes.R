@@ -24,7 +24,7 @@ our_curves <- singlecell::slingshot(res_our$u_mat[,1:p], cluster_labels, startin
 
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
-our_bootstrap_list <- singlecell::bootstrap_curves(res_our$u_mat[,1:3], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+our_bootstrap_list <- singlecell::bootstrap_curves(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                                    cluster_group_list = cluster_group_list, trials = 100,
                                                    cores = 15, upscale_vec = upscale_vec)
 

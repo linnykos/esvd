@@ -18,11 +18,12 @@ for(i in 1:length(cluster_group_list)){
 p <- 3
 our_curves <- singlecell::slingshot(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                     cluster_group_list = cluster_group_list,
-                                    verbose = F, upscale_vec = upscale_vec)
+                                    verbose = F, upscale_vec = upscale_vec, cores = ncores)
 
-our_bootstrap_list <- singlecell::bootstrap_curves(res_our$u_mat[,1:3], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+set.seed(10)
+our_bootstrap_list <- singlecell::bootstrap_curves(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                                    cluster_group_list = cluster_group_list, trials = 100,
-                                                   upscale_vec = upscale_vec)
+                                                   upscale_vec = upscale_vec, cores = ncores)
 
 our_sd_val <- singlecell::compute_curve_sd(our_curves, our_bootstrap_list)
 
@@ -32,11 +33,12 @@ tmp <- svd(dat_impute)
 naive_embedding <- tmp$u[,1:p] %*% diag(sqrt(tmp$d[1:p]))
 naive_curves <- singlecell::slingshot(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                     cluster_group_list = cluster_group_list,
-                                    verbose = F, upscale_vec = upscale_vec)
+                                    verbose = F, upscale_vec = upscale_vec, cores = ncores)
 
+set.seed(10)
 naive_bootstrap_list <- singlecell::bootstrap_curves(naive_curves, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                                    cluster_group_list = cluster_group_list, trials = 100,
-                                                   upscale_vec = upscale_vec)
+                                                   upscale_vec = upscale_vec, cores = ncores)
 
 naive_sd_val <- singlecell::compute_curve_sd(naive_curves, naive_bootstrap_list)
 

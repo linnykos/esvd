@@ -5,18 +5,6 @@ load("../results/step5_clustering_spca.RData")
 our_sd_val$sd_val
 naive_sd_val$sd_val
 
-naive_sd <- max(sapply(naive_sd_val$mat_list, function(x){
-  quantile(apply(x, 2, function(x){
-    quantile(x,probs = 0.95)
-  }), probs = 0.95)
-}))
-
-our_sd <- max(sapply(our_sd_val$mat_list, function(x){
-  quantile(apply(x, 2, function(x){
-    quantile(x,probs = 0.95)
-  }), probs = 0.95)
-}))
-
 ###################################
 
 # basic 3d plots
@@ -26,9 +14,10 @@ col_func <- function(alpha){
   for(i in 1:3){
     col_vec[cluster_group_list[[i]]] <- rgb(240/255, 228/255, 66/255,alpha) #yellow
   }
-  col_vec[cluster_group_list[[4]]] <- rgb(0/255, 158/255, 115/255,alpha) #bluish green
-  col_vec[cluster_group_list[[5]]] <- rgb(230/255, 159/255, 0/255,alpha) #red
+  col_vec[cluster_group_list[[4]]] <- rgb(86/255, 180/255, 233/255,alpha) #skyblue
+  col_vec[cluster_group_list[[5]]] <- rgb(0/255, 158/255, 115/255,alpha) #bluish green
   col_vec[cluster_group_list[[6]]] <- rgb(86/255, 180/255, 233/255,alpha) #blue
+  # col_vec[cluster_group_list[[7]]] <- rgb(230/255, 159/255, 0/255,alpha) #orange
 
   col_vec[c(1,2,4,10,12)]
 }
@@ -69,5 +58,52 @@ sapply(1:nrow(paramMat), function(x){
                    zlab = "Latent dimension 3")
   graphics.off()
 })
+
+sapply(1:nrow(paramMat), function(x){
+  if(x %% round(nrow(paramMat)/10) == 0) cat('*')
+
+  png(paste0("../figure/experiment/Writeup22_3dplots/Writeup22_naive_lineage_theta",
+             paramMat[x,1], "_phi", paramMat[x,2], ".png"),
+      height = 2000, width = 2000, res = 300, units = "px")
+  par(mar = c(0.5, 0.5, 4, 0.5))
+  slingshot_3dplot(naive_embedding, cluster_labels,
+                   bg_col_vec = col_func(0.1), cluster_col_vec = col_func(1),
+                   breaks = c(0, 1.5, 3.5, 9.5, 11.5, 14), curves = naive_curves$curves,
+                   pch = 16, lwd = 2, main = "Naive lineages",
+                   theta = paramMat[x,1], phi = paramMat[x,2],
+                   xlab = "Latent dimension 1",
+                   ylab = "Latent dimension 2",
+                   zlab = "Latent dimension 3")
+  graphics.off()
+})
+
+#######################
+
+# add the tubes
+our_tube_list <- lapply(1:length(our_curves$curves), function(x){
+  s_mat <- our_curves$curves[[x]]$s[our_curves$curves[[x]]$ord,]
+  construct_3d_tube(s_mat, radius = our_sd_val$sd_val)
+})
+
+par(mar = c(0.5, 0.5, 4, 0.5))
+col_tube_vec <- c(rgb(230/255, 159/255, 0/255), rgb(86/255, 180/255, 233/255))
+slingshot_3dplot(res_our$u_mat[,1:3], cluster_labels,
+                 bg_col_vec = col_func(0.1), cluster_col_vec = col_func(1),
+                 breaks = c(0, 1.5, 3.5, 9.5, 11.5, 14), curves = our_curves$curves,
+                 pch = 16, lwd = 2, main = "Our lineages",
+                 xlab = "Latent dimension 1",
+                 ylab = "Latent dimension 2",
+                 zlab = "Latent dimension 3")
+for(i in 1:length(our_tube_list)){
+  plot3D::surf3D(our_tube_list[[i]]$x_mat,
+                 our_tube_list[[i]]$y_mat,
+                 our_tube_list[[i]]$z_mat, add = T,
+                 colvar = zz$z_mat,
+                 col = colorRampPalette(c("white", col_tube_vec[i]))(100),
+                 breaks = seq(min(zz$z_mat), max(zz$z_mat), length.out = 101),
+                 colkey = F)
+}
+
+
 
 

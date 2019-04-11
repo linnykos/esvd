@@ -4,7 +4,6 @@ load("../../raw_data/marques.RData")
 dat <- marques$counts
 
 cell_types <- unique(marques$cell.info$cell.type)
-#cell_types <- cell_types[-which(cell_types %in% c("OPC", "PPR"))]
 
 set.seed(10)
 cell_idx <- unlist(lapply(cell_types, function(x){
@@ -30,13 +29,13 @@ spca_func <- function(i){
   res
 }
 
-doMC::registerDoMC(cores = 15)
+doMC::registerDoMC(cores = ncores)
 res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
 print(paste0(Sys.time(), ": Finished SPC"))
 
 # run DESCEND
-res_descend <- descend::runDescend(t(dat), n.cores = 15)
+res_descend <- descend::runDescend(t(dat), n.cores = ncores)
 
 rm(list = c("idx", "zz", "k", "lvls", "reorder_idx", "column_vec"))
 print(paste0(Sys.time(), ": Finished screening"))
