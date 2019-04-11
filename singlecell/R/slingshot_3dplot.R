@@ -1,20 +1,23 @@
 slingshot_3dplot <- function(dat, cluster_labels, bg_col_vec,
-                             cluster_col_vec, breaks,
-                             bg_cex = 0.4, cluster_cex = 2,
+                             breaks, bg_cex = 0.4,
+                             cluster_center = NA,
+                             center_cex = 2, center_col_vec = NA, center_labels = NA,
                              curves = NA, ...){
   stopifnot(length(bg_col_vec) == length(breaks) - 1 &
-              length(cluster_col_vec) == length(breaks) - 1)
+              length(center_col_vec) == length(breaks) - 1)
 
-  cluster_center <- .compute_cluster_center(dat, .construct_cluster_matrix(cluster_labels))
 
   plot3D::scatter3D(x = dat[,1], y = dat[,2], z = dat[,3],
                     surface = FALSE, colvar = cluster_labels,
                     cex = bg_cex,
                     breaks = breaks, col = bg_col_vec, colkey = F, ...)
-  plot3D::points3D(cluster_center[,1], cluster_center[,2], cluster_center[,3],
-                   colvar = 1:max(cluster_labels),
-                   breaks = breaks, add = T, col = cluster_col_vec,
-                   cex = cluster_cex, colkey = F, ...)
+
+  if(!all(is.na(cluster_center))){
+    plot3D::points3D(cluster_center[,1], cluster_center[,2], cluster_center[,3],
+                     colvar = center_labels,
+                     breaks = breaks, add = T, col = center_col_vec,
+                     cex = center_cex, colkey = F, ...)
+  }
 
   if(!all(is.na(curves))){
     for(k in 1:length(curves)){
