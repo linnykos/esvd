@@ -12,7 +12,7 @@ test_that(".gradient_vec works", {
   i <- 5
   dat_vec <- dat[i,]
   class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-  res <- .gradient_vec(dat_vec, u_mat[i,], v_mat)
+  res <- .gradient_vec(dat_vec, u_mat[i,], v_mat, n = nrow(dat), p = ncol(dat))
 
   expect_true(is.numeric(res))
   expect_true(length(res) == 2)
@@ -28,7 +28,7 @@ test_that(".gradient_vec works for the other direction", {
   j <- 2
   dat_vec <- dat[,j]
   class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-  res <- .gradient_vec(dat_vec, v_mat[j,], u_mat)
+  res <- .gradient_vec(dat_vec, v_mat[j,], u_mat, n = nrow(dat), p = ncol(dat))
 
   expect_true(is.numeric(res))
   expect_true(length(res) == 2)
@@ -47,10 +47,10 @@ test_that(".gradient_vec satisfies the gradient definition", {
     i <- sample(1:10, 1)
     dat_vec <- dat[i,]
     class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-    grad <- .gradient_vec(dat_vec, u_vec, v_mat)
+    grad <- .gradient_vec(dat_vec, u_vec, v_mat, n = nrow(dat), p = ncol(dat))
 
-    res <- .evaluate_objective_single(dat_vec, u_vec, v_mat)
-    res2 <- .evaluate_objective_single(dat_vec, u_vec2, v_mat)
+    res <- .evaluate_objective_single(dat_vec, u_vec, v_mat, n = nrow(dat), p = ncol(dat))
+    res2 <- .evaluate_objective_single(dat_vec, u_vec2, v_mat, n = nrow(dat), p = ncol(dat))
 
     res2 >= res + as.numeric(grad %*% (u_vec2 - u_vec)) - 1e-6
   })
@@ -121,7 +121,7 @@ test_that(".evaluate_objective is equal to many .evaluate_objective_single", {
   res2 <- sum(sapply(1:nrow(u_mat), function(x){
     dat_vec <- dat[x,]
     class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-    .evaluate_objective_single(dat[x,], u_mat[x,], v_mat)
+    .evaluate_objective_single(dat[x,], u_mat[x,], v_mat, n = nrow(dat), p = ncol(dat))
   }))
 
   expect_true(abs(res - res2) <= 1e-6)
@@ -202,7 +202,7 @@ test_that(".evaluate_objective_single works", {
   i <- 5
   dat_vec <- dat[i,]
   class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-  res <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat)
+  res <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat, n = nrow(dat), p = ncol(dat))
 
   expect_true(is.numeric(res))
   expect_true(!is.matrix(res))
@@ -229,11 +229,11 @@ test_that(".evaluate_objective_single yields a smaller value under truth", {
     i <- sample(1:10, 1)
     dat_vec <- dat[i,]
     class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
-    res <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat)
+    res <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat, n = nrow(dat), p = ncol(dat))
 
     u_mat2 <- abs(matrix(rnorm(20), nrow = 10, ncol = 2))
     v_mat2 <- -abs(matrix(rnorm(8), nrow = 4, ncol = 2))
-    res2 <- .evaluate_objective_single(dat_vec, u_mat2[i,], v_mat2)
+    res2 <- .evaluate_objective_single(dat_vec, u_mat2[i,], v_mat2, n = nrow(dat), p = ncol(dat))
 
     c(res, res2)
   })
