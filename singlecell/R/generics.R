@@ -11,7 +11,7 @@
 
 ##########
 
-.evaluate_objective_single <- function (dat_vec, current_vec, other_mat, ...) {
+.evaluate_objective_single <- function (dat_vec, current_vec, other_mat, n, p, ...) {
   stopifnot(!is.matrix(dat_vec))
   stopifnot(length(current_vec) == ncol(other_mat))
   stopifnot(length(dat_vec) == nrow(other_mat))
@@ -19,8 +19,8 @@
   UseMethod(".evaluate_objective_single")
 }
 
-.evaluate_objective_single.default <- function(dat_vec, current_vec, other_mat, ...){
-  .evaluate_objective_single.exponential(dat_vec, current_vec, other_mat, ...)
+.evaluate_objective_single.default <- function(dat_vec, current_vec, other_mat, n, p, ...){
+  .evaluate_objective_single.exponential(dat_vec, current_vec, other_mat, n, p, ...)
 }
 
 ###########
@@ -33,8 +33,8 @@
   UseMethod(".gradient_vec")
 }
 
-.gradient_vec.default <- function(dat_vec, current_vec, other_mat, ...){
-  .gradient_vec.exponential(dat_vec, current_vec, other_mat, ...)
+.gradient_vec.default <- function(dat_vec, current_vec, other_mat, n, p, ...){
+  .gradient_vec.exponential(dat_vec, current_vec, other_mat, n, p, ...)
 }
 
 ###########

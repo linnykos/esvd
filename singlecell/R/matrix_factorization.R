@@ -158,7 +158,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     grad_vec <- .gradient_vec(dat_vec, current_vec, other_mat, n = n, p = p, ...)
     step_vec <- .frank_wolfe(grad_vec, other_mat,
                              direction = direction, other_bound = max_val)
-    step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, ...)
+    step_size <- .binary_search(dat_vec, current_vec, step_vec, other_mat, n = n, p = p, ...)
     current_vec <- (1-step_size)*current_vec + step_size*step_vec
 
     next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, n = n, p = p, ...)

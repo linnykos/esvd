@@ -67,7 +67,7 @@ test_that(".adaptive_gradient_step always decreases the objective", {
     class(dat) <- c("gaussian", class(dat)[length(class(dat))])
     direction <- .dictate_direction(class(dat)[1])
 
-    pred_mat <- abs(matrix(rnorm(100), 10, 10))
+    pred_mat <- -abs(matrix(rnorm(100), 10, 10))
     gradient_mat <-  .gradient_mat(dat, pred_mat)
 
     new_mat <- .adaptive_gradient_step(dat, pred_mat, gradient_mat, k = 2,
@@ -93,14 +93,14 @@ test_that(".adaptive_gradient_step always gives solutions within the constraint"
     class(dat) <- c("gaussian", class(dat)[length(class(dat))])
     direction <- .dictate_direction(class(dat)[1])
 
-    pred_mat <- abs(matrix(rnorm(20), 10, 2)) %*% t(abs(matrix(rnorm(20), 10, 2)))
+    pred_mat <- -abs(matrix(rnorm(20), 10, 2)) %*% t(abs(matrix(rnorm(20), 10, 2)))
     gradient_mat <-  .gradient_mat(dat, pred_mat)
 
     new_mat <- .adaptive_gradient_step(dat, pred_mat, gradient_mat, k = 2,
                                        direction = direction)
 
     svd_res <- svd(new_mat)
-    all(new_mat > 0) & all(abs(svd_res$d[-(1:2)]) < 1e-3)
+    all(new_mat < 0) & all(abs(svd_res$d[-(1:2)]) < 1e-3)
   })
 
   expect_true(all(bool_vec))
