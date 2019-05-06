@@ -47,7 +47,7 @@ test_that(".adaptive_gradient_step works", {
   class(dat) <- c("gaussian", class(dat)[length(class(dat))])
   direction <- .dictate_direction(class(dat)[1])
 
-  pred_mat <- abs(matrix(rnorm(100), 10, 10))
+  pred_mat <- -abs(matrix(rnorm(100), 10, 10))
   gradient_mat <-  .gradient_mat(dat, pred_mat)
 
   res <- .adaptive_gradient_step(dat, pred_mat, gradient_mat, k = 2,
