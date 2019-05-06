@@ -41,6 +41,7 @@ initialization <- function(dat, k = 2, family = "exponential",
 
 ##################################
 
+# enforces all the resulting entries to be non-negative
 .matrix_completion <- function(dat, k){
   if(any(is.na(dat))){
     lambda0_val <- softImpute::lambda0(dat)
@@ -49,7 +50,7 @@ initialization <- function(dat, k = 2, family = "exponential",
     dat[which(is.na(dat))] <- pred_naive[which(is.na(dat))]
   }
 
-  dat
+  abs(dat)
 }
 
 .determine_initial_matrix <- function(dat, family, k, max_val = NA){
