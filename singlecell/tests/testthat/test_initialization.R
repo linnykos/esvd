@@ -145,4 +145,25 @@ test_that(".projected_gradient_descent decreases the value", {
   expect_true(all(bool_vec))
 })
 
+#####################
+
+## initialization is correct
+
+test_that("initialization works", {
+  set.seed(10)
+  true_val <- 1/2
+  u_mat <- matrix(true_val, nrow = 100, ncol = 1)
+  v_mat <- -matrix(true_val, nrow = 100, ncol = 1)
+  pred_mat <- u_mat %*% t(v_mat)
+  dat <- pred_mat
+  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+
+  for(i in 1:nrow(u_mat)){
+    for(j in 1:nrow(v_mat)){
+      dat[i,j] <- abs(stats::rnorm(1, mean = -1/pred_mat[i,j], sd = -1/(2*pred_mat[i,j])))
+    }
+  }
+
+  res <- initialization(dat, k = 2, family = "gaussian", max_val = -1000)
+})
 

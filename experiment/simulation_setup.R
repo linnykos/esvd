@@ -46,9 +46,10 @@ for(i in 1:n){
 }
 
 obs_mat[obs_mat < 0] <- 0
-obs_mat2 <- round(exp(obs_mat*10)-1)
+obs_mat2 <- round(100*obs_mat)
+# obs_mat2 <- round(exp(obs_mat*10)-1)
 # length(which(obs_mat2 > 5000))/prod(dim(obs_mat2))
-obs_mat2[obs_mat2 > 200] <- 200
+# obs_mat2[obs_mat2 > 200] <- 200
 # quantile(obs_mat2, probs = seq(0,1,length.out=11))
 # length(which(obs_mat2 == 0))/prod(dim(obs_mat2))
 
@@ -71,13 +72,17 @@ for(i in 1:nrow(obs_mat3)){
 plot(cell_mat[,1], cell_mat[,2], asp = T,
      pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 
+
 ##############################
 
-dat <- obs_mat3
-reweight_factor <- rowSums(dat)
-dat_rescale <- t(sapply(1:nrow(dat), function(i){dat[i,]/reweight_factor[i]}))
+# dat <- obs_mat3
+# reweight_factor <- rowSums(dat)
+# dat_rescale <- t(sapply(1:nrow(dat), function(i){dat[i,]/reweight_factor[i]}))
+# dat_rescale <- dat_rescale*10/mean(dat_rescale)
 
 set.seed(10)
+dat_rescale <- obs_mat3
+library(NMF)
 init <- initialization(dat_rescale, family = "gaussian", k = 2, max_val = -2000)
 plot(init$u_mat[,1], init$u_mat[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 res_our <- fit_factorization(dat_rescale, u_mat = init$u_mat, v_mat = init$v_mat,
@@ -88,5 +93,26 @@ res_our <- fit_factorization(dat_rescale, u_mat = init$u_mat, v_mat = init$v_mat
                                          verbose = T)
 plot(res_our$u_mat[,1], res_our$u_mat[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 
+#######
+
+set.seed(10)
+zz <- Rtsne::Rtsne(dat_rescale)
+plot(zz$Y[,1], zz$Y[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
+
+#####
+set.seed(10)
+tmp <- vamf:::vamf(t(dat_rescale), 2, log2trans=F) # error in the max-elbos
+
+set.seed(10)
+dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat_rescale)))
+tmp <- zinbwave::zinbwave(dat_se, K = 2, maxiter.optimize = 100)
+res_zinb <- tmp@reducedDims$zinbwave
+
+plot(res_zinb[,1], res_zinb[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
+
+########
+set.seed(10)
+res <- pCMF::pCMF(dat_rescale, K = 2)
+plot(res$factor$U[,1], res$factor$U[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 
 

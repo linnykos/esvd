@@ -218,7 +218,7 @@ initialization <- function(dat, k = 2, family = "exponential",
 
   # perform the nonnegative matrix factorization
   stopifnot(all(mat > 0))
-  res <- NMF::nmf(mat, rank = k)
+  res <- NMF::nmf(mat, rank = k) #requires NMF package to be explicitly loaded
 
   w_mat <- res@fit@W
   h_mat <- res@fit@H
