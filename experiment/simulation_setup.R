@@ -18,6 +18,11 @@ cell_mat <- do.call(rbind, lapply(1:h, function(x){
 n <- nrow(cell_mat)
 k <- ncol(cell_mat)
 
+
+plot(cell_mat[,1], cell_mat[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
+
+
+
 # construct the gene information
 g <- nrow(gene_pop)
 gene_mat <- do.call(rbind, lapply(1:g, function(x){
@@ -93,11 +98,21 @@ res_our <- fit_factorization(dat_rescale, u_mat = init$u_mat, v_mat = init$v_mat
                                          verbose = T)
 plot(res_our$u_mat[,1], res_our$u_mat[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 
+cluster_labels <- rep(1:4, each = n_each)
+our_curves <- singlecell::slingshot(res_our$u_mat[,1:2], cluster_labels,
+                                    starting_cluster = 1,
+                                    verbose = T)
+our_curves$lineages
+
 #######
 
 set.seed(10)
-zz <- Rtsne::Rtsne(dat_rescale)
+zz <- Rtsne::Rtsne(dat_rescale, perplexity = 30)
 plot(zz$Y[,1], zz$Y[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
+tsne_curves <- singlecell::slingshot(zz$Y[,1:2], cluster_labels,
+                                    starting_cluster = 1,
+                                    verbose = T)
+tsne_curves$lineages
 
 #####
 set.seed(10)
@@ -107,6 +122,10 @@ set.seed(10)
 dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat_rescale)))
 tmp <- zinbwave::zinbwave(dat_se, K = 2, maxiter.optimize = 100)
 res_zinb <- tmp@reducedDims$zinbwave
+zinb_curves <- singlecell::slingshot(res_zinb[,1:2], cluster_labels,
+                                     starting_cluster = 1,
+                                     verbose = T)
+zinb_curves$lineages
 
 plot(res_zinb[,1], res_zinb[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 
@@ -115,4 +134,7 @@ set.seed(10)
 res <- pCMF::pCMF(dat_rescale, K = 2)
 plot(res$factor$U[,1], res$factor$U[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = n_each)])
 
-
+pcmf_curves <- singlecell::slingshot(res$factor$U[,1:2], cluster_labels,
+                                     starting_cluster = 1,
+                                     verbose = T)
+pcmf_curves$lineages
