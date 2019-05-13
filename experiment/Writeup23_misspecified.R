@@ -1,7 +1,6 @@
 rm(list=ls())
 library(simulation)
 library(singlecell)
-source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000)
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
@@ -9,29 +8,71 @@ trials <- 50
 
 ################
 
-cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
-                     40,10, 60,80, 60,80, 100, 25)/10,
-                   nrow = 4, ncol = 4, byrow = T)
-gene_pop <- matrix(c(20,90, 25,100,
-                     90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
-
 rule <- function(vec){
+  cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
+                       40,10, 60,80, 60,80, 100, 25)/10,
+                     nrow = 4, ncol = 4, byrow = T)
+  gene_pop <- matrix(c(20,90, 25,100,
+                       90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
   n_each <- vec["n_each"]
   d_each <- vec["d_each"]
   sigma <- vec["sigma"]
   total <- vec["total"]
 
-  res <- generate_natrual_mat(cell_pop, gene_pop, n_each, d_each, sigma)
-  nat_mat <- res$nat_mat
+  h <- nrow(cell_pop)
+  cell_mat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_each)
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = sigma),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = sigma))
+  }))
+  n <- nrow(cell_mat)
+  k <- ncol(cell_mat)
 
-  obs_mat <- generator_exponential(nat_mat)
+  # construct the gene information
+  g <- nrow(gene_pop)
+  gene_mat <- do.call(rbind, lapply(1:g, function(x){
+    pos <- stats::runif(d_each)
+    cbind(pos*gene_pop[x,1] + (1-pos)*gene_pop[x,3] + stats::rnorm(d_each, sd = sigma),
+          pos*gene_pop[x,2] + (1-pos)*gene_pop[x,4] + stats::rnorm(d_each, sd = sigma))
+  }))
+  d <- nrow(gene_mat)
+
+  # form observations
+  gram_mat <- cell_mat %*% t(gene_mat) #natural parameter
+  svd_res <- svd(gram_mat)
+  cell_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+  gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+
+  res <- singlecell:::.reparameterize(cell_mat, gene_mat)
+  cell_mat <- res$u_mat; gene_mat <- res$v_mat
+
+  pred_mat <- cell_mat %*% t(gene_mat)
+
+  obs_mat <- matrix(0, ncol = ncol(gram_mat), nrow = nrow(gram_mat))
+  for(i in 1:n){
+    for(j in 1:d){
+      obs_mat[i,j] <- rnorm(1, pred_mat[i,j], 0.5)
+    }
+  }
+
+  obs_mat[obs_mat < 0] <- 0
   obs_mat2 <- round(100*obs_mat)
-
   # quantile(obs_mat2, probs = seq(0,1,length.out=11))
   # length(which(obs_mat2 == 0))/prod(dim(obs_mat2))
 
   # now do something more dramatic with dropout
-  obs_mat3 <- generate_dropout(obs_mat2)
+  obs_mat3 <- obs_mat2
+  .dropped_indices <- function(x, total){
+    vec <- 1:length(x)
+    samp <- sample(vec, size = total, replace = T, prob = x)
+    setdiff(vec, unique(samp))
+  }
+
+  total_vec <- rep(total, nrow(obs_mat3))
+  for(i in 1:nrow(obs_mat3)){
+    idx <- .dropped_indices(obs_mat[i,], total = total_vec[i])
+    obs_mat3[i,idx] <- 0
+  }
   # quantile(obs_mat3, probs = seq(0,1,length.out=11))
   # length(which(obs_mat3 == 0))/prod(dim(obs_mat3))
 
@@ -39,7 +80,6 @@ rule <- function(vec){
 }
 
 criterion <- function(dat, vec, y){
-  print(y)
   cluster_labels <- rep(1:4, each = vec["n_each"])
 
   # SVD
@@ -67,11 +107,11 @@ criterion <- function(dat, vec, y){
   set.seed(10)
   init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
   tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                               family = "gaussian",  reparameterize = T,
-                               max_iter = 100, max_val = vec["max_val"],
-                               scalar = vec["scalar"],
-                               return_path = F, cores = 1,
-                               verbose = F)
+                                       family = "gaussian",  reparameterize = T,
+                                       max_iter = 100, max_val = vec["max_val"],
+                                       scalar = vec["scalar"],
+                                       return_path = F, cores = 1,
+                                       verbose = F)
   res_our <- tmp$u_mat
   curves_our <- singlecell::slingshot(res_our[,1:vec["k"]], cluster_labels,
                                       starting_cluster = 1,
@@ -108,17 +148,3 @@ criterion <- function(dat, vec, y){
        dat = dat)
 }
 
-# set.seed(1); zz <- criterion(rule(paramMat[1,]), paramMat[1,], 1)
-# plot(zz$res_our[,1], zz$res_our[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n_each"])])
-# for(i in 1:2){ord <- zz$curves_our$curves[[i]]$ord; lines(zz$curves_our$curves[[i]]$s[ord,1], zz$curves_our$curves[[i]]$s[ord,2], lwd = 2)}
-# i <- 1; idx <- which(zz$curves_truth$curves[[i]]$lambda_long != 0); cor(zz$curves_truth$curves[[i]]$lambda_long[idx], zz$curves_our$curves[[i]]$lambda_long[idx])
-
-############
-
-res <- simulation::simulation_generator(rule = rule, criterion = criterion,
-                                        paramMat = paramMat, trials = trials,
-                                        cores = 1, as_list = T,
-                                        filepath = "../results/factorization_results_tmp.RData",
-                                        verbose = T)
-
-save.image("../results/factorization_results.RData")
