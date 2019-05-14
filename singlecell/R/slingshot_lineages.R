@@ -167,28 +167,34 @@
 
 .binary_search <- function(dat, evaluation_func, target_val,
                            range_val = c(0,1), start_min = 0.1, start_max = 10,
-                           max_iter = 10, ...){
+                           max_iter = 10, verbose = F, ...){
 
-  lower_val <- evaluation_func(dat, start_min, ...)
-  upper_val <- evaluation_func(dat, start_max, ...)
-  if(lower_val > target_val) return(start_min)
-  if(upper_val < target_val) return(start_max)
+  eval_lower <- evaluation_func(dat, start_min, ...)
+  eval_upper <- evaluation_func(dat, start_max, ...)
+  if(eval_lower > target_val) return(start_min)
+  if(eval_upper < target_val) return(start_max)
 
   iter <- 1;
-  min_val <- start_min; max_val <- start_max
+  arg_lower <- start_min; arg_upper <- start_max
 
-  while(TRUE){
-    try_val <- (min_val + max_val)/2
-    mid_val <- evaluation_func(dat, try_val, ...)
+  while(iter < max_iter){
+    arg_mid <- (arg_lower + arg_upper)/2
+    eval_mid <- evaluation_func(dat, arg_mid, ...)
 
-    if(target_val < mid_val) {
-      upper_val <- mid_val
+    if(verbose) print(paste0("Min value: ", round(arg_lower, 2),
+                             " // Try value: ", round(arg_mid, 2), " - ", eval_mid,
+                             " // Max value: ", round(arg_upper, 2)))
+
+    if(target_val < eval_mid) {
+      arg_upper <- arg_mid
     } else {
-      lower_val <- mid_val
+      arg_lower <- arg_mid
     }
+
+    iter <- iter + 1
   }
 
-  try_val
+  arg_mid
 }
 
 .ellipse_points <- function(mean_vec, cov_mat){
@@ -219,7 +225,7 @@
 
   e_points <- .ellipse_points(mean_vec, multiplier_val*cov_mat)
 
-  e_hull <- tripack::tri.mesh(epoints[-1,1], epoints[-1,2])
+  e_hull <- tripack::tri.mesh(e_points[-1,1], e_points[-1,2])
   bool_vec <- tripack::in.convex.hull(e_hull, dat[,1], dat[,2])
 
   sum(bool_vec)/length(bool_vec)
@@ -227,7 +233,6 @@
 
 .initial_edges <- function(dat, cluster_labels, target_percentage = 0.8){
   stopifnot(ncol(dat) == 2, all(cluster_labels > 0), all(cluster_labels %% 1 == 0),
-            length(cluster_labels) == length(unique(cluster_labels)),
             max(cluster_labels) == length(unique(cluster_labels)))
 
   # form the ellipses

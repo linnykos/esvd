@@ -17,7 +17,8 @@ Imports:
     clplite,
     softImpute,
     NMF,
-    plot3D
+    plot3D,
+    tripack
 Suggests:
     testthat
 RoxygenNote: 6.1.1
