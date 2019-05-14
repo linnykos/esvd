@@ -88,7 +88,7 @@ criterion <- function(dat, vec, y){
 
   # pcmf
   set.seed(10)
-  tmp <- pCMF::pCMF(dat$dat, K = vec["k"], verbose = F)
+  tmp <- pCMF::pCMF(dat$dat, K = vec["k"], sparsity = F, verbose = F)
   res_pcmf <- tmp$factor$U
   curves_pcmf <- singlecell::slingshot(res_pcmf[,1:2], cluster_labels,
                                        starting_cluster = 1,

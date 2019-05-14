@@ -48,13 +48,70 @@ generate_dropout <- function(obs_mat, total){
   obs_mat3
 }
 
+
 #####################
 
-generator_exponential <- function(nat_mat){
-  obs_mat <- matrix(0, ncol = ncol(nat_mat), nrow = nrow(nat_mat))
+# draw a poisson from the inner product
+generator_pcmf_poisson <- function(nat_mat, dropout_prob = 0.5, ...){
+  n <- nrow(nat_mat); d <- ncol(nat_mat)
+
+  obs_mat <- matrix(0, ncol = d, nrow = n)
+  for(i in 1:n){
+    for(j in 1:d){
+      obs_mat[i,j] <- rpois(1, nat_mat[i,j])
+    }
+  }
+
+  # 1 means not dropped
+  dropout_mat <- matrix(rbinom(n*d, size = 1, prob = 1-dropout_prob),
+                        ncol = d, nrow = n)
+  obs_mat[dropout_mat == 0] <- 0
+
+  obs_mat
+}
+
+# draw a negative binomial from the exponential of inner product
+generator_zinb_nb <- function(nat_mat, theta = rep(0.1, ncol(nat_mat)), ...){
+  n <- nrow(nat_mat); d <- ncol(nat_mat)
+
+  obs_mat <- matrix(0, ncol = d, nrow = n)
+  dropout_mat <- matrix(0, ncol = d, nrow = n)
+  for(i in 1:n){
+    for(j in 1:d){
+      obs_mat[i,j] <- rnbinom(1, size = exp(nat_mat[i,j]), prob = theta[j])
+
+      dropout_mat[i,j] <- rbinom(1, size = 1, prob = 1/(1+exp(-nat_mat[i,j])))
+    }
+  }
+
+  # 1 means not dropped
+  obs_mat[dropout_mat == 0] <- 0
+
+  obs_mat
+}
+
+# draw an exponential from the negative of the natural parameter
+generator_exponential <- function(nat_mat, ...){
+  n <- nrow(nat_mat); d <- ncol(nat_mat)
+
+  obs_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
       obs_mat[i,j] <- rexp(1, nat_mat[i,j])
+    }
+  }
+
+  obs_mat
+}
+
+# draw a gaussian from the natural parameter
+generator_gaussian <- function(nat_mat, sd_val = 0.25, ...){
+  n <- nrow(nat_mat); d <- ncol(nat_mat)
+
+  obs_mat <- matrix(0, ncol = d, nrow = n)
+  for(i in 1:n){
+    for(j in 1:d){
+      obs_mat[i,j] <- rnorm(1, nat_mat[i,j], sd = sd_val)
     }
   }
 
@@ -62,5 +119,23 @@ generator_exponential <- function(nat_mat){
 
   obs_mat
 }
+
+# draw a gaussian from the negative of the natural parameter
+generator_curved_gaussian <- function(nat_mat, alpha = 2, ...){
+  n <- nrow(nat_mat); d <- ncol(nat_mat)
+
+  obs_mat <- matrix(0, ncol = d, nrow = n)
+  for(i in 1:n){
+    for(j in 1:d){
+      obs_mat[i,j] <- rnorm(1, 1/nat_mat[i,j], sd = 1/(alpha*nat_mat[i,j]))
+    }
+  }
+
+  obs_mat[obs_mat < 0] <- 0
+
+  obs_mat
+}
+
+
 
 
