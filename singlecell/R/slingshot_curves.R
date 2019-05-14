@@ -9,6 +9,8 @@
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
+#' @param use_initialization use principal curves on each cluster to prune the
+#' list of possible neighboring clusters
 #' @param reduction_percentage numeric
 #' @param shrink shrinkage factor
 #' @param thresh parameter to determine convergence
@@ -22,6 +24,7 @@
 #' @export
 slingshot <- function(dat, cluster_labels, starting_cluster,
                       cluster_group_list = NA,
+                      use_initialization = F,
                       reduction_percentage = 0.25,
                       shrink = 1, thresh = 0.001, max_iter = 15,
                       upscale_vec = NA, verbose = F){
@@ -32,7 +35,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   if(verbose) print("Starting to infer lineages")
   lineages <- .get_lineages(dat2, cluster_labels, starting_cluster = starting_cluster,
-                            cluster_group_list = cluster_group_list)
+                            cluster_group_list = cluster_group_list,
+                            use_initialization = use_initialization)
 
   if(verbose) print("Starting to infer curves")
   curves <- .get_curves(dat2, cluster_labels, lineages, shrink = shrink,

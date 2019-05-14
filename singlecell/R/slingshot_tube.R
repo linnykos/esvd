@@ -94,10 +94,10 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
 }
 
 # for every point in our_mat, find its l2 distance to its closest neighbor in all curves in our_mat_collection
-.compute_l2_curve <- function(mat, mat_collection){
+.compute_l2_curve <- function(mat, mat_collection, verbose = F){
   n <- nrow(mat); k <- length(mat_collection)
   sapply(1:n, function(x){
-    if(x %% floor(n/10) == 0) cat('*')
+    if(verbose & x %% floor(n/10) == 0) cat('*')
 
     vec <- mat[x,]
     sapply(1:k, function(y){

@@ -15,10 +15,13 @@
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
+#' @param use_initialization use principal curves on each cluster to prune the
+#' list of possible neighboring clusters
 #'
 #' @return A list of cluster indices, with \code{starting_cluster} starting as
 #' its first element
-.get_lineages <- function(dat, cluster_labels, starting_cluster, cluster_group_list = NA){
+.get_lineages <- function(dat, cluster_labels, starting_cluster,
+                          cluster_group_list = NA, use_initialization = F){
   stopifnot(!is.list(cluster_group_list) || starting_cluster %in% cluster_group_list[[1]])
   stopifnot(all(cluster_labels > 0), all(cluster_labels %% 1 == 0), length(unique(cluster_labels)) == max(cluster_labels))
   if(all(!is.na(cluster_group_list))){
@@ -28,6 +31,12 @@
 
   ### construct the distance matrix
   dist_mat <- .compute_cluster_distances(dat, cluster_labels)
+  if(use_initialization){
+    bool_mat <- .initial_edges(dat, cluster_labels)
+    if(all(rowSums(bool_mat) >= 1)){
+      dist_mat[!bool_mat] <- Inf
+    }
+  }
 
   ### construct the spt (shortest path tree)
   g <- .construct_graph_hierarchy(dist_mat, cluster_labels = cluster_labels,
@@ -165,88 +174,30 @@
 
 ########
 
-.binary_search <- function(dat, evaluation_func, target_val,
-                           range_val = c(0,1), start_min = 0.1, start_max = 10,
-                           max_iter = 10, verbose = F, ...){
+.initial_edges <- function(dat, cluster_labels, multiplier = 5){
+  k <- max(cluster_labels)
 
-  eval_lower <- evaluation_func(dat, start_min, ...)
-  eval_upper <- evaluation_func(dat, start_max, ...)
-  if(eval_lower > target_val) return(start_min)
-  if(eval_upper < target_val) return(start_max)
+  curve_list <- lapply(1:k, function(i){
+    dat_subset <- dat[which(cluster_labels == i),]
+    princurve::principal_curve(dat_subset)
+  })
 
-  iter <- 1;
-  arg_lower <- start_min; arg_upper <- start_max
 
-  while(iter < max_iter){
-    arg_mid <- (arg_lower + arg_upper)/2
-    eval_mid <- evaluation_func(dat, arg_mid, ...)
+  sd_vec <- sapply(1:k, function(i){
+    dat_subset <- dat[which(cluster_labels == i),]
+    median(.compute_l2_curve(dat_subset, list(curve_list[[i]]$s)))
+  })
+  sd_val <- max(sd_vec)
 
-    if(verbose) print(paste0("Min value: ", round(arg_lower, 2),
-                             " // Try value: ", round(arg_mid, 2), " - ", eval_mid,
-                             " // Max value: ", round(arg_upper, 2)))
-
-    if(target_val < eval_mid) {
-      arg_upper <- arg_mid
-    } else {
-      arg_lower <- arg_mid
+  dist_mat <- matrix(0, k, k)
+  for(i in 1:(k-1)){
+    for(j in (i+1):k){
+      dist_mat[i,j] <- min(.compute_l2_curve(curve_list[[i]]$s, list(curve_list[[j]]$s)))
+      dist_mat[j,i] <- dist_mat[i,j]
     }
-
-    iter <- iter + 1
   }
 
-  arg_mid
+  dist_mat <= multiplier*sd_val
 }
 
-.ellipse_points <- function(mean_vec, cov_mat){
-  stopifnot(length(mean_vec) == 2, all(dim(cov_mat) == 2))
-
-  eig <- eigen(cov_mat)
-  alpha <- atan(eig$vectors[2,1]/eig$vectors[1,1])
-  if(alpha < 0) alpha <- alpha + 2*pi
-
-  a <- sqrt(eig$values[1])
-  b <- sqrt(eig$values[2])
-
-  theta_grid <- seq(0, 2*pi, length.out = 100)
-  ellipse_x <- a*cos(theta_grid)
-  ellipse_y <- b*sin(theta_grid)
-
-  R <- matrix(c(cos(alpha), -sin(alpha), sin(alpha), cos(alpha)), 2, 2)
-  val <- cbind(ellipse_x, ellipse_y) %*% R
-
-  val <- t(apply(val, 1, function(x){x + mean_vec}))
-}
-
-.ellipse_coverage <- function(dat, multiplier_val, ...){
-  stopifnot(ncol(dat) == 2)
-
-  mean_vec <- colMeans(dat)
-  cov_mat <- stats::cov(dat)
-
-  e_points <- .ellipse_points(mean_vec, multiplier_val*cov_mat)
-
-  e_hull <- tripack::tri.mesh(e_points[-1,1], e_points[-1,2])
-  bool_vec <- tripack::in.convex.hull(e_hull, dat[,1], dat[,2])
-
-  sum(bool_vec)/length(bool_vec)
-}
-
-.initial_edges <- function(dat, cluster_labels, target_percentage = 0.8){
-  stopifnot(ncol(dat) == 2, all(cluster_labels > 0), all(cluster_labels %% 1 == 0),
-            max(cluster_labels) == length(unique(cluster_labels)))
-
-  # form the ellipses
-  k <- max(cluster_labels)
-  e_list <- lapply(1:k, function(x){
-    dat_subset <- dat[which(cluster_labels == x),]
-
-    scaling_val <- .binary_search(dat_subset, evaluation_func = .ellipse_coverage,
-                                  target_val = target_percentage)
-
-    mean_vec <- colMeans(dat)
-    cov_mat <- stats::cov(dat)
-
-    .ellipse_points(mean_vec, scaling_val*cov_mat)
-  })
-}
 
