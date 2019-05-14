@@ -71,14 +71,16 @@ generator_pcmf_poisson <- function(nat_mat, dropout_prob = 0.5, ...){
 }
 
 # draw a negative binomial from the exponential of inner product
-generator_zinb_nb <- function(nat_mat, theta = rep(0.1, ncol(nat_mat)), ...){
+generator_zinb_nb <- function(nat_mat, theta = rep(100, ncol(nat_mat)), ...){
   n <- nrow(nat_mat); d <- ncol(nat_mat)
 
   obs_mat <- matrix(0, ncol = d, nrow = n)
   dropout_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- rnbinom(1, size = exp(nat_mat[i,j]), prob = theta[j])
+      p <- exp(nat_mat[i,j])/(exp(nat_mat[i,j])+theta[j])
+      r <- theta[j]
+      obs_mat[i,j] <- rnbinom(1, size = r, prob = p)
 
       dropout_mat[i,j] <- rbinom(1, size = 1, prob = 1/(1+exp(-nat_mat[i,j])))
     }

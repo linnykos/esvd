@@ -26,12 +26,20 @@ res <- generate_natrual_mat(cell_pop, gene_pop, n_each, d_each, sigma)
 nat_mat <- res$nat_mat
 
 set.seed(10)
-obs_mat <- generator_pcmf_poisson(nat_mat, dropout_prob = 0.5)
+obs_mat <- generator_zinb_nb(nat_mat)
+# quantile(obs_mat, probs = seq(0, 1, length.out=11))
+
+# set.seed(10)
+# tmp <- pCMF::pCMF(obs_mat, K = vec["k"], verbose = T, sparsity = F)
+# res_pcmf <- tmp$factor$U
+# plot(res_pcmf[,1], res_pcmf[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n_each"])])
 
 set.seed(10)
-tmp <- pCMF::pCMF(obs_mat, K = vec["k"], verbose = T, sparsity = F)
-res_pcmf <- tmp$factor$U
-plot(res_pcmf[,1], res_pcmf[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n_each"])])
+dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(obs_mat)))
+tmp <- zinbwave::zinbwave(dat_se, K = vec["k"], maxiter.optimize = 100)
+res_zinb <- tmp@reducedDims$zinbwave
+plot(res_zinb[,1], res_zinb[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n_each"])])
+
 
 ##############
 
@@ -40,9 +48,21 @@ init <- singlecell::initialization(obs_mat, family = "gaussian", k = vec["k"], m
 tmp <- singlecell::fit_factorization(obs_mat, u_mat = init$u_mat, v_mat = init$v_mat,
                                      family = "gaussian",  reparameterize = T,
                                      max_iter = 100, max_val = vec["max_val"],
-                                     scalar = vec["scalar"],
+                                     scalar = 1,
                                      return_path = F, cores = 1,
                                      verbose = F)
 res_our <- tmp$u_mat
 plot(res_our[,1], res_our[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n_each"])])
+cluster_labels <- rep(1:4, each = vec["n_each"])
+curves_our <- singlecell::slingshot(res_our[,1:vec["k"]], cluster_labels,
+                                    starting_cluster = 1,
+                                    verbose = F)
+curves_our$lineages
+for(i in 1:3){
+  ord <- curves_our$curves[[i]]$ord
+  lines(curves_our$curves[[i]]$s[ord,1], curves_our$curves[[i]]$s[ord,2], lwd = 2)
+}
+
+###############
+
 
