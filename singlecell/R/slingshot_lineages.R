@@ -162,3 +162,86 @@
 
   path_list[which(bool_vec)]
 }
+
+########
+
+.binary_search <- function(dat, evaluation_func, target_val,
+                           range_val = c(0,1), start_min = 0.1, start_max = 10,
+                           max_iter = 10, ...){
+
+  lower_val <- evaluation_func(dat, start_min, ...)
+  upper_val <- evaluation_func(dat, start_max, ...)
+  if(lower_val > target_val) return(start_min)
+  if(upper_val < target_val) return(start_max)
+
+  iter <- 1;
+  min_val <- start_min; max_val <- start_max
+
+  while(TRUE){
+    try_val <- (min_val + max_val)/2
+    mid_val <- evaluation_func(dat, try_val, ...)
+
+    if(target_val < mid_val) {
+      upper_val <- mid_val
+    } else {
+      lower_val <- mid_val
+    }
+  }
+
+  try_val
+}
+
+.ellipse_points <- function(mean_vec, cov_mat){
+  stopifnot(length(mean_vec) == 2, all(dim(cov_mat) == 2))
+
+  eig <- eigen(cov_mat)
+  alpha <- atan(eig$vectors[2,1]/eig$vectors[1,1])
+  if(alpha < 0) alpha <- alpha + 2*pi
+
+  a <- sqrt(eig$values[1])
+  b <- sqrt(eig$values[2])
+
+  theta_grid <- seq(0, 2*pi, length.out = 100)
+  ellipse_x <- a*cos(theta_grid)
+  ellipse_y <- b*sin(theta_grid)
+
+  R <- matrix(c(cos(alpha), -sin(alpha), sin(alpha), cos(alpha)), 2, 2)
+  val <- cbind(ellipse_x, ellipse_y) %*% R
+
+  val <- t(apply(val, 1, function(x){x + mean_vec}))
+}
+
+.ellipse_coverage <- function(dat, multiplier_val, ...){
+  stopifnot(ncol(dat) == 2)
+
+  mean_vec <- colMeans(dat)
+  cov_mat <- stats::cov(dat)
+
+  e_points <- .ellipse_points(mean_vec, multiplier_val*cov_mat)
+
+  e_hull <- tripack::tri.mesh(epoints[-1,1], epoints[-1,2])
+  bool_vec <- tripack::in.convex.hull(e_hull, dat[,1], dat[,2])
+
+  sum(bool_vec)/length(bool_vec)
+}
+
+.initial_edges <- function(dat, cluster_labels, target_percentage = 0.8){
+  stopifnot(ncol(dat) == 2, all(cluster_labels > 0), all(cluster_labels %% 1 == 0),
+            length(cluster_labels) == length(unique(cluster_labels)),
+            max(cluster_labels) == length(unique(cluster_labels)))
+
+  # form the ellipses
+  k <- max(cluster_labels)
+  e_list <- lapply(1:k, function(x){
+    dat_subset <- dat[which(cluster_labels == x),]
+
+    scaling_val <- .binary_search(dat_subset, evaluation_func = .ellipse_coverage,
+                                  target_val = target_percentage)
+
+    mean_vec <- colMeans(dat)
+    cov_mat <- stats::cov(dat)
+
+    .ellipse_points(mean_vec, scaling_val*cov_mat)
+  })
+}
+

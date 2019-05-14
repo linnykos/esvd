@@ -71,24 +71,43 @@ cluster_group_list = NA
 dist_mat <- .compute_cluster_distances(dat, cluster_labels)
 
 ######
+ellipse_points <- function(mean_vec, cov_mat){
+  eig <- eigen(cov_mat)
+  alpha <- atan(eig$vectors[2,1]/eig$vectors[1,1])
+  if(alpha < 0) alpha <- alpha + 2*pi
 
-visualization <- function(mean_vec1, cov_mat1, mean_vec2, cov_mat2){
+  a <- sqrt(eig$values[1])
+  b <- sqrt(eig$values[2])
 
-  set.seed(10)
+  theta_grid <- seq(0, 2*pi, length.out = 100)
+  ellipse_x <- a*cos(theta_grid)
+  ellipse_y <- b*sin(theta_grid)
 
-  e1 <- ellipse_points(mean_vec1, cov_mat1)
-  x1 <- MASS::mvrnorm(100, mean_vec1, cov_mat1)
-  e2 <- ellipse_points(mean_vec2, cov_mat2)
-  x2 <- MASS::mvrnorm(100, mean_vec2, cov_mat2)
+  R <- matrix(c(cos(alpha), -sin(alpha), sin(alpha), cos(alpha)), 2, 2)
+  val <- cbind(ellipse_x, ellipse_y) %*% R
 
-  points(x1[,1], x1[,2], pch = 16, asp = T, xlim = range(c(x1[,1], x2[,1])),
-       ylim = range(c(x1[,2], x2[,2])), col = rgb(0,0,0,0.2),
-       main = paste0(dist_func(mean_vec1, cov_mat1, mean_vec2, cov_mat2)))
-  points(x2[,1], x2[,2], pch = 16, col = rgb(1,0,0,0.2))
-
-  points(e1[,1], e1[,2], cex = 0.5, col = "black")
-  points(e2[,1], e2[,2], cex = 0.5, col = "red")
-
+  val <- t(apply(val, 1, function(x){x + mean_vec}))
 }
 
+dist_func <- function(mean_vec1, cov_mat1, mean_vec2, cov_mat2){
+  as.numeric(t(mean_vec1 - mean_vec2) %*% solve(cov_mat1 + cov_mat2) %*% (mean_vec1 - mean_vec2))
+}
+
+for(i in 1:4){
+  mean_vec <- apply(dat[which(cluster_labels == i), ], 2, mean)
+  cov_mat <- cov(dat[which(cluster_labels == i), ])
+  epoints <- ellipse_points(mean_vec, cov_mat)
+  lines(epoints[,1], epoints[,2], col = "black", lwd = 2)
+}
+
+i <- 4
+dat_subset <- dat[which(cluster_labels == i), ]
+mean_vec <- apply(dat_subset, 2, mean)
+cov_mat <- cov(dat_subset)
+epoints <- ellipse_points(mean_vec, cov_mat)
+tr <- tripack::tri.mesh(epoints[-1,1], epoints[-1,2])
+zz <- tripack::in.convex.hull(tr, dat_subset[,1], dat_subset[,2])
+sum(zz)/length(zz)
+
+# after intersecting, discard all other indices in the distance matrix
 
