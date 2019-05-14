@@ -65,4 +65,30 @@ for(i in 1:3){
 
 ###############
 
+dat <- res_our[,1:vec["k"]]
+starting_cluster <- 1
+cluster_group_list = NA
+dist_mat <- .compute_cluster_distances(dat, cluster_labels)
+
+######
+
+visualization <- function(mean_vec1, cov_mat1, mean_vec2, cov_mat2){
+
+  set.seed(10)
+
+  e1 <- ellipse_points(mean_vec1, cov_mat1)
+  x1 <- MASS::mvrnorm(100, mean_vec1, cov_mat1)
+  e2 <- ellipse_points(mean_vec2, cov_mat2)
+  x2 <- MASS::mvrnorm(100, mean_vec2, cov_mat2)
+
+  points(x1[,1], x1[,2], pch = 16, asp = T, xlim = range(c(x1[,1], x2[,1])),
+       ylim = range(c(x1[,2], x2[,2])), col = rgb(0,0,0,0.2),
+       main = paste0(dist_func(mean_vec1, cov_mat1, mean_vec2, cov_mat2)))
+  points(x2[,1], x2[,2], pch = 16, col = rgb(1,0,0,0.2))
+
+  points(e1[,1], e1[,2], cex = 0.5, col = "black")
+  points(e2[,1], e2[,2], cex = 0.5, col = "red")
+
+}
+
 
