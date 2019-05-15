@@ -8,7 +8,7 @@ plot(res_our[,1], res_our[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = p
 
 cluster_labels <- rep(1:4, each = vec["n_each"])
 res <- slingshot(res_our, cluster_labels, starting_cluster = 1,
-                 use_initialization = T, reduction_percentage = 0.5)
+                 use_initialization = T, reduction_percentage = 0.2)
 
 plot(res_our[,1], res_our[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n_each"])])
 for(i in 1:2){

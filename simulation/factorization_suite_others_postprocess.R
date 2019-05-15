@@ -1,0 +1,38 @@
+rm(list=ls())
+load("../results/factorization_results_others.RData")
+
+col_func <- function(alpha){
+  c( rgb(86/255, 180/255, 233/255, alpha), #skyblue
+     rgb(240/255, 228/255, 66/255, alpha), #yellow
+     rgb(0/255, 158/255, 115/255, alpha), #bluish green
+     rgb(230/255, 159/255, 0/255,alpha)) #orange
+}
+col <- col_func(1)
+
+cluster_labels <- rep(1:4, each = paramMat[1,"n_each"])
+
+type_vec <- c("gaussian", "curved_gaussian", "zinb", "pcmf")
+for(k in 1:length(type_vec)){
+  png(paste0("../figure/simulation/factorization_", type_vec[k], "_example.png"),
+      height = 1500, width = 2000, res = 300, units = "px")
+  label_vec <- c("SVD", "ICA", "t-SNE", "Our", "ZINB-WaVE", "pCMF")
+  idx <- 1
+  par(mfrow = c(2,3), mar = c(4, 4, 4, 0.5))
+  for(i in 1:6){
+    plot(res[[k]][[idx]][[i]][,1], res[[k]][[idx]][[i]][,2],
+         asp = T, pch = 16, col = col[rep(1:4, each = paramMat[1,"n_each"])],
+         xlab = "Latent dim. 1", ylab = "Latent dim. 2",
+         main = paste0(label_vec[i]))
+
+
+    curves <- singlecell::slingshot(res[[k]][[idx]][[i]], cluster_labels,
+                                         starting_cluster = 1, verbose = F,
+                                         use_initialization = T)
+
+    for(j in 1:length(curves$curves)){
+      ord <- curves$curves[[j]]$ord
+      lines(curves$curves[[j]]$s[ord,1], curves$curves[[j]]$s[ord,2], lwd = 3, col = "white")
+      lines(curves$curves[[j]]$s[ord,1], curves$curves[[j]]$s[ord,2], lwd = 2)}
+  }
+  graphics.off()
+}

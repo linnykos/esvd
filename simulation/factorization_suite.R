@@ -21,7 +21,7 @@ rule <- function(vec){
   sigma <- vec["sigma"]
   total <- vec["total"]
 
-  res <- generate_natrual_mat(cell_pop, gene_pop, n_each, d_each, sigma)
+  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma)
   nat_mat <- res$nat_mat
 
   obs_mat <- generator_exponential(nat_mat)
