@@ -1,17 +1,23 @@
 rm(list=ls())
-load("../experiment/tmp.RData")
-paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000)
-colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
-vec <- paramMat[1,]
+load("../results/factorization_results_others.RData")
 
-plot(res_our[,1], res_our[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n_each"])])
-
-cluster_labels <- rep(1:4, each = vec["n_each"])
-res <- slingshot(res_our, cluster_labels, starting_cluster = 1,
-                 use_initialization = T, reduction_percentage = 0.2)
-
-plot(res_our[,1], res_our[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n_each"])])
-for(i in 1:2){
-  ord <- res$curves[[i]]$ord
-  lines(res$curves[[i]]$s[ord,1], res$curves[[i]]$s[ord,2], lwd = 2)
+col_func <- function(alpha){
+  c( rgb(86/255, 180/255, 233/255, alpha), #skyblue
+     rgb(240/255, 228/255, 66/255, alpha), #yellow
+     rgb(0/255, 158/255, 115/255, alpha), #bluish green
+     rgb(230/255, 159/255, 0/255,alpha)) #orange
 }
+col <- col_func(1)
+
+cluster_labels <- rep(1:4, each = paramMat[1,"n_each"])
+
+type_vec <- c("gaussian", "curved_gaussian", "zinb", "pcmf")
+k <- 1
+idx <- 1
+i <- 1
+curves <- singlecell::slingshot(res[[k]][[idx]][[i]], cluster_labels,
+                                starting_cluster = 1, verbose = F,
+                                use_initialization = T)
+
+####################
+
