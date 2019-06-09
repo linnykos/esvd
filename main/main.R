@@ -1,7 +1,7 @@
 rm(list=ls())
 set.seed(10)
 
-suffix <- "_spca"
+suffix <- ""
 family <- "gaussian"
 ncores <- 15
 
