@@ -18,7 +18,7 @@ for(i in 1:length(cluster_group_list)){
 p <- 3
 our_curves <- singlecell::slingshot(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                     cluster_group_list = cluster_group_list,
-                                    verbose = F, upscale_vec = upscale_vec, cores = ncores)
+                                    verbose = F, upscale_vec = upscale_vec)
 
 set.seed(10)
 our_bootstrap_list <- singlecell::bootstrap_curves(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
@@ -33,7 +33,7 @@ tmp <- svd(dat_impute)
 naive_embedding <- tmp$u[,1:p] %*% diag(sqrt(tmp$d[1:p]))
 naive_curves <- singlecell::slingshot(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                     cluster_group_list = cluster_group_list,
-                                    verbose = F, upscale_vec = upscale_vec, cores = ncores)
+                                    verbose = F, upscale_vec = upscale_vec)
 
 set.seed(10)
 naive_bootstrap_list <- singlecell::bootstrap_curves(naive_curves, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
