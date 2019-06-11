@@ -25,7 +25,11 @@ our_bootstrap_list <- singlecell::bootstrap_curves(res_our$u_mat[,1:p], cluster_
                                                    cluster_group_list = cluster_group_list, trials = 100,
                                                    upscale_vec = upscale_vec, cores = ncores)
 
+save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+
 our_sd_val <- singlecell::compute_curve_sd(our_curves, our_bootstrap_list)
+
+save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 #########
 
@@ -39,6 +43,8 @@ set.seed(10)
 naive_bootstrap_list <- singlecell::bootstrap_curves(naive_curves, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                                    cluster_group_list = cluster_group_list, trials = 100,
                                                    upscale_vec = upscale_vec, cores = ncores)
+
+save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 naive_sd_val <- singlecell::compute_curve_sd(naive_curves, naive_bootstrap_list)
 
