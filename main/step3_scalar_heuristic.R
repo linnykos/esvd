@@ -22,14 +22,14 @@ for(i in 1:length(scalar_vec)){
 quality_vec <- sapply(res_list, function(x){
   pred_mat <- 1/(x$u_mat %*% t(x$v_mat))
 
-  mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
+  mat <- cbind(dat_impute[missing_idx], -pred_mat[missing_idx])
 
   pca_res <- stats::princomp(mat)
-  diag_vec <- c(1,1); diag_vec <- diag_vec/.l2norm(diag_vec)
+  diag_vec <- c(1,1)
 
   # plot(mat[,1], mat[,2], asp = T, pch = 16, col = rgb(0,0,0,0.2)); lines(c(0,1e6), c(0,1e6), col = "red", lwd = 2); lines(c(0, 1e6), c(0, 1e6*pca_res$loadings[2,1]/pca_res$loadings[1,1]), col = "blue", lwd = 2, lty = 2)
 
-  acos(diag_vec %*% pca_res$loadings[,1])
+  acos(diag_vec %*% pca_res$loadings[,1] / (.l2norm(diag_vec) * .l2norm(pca_res$loadings[,1])))
 })
 
 scalar_val <- scalar_vec[which.min(quality_vec)]

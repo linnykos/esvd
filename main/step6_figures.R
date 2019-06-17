@@ -1,5 +1,21 @@
 load(paste0("../results/step5_clustering", suffix, ".RData"))
 
+idx <- which.min(quality_vec)
+pred_mat <- 1/(res_list[[idx]]$u_mat %*% t(res_list[[idx]]$v_mat))
+tmp <- cbind(pred_mat[missing_idx], dat_impute[missing_idx])
+pca_res <- princomp(tmp)
+plot(-pred_mat[missing_idx], dat_impute[missing_idx], asp = T, pch = 16,
+     col = rgb(0,0,0,0.2), main = "Our embedding",
+     xlab = "Predicted value", ylab = "Observed and masked value")
+lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
+lines(c(-1e10,1e10)*pca_res$loadings[1,1], c(-1e10,1e10)*pca_res$loadings[1,2],
+      col = "blue", lwd = 2, lty = 2)
+
+
+
+#########
+#under construction
+
 d <- 3
 dat <- res_our$u_mat[,1:d]
 
