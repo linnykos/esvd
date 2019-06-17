@@ -9,6 +9,8 @@
 *.ROut
 .ROut
 main/beta_vec
+*.RData
+.RData
 figures/*.RData
 results/*.RData
 results/old/*.RData
