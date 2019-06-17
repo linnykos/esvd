@@ -29,7 +29,7 @@ spca_func <- function(i){
   res
 }
 
-doMC::registerDoMC(cores = ncores)
+
 res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
 print(paste0(Sys.time(), ": Finished SPC"))

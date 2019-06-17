@@ -4,6 +4,7 @@ set.seed(10)
 suffix <- ""
 family <- "gaussian"
 ncores <- 15
+doMC::registerDoMC(cores = ncores)
 
 #source("../main/step0_screening.R")
 #source("../main/step1_imputing.R")

@@ -40,7 +40,7 @@ naive_curves <- singlecell::slingshot(naive_embedding, cluster_labels, starting_
                                     verbose = F, upscale_vec = upscale_vec)
 
 set.seed(10)
-naive_bootstrap_list <- singlecell::bootstrap_curves(naive_curves, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+naive_bootstrap_list <- singlecell::bootstrap_curves(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                                    cluster_group_list = cluster_group_list, trials = 100,
                                                    upscale_vec = upscale_vec, cores = ncores)
 

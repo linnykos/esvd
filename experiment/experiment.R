@@ -1,23 +1,35 @@
 rm(list=ls())
-load("../results/factorization_results_others.RData")
+set.seed(10)
 
-col_func <- function(alpha){
-  c( rgb(86/255, 180/255, 233/255, alpha), #skyblue
-     rgb(240/255, 228/255, 66/255, alpha), #yellow
-     rgb(0/255, 158/255, 115/255, alpha), #bluish green
-     rgb(230/255, 159/255, 0/255,alpha)) #orange
+suffix <- ""
+family <- "gaussian"
+ncores <- 15
+doMC::registerDoMC(cores = ncores)
+
+load(paste0("../results/step4_factorization", suffix, ".RData"))
+
+cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
+cell_type_vec <- as.factor(cell_type_vec)
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
+
+upscale_vec <- rep(NA, length(unique(cluster_labels)))
+size_vec <- sapply(cluster_group_list, function(x){length(which(cluster_labels %in% x))})
+for(i in 1:length(cluster_group_list)){
+  upscale_vec[cluster_group_list[[i]]] <- (max(size_vec)/size_vec[i])^(1/2)
 }
-col <- col_func(1)
 
-cluster_labels <- rep(1:4, each = paramMat[1,"n_each"])
+p <- 3
+tmp <- svd(dat_impute)
+naive_embedding <- tmp$u[,1:p] %*% diag(sqrt(tmp$d[1:p]))
+naive_curves <- singlecell::slingshot(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                                      cluster_group_list = cluster_group_list,
+                                      verbose = F, upscale_vec = upscale_vec)
 
-type_vec <- c("gaussian", "curved_gaussian", "zinb", "pcmf")
-k <- 1
-idx <- 1
-i <- 1
-curves <- singlecell::slingshot(res[[k]][[idx]][[i]], cluster_labels,
-                                starting_cluster = 1, verbose = F,
-                                use_initialization = T)
+##########
 
-####################
+dat <- naive_curves
 
