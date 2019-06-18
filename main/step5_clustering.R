@@ -48,7 +48,7 @@ save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 naive_sd_val <- singlecell::compute_curve_sd(naive_curves, naive_bootstrap_list)
 
-rm(list = c("cell_type_vec", "tmp"))
+rm(list = c("tmp"))
 print(paste0(Sys.time(), ": Finished clustering"))
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 

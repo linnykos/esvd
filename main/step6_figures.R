@@ -10,11 +10,13 @@ x_val <- seq(1, 1e5, length.out = 100)
 y_val_top <- sapply(x_val, function(x){stats::qnorm(0.75, mean = x, sd = x/scalar_val)})
 y_val_bottom <- sapply(x_val, function(x){stats::qnorm(0.25, mean = x, sd = x/scalar_val)})
 
+png("../figure/main/esvd_diagnostic.png", height = 1200, width = 1100, res = 300, units = "px")
 plot(NA, asp = T, pch = 16,
      xlim = c(0, max(c(-pred_mat[missing_idx], dat_impute[missing_idx]))),
      ylim = c(0, max(c(-pred_mat[missing_idx], dat_impute[missing_idx]))),
-     main = "eSVD embedding (Curved Gaussian)",
-     xlab = "Predicted value", ylab = "Observed but masked value")
+     main = "eSVD embedding:\nMatrix-completion diagnostic",
+     xlab = "Predicted value", ylab = "Observed but masked value",
+     cex.lab = 1.25, cex.axis = 1.25)
 
 polygon(c(x_val, rev(x_val)), c(y_val_top, rev(y_val_bottom)), col = rgb(1,0,0,0.2),
         border = NA, density = 30, angle = -45)
@@ -36,7 +38,7 @@ x_circ <- rad * cos(radian_seq)
 y_circ <- rad * sin(radian_seq)
 lines(x_circ, y_circ, lty = 2)
 text(x = 500, y = 200, pos = 4, label = paste0(round(ang * 180/pi, 1), " degrees"))
-
+graphics.off()
 
 ######################################
 
@@ -49,11 +51,13 @@ sd_val <- stats::sd(pred_naive[-missing_idx] - dat_impute[-missing_idx])
 y_val_top <- sapply(x_val, function(x){stats::qnorm(0.9, mean = x, sd = sd_val)})
 y_val_bottom <- sapply(x_val, function(x){stats::qnorm(0.1, mean = x, sd = sd_val)})
 
+png("../figure/main/svd_diagnostic.png", height = 1200, width = 1100, res = 300, units = "px")
 plot(NA, asp = T, pch = 16,
      xlim = c(0, max(c(pred_naive[missing_idx], dat_impute[missing_idx]))),
      ylim = c(0, max(c(pred_naive[missing_idx], dat_impute[missing_idx]))),
-     main = "SVD embedding\n(Constant-variance Gaussian)",
-     xlab = "Predicted value", ylab = "Observed but masked value")
+     main = "SVD embedding:\nMatrix-completion diagnostic",
+     xlab = "Predicted value", ylab = "Observed but masked value",
+     cex.lab = 1.25, cex.axis = 1.25)
 
 polygon(c(x_val, rev(x_val)), c(y_val_top, rev(y_val_bottom)), col = rgb(1,0,0,0.2),
         border = NA, density = 30, angle = -45)
@@ -75,11 +79,36 @@ x_circ <- rad * cos(radian_seq)
 y_circ <- rad * sin(radian_seq)
 lines(x_circ, y_circ, lty = 2)
 text(x = 500, y = 200, pos = 4, label = paste0(round(ang * 180/pi, 1), " degrees"))
+graphics.off()
+
+###################
+
+color_func <- function(alpha = 0.2){
+  c(rgb(240/255, 228/255, 66/255, alpha), #yellow
+    rgb(86/255, 180/255, 233/255, alpha), #skyblue
+    rgb(0/255, 158/255, 115/255, alpha), #bluish green
+    rgb(0/255, 114/255, 178/255,alpha), #blue
+    rgb(230/255, 159/255, 0/255,alpha)) #orange
+}
+
+svd_res <- svd(dat_impute)
+svd_u <- svd_res$u[,1:p] %*% diag(sqrt(svd_res$d[1:p]))
+
+col_vec <- color_func(1)[c(5, rep(3,2), rep(2,2), rep(1,6), rep(5,2))]
+col_name <- c("orange", rep("bluish green", 2), rep("skyblue", 2), rep("yellow", 6), rep("orange", 2))
+cbind(levels(cell_type_vec), sort(unique(cluster_labels)), col_name, col_vec)
+
+png("../figure/main/svd_embedding_23.png", height = 1200, width = 1100, res = 300, units = "px")
+plot(svd_u[,2], svd_u[,3], asp = T, pch = 16, col = col_vec[cluster_labels],
+     cex = 0.75, xlab = "Latent dimension 2", ylab = "Latent dimension 3",
+     main = "SVD embedding\n(Constant-variance Gaussian)",
+     cex.lab = 1.25, cex.axis = 1.25)
+graphics.off()
 
 #########
 #under construction
 
-d <- 3
+
 dat <- res_our$u_mat[,1:d]
 
 cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
