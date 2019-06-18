@@ -19,8 +19,9 @@ dat <- dat[,which(zz > 30)]
 
 # try a series of SPCAs
 k <- 5
-lvls <- 20
-v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
+lvls <- 5
+# v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
+vseq <- seq(1, 3, length.out = 5)
 res_list <- vector("list", lvls)
 
 spca_func <- function(i){
