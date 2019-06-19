@@ -6,7 +6,7 @@ source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000)
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
-trials <- 5
+trials <- 200
 
 ################
 
@@ -50,7 +50,7 @@ criterion <- function(dat, vec, y){
                                       starting_cluster = 1,
                                       verbose = F)
 
-  print("fin1")
+  #print("fin1")
 
   # ICA
   tmp <- ica::icafast(dat$dat, nc = vec["k"])
@@ -59,7 +59,7 @@ criterion <- function(dat, vec, y){
                                       starting_cluster = 1,
                                       verbose = F)
 
-  print("fin2")
+  #print("fin2")
 
   # tsne
   tmp <- Rtsne::Rtsne(dat$dat, perplexity = 30)
@@ -68,16 +68,16 @@ criterion <- function(dat, vec, y){
                                        starting_cluster = 1,
                                        verbose = F)
 
-  print("fin2b")
+  #print("fin2b")
 
-  # Our method
+  # # Our method
   set.seed(10)
   init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
   tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                family = "gaussian",  reparameterize = T,
                                max_iter = 100, max_val = vec["max_val"],
                                scalar = vec["scalar"],
-                               return_path = F, cores = 1,
+                               return_path = F, cores = NA,
                                verbose = F)
 
   res_our <- tmp$u_mat
@@ -85,7 +85,7 @@ criterion <- function(dat, vec, y){
                                       starting_cluster = 1,
                                       verbose = F)
 
-  print("fin3")
+  #print("fin3")
 
   # zinb-wave
   set.seed(10)
@@ -96,7 +96,7 @@ criterion <- function(dat, vec, y){
                                        starting_cluster = 1,
                                        verbose = F)
 
-  print("fin4")
+  #print("fin4")
 
   # pcmf
   set.seed(10)
@@ -106,13 +106,13 @@ criterion <- function(dat, vec, y){
                                        starting_cluster = 1,
                                        verbose = F)
 
-  print("fin5")
+  #print("fin5")
 
   curves_truth <- singlecell::slingshot(dat$truth, cluster_labels,
                                         starting_cluster = 1,
                                         verbose = F)
 
-  print("fin6")
+  #print("fin6")
 
   list(res_svd = res_svd, curves_svd = curves_svd,
        res_ica = res_ica, curves_ica = curves_ica,
@@ -133,7 +133,7 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = 15, as_list = T,
+                                        cores = NA, as_list = T,
                                         filepath = "../results/factorization_results_tmp.RData",
                                         verbose = T)
 
