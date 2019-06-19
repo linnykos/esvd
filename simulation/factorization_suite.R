@@ -1,11 +1,12 @@
 rm(list=ls())
 library(simulation)
 library(singlecell)
+library(Rtsne); library(pCMF); library(zinbwave); library(SummarizedExperiment)
 source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000)
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
-trials <- 200
+trials <- 1
 
 ################
 
@@ -49,12 +50,16 @@ criterion <- function(dat, vec, y){
                                       starting_cluster = 1,
                                       verbose = F)
 
+  print("fin1")
+
   # ICA
   tmp <- ica::icafast(dat$dat, nc = vec["k"])
   res_ica <- tmp$S
   curves_ica <- singlecell::slingshot(res_ica[,1:vec["k"]], cluster_labels,
                                       starting_cluster = 1,
                                       verbose = F)
+
+  print("fin2")
 
   # tsne
   tmp <- Rtsne::Rtsne(dat$dat, perplexity = 30)
@@ -72,10 +77,13 @@ criterion <- function(dat, vec, y){
                                scalar = vec["scalar"],
                                return_path = F, cores = 1,
                                verbose = F)
+
   res_our <- tmp$u_mat
   curves_our <- singlecell::slingshot(res_our[,1:vec["k"]], cluster_labels,
                                       starting_cluster = 1,
                                       verbose = F)
+
+  print("fin3")
 
   # zinb-wave
   set.seed(10)
@@ -86,6 +94,8 @@ criterion <- function(dat, vec, y){
                                        starting_cluster = 1,
                                        verbose = F)
 
+  print("fin4")
+
   # pcmf
   set.seed(10)
   tmp <- pCMF::pCMF(dat$dat, K = vec["k"], sparsity = F, verbose = F)
@@ -94,9 +104,13 @@ criterion <- function(dat, vec, y){
                                        starting_cluster = 1,
                                        verbose = F)
 
+  print("fin5")
+
   curves_truth <- singlecell::slingshot(dat$truth, cluster_labels,
                                         starting_cluster = 1,
                                         verbose = F)
+
+  print("fin6")
 
   list(res_svd = res_svd, curves_svd = curves_svd,
        res_ica = res_ica, curves_ica = curves_ica,
