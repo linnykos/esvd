@@ -22,7 +22,7 @@ dat <- dat[,which(zz > 30)]
 k <- 5
 lvls <- 5
 # v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
-v_seq <- seq(1, 3, length.out = 5)
+v_seq <- seq(1, 3, length.out = lvls)
 res_list <- vector("list", lvls)
 
 spca_func <- function(i){

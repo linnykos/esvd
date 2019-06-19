@@ -35,7 +35,7 @@ rule <- function(vec){
   # quantile(obs_mat3, probs = seq(0,1,length.out=11))
   # length(which(obs_mat3 == 0))/prod(dim(obs_mat3))
 
-  list(dat = obs_mat3, truth = cell_mat)
+  list(dat = obs_mat3, truth = res$cell_mat)
 }
 
 criterion <- function(dat, vec, y){
