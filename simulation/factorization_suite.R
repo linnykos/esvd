@@ -5,7 +5,7 @@ source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000)
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
-trials <- 50
+trials <- 200
 
 ################
 
@@ -31,7 +31,7 @@ rule <- function(vec){
   # length(which(obs_mat2 == 0))/prod(dim(obs_mat2))
 
   # now do something more dramatic with dropout
-  obs_mat3 <- generate_dropout(obs_mat2)
+  obs_mat3 <- generate_dropout(obs_mat2, total = total)
   # quantile(obs_mat3, probs = seq(0,1,length.out=11))
   # length(which(obs_mat3 == 0))/prod(dim(obs_mat3))
 
