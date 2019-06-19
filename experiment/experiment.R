@@ -1,35 +1,85 @@
 rm(list=ls())
-set.seed(10)
+library(simulation)
+library(singlecell)
+library(Rtsne); library(pCMF); library(zinbwave); library(SummarizedExperiment)
+source("../simulation/factorization_generator.R")
 
-suffix <- ""
-family <- "gaussian"
-ncores <- 15
-doMC::registerDoMC(cores = ncores)
+paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000)
+colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
+trials <- 1
 
-load(paste0("../results/step4_factorization", suffix, ".RData"))
+################
 
-cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
-cell_type_vec <- as.factor(cell_type_vec)
-cluster_labels <- as.numeric(cell_type_vec)
-order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
-cluster_group_list <- lapply(order_vec, function(x){
-  grep(paste0("^", x), levels(cell_type_vec))
-})
+cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
+                     40,10, 60,80, 60,80, 100, 25)/10,
+                   nrow = 4, ncol = 4, byrow = T)
+gene_pop <- matrix(c(20,90, 25,100,
+                     90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
 
-upscale_vec <- rep(NA, length(unique(cluster_labels)))
-size_vec <- sapply(cluster_group_list, function(x){length(which(cluster_labels %in% x))})
-for(i in 1:length(cluster_group_list)){
-  upscale_vec[cluster_group_list[[i]]] <- (max(size_vec)/size_vec[i])^(1/2)
+rule <- function(vec){
+  n_each <- vec["n_each"]
+  d_each <- vec["d_each"]
+  sigma <- vec["sigma"]
+  total <- vec["total"]
+
+  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma)
+  nat_mat <- res$nat_mat
+
+  obs_mat <- generator_exponential(nat_mat)
+  obs_mat2 <- round(100*obs_mat)
+
+  # quantile(obs_mat2, probs = seq(0,1,length.out=11))
+  # length(which(obs_mat2 == 0))/prod(dim(obs_mat2))
+
+  # now do something more dramatic with dropout
+  obs_mat3 <- generate_dropout(obs_mat2, total = total)
+  # quantile(obs_mat3, probs = seq(0,1,length.out=11))
+  # length(which(obs_mat3 == 0))/prod(dim(obs_mat3))
+
+  list(dat = obs_mat3, truth = res$cell_mat)
 }
 
-p <- 3
-tmp <- svd(dat_impute)
-naive_embedding <- tmp$u[,1:p] %*% diag(sqrt(tmp$d[1:p]))
-naive_curves <- singlecell::slingshot(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                                      cluster_group_list = cluster_group_list,
-                                      verbose = F, upscale_vec = upscale_vec)
+set.seed(1)
+vec <- paramMat[1,]
+dat <- rule(vec)
+set.seed(10)
+init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
 
-##########
+################
 
-dat <- naive_curves
+dat = dat$dat
+family = "gaussian"
+k = vec["k"]
+max_val = vec["max_val"]
+tol = 1e-3
+verbose = F
+
+direction <- .dictate_direction(family)
+
+# initialize
+dat <- .matrix_completion(dat, k = k)
+if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
+
+# projected gradient descent
+# pred_mat <- .projected_gradient_descent(dat, k = k, max_val = max_val,
+#                                         direction = direction,
+#                                         max_iter = max_iter,
+#                                         tol = tol)
+
+n <- nrow(dat); d <- ncol(dat)
+pred_mat <- .determine_initial_matrix(dat, class(dat)[1], k = k, max_val = max_val)
+
+######
+
+min_val <- min(dat[which(dat > 0)])
+dat[which(dat <= 0)] <- min_val/2
+pred_mat <- .mean_transformation(dat, family)
+direction <- .dictate_direction(family)
+
+class(pred_mat) <- "matrix" #bookeeping purposes
+.nonnegative_matrix_factorization(pred_mat, k = k, direction = direction,
+                                  max_val = max_val)
+
+##############
+
 

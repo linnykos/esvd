@@ -1,5 +1,6 @@
 rm(list=ls())
 set.seed(10)
+library(NMF)
 
 suffix <- ""
 family <- "gaussian"

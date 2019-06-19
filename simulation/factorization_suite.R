@@ -1,7 +1,7 @@
 rm(list=ls())
 library(simulation)
 library(singlecell)
-library(Rtsne); library(pCMF); library(zinbwave); library(SummarizedExperiment)
+library(NMF)
 source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000)
@@ -67,6 +67,8 @@ criterion <- function(dat, vec, y){
   curves_tsne <- singlecell::slingshot(res_tsne[,1:vec["k"]], cluster_labels,
                                        starting_cluster = 1,
                                        verbose = F)
+
+  print("fin2b")
 
   # Our method
   set.seed(10)
