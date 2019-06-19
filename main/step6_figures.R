@@ -94,9 +94,11 @@ color_func <- function(alpha = 0.2){
 svd_res <- svd(dat_impute)
 svd_u <- svd_res$u[,1:p] %*% diag(sqrt(svd_res$d[1:p]))
 
-col_vec <- color_func(1)[c(5, rep(3,2), rep(2,2), rep(1,6), rep(5,2))]
-col_name <- c("orange", rep("bluish green", 2), rep("skyblue", 2), rep("yellow", 6), rep("orange", 2))
-cbind(levels(cell_type_vec), sort(unique(cluster_labels)), col_name, col_vec)
+col_vec <- color_func(1)[c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))]
+col_name <- c("orange", rep("bluish green", 2), rep("yellow", 6), rep("skyblue", 2), rep("orange", 2))
+cbind(levels(cell_type_vec), sort(unique(cluster_labels)),
+      sapply(1:13, function(y){which(sapply(cluster_group_list, function(x){y %in% x}))}),
+      col_name, col_vec)
 
 png("../figure/main/svd_embedding_23.png", height = 1200, width = 1100, res = 300, units = "px")
 plot(svd_u[,2], svd_u[,3], asp = T, pch = 16, col = col_vec[cluster_labels],
@@ -104,6 +106,13 @@ plot(svd_u[,2], svd_u[,3], asp = T, pch = 16, col = col_vec[cluster_labels],
      main = "SVD embedding\n(Constant-variance Gaussian)",
      cex.lab = 1.25, cex.axis = 1.25)
 graphics.off()
+
+##################
+
+plot(res_our$u_mat[,1], res_our$u_mat[,2], asp = T, pch = 16, col = col_vec[cluster_labels],
+     cex = 0.75, xlab = "Latent dimension 2", ylab = "Latent dimension 3",
+     main = "eSVD embedding\n(Curved Gaussian)",
+     cex.lab = 1.25, cex.axis = 1.25)
 
 #########
 #under construction

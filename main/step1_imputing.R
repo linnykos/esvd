@@ -5,7 +5,7 @@ res_hvg <- descend::findHVG(res_descend, threshold = 50)
 length(res_hvg$HVG.genes)
 
 # cbind(v_seq, t(sapply(res_list, function(x){c(length(unique(sort(unlist(apply(x$v, 2, function(y){which(y != 0)}))))), x$prop.var.explained[5])})))
-idx1 <- sort(unlist(apply(res_list[[9]]$v, 2, function(x){which(x != 0)})))
+idx1 <- sort(unlist(apply(res_list[[4]]$v, 2, function(x){which(x != 0)})))
 idx2 <- which(colnames(dat) %in% res_hvg$HVG.genes)
 idx <- sort(unique(c(idx1, idx2)))
 dat <- dat[,idx]
@@ -35,6 +35,6 @@ dim(dat_impute)
 # singlecell:::.plot_singlecell(dat_impute)
 # graphics.off()
 
-rm(list = c("idx1", "idx2", "idx", "res_descend", "res_list", "v_seq", "k", "tmp"))
+rm(list = c("idx1", "idx2", "idx", "res_descend", "res_list", "k", "tmp"))
 print(paste0(Sys.time(), ": Finished imputing"))
 save.image(paste0("../results/step1_imputing", suffix, ".RData"))
