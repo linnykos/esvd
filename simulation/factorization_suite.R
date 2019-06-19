@@ -6,7 +6,7 @@ source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000)
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
-trials <- 1
+trials <- 5
 
 ################
 
