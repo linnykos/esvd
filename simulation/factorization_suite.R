@@ -117,7 +117,7 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = 1, as_list = T,
+                                        cores = 15, as_list = T,
                                         filepath = "../results/factorization_results_tmp.RData",
                                         verbose = T)
 
