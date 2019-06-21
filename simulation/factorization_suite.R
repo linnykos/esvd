@@ -50,7 +50,7 @@ criterion <- function(dat, vec, y){
                                       starting_cluster = 1,
                                       verbose = F)
 
-  #print("fin1")
+  print("fin1")
 
   # ICA
   tmp <- ica::icafast(dat$dat, nc = vec["k"])
@@ -59,7 +59,7 @@ criterion <- function(dat, vec, y){
                                       starting_cluster = 1,
                                       verbose = F)
 
-  #print("fin2")
+  print("fin2")
 
   # tsne
   tmp <- Rtsne::Rtsne(dat$dat, perplexity = 30)
@@ -68,7 +68,7 @@ criterion <- function(dat, vec, y){
                                        starting_cluster = 1,
                                        verbose = F)
 
-  #print("fin2b")
+  print("fin3")
 
   # # Our method
   set.seed(10)
@@ -85,7 +85,7 @@ criterion <- function(dat, vec, y){
                                       starting_cluster = 1,
                                       verbose = F)
 
-  #print("fin3")
+  print("fin4")
 
   # zinb-wave
   set.seed(10)
@@ -96,7 +96,7 @@ criterion <- function(dat, vec, y){
                                        starting_cluster = 1,
                                        verbose = F)
 
-  #print("fin4")
+  print("fin5")
 
   # pcmf
   set.seed(10)
@@ -106,13 +106,13 @@ criterion <- function(dat, vec, y){
                                        starting_cluster = 1,
                                        verbose = F)
 
-  #print("fin5")
+  print("fin6")
 
   curves_truth <- singlecell::slingshot(dat$truth, cluster_labels,
                                         starting_cluster = 1,
                                         verbose = F)
 
-  #print("fin6")
+  print("fin7")
 
   list(res_svd = res_svd, curves_svd = curves_svd,
        res_ica = res_ica, curves_ica = curves_ica,
