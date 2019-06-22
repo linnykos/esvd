@@ -23,7 +23,7 @@ png("../figure/simulation/factorization_density.png",
 label_vec <- c("SVD", "ICA", "t-SNE", "Our", "ZINB-WaVE", "pCMF")
 par(mfrow = c(2,3), mar = c(4, 4, 4, 0.5))
 for(i in 1:6){
-  hist(res_mat[i,], xlim = c(0, 1), breaks = seq(0, 1, length.out = 21), col = "gray",
+  hist(res_mat[i,], xlim = c(min(res_mat), 1), breaks = seq(0, 1, length.out = 21), col = "gray",
        xlab = "Kendall's tau correlation", ylab = "Count",
        main = paste0(label_vec[i], ": (", round(median(res_mat[i,]), 2), ")"))
   lines(rep(median(res_mat[i,]), 2), c(0, 100), col = "red", lwd = 2, lty = 2)
