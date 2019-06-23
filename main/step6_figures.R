@@ -1,5 +1,15 @@
 load(paste0("../results/step5_clustering", suffix, ".RData"))
 
+color_func <- function(alpha = 0.2){
+  c(rgb(240/255, 228/255, 66/255, alpha), #yellow
+    rgb(86/255, 180/255, 233/255, alpha), #skyblue
+    rgb(0/255, 158/255, 115/255, alpha), #bluish green
+    rgb(0/255, 114/255, 178/255,alpha), #blue
+    rgb(230/255, 159/255, 0/255,alpha)) #orange
+}
+
+######################################################
+
 # diagnostic of eSVD
 idx <- which.min(quality_vec)
 pred_mat <- 1/(res_list[[idx]]$u_mat %*% t(res_list[[idx]]$v_mat))
@@ -81,15 +91,7 @@ lines(x_circ, y_circ, lty = 2)
 text(x = 500, y = 200, pos = 4, label = paste0(round(ang * 180/pi, 1), " degrees"))
 graphics.off()
 
-###################
-
-color_func <- function(alpha = 0.2){
-  c(rgb(240/255, 228/255, 66/255, alpha), #yellow
-    rgb(86/255, 180/255, 233/255, alpha), #skyblue
-    rgb(0/255, 158/255, 115/255, alpha), #bluish green
-    rgb(0/255, 114/255, 178/255,alpha), #blue
-    rgb(230/255, 159/255, 0/255,alpha)) #orange
-}
+##################
 
 svd_res <- svd(dat_impute)
 svd_u <- svd_res$u[,1:p] %*% diag(sqrt(svd_res$d[1:p]))
@@ -109,10 +111,28 @@ graphics.off()
 
 ##################
 
-plot(res_our$u_mat[,1], res_our$u_mat[,2], asp = T, pch = 16, col = col_vec[cluster_labels],
-     cex = 0.75, xlab = "Latent dimension 2", ylab = "Latent dimension 3",
+# latent embedding
+col_vec <- color_func(1)[c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))]
+col_name <- c("orange", rep("bluish green", 2), rep("yellow", 6), rep("skyblue", 2), rep("orange", 2))
+cbind(levels(cell_type_vec), sort(unique(cluster_labels)),
+      sapply(1:13, function(y){which(sapply(cluster_group_list, function(x){y %in% x}))}),
+      col_name, col_vec)
+
+par(mfrow = c(1,2))
+plot(res_our$u_mat[,1], res_our$u_mat[,3], asp = T, pch = 16, col = col_vec[cluster_labels],
+     cex = 0.75, xlab = "Latent dimension 1", ylab = "Latent dimension 3",
      main = "eSVD embedding\n(Curved Gaussian)",
      cex.lab = 1.25, cex.axis = 1.25)
+
+# violin plot
+# construct a custom data frame
+tmp_df <- data.frame(val = res_our$u_mat[,1], type = sapply(1:13, function(y){which(sapply(cluster_group_list, function(x){y %in% x}))})[cluster_labels])
+vioplot::vioplot(tmp_df$val[tmp_df$type == 1],
+                 tmp_df$val[tmp_df$type == 2],
+                 tmp_df$val[tmp_df$type == 3],
+                 tmp_df$val[tmp_df$type == 4],
+                 tmp_df$val[tmp_df$type == 5],
+                 tmp_df$val[tmp_df$type == 6])
 
 #########
 #under construction

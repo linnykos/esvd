@@ -3,10 +3,10 @@ library(simulation)
 library(singlecell)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000, c(1:4))
+paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000, 1)
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val",
                         "generation_type")
-trials <- 50
+trials <- 200
 
 ################
 
@@ -45,66 +45,81 @@ criterion <- function(dat, vec, y){
   # SVD
   tmp <- svd(dat$dat)
   res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
-  # curves_svd <- singlecell::slingshot(res_svd[,1:vec["k"]], cluster_labels,
-  #                                     starting_cluster = 1,
-  #                                     verbose = F)
+  curves_svd <- singlecell::slingshot(res_svd[,1:vec["k"]], cluster_labels,
+                                      starting_cluster = 1,
+                                      verbose = F)
+
+  # print("fin1")
 
   # ICA
   tmp <- ica::icafast(dat$dat, nc = vec["k"])
   res_ica <- tmp$S
-  # curves_ica <- singlecell::slingshot(res_ica[,1:vec["k"]], cluster_labels,
-  #                                     starting_cluster = 1,
-  #                                     verbose = F)
+  curves_ica <- singlecell::slingshot(res_ica[,1:vec["k"]], cluster_labels,
+                                      starting_cluster = 1,
+                                      verbose = F)
+
+  # print("fin2")
 
   # tsne
   tmp <- Rtsne::Rtsne(dat$dat, perplexity = 30)
   res_tsne <- tmp$Y
-  # curves_tsne <- singlecell::slingshot(res_tsne[,1:vec["k"]], cluster_labels,
-  #                                      starting_cluster = 1,
-  #                                      verbose = F)
+  curves_tsne <- singlecell::slingshot(res_tsne[,1:vec["k"]], cluster_labels,
+                                       starting_cluster = 1,
+                                       verbose = F)
 
-  # Our method
+  # print("fin3")
+
+  # # Our method
   set.seed(10)
   init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
   tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                        family = "gaussian",  reparameterize = T,
                                        max_iter = 100, max_val = vec["max_val"],
                                        scalar = vec["scalar"],
-                                       return_path = F, cores = 1,
+                                       return_path = F, cores = NA,
                                        verbose = F)
+
   res_our <- tmp$u_mat
-  # curves_our <- singlecell::slingshot(res_our[,1:vec["k"]], cluster_labels,
-  #                                     starting_cluster = 1,
-  #                                     verbose = F)
+  curves_our <- singlecell::slingshot(res_our[,1:vec["k"]], cluster_labels,
+                                      starting_cluster = 1,
+                                      verbose = F)
+
+  # print("fin4")
 
   # zinb-wave
   set.seed(10)
   dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat$dat)))
   tmp <- zinbwave::zinbwave(dat_se, K = vec["k"], maxiter.optimize = 100)
   res_zinb <- tmp@reducedDims$zinbwave
-  # curves_zinb <- singlecell::slingshot(res_zinb[,1:vec["k"]], cluster_labels,
-  #                                      starting_cluster = 1,
-  #                                      verbose = F)
+  curves_zinb <- singlecell::slingshot(res_zinb[,1:vec["k"]], cluster_labels,
+                                       starting_cluster = 1,
+                                       verbose = F)
+
+  # print("fin5")
 
   # pcmf
   set.seed(10)
   tmp <- pCMF::pCMF(dat$dat, K = vec["k"], sparsity = F, verbose = F)
   res_pcmf <- tmp$factor$U
-  # curves_pcmf <- singlecell::slingshot(res_pcmf[,1:2], cluster_labels,
-  #                                      starting_cluster = 1,
-  #                                      verbose = F)
+  curves_pcmf <- singlecell::slingshot(res_pcmf[,1:2], cluster_labels,
+                                       starting_cluster = 1,
+                                       verbose = F)
 
-  # curves_truth <- singlecell::slingshot(dat$truth, cluster_labels,
-  #                                       starting_cluster = 1,
-  #                                       verbose = F)
+  # print("fin6")
 
-  list(res_svd = res_svd, #curves_svd = curves_svd,
-       res_ica = res_ica, #curves_ica = curves_ica,
-       res_tsne = res_tsne, #curves_tsne = curves_tsne,
-       res_our = res_our, #curves_our = curves_our,
-       res_zinb = res_zinb, #curves_zinb = curves_zinb,
-       res_pcmf = res_pcmf, #curves_pcmf = curves_pcmf,
-       #curves_truth = curves_truth,
+  curves_truth <- singlecell::slingshot(dat$truth, cluster_labels,
+                                        starting_cluster = 1,
+                                        verbose = F)
+
+  # print("fin7")
+
+  list(res_svd = res_svd, curves_svd = curves_svd,
+       res_ica = res_ica, curves_ica = curves_ica,
+       res_tsne = res_tsne, curves_tsne = curves_tsne,
+       res_our = res_our, curves_our = curves_our,
+       res_zinb = res_zinb, curves_zinb = curves_zinb,
+       res_pcmf = res_pcmf, curves_pcmf = curves_pcmf,
+       curves_truth = curves_truth,
        dat = dat)
 }
 
@@ -117,8 +132,8 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = 1, as_list = T,
-                                        filepath = "../results/factorization_results_others_tmp.RData",
+                                        cores = NA, as_list = T,
+                                        filepath = "../results/factorization_results_others_tmp_gen1.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_others.RData")
+save.image("../results/factorization_results_others_gen1.RData")
