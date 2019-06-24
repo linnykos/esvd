@@ -1,4 +1,5 @@
-load(paste0("../results/step5_clustering", suffix, ".RData"))
+# load(paste0("../results/step5_clustering", suffix, ".RData"))
+load(paste0("../results/old_results/step5_clustering_spca.RData"))
 
 color_func <- function(alpha = 0.2){
   c(rgb(240/255, 228/255, 66/255, alpha), #yellow
@@ -7,6 +8,8 @@ color_func <- function(alpha = 0.2){
     rgb(0/255, 114/255, 178/255,alpha), #blue
     rgb(230/255, 159/255, 0/255,alpha)) #orange
 }
+cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
+cell_type_vec <- as.factor(cell_type_vec)
 
 ######################################################
 
@@ -98,41 +101,47 @@ svd_u <- svd_res$u[,1:p] %*% diag(sqrt(svd_res$d[1:p]))
 
 col_vec <- color_func(1)[c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))]
 col_name <- c("orange", rep("bluish green", 2), rep("yellow", 6), rep("skyblue", 2), rep("orange", 2))
-cbind(levels(cell_type_vec), sort(unique(cluster_labels)),
-      sapply(1:13, function(y){which(sapply(cluster_group_list, function(x){y %in% x}))}),
-      col_name, col_vec)
+col_info <- data.frame(name = levels(cell_type_vec),
+                       idx = sort(unique(cluster_labels)),
+                       level = sapply(1:13, function(y){which(sapply(cluster_group_list, function(x){y %in% x}))}),
+                       col_name = col_name,
+                       col_code = col_vec)
+col_info
 
-png("../figure/main/svd_embedding_23.png", height = 1200, width = 1100, res = 300, units = "px")
-plot(svd_u[,2], svd_u[,3], asp = T, pch = 16, col = col_vec[cluster_labels],
-     cex = 0.75, xlab = "Latent dimension 2", ylab = "Latent dimension 3",
-     main = "SVD embedding\n(Constant-variance Gaussian)",
-     cex.lab = 1.25, cex.axis = 1.25)
-graphics.off()
+png("../figure/main/svd_preview.png", height = 1200, width = 2200, res = 300, units = "px")
+par(mfrow = c(1,2), mar = c(5,6,4,2))
 
-##################
+scaling_vec <- -svd_res$v[,2]
+scaling_vec <- (scaling_vec-min(scaling_vec))/(max(scaling_vec)-min(scaling_vec))
+scaling_vec <- scaling_vec/sum(scaling_vec)
+val <- dat_impute %*% scaling_vec
+tmp_df <- data.frame(val = val, type = sapply(1:13, function(y){which(sapply(cluster_group_list, function(x){y %in% x}))})[cluster_labels])
 
-# latent embedding
-col_vec <- color_func(1)[c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))]
-col_name <- c("orange", rep("bluish green", 2), rep("yellow", 6), rep("skyblue", 2), rep("orange", 2))
-cbind(levels(cell_type_vec), sort(unique(cluster_labels)),
-      sapply(1:13, function(y){which(sapply(cluster_group_list, function(x){y %in% x}))}),
-      col_name, col_vec)
-
-par(mfrow = c(1,2))
-plot(res_our$u_mat[,1], res_our$u_mat[,3], asp = T, pch = 16, col = col_vec[cluster_labels],
-     cex = 0.75, xlab = "Latent dimension 1", ylab = "Latent dimension 3",
-     main = "eSVD embedding\n(Curved Gaussian)",
-     cex.lab = 1.25, cex.axis = 1.25)
-
-# violin plot
-# construct a custom data frame
-tmp_df <- data.frame(val = res_our$u_mat[,1], type = sapply(1:13, function(y){which(sapply(cluster_group_list, function(x){y %in% x}))})[cluster_labels])
 vioplot::vioplot(tmp_df$val[tmp_df$type == 1],
                  tmp_df$val[tmp_df$type == 2],
                  tmp_df$val[tmp_df$type == 3],
                  tmp_df$val[tmp_df$type == 4],
                  tmp_df$val[tmp_df$type == 5],
-                 tmp_df$val[tmp_df$type == 6])
+                 tmp_df$val[tmp_df$type == 6],
+                 col = sapply(1:6, function(x){unique(col_info$col_code[which(col_info$level == x)])}),
+                 pchMed = 21,
+                 colMed = "black", colMed2 = "white",
+                 xlab = "", names = rep("", 6))
+title(ylab = "(Rescaled) Expression of\n2nd eigen-gene",
+      main = "Average gene expression\nper cell type", cex.lab = 1.25)
+text(1:6, par("usr")[3]-2,
+     srt = -45, xpd = TRUE,
+     labels = c("Pdgfra+", "OPC", "COP", "NFOL", "MFOL", "MOL"), cex=1)
+
+par(mar = c(5,4,4,2))
+set.seed(10)
+idx <- sample(1:nrow(svd_u))
+plot(-svd_u[idx,2], svd_u[idx,3], asp = T, pch = 16, col = col_vec[cluster_labels][idx],
+     cex = 0.75, xlab = "Latent dimension 2", ylab = "Latent dimension 3",
+     main = "SVD embedding\n(Constant-variance Gaussian)",
+     cex.lab = 1.25, cex.axis = 1.25)
+graphics.off()
+
 
 #########
 #under construction

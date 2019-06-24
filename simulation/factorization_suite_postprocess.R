@@ -17,6 +17,7 @@ for(i in 1:trials){
     }))
   }
 }
+res_mat <- res_mat[c(4,1,2,3,5,6),]
 
 num_mat <- matrix(NA, 6, trials)
 for(i in 1:trials){
@@ -25,17 +26,17 @@ for(i in 1:trials){
   }
 }
 
-png("../figure/simulation/factorization_density.png",
-    height = 1200, width = 2000, res = 300, units = "px")
-label_vec <- c("SVD", "ICA", "t-SNE", "Our", "ZINB-WaVE", "pCMF")
-par(mfrow = c(2,3), mar = c(4, 4, 4, 0.5))
-for(i in 1:6){
-  hist(res_mat[i,], xlim = c(min(res_mat), 1), breaks = seq(min(res_mat), 1, length.out = 21), col = "gray",
-       xlab = "Kendall's tau correlation", ylab = "Count",
-       main = paste0(label_vec[i], ": (", round(median(res_mat[i,]), 2), ")"))
-  lines(rep(median(res_mat[i,]), 2), c(0, 100), col = "red", lwd = 2, lty = 2)
-}
-graphics.off()
+# png("../figure/simulation/factorization_density.png",
+#     height = 1200, width = 2000, res = 300, units = "px")
+# label_vec <- c("SVD", "ICA", "t-SNE", "Our", "ZINB-WaVE", "pCMF")
+# par(mfrow = c(2,3), mar = c(4, 4, 4, 0.5))
+# for(i in 1:6){
+#   hist(res_mat[i,], xlim = c(min(res_mat), 1), breaks = seq(min(res_mat), 1, length.out = 21), col = "gray",
+#        xlab = "Kendall's tau correlation", ylab = "Count",
+#        main = paste0(label_vec[i], ": (", round(median(res_mat[i,]), 2), ")"))
+#   lines(rep(median(res_mat[i,]), 2), c(0, 100), col = "red", lwd = 2, lty = 2)
+# }
+# graphics.off()
 
 
 
@@ -58,9 +59,15 @@ den_list <- lapply(1:nrow(res_mat), function(i){
 #max_val <- max(sapply(den_list, function(x){max(x$y)}))
 scaling_factor <- quantile(sapply(den_list, function(x){max(x$y)}), probs = 0.3)
 
-col_vec <- color_func(1)
-plot(NA, xlim = c(min(res_mat), 1), ylim = c(0, 6), asp = .1, ylab = "",
-     yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau")
+col_vec <- color_func(1)[c(5,2,3,1,4,6)]
+text_vec <- c("eSVD", "SVD", "ICA", "t-SNE", "ZINB-WaVE", "pCMF")
+
+png("../figure/simulation/factorization_density.png",
+    height = 1800, width = 1000, res = 300, units = "px")
+par(mar = c(4,0.5,4,0.5))
+plot(NA, xlim = c(-.2, 1), ylim = c(0, 6.25), ylab = "",
+     yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau",
+     main = "Estimated lineage accuracy")
 axis(side = 1, at = seq(0,1,length.out = 6))
 for(i in 1:nrow(res_mat)){
   lines(c(0,1), rep(nrow(res_mat) - i, 2))
@@ -74,9 +81,45 @@ for(i in 1:nrow(res_mat)){
   points(med, y = nrow(res_mat) - i, col = "black", pch = 16, cex = 2)
   points(med, y = nrow(res_mat) - i, col = col_vec[i], pch = 16, cex = 1.5)
 }
+text(x = rep(0,6), y = seq(5.35,0.35,by=-1), labels = text_vec)
+graphics.off()
+
+
+################
+
+col_func2 <- function(alpha){
+  c( rgb(86/255, 180/255, 233/255, alpha), #skyblue
+     rgb(240/255, 228/255, 66/255, alpha), #yellow
+     rgb(0/255, 158/255, 115/255, alpha), #bluish green
+     rgb(230/255, 159/255, 0/255,alpha)) #orange
+}
+col <- col_func2(1)
+order_vec <- ((1:6-1)*2+1)[c(4,1,2,3,5,6)]
+
+idx <- 50
+label_vec <- c("eSVD", "SVD", "ICA", "t-SNE", "ZINB-WaVE", "pCMF")
+
+png("../figure/simulation/factorization_example.png",
+    height = 1500, width = 1500, res = 300, units = "px")
+
+par(mfrow = c(2,3), mar = c(2, 2, 3, 0.5))
+for(i in 1:6){
+  plot(res[[1]][[idx]][[order_vec[i]]][,1], res[[1]][[idx]][[order_vec[i]]][,2],
+       asp = T, pch = 16, col = col[rep(1:4, each = paramMat[1,"n_each"])],
+       xlab = "Latent dim. 1", ylab = "Latent dim. 2",
+       main = paste0(label_vec[i], ": (", round(res_mat[i, idx], 2), ")"))
+  for(j in 1:length(res[[1]][[idx]][[order_vec[i]+1]]$curves)){
+    ord <- res[[1]][[idx]][[order_vec[i]+1]]$curves[[j]]$ord
+    lines(res[[1]][[idx]][[order_vec[i]+1]]$curves[[j]]$s[ord,1],
+          res[[1]][[idx]][[order_vec[i]+1]]$curves[[j]]$s[ord,2], lwd = 3, col = "white")
+    lines(res[[1]][[idx]][[order_vec[i]+1]]$curves[[j]]$s[ord,1],
+          res[[1]][[idx]][[order_vec[i]+1]]$curves[[j]]$s[ord,2], lwd = 2)}
+}
+graphics.off()
 
 ############################
 
+# under construction
 
 col_func <- function(alpha){
   c( rgb(86/255, 180/255, 233/255, alpha), #skyblue

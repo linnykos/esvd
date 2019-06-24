@@ -1,9 +1,10 @@
 rm(list=ls())
 library(simulation)
 library(singlecell)
+library(NMF)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000, 1)
+paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000, 4)
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val",
                         "generation_type")
 trials <- 200
@@ -133,7 +134,7 @@ criterion <- function(dat, vec, y){
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = NA, as_list = T,
-                                        filepath = "../results/factorization_results_others_tmp_gen1.RData",
+                                        filepath = "../results/factorization_results_others_tmp_gen4.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_others_gen1.RData")
+save.image("../results/factorization_results_others_gen4.RData")
