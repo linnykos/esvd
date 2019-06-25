@@ -3,18 +3,12 @@ load("../results/factorization_results.RData")
 
 res_mat <- matrix(NA, 6, trials)
 for(i in 1:trials){
+  print(i)
+
   for(k in 1:6){
-    res_mat[k,i] <- mean(sapply(1:2, function(j){
-      idx <- which(res[[1]][[i]]$curves_truth$curves[[j]]$lambda_long != 0)
-
-      # find which curve is most suitable
-      tmp <- sapply(1:length(res[[1]][[i]][[2*k]]$curves), function(l){
-        cor(res[[1]][[i]]$curves_truth$curves[[j]]$lambda_long[idx],
-            res[[1]][[i]][[2*k]]$curves[[l]]$lambda_long[idx], method = "pearson")
-      })
-
-      max(tmp)
-    }))
+    cat('*')
+    res_mat[k,i] <- transport::wasserstein(transport::pp(res[[1]][[i]]$dat$truth),
+                                           transport::pp(res[[1]][[i]][[(k-1)*2+1]]), p = 1)
   }
 }
 res_mat <- res_mat[c(4,1,2,3,5,6),]
