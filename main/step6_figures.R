@@ -128,7 +128,7 @@ vioplot::vioplot(tmp_df$val[tmp_df$type == 1],
                  colMed = "black", colMed2 = "white",
                  xlab = "", names = rep("", 6))
 title(ylab = "(Rescaled) Expression of\n2nd eigen-gene",
-      main = "Average gene expression\nper cell type", cex.lab = 1.25)
+      main = "Average gene expression\nper cell type (SVD)", cex.lab = 1.25)
 text(1:6, par("usr")[3]-2,
      srt = -45, xpd = TRUE,
      labels = c("Pdgfra+", "OPC", "COP", "NFOL", "MFOL", "MOL"), cex=1)
@@ -142,53 +142,60 @@ plot(-svd_u[idx,2], svd_u[idx,3], asp = T, pch = 16, col = col_vec[cluster_label
      cex.lab = 1.25, cex.axis = 1.25)
 graphics.off()
 
+####################################
 
-#########
-#under construction
+our_curves$lineages
+custom_cluster_group_list <- list(13, 12, 1, c(10,11), c(2,3), c(4:7), c(8,9))
 
+col_vec <- color_func(1)[c(5, rep(3,2), 3, rep(1,3), rep(4,2), rep(2,2),  rep(5,2))]
+col_name <- c("orange", rep("bluish green", 3), rep("yellow", 3), rep("blue", 2), rep("skyblue", 2), rep("orange", 2))
+col_info <- data.frame(name = levels(cell_type_vec),
+                       idx = sort(unique(cluster_labels)),
+                       level = sapply(1:13, function(y){which(sapply(custom_cluster_group_list, function(x){y %in% x}))}),
+                       col_name = col_name,
+                       col_code = col_vec)
+col_info
 
-dat <- res_our$u_mat[,1:d]
+nat_mat <- res_our$u_mat %*% t(res_our$v_mat)
+svd_res <- svd(nat_mat)
+scaling_vec <- -svd_res$v[,1]
+scaling_vec <- (scaling_vec-min(scaling_vec))/(max(scaling_vec)-min(scaling_vec))
+scaling_vec <- scaling_vec/sum(scaling_vec)
+val <- dat_impute %*% scaling_vec
 
-cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
-# keep only the first two letters
-cell_type_vec <- as.character(sapply(cell_type_vec, function(x){substr(x,1,2)}))
-alpha_val <- 0.2
-col_idx <- c(rgb(238/255,204/255,17/255,alpha_val), #goldenrod
-             rgb(227/255,73/255,86/255,alpha_val), #red
-             rgb(100/255,140/255,252/255,alpha_val), #blue
-             rgb(129/255,199/255,124/255,alpha_val), #green
-             rgb(238/255,204/255,17/255,alpha_val),
-             rgb(238/255,204/255,17/255,alpha_val))[as.numeric(as.factor(cell_type_vec))]
+# custom tmp_df
+type_vec <- sapply(1:13, function(y){which(sapply(cluster_group_list, function(x){y %in% x}))})[cluster_labels]
+tmp_df <- data.frame(val = val, type = type_vec)
+tmp_df <- rbind(tmp_df, data.frame(val = val[cluster_labels == 4], type = 7)) #duplicate MOL shared in both lineages
 
-num_cell <- length(unique(cell_type_vec))
+png("../figure/main/esvd_preview.png", height = 1200, width = 2200, res = 300, units = "px")
+par(mfrow = c(1,2), mar = c(5,6,4,2))
 
-combn_mat <- combn(3,2)
-for(x in 1:ncol(combn_mat)){
-  i1 <- combn_mat[1,x]; i2 <- combn_mat[2,x]
-  xlim <- range(dat[,i1])
-  ylim <- range(dat[,i2])
-  order_vec <- c(6,5,1,4,2,3) #these are in alphabetical order from "CO", "MF", "MO", "NF", "OP", "PP"
-  name_vec <- c("Pdgfra+ (1)", "Precusor (2)", "Differentiated-commited\nprecusor (3)", "Newly formed (4)",
-                "Myelin-forming (5)", "Mature (6)")
+vioplot::vioplot(tmp_df$val[tmp_df$type == 1],
+                 tmp_df$val[tmp_df$type == 2],
+                 tmp_df$val[tmp_df$type == 3],
+                 tmp_df$val[tmp_df$type == 4],
+                 tmp_df$val[tmp_df$type == 5],
+                 tmp_df$val[tmp_df$type == 6],
+                 tmp_df$val[tmp_df$type == 7],
+                 col = sapply(1:7, function(x){
+                   tmp <- table(col_info$col_code[which(col_info$level == x)])
+                   names(tmp)[which.max(tmp)]
+                 }),
+                 pchMed = 21,
+                 colMed = "black", colMed2 = "white",
+                 xlab = "", names = rep("", 7))
+title(ylab = "(Rescaled) Expression of\n1st eigen-gene",
+      main = "Average gene expression\nper cell type (eSVD)", cex.lab = 1.25)
+text(1:7, par("usr")[3]-3,
+     srt = -45, xpd = TRUE,
+     labels = c("Pdgfra+", "OPC", "COP", "NFOL", "MFOL", "MOL (1)", "MOL (2)"), cex=.75)
 
-  png(paste0("../figure/main/marques_latent_our_", i1, i2, ".png"), height = 1500, width = 2000, res = 300, units = "px")
-  par(mfrow = c(2,3), mar = c(4,4,4,0.5))
-  for(i in 1:6){
-    idx <- which(as.numeric(as.factor(cell_type_vec)) == order_vec[i])
-    plot(dat[-idx,i1], dat[-idx,i2], asp = T, pch = 16,
-         col = rgb(0.8, 0.8, 0.8), xlim = xlim, ylim = ylim,
-         main = name_vec[i], xlab = paste0("Our latent dimension ", i1),
-         ylab = paste0("Our latent dimension ", i2))
-
-    lines(c(-100,100), rep(0,2), lwd = 2, lty = 2)
-    lines(rep(0,2), c(-100,100), lwd = 2, lty = 2)
-
-    points(dat[idx,i1], dat[idx,i2], pch = 16,
-           col = rgb(1,1,1), cex = 1.5)
-
-    points(dat[idx,i1], dat[idx,i2], pch = 16,
-           col = col_idx[idx], cex = 1.5)
-  }
-  graphics.off()
-
-}
+par(mar = c(5,4,4,2))
+set.seed(10)
+idx <- sample(1:nrow(res_our$u_mat))
+plot(res_our$u_mat[idx,1], res_our$u_mat[idx,3], asp = T, pch = 16, col = col_vec[cluster_labels][idx],
+     cex = 0.75, xlab = "Latent dimension 1", ylab = "Latent dimension 3",
+     main = "eSVD embedding\n(Curved Gaussian)",
+     cex.lab = 1.25, cex.axis = 1.25)
+graphics.off()
