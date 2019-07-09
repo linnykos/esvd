@@ -8,7 +8,7 @@ for(i in 1:trials){
   for(k in 1:6){
     cat('*')
     res_mat[k,i] <- transport::wasserstein(transport::pp(res[[1]][[i]]$dat$truth),
-                                           transport::pp(res[[1]][[i]][[(k-1)*2+1]]), p = 1)
+                                            transport::pp(res[[1]][[i]][[(k-1)*2+1]]), p = 1)
   }
 }
 res_mat <- res_mat[c(4,1,2,3,5,6),]
