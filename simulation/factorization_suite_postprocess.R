@@ -1,38 +1,14 @@
 rm(list=ls())
-load("../results/factorization_results.RData")
+# load("../results/factorization_results.RData")
+load("../results/factorization_results_wasserstein.RData")
 
 res_mat <- matrix(NA, 6, trials)
 for(i in 1:trials){
-  print(i)
-
   for(k in 1:6){
-    cat('*')
-    res_mat[k,i] <- transport::wasserstein(transport::pp(res[[1]][[i]]$dat$truth),
-                                            transport::pp(res[[1]][[i]][[(k-1)*2+1]]), p = 1)
+    res_mat[k,i] <- res_wasserstein[[i]][k]
   }
 }
 res_mat <- res_mat[c(4,1,2,3,5,6),]
-
-num_mat <- matrix(NA, 6, trials)
-for(i in 1:trials){
-  for(k in 1:6){
-    num_mat[k,i] <- length(res[[1]][[i]][[2*k]]$lineages)
-  }
-}
-
-# png("../figure/simulation/factorization_density.png",
-#     height = 1200, width = 2000, res = 300, units = "px")
-# label_vec <- c("SVD", "ICA", "t-SNE", "Our", "ZINB-WaVE", "pCMF")
-# par(mfrow = c(2,3), mar = c(4, 4, 4, 0.5))
-# for(i in 1:6){
-#   hist(res_mat[i,], xlim = c(min(res_mat), 1), breaks = seq(min(res_mat), 1, length.out = 21), col = "gray",
-#        xlab = "Kendall's tau correlation", ylab = "Count",
-#        main = paste0(label_vec[i], ": (", round(median(res_mat[i,]), 2), ")"))
-#   lines(rep(median(res_mat[i,]), 2), c(0, 100), col = "red", lwd = 2, lty = 2)
-# }
-# graphics.off()
-
-
 
 #############################
 
@@ -59,12 +35,12 @@ text_vec <- c("eSVD", "SVD", "ICA", "t-SNE", "ZINB-WaVE", "pCMF")
 png("../figure/simulation/factorization_density.png",
     height = 1800, width = 1000, res = 300, units = "px")
 par(mar = c(4,0.5,4,0.5))
-plot(NA, xlim = c(-.2, 1), ylim = c(0, 6.25), ylab = "",
+plot(NA, xlim = c(-.2, max(res_mat)), ylim = c(0, 6.25), ylab = "",
      yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau",
      main = "Estimated lineage accuracy")
-axis(side = 1, at = seq(0,1,length.out = 6))
+axis(side = 1, at = round(seq(0,max(res_mat),length.out = 6),2))
 for(i in 1:nrow(res_mat)){
-  lines(c(0,1), rep(nrow(res_mat) - i, 2))
+  lines(c(0,max(res_mat)), rep(nrow(res_mat) - i, 2))
 
   polygon(x = c(den_list[[i]]$x[1], den_list[[i]]$x, den_list[[i]]$x[length(den_list[[i]]$x)], den_list[[i]]$x[1]),
           y = (c(0, den_list[[i]]$y, 0 , 0))/scaling_factor + nrow(res_mat) - i,
