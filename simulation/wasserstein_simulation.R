@@ -78,7 +78,7 @@ criterion <- function(dat, vec, y){
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = 15, as_list = T,
-                                        filepath = "../results/wasserstein_tmp.RData",
+                                        filepath = "wasserstein_tmp.RData",
                                         verbose = T)
 
-save.image("../results/wasserstein_simulation.RData")
+save.image("wasserstein_simulation.RData")
