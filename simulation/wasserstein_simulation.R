@@ -48,12 +48,25 @@ criterion <- function(dat, vec, y){
                                        verbose = F)
   res_our <- tmp$u_mat
 
-  l2_loss <- sum((res_our - dat$truth)^2)/nrow(res_our)
-  wasserstein_loss <- transport::wasserstein(transport::pp(res_our),
+  # try all different orientations
+  vec1 <- res_our[,1]; vec2 <- res_our[,2]
+
+  l2_loss1 <- sum((cbind(vec1, vec2) - dat$truth)^2)/nrow(res_our)
+  wasserstein_loss1 <- transport::wasserstein(transport::pp(cbind(vec1, vec2)),
                                              transport::pp(dat$truth), p = 1)
+  l2_loss2 <- sum((cbind(-vec1, vec2) - dat$truth)^2)/nrow(res_our)
+  wasserstein_loss2 <- transport::wasserstein(transport::pp(cbind(-vec1, vec2)),
+                                              transport::pp(dat$truth), p = 1)
+  l2_loss3 <- sum((cbind(vec1, -vec2) - dat$truth)^2)/nrow(res_our)
+  wasserstein_loss3 <- transport::wasserstein(transport::pp(cbind(vec1, -vec2)),
+                                              transport::pp(dat$truth), p = 1)
+  l2_loss4 <- sum((cbind(-vec1, -vec2) - dat$truth)^2)/nrow(res_our)
+  wasserstein_loss4 <- transport::wasserstein(transport::pp(cbind(-vec1, -vec2)),
+                                              transport::pp(dat$truth), p = 1)
 
   list(res_our = res_our,
-       l2_loss = l2_loss, wasserstein_loss = wasserstein_loss,
+       l2_loss = min(l2_loss1, l2_loss2, l2_loss3, l2_loss4),
+       wasserstein_loss = min(wasserstein_loss1, wasserstein_loss2, wasserstein_loss3, wasserstein_loss4),
        dat = dat)
 }
 
