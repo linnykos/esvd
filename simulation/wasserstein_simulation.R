@@ -38,7 +38,7 @@ criterion <- function(dat, vec, y){
   print(y)
 
   # # Our method
-  set.seed(10)
+  set.seed(y)
   init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
   tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                        family = "gaussian",  reparameterize = T,
@@ -57,7 +57,8 @@ criterion <- function(dat, vec, y){
        dat = dat)
 }
 
-# set.seed(1); zz <- criterion(rule(paramMat[1,]), paramMat[1,], 1)
+# set.seed(1); zz1 <- criterion(rule(paramMat[1,]), paramMat[1,], 1)
+# set.seed(2); zz2 <- criterion(rule(paramMat[1,]), paramMat[1,], 2)
 
 #################
 
