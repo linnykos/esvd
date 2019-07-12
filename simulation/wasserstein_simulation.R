@@ -82,3 +82,4 @@ res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         verbose = T)
 
 save.image("wasserstein_simulation.RData")
+save.image("../results/wasserstein_simulation.RData")
