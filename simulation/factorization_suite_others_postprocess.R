@@ -20,19 +20,19 @@ for(kk in 1:length(lab_vec)){
 
   res_mat <- matrix(NA, 6, trials)
   for(i in 1:trials){
+    if(i %% floor(trials/10) == 0) cat('*')
+
+    dist_mat_truth <- as.matrix(stats::dist(res[[i]]$dat$truth))
+
     for(k in 1:6){
-      sil <- cluster::silhouette(rep(1:4, each = 50), dist(res[[i]][[(k-1)*2+1]], "euclidean"))
-      res_mat[k,i] <- summary(sil)$avg.width
+      dist_mat_est <- as.matrix(stats::dist(res[[i]][[(k-1)*2+1]]))
+
+      res_mat[k,i] <- mean(sapply(1:nrow(dist_mat_est), function(x){
+        cor(dist_mat_truth[x,], dist_mat_est[x,], method = "kendall")
+      }))
     }
   }
   res_mat <- res_mat[c(4,1,2,3,5,6),]
-
-  num_mat <- matrix(NA, 6, trials)
-  for(i in 1:trials){
-    for(k in 1:6){
-      num_mat[k,i] <- length(res[[i]][[2*k]]$lineages)
-    }
-  }
 
   #############################
 
@@ -59,12 +59,12 @@ for(kk in 1:length(lab_vec)){
   png(paste0("../figure/simulation/factorization_density_", kk, ".png"),
       height = 1800, width = 1000, res = 300, units = "px")
   par(mar = c(4,0.5,4,0.5))
-  plot(NA, xlim = c(-1, 1), ylim = c(0, 6.25), ylab = "",
+  plot(NA, xlim = c(-0.2, 1), ylim = c(0, 6.25), ylab = "",
        yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau",
        main = paste0("Estimated lineage accuracy\n", lab_vec[kk]))
-  axis(side = 1, at = seq(-1,1,length.out = 6))
+  axis(side = 1, at = seq(0,1,length.out = 6))
   for(i in 1:nrow(res_mat)){
-    lines(c(-1,1), rep(nrow(res_mat) - i, 2))
+    lines(c(0,1), rep(nrow(res_mat) - i, 2))
 
     y_vec <- (c(0, den_list[[i]]$y, 0 , 0))/scaling_factor
     if(max(y_vec) > max_height) y_vec <- y_vec*max_height/max(y_vec)
@@ -77,7 +77,7 @@ for(kk in 1:length(lab_vec)){
     points(med, y = nrow(res_mat) - i, col = "black", pch = 16, cex = 2)
     points(med, y = nrow(res_mat) - i, col = col_vec[i], pch = 16, cex = 1.5)
   }
-  text(x = rep(-0.5,6), y = seq(5.35,0.35,by=-1), labels = text_vec)
+  text(x = rep(0,6), y = seq(5.35,0.35,by=-1), labels = text_vec)
   graphics.off()
 }
 

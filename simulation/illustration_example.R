@@ -182,10 +182,10 @@ for(i in 1:length(res)){
   axis(1, at = seq(-3,0,by=1), labels = T, las=2)
   axis(2, at = seq(-3,2,by=1), labels = T, las=2)
 
-  for(j in 1:length(res[[i]][[1]]$curves_our$curves)){
-    ord <- res[[i]][[1]]$curves_our$curves[[j]]$ord
-    lines(-res[[i]][[1]]$curves_our$curves[[j]]$s[ord,1]*rescale_factor,
-          res[[i]][[1]]$curves_our$curves[[j]]$s[ord,2]*rescale_factor, lwd = 2)
-  }
+  # for(j in 1:length(res[[i]][[1]]$curves_our$curves)){
+  #   ord <- res[[i]][[1]]$curves_our$curves[[j]]$ord
+  #   lines(-res[[i]][[1]]$curves_our$curves[[j]]$s[ord,1]*rescale_factor,
+  #         res[[i]][[1]]$curves_our$curves[[j]]$s[ord,2]*rescale_factor, lwd = 2)
+  # }
 }
 graphics.off()
