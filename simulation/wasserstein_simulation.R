@@ -10,6 +10,8 @@ paramMat <- cbind(round(exp(seq(log(10), log(200), length.out = 10))),
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
 trials <- 200
 
+save.image("../results/test.RData")
+
 ################
 
 cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
