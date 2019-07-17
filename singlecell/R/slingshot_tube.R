@@ -104,6 +104,7 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
       dist_vec <- apply(mat_collection[[k]], 1, function(z){
         .l2norm(z-vec)
       })
+
       min(dist_vec)
     })
   })

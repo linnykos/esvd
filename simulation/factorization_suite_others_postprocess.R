@@ -61,7 +61,7 @@ for(kk in 1:length(lab_vec)){
   par(mar = c(4,0.5,4,0.5))
   plot(NA, xlim = c(-0.2, 1), ylim = c(0, 6.25), ylab = "",
        yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau",
-       main = paste0("Estimated lineage accuracy\n", lab_vec[kk]))
+       main = paste0("Relative embedding correlation\n", lab_vec[kk]))
   axis(side = 1, at = seq(0,1,length.out = 6))
   for(i in 1:nrow(res_mat)){
     lines(c(0,1), rep(nrow(res_mat) - i, 2))
