@@ -10,7 +10,7 @@ paramMat <- cbind(round(exp(seq(log(10), log(200), length.out = 10))),
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
 trials <- 200
 
-save.image("../results/test.RData")
+save.image("/raid6/Kevin/singlecell_results/simulation/wasserstein_simulation.RData")
 
 ################
 
