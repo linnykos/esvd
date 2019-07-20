@@ -35,9 +35,7 @@ rule <- function(vec){
 }
 
 criterion <- function(dat, vec, y){
-  print(y)
-
-  # # Our method
+  # Our method
   set.seed(y)
   init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
   tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
@@ -66,8 +64,7 @@ criterion <- function(dat, vec, y){
 
   list(res_our = res_our,
        l2_loss = min(l2_loss1, l2_loss2, l2_loss3, l2_loss4),
-       wasserstein_loss = min(wasserstein_loss1, wasserstein_loss2, wasserstein_loss3, wasserstein_loss4),
-       dat = dat)
+       wasserstein_loss = min(wasserstein_loss1, wasserstein_loss2, wasserstein_loss3, wasserstein_loss4))
 }
 
 # set.seed(1); zz1 <- criterion(rule(paramMat[1,]), paramMat[1,], 1)

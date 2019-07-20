@@ -177,7 +177,7 @@ for(i in 1:length(res)){
        xlim = range(as.numeric(colnames(mat))),
        ylim = range(as.numeric(rownames(mat))),
        xlab = "Latent dimension 1", ylab = "Latent dimension 2", axes = F, cex.lab = 1.25,
-       main = paste0("Estimated trajectory\n(n = ", 4*n, ")"))
+       main = paste0("Estimated embedding\n(n = ", 4*n, ")"))
 
   axis(1, at = seq(-3,0,by=1), labels = T, las=2)
   axis(2, at = seq(-3,2,by=1), labels = T, las=2)
