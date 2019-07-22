@@ -1,6 +1,10 @@
 rm(list=ls())
 load("../results/wasserstein_simulation.RData")
 
+######### # test
+tmp <- res[[7]][[1]]$res_our
+plot(tmp[,1], tmp[,2], asp = T, col = rep(1:4, each = nrow(tmp)/4), pch = 16)
+
 #####################
 
 # zz <- res[[10]][[1]]$u_mat %*% t(res[[10]][[1]]$v_mat)

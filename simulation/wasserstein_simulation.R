@@ -40,8 +40,8 @@ criterion <- function(dat, vec, y){
   init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
   tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                        family = "gaussian",  reparameterize = T,
-                                       max_iter = 100, max_val = vec["max_val"],
-                                       scalar = vec["scalar"],
+                                       max_iter = 50, max_val = vec["max_val"],
+                                       scalar = vec["scalar"], tol = NA,
                                        return_path = F, cores = NA,
                                        verbose = F)
   res_our <- tmp$u_mat
