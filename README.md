@@ -41,15 +41,15 @@ All the code below were run on a server with 15 cores.
 
 To reproduce the simulations (Section 5 and Appendix D of our paper), navigate to the `simulation` folder. 
 
-* To reproduce Figure 2, run `illustration_example.R'.
+* To reproduce Figure 2, run `illustration_example.R`.
 
-* To reproduce Figure 3, run `factorization_suite.R' and `factorization_suite_postprocess.R'.
+* To reproduce Figure 3, run `factorization_suite.R` and `factorization_suite_postprocess.R`.
 
-* To reproduce Figure 8, run `wasserstein_simulation.R' and `wasserstein_simulation_plot.R'.
+* To reproduce Figure 8, run `wasserstein_simulation.R` and `wasserstein_simulation_plot.R`.
 
-* To reproduce Figure 9 through 13, run `factorization_suite_others.R' and `factorization_suite_others_postprocess.R'.
+* To reproduce Figure 9 through 13, run `factorization_suite_others.R` and `factorization_suite_others_postprocess.R`.
 
 
 ## Running the analysis
 
-To reproduce the analysis (Section 1, Section 6, and Appendix G of our paper), navigate to the `main` folder. From this location, run the following lines in the command window. All the results and figures in these sections are reproduced by running `main.R', which calls 7 different R scripts in succession. The figures are produced in the last two scripts, `step6_figures.R' and `step7_figures_embedding.R'.
+To reproduce the analysis (Section 1, Section 6, and Appendix G of our paper), navigate to the `main` folder. From this location, run the following lines in the command window. All the results and figures in these sections are reproduced by running `main.R`, which calls 7 different R scripts in succession. The figures are produced in the last two scripts, `step6_figures.R` and `step7_figures_embedding.R`.
