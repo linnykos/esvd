@@ -5,7 +5,7 @@
 \title{Estimate the lineages (via Slingshot)}
 \usage{
 .get_lineages(dat, cluster_labels, starting_cluster,
-  cluster_group_list = NA)
+  cluster_group_list = NA, use_initialization = F)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}
@@ -18,6 +18,9 @@ the cluster labels are consecutive positive integers from 1 to
 from}
 
 \item{cluster_group_list}{list denoting the hierarchy and order of the clusters}
+
+\item{use_initialization}{use principal curves on each cluster to prune the
+list of possible neighboring clusters}
 }
 \value{
 A list of cluster indices, with \code{starting_cluster} starting as

@@ -165,5 +165,7 @@ test_that("initialization works", {
   }
 
   res <- initialization(dat, k = 2, family = "gaussian", max_val = -1000)
+
+  expect_true(is.list(res))
 })
 

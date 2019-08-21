@@ -23,7 +23,7 @@ generate_natural_mat <- function(cell_pop, gene_pop, n_each, d_each, sigma){
   cell_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
   gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
 
-  res <- singlecell:::.reparameterize(cell_mat, gene_mat)
+  res <- eSVD:::.reparameterize(cell_mat, gene_mat)
   cell_mat <- res$u_mat; gene_mat <- res$v_mat
 
   nat_mat <- cell_mat %*% t(gene_mat)

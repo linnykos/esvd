@@ -70,8 +70,8 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
   }
 
   sd_vec <- sapply(mat_list, function(x){
-    quantile(apply(x, 2, function(x){
-      quantile(x,probs = 0.95)
+    stats::quantile(apply(x, 2, function(x){
+      stats::quantile(x,probs = 0.95)
     }), probs = 0.95)
   })
 

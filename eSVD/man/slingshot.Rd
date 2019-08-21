@@ -5,8 +5,8 @@
 \title{Use slingshot to estimate the cell development trajectories}
 \usage{
 slingshot(dat, cluster_labels, starting_cluster, cluster_group_list = NA,
-  reduction_percentage = 0.25, shrink = 1, thresh = 0.001,
-  max_iter = 15, upscale_vec = NA, verbose = F)
+  use_initialization = F, reduction_percentage = 0.25, shrink = 1,
+  thresh = 0.001, max_iter = 15, upscale_vec = NA, verbose = F)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}
@@ -19,6 +19,9 @@ the cluster labels are consecutive positive integers from 1 to
 from}
 
 \item{cluster_group_list}{list denoting the hierarchy and order of the clusters}
+
+\item{use_initialization}{use principal curves on each cluster to prune the
+list of possible neighboring clusters}
 
 \item{reduction_percentage}{numeric}
 

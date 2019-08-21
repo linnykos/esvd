@@ -1,4 +1,5 @@
 context("Test matrix factorization")
+library(NMF)
 
 ## .optimize_row is correct
 
@@ -321,7 +322,7 @@ test_that("fit_factorization works with Gaussian and missing values", {
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
-    dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
+    dat <- abs(matrix(rnorm(20), nrow = 5, ncol = 4))
     dat[sample(1:prod(dim(dat)),3)] <- NA
     init <- initialization(dat, max_val = -100, family = "gaussian")
 

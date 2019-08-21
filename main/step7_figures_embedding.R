@@ -16,7 +16,7 @@ cell_type_vec <- as.factor(cell_type_vec)
 
 # first do our embedding
 
-cluster_center <- .compute_cluster_center(res_our$u_mat[,1:3], .construct_cluster_matrix(cluster_labels))
+cluster_center <- .compute_cluster_center(res_our$u_mat[,1:3], eSVD:::.construct_cluster_matrix(cluster_labels))
 custom_cluster_group_list <- list(13, 12, 1, c(10,11), c(2,3), c(4:7), c(8,9))
 
 num_order_vec <- c(5, rep(3,2), 3, rep(1,3), rep(4,2), rep(2,2),  rep(5,2))
@@ -41,7 +41,7 @@ for(kk in 1:nrow(angle_matrix)){
   png(paste0("../figure/main/eSVD_theta", angle_matrix[kk,1], "_phi", angle_matrix[kk,2], ".png"),
       height = 2000, width = 2000, res = 300, units = "px")
   par(mar = c(0,0,4,0))
-  slingshot_3dplot(res_our$u_mat[,1:3], cluster_labels,
+  eSVD::slingshot_3dplot(res_our$u_mat[,1:3], cluster_labels,
                    bg_col_vec = col_vec2, bg_cex = 0.8,
                    breaks = seq(0.5, 13.5, by = 1),
                    cluster_center = cluster_center,
@@ -76,7 +76,7 @@ for(kk in 1:nrow(angle_matrix)){
 
 our_tube_list <- lapply(1:length(our_curves$curves), function(x){
   s_mat <- our_curves$curves[[x]]$s[our_curves$curves[[x]]$ord,]
-  construct_3d_tube(s_mat, radius = our_sd_val$sd_val)
+  eSVD::construct_3d_tube(s_mat, radius = our_sd_val$sd_val)
 })
 
 
@@ -86,7 +86,7 @@ for(kk in 1:nrow(angle_matrix)){
   png(paste0("../figure/main/eSVD_theta", angle_matrix[kk,1], "_phi", angle_matrix[kk,2], "_tube.png"),
       height = 2000, width = 2000, res = 300, units = "px")
   par(mar = c(0,0,4,0))
-  slingshot_3dplot(res_our$u_mat[,1:3], cluster_labels,
+  eSVD::slingshot_3dplot(res_our$u_mat[,1:3], cluster_labels,
                    bg_col_vec = col_vec2, bg_cex = 0.8,
                    breaks = seq(0.5, 13.5, by = 1),
                    cluster_center = cluster_center,
@@ -134,7 +134,7 @@ for(kk in 1:nrow(angle_matrix)){
 svd_res <- svd(dat_impute)
 svd_u <- svd_res$u[,1:p] %*% diag(sqrt(svd_res$d[1:p]))
 
-cluster_center <- .compute_cluster_center(svd_u[,1:3], .construct_cluster_matrix(cluster_labels))
+cluster_center <- .compute_cluster_center(svd_u[,1:3], eSVD:::.construct_cluster_matrix(cluster_labels))
 
 num_order_vec <- c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))
 col_vec <- color_func(1)[num_order_vec]
@@ -160,7 +160,7 @@ for(kk in 1:nrow(angle_matrix)){
   png(paste0("../figure/main/SVD_theta", angle_matrix[kk,1], "_phi", angle_matrix[kk,2], ".png"),
       height = 2000, width = 2000, res = 300, units = "px")
   par(mar = c(1,1,4,1))
-  slingshot_3dplot(svd_u[,1:3], cluster_labels,
+  eSVD::slingshot_3dplot(svd_u[,1:3], cluster_labels,
                    bg_col_vec = col_vec2, bg_cex = 0.8,
                    breaks = seq(0.5, 13.5, by = 1),
                    cluster_center = cluster_center,
@@ -191,7 +191,7 @@ for(kk in 1:nrow(angle_matrix)){
 
 naive_tube_list <- lapply(1:length(naive_curves$curves), function(x){
   s_mat <- naive_curves$curves[[x]]$s[naive_curves$curves[[x]]$ord,]
-  construct_3d_tube(s_mat, radius = naive_sd_val$sd_val)
+  eSVD::construct_3d_tube(s_mat, radius = naive_sd_val$sd_val)
 })
 
 for(kk in 1:nrow(angle_matrix)){
@@ -201,7 +201,7 @@ for(kk in 1:nrow(angle_matrix)){
   png(paste0("../figure/main/SVD_theta", angle_matrix[kk,1], "_phi", angle_matrix[kk,2], "_tube.png"),
       height = 2000, width = 2000, res = 300, units = "px")
   par(mar = c(1,1,4,1))
-  slingshot_3dplot(svd_u[,1:3], cluster_labels,
+  eSVD::slingshot_3dplot(svd_u[,1:3], cluster_labels,
                    bg_col_vec = col_vec2, bg_cex = 0.8,
                    breaks = seq(0.5, 13.5, by = 1),
                    cluster_center = cluster_center,

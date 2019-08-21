@@ -1,92 +1,36 @@
 rm(list=ls())
-library(simulation)
-library(singlecell)
-library(NMF)
-source("../simulation/factorization_generator.R")
+set.seed(10)
+cluster_labels <- rep(1:5, each = 20)
+dat <- MASS::mvrnorm(100, rep(0, 5), diag(5))
+lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
+cluster_mat <- .construct_cluster_matrix(cluster_labels)
+k <- ncol(cluster_mat)
+centers <- .compute_cluster_center(dat, cluster_mat)
+W <- .initialize_weight_matrix(cluster_mat, lineages)
+cluster_vec <- 1:ncol(cluster_mat)
+s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
+pcurve_list <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)$pcurve_list
 
-paramMat <- cbind(round(exp(seq(log(10), log(200), length.out = 10))),
-                  round(exp(seq(log(20), log(400), length.out = 10))),
-                  0.05, 150, 2, 2, -2000)
-colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
-trials <- 200
+res <- .construct_average_curve(pcurve_list, dat)
 
-# save.image("/raid6/Kevin/singlecell_results/simulation/wasserstein_simulation.RData")
+#######################
 
-################
+n <- nrow(pcurve_list[[1]]$s)
+p <- ncol(pcurve_list[[1]]$s)
+lambdas_all <- unique(unlist(lapply(pcurve_list, function(pcv){pcv$lambda})))
+max_shared_lambda <- min(sapply(pcurve_list, function(pcv){max(pcv$lambda)}))
+lambdas_all <- sort(lambdas_all[lambdas_all <= max_shared_lambda])
 
-cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
-                     40,10, 60,80, 60,80, 100, 25)/10,
-                   nrow = 4, ncol = 4, byrow = T)
-gene_pop <- matrix(c(20,90, 25,100,
-                     90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
+# interpolate all the curves so they're parameterized on the same points
+pcurves_dense <- lapply(pcurve_list, function(pcurve){
+  sapply(1:p, function(jj){
+    stats::approx(pcurve$lambda, pcurve$s[,jj], xout = lambdas_all)$y
+  })
+})
 
-rule <- function(vec){
-  n_each <- vec["n_each"]
-  d_each <- vec["d_each"]
-  sigma <- vec["sigma"]
-  total <- vec["total"]
-
-  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma)
-  nat_mat <- res$nat_mat
-
-  obs_mat <- generator_curved_gaussian(nat_mat, alpha = vec["scalar"])
-
-  list(dat = obs_mat, truth = res$cell_mat)
-}
-
-criterion <- function(dat, vec, y){
-  # Our method
-  set.seed(y)
-  init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
-  tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                                       family = "gaussian",  reparameterize = T,
-                                       max_iter = 100, max_val = vec["max_val"],
-                                       scalar = vec["scalar"],
-                                       return_path = F, cores = NA,
-                                       verbose = F)
-  res_our <- tmp$u_mat
-
-  # try all different orientations
-  vec1 <- res_our[,1]; vec2 <- res_our[,2]
-
-  l2_loss1 <- sum((cbind(vec1, vec2) - dat$truth)^2)/nrow(res_our)
-  wasserstein_loss1 <- transport::wasserstein(transport::pp(cbind(vec1, vec2)),
-                                              transport::pp(dat$truth), p = 1)
-  l2_loss2 <- sum((cbind(-vec1, vec2) - dat$truth)^2)/nrow(res_our)
-  wasserstein_loss2 <- transport::wasserstein(transport::pp(cbind(-vec1, vec2)),
-                                              transport::pp(dat$truth), p = 1)
-  l2_loss3 <- sum((cbind(vec1, -vec2) - dat$truth)^2)/nrow(res_our)
-  wasserstein_loss3 <- transport::wasserstein(transport::pp(cbind(vec1, -vec2)),
-                                              transport::pp(dat$truth), p = 1)
-  l2_loss4 <- sum((cbind(-vec1, -vec2) - dat$truth)^2)/nrow(res_our)
-  wasserstein_loss4 <- transport::wasserstein(transport::pp(cbind(-vec1, -vec2)),
-                                              transport::pp(dat$truth), p = 1)
-
-  list(res_our = res_our,
-       l2_loss = min(l2_loss1, l2_loss2, l2_loss3, l2_loss4),
-       wasserstein_loss = min(wasserstein_loss1, wasserstein_loss2, wasserstein_loss3, wasserstein_loss4))
-}
-
-# set.seed(1); zz1 <- criterion(rule(paramMat[7,]), paramMat[7,], 1)
-
-#########################
-
-y <- 1
-set.seed(y)
-vec <- paramMat[7,]
-dat <- rule(vec)
-
-set.seed(y)
-init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
-tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                                     family = "gaussian",  reparameterize = T,
-                                     max_iter = 50, max_val = vec["max_val"],
-                                     scalar = vec["scalar"], tol = NA,
-                                     return_path = F, cores = NA,
-                                     verbose = T)
-res_our <- tmp$u_mat
-
-load("../results/tmp.RData")
-plot(res_our[,1], res_our[,2], asp = T)
-plot(tmp$u_mat[,1], tmp$u_mat[,2], asp = T)
-
+avg <- sapply(1:p, function(j){
+  dim_all <- sapply(1:length(pcurves_dense),function(i){
+    pcurves_dense[[i]][,j]
+  })
+  rowMeans(dim_all)
+})

@@ -377,7 +377,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   # interpolate all the curves so they're parameterized on the same points
   pcurves_dense <- lapply(pcurve_list, function(pcurve){
     sapply(1:p, function(jj){
-      stats::approx(pcurve$lambda, pcurve$s[,jj], xout = lambdas_all)$y
+      suppressWarnings(stats::approx(pcurve$lambda, pcurve$s[,jj], xout = lambdas_all)$y)
     })
   })
 

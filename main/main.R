@@ -1,6 +1,7 @@
 rm(list=ls())
 set.seed(10)
 library(NMF)
+library(eSVD)
 
 suffix <- ""
 family <- "gaussian"

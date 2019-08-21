@@ -185,7 +185,7 @@
 
   sd_vec <- sapply(1:k, function(i){
     dat_subset <- dat[which(cluster_labels == i),]
-    median(.compute_l2_curve(dat_subset, list(curve_list[[i]]$s)))
+    stats::median(.compute_l2_curve(dat_subset, list(curve_list[[i]]$s)))
   })
   sd_val <- max(sd_vec)
 
