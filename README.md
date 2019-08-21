@@ -49,7 +49,6 @@ To reproduce the simulations (Section 5 and Appendix D of our paper), navigate t
 
 * To reproduce Figure 9 through 13, run `factorization_suite_others.R' and `factorization_suite_others_postprocess.R'.
 
-```
 
 ## Running the analysis
 
