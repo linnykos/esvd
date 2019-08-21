@@ -42,7 +42,7 @@ for(kk in 1:nrow(angle_matrix)){
       height = 2000, width = 2000, res = 300, units = "px")
   par(mar = c(0,0,4,0))
   slingshot_3dplot(res_our$u_mat[,1:3], cluster_labels,
-                   bg_col_vec = col_vec2,
+                   bg_col_vec = col_vec2, bg_cex = 0.8,
                    breaks = seq(0.5, 13.5, by = 1),
                    cluster_center = cluster_center,
                    center_col_vec = col_vec,
@@ -63,11 +63,11 @@ for(kk in 1:nrow(angle_matrix)){
     plot3D::lines3D(x = curves[[i]]$s[ord, 1],
                     y = curves[[i]]$s[ord, 2],
                     z = curves[[i]]$s[ord, 3],
-                    add = T, colkey = F, col = "black", lwd = 2)
+                    add = T, colkey = F, col = "black", lwd = 6)
     plot3D::lines3D(x = curves[[i]]$s[ord, 1],
                     y = curves[[i]]$s[ord, 2],
                     z = curves[[i]]$s[ord, 3],
-                    add = T, colkey = F, col = col_vec_short[i], lwd = 2)
+                    add = T, colkey = F, col = col_vec_short[i], lwd = 6)
   }
   graphics.off()
 }
@@ -87,7 +87,7 @@ for(kk in 1:nrow(angle_matrix)){
       height = 2000, width = 2000, res = 300, units = "px")
   par(mar = c(0,0,4,0))
   slingshot_3dplot(res_our$u_mat[,1:3], cluster_labels,
-                   bg_col_vec = col_vec2,
+                   bg_col_vec = col_vec2, bg_cex = 0.8,
                    breaks = seq(0.5, 13.5, by = 1),
                    cluster_center = cluster_center,
                    center_col_vec = col_vec,
@@ -108,11 +108,11 @@ for(kk in 1:nrow(angle_matrix)){
     plot3D::lines3D(x = curves[[i]]$s[ord, 1],
                     y = curves[[i]]$s[ord, 2],
                     z = curves[[i]]$s[ord, 3],
-                    add = T, colkey = F, col = "black", lwd = 2)
+                    add = T, colkey = F, col = "black", lwd = 6)
     plot3D::lines3D(x = curves[[i]]$s[ord, 1],
                     y = curves[[i]]$s[ord, 2],
                     z = curves[[i]]$s[ord, 3],
-                    add = T, colkey = F, col = col_vec_short[i], lwd = 2)
+                    add = T, colkey = F, col = col_vec_short[i], lwd = 6)
 
     col_mat <- our_tube_list[[i]]$z_mat
 
@@ -161,7 +161,7 @@ for(kk in 1:nrow(angle_matrix)){
       height = 2000, width = 2000, res = 300, units = "px")
   par(mar = c(1,1,4,1))
   slingshot_3dplot(svd_u[,1:3], cluster_labels,
-                   bg_col_vec = col_vec2,
+                   bg_col_vec = col_vec2, bg_cex = 0.8,
                    breaks = seq(0.5, 13.5, by = 1),
                    cluster_center = cluster_center,
                    center_col_vec = col_vec,
@@ -182,7 +182,7 @@ for(kk in 1:nrow(angle_matrix)){
     plot3D::lines3D(x = curves[[i]]$s[ord, 1],
                     y = curves[[i]]$s[ord, 2],
                     z = curves[[i]]$s[ord, 3],
-                    add = T, colkey = F, col = "black", lwd = 2)
+                    add = T, colkey = F, col = "black", lwd = 6)
   }
   graphics.off()
 }
@@ -202,7 +202,7 @@ for(kk in 1:nrow(angle_matrix)){
       height = 2000, width = 2000, res = 300, units = "px")
   par(mar = c(1,1,4,1))
   slingshot_3dplot(svd_u[,1:3], cluster_labels,
-                   bg_col_vec = col_vec2,
+                   bg_col_vec = col_vec2, bg_cex = 0.8,
                    breaks = seq(0.5, 13.5, by = 1),
                    cluster_center = cluster_center,
                    center_col_vec = col_vec,
@@ -223,7 +223,7 @@ for(kk in 1:nrow(angle_matrix)){
     plot3D::lines3D(x = curves[[i]]$s[ord, 1],
                     y = curves[[i]]$s[ord, 2],
                     z = curves[[i]]$s[ord, 3],
-                    add = T, colkey = F, col = "black", lwd = 2)
+                    add = T, colkey = F, col = "black", lwd = 6)
   }
 
   i <- 3
