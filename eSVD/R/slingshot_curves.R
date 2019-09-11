@@ -39,16 +39,17 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                             use_initialization = use_initialization)
 
   if(verbose) print("Starting to infer curves")
-  curves <- .get_curves(dat2, cluster_labels, lineages, shrink = shrink,
+  res <- .get_curves(dat2, cluster_labels, lineages, shrink = shrink,
                         thresh = thresh, max_iter = max_iter, upscale_vec = upscale_vec,
                         verbose = verbose)
+  curves <- res$pcurve_list
 
   # adjust up
   for(k in 1:length(curves)){
     curves[[k]]$s <- curves[[k]]$s*reduction_factor
   }
 
-  list(lineages = lineages, curves = curves)
+  list(lineages = lineages, curves = curves, idx = res$idx)
 }
 
 #' Estimate the slingshot curves
@@ -194,7 +195,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   names(pcurve_list) <- paste('Curve', 1:length(pcurve_list), sep='')
 
-  pcurve_list
+  list(pcurve_list = pcurve_list, idx = idx_all)
 }
 
 ##################
