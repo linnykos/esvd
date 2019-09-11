@@ -1,49 +1,39 @@
 rm(list=ls())
-load("../experiment/Writeup_interm_geneordering.RData")
+load("../results/old_results/step5_clustering_spca.RData")
 
-# extract the curves
-## there are some complications: we had upscaled the dataset, so we need to reverse the process
-idx <- our_curves$idx
-lambda_long <- our_curves$curves[[1]]$lambda_long
-length(idx) == length(lambda_long) # check to see if we have the correct representation
+# extract the curve in question
+curve <- our_curves$curves$Curve1$s
+nrow(dat_impute) == length(cluster_labels)
+intersect_labels <- intersect(our_curves$lineages[[1]], our_curves$lineages[[2]])
+# pointer_list <- lapply(intersect_labels, function(x){
+#   print(paste0("Working on index ", x))
+#   idx <- which(cluster_labels == x)
+#
+#   tmp_mat <- matrix(NA, nrow = length(idx), ncol = 3)
+#   tmp_mat[,1] <- idx
+#
+#   # for each point, find the closest index on the curve
+#   for(i in 1:length(idx)){
+#     tmp <- sapply(1:nrow(curve), function(x){.l2norm(res_our$u_mat[idx[i], 1:3] - curve[x,])})
+#     tmp_mat[i,2] <- which.min(tmp)
+#     tmp_mat[i,3] <- min(tmp)
+#   }
+#
+#   tmp_mat[order(tmp_mat[,2]),1]
+# })
 
-length(which(our_curves$curves[[1]]$lambda_long != 0)) == length(our_curves$curves[[1]]$ord) #... ???
-# construct a 3-column matrix:
-## lambda_long (which tells which cells are in the curve),
-## pos (which we need to fill, NA or the ord values)
-## idx (which tells us which cells are duplicated)
-mat <- matrix(NA, nrow = length(idx), ncol = 3)
-mat[,1] <- our_curves$curves[[1]]$lambda_long
-counter <- 1
-for(i in 1:nrow(mat)){
-  if(mat[i,1] != 0) {
-    mat[i,2] <- our_curves$curves[[1]]$ord[counter]
-    counter <- counter + 1
-  }
-}
-mat[,3] <- our_curves$idx
-
-# remove cells not in the curve
-mat <- mat[apply(mat, 1, function(x){!any(is.na(x))}),]
-
-# remove duplicates
-mat <- mat[!duplicated(mat[,3]),]
-
-# append which cell type group each cell is in
-mat <- cbind(mat, NA)
-for(i in 1:nrow(mat)){
-  mat[i,4] <- as.numeric(cell_type_vec[mat[i,3]])
+tmp_mat <- matrix(NA, nrow = length(which(cluster_labels %in% intersect_labels)), ncol = 2)
+tmp_mat[,1] <- which(cluster_labels %in% intersect_labels)
+for(i in 1:nrow(tmp_mat)){
+  tmp <- sapply(1:nrow(curve), function(x){.l2norm(res_our$u_mat[tmp_mat[i,1], 1:3] - curve[x,])})
+  tmp_mat[i,2] <- which.min(tmp)
 }
 
-# find the common indices we want to keep
-intersect_vals <- intersect(our_curves$lineages[[1]], our_curves$lineages[[2]])
-mat <- mat[which(mat[,4] %in% intersect_vals),]
-dim(mat)
+order_cell <- tmp_mat[order(tmp_mat[,2]),1]
+hclust_res <- hclust(dist(t(dat_impute)))
+order_gene <- hclust_res$order
 
-# do a quick sanity check to see if values are roughly in order
-sapply(1:length(intersect_vals), function(i){
-  idx <- intersect_vals[i]
-  summary(mat[which(mat[,4] == idx),2])
-}) # something seems wrong? i might want to do this sorting manually, within each cell subtype....
-
-
+clockwise90 = function(a) { t(a[nrow(a):1,]) }
+tmp_mat <- t(log(dat_impute[order_cell, order_gene]+1))
+bool_mat <- tmp_mat > 1
+image(clockwise90(bool_mat), asp = length(order_gene)/length(order_cell))
