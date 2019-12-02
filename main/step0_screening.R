@@ -8,7 +8,7 @@ cell_types <- unique(marques$cell.info$cell.type)
 set.seed(10)
 cell_idx <- unlist(lapply(cell_types, function(x){
   tmp <- which(marques$cell.info$cell.type == x)
-  sample(tmp, round(length(tmp)/2.5))
+  sample(tmp, round(length(tmp)/1.5))
 }))
 cell_idx <- 1:nrow(dat)
 dat <- dat[cell_idx,]
