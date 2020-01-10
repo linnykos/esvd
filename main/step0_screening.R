@@ -16,7 +16,7 @@ dim(dat)
 
 # # remove genes with too many 0's
 zz <- apply(dat, 2, function(x){length(which(x!=0))})
-dat <- dat[,which(zz > 30)]
+dat <- dat[,which(zz > 30)] # WARNING: CHANGE THIS TO PERCENTAGE
 
 # try a series of SPCAs
 k <- 5
@@ -30,7 +30,6 @@ spca_func <- function(i){
   print(paste0("Finished SPC for level ", i))
   res
 }
-
 
 res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
