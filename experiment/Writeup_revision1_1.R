@@ -90,6 +90,8 @@ for(i in 1:7){
 
 ###################
 
+png("../figure/experiment/revision1_data_subsampled.png", height = 1200, width = 2000, res = 300, units = "px")
+par(mfrow = c(2,4), mar = c(0.5, 0.5, 4, 0.5))
 for(i in 1:7){
   #rescale each row
   dat_impute <- dat_preprocessed[[i]]$dat
@@ -101,13 +103,13 @@ for(i in 1:7){
   #simple svd
   svd_res <- svd(dat_impute)
   plot(svd_res$u[,1], svd_res$u[,2], asp = T, col = as.factor(dat_preprocessed[[i]]$label_vec), pch = 16,
-       main = i)
+       main = i, xaxt = "n", yaxt = "n")
 }
-
-
-
+graphics.off()
 
 #############
+
+# function to create the neighborhood graph
 
 
 # i <- 1
