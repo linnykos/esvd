@@ -9,8 +9,6 @@
   n <- nrow(dat); p <- ncol(dat)
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
-  stopifnot(all(pred_mat[idx] > 0))
-  stopifnot(all(dat[idx] > 0))
 
   1/(n*p) * sum((pred_mat[idx] - dat[idx])^2)
 }
