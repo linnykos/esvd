@@ -11,7 +11,7 @@
   idx <- which(!is.na(dat))
   stopifnot(all(pred_mat > 0))
 
-  1/(n*p) * sum(-log(-pred_mat[idx]) +
+  1/(n*p) * sum(-log(pred_mat[idx]) -
         pred_mat[idx]*dat[idx]*scalar^2 +
         pred_mat[idx]^2*dat[idx]^2*scalar^2/2)
 }
@@ -24,7 +24,7 @@
   idx <- which(!is.na(dat_vec))
   stopifnot(all(pred_vec[idx] > 0))
 
-  1/(n*p) * sum(-log(-pred_vec[idx]) +
+  1/(n*p) * sum(-log(pred_vec[idx]) -
         pred_vec[idx]*dat_vec[idx]*scalar^2 +
         pred_vec[idx]^2*dat_vec[idx]^2*scalar^2/2)
 }
@@ -37,8 +37,8 @@
   stopifnot(all(pred_vec > 0))
 
   tmp <- sapply(idx, function(j){
-    other_mat[j,,drop=F]*(pred_vec[j]*scalar^2*dat_vec[j]^2 +
-                            dat_vec[j]*scalar^2 - 1/pred_vec[j])
+    other_mat[j,,drop=F]*(- 1/pred_vec[j] - dat_vec[j]*scalar^2 +
+                          pred_vec[j]*scalar^2*dat_vec[j]^2)
   })
 
   if(is.matrix(tmp)) 1/(n*p) * rowSums(tmp) else 1/(n*p) * sum(tmp)
@@ -51,7 +51,7 @@
   stopifnot(all(pred_mat > 0))
   idx <- which(!is.na(dat))
 
-  1/(n*p) * sum(-log(-pred_mat[idx]) +
+  1/(n*p) * sum(-log(pred_mat[idx]) -
         pred_mat[idx]*dat[idx]*scalar^2 +
         pred_mat[idx]^2*dat[idx]^2*scalar^2/2)
 }
@@ -63,7 +63,7 @@
   stopifnot(all(!is.na(dat)))
   stopifnot(all(pred_mat > 0))
 
-  (-1/(pred_mat) + scalar^2*dat + scalar^2*dat^2*pred_mat)/(n*p)
+  (-1/(pred_mat) - scalar^2*dat + scalar^2*dat^2*pred_mat)/(n*p)
 }
 
 
