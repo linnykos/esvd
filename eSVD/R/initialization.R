@@ -50,7 +50,7 @@ initialization <- function(dat, k = 2, family = "exponential",
     dat[which(is.na(dat))] <- pred_naive[which(is.na(dat))]
   }
 
-  abs(dat)
+  pmax(dat, 0)
 }
 
 .determine_initial_matrix <- function(dat, family, k, max_val = NA){
