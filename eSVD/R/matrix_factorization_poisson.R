@@ -10,7 +10,7 @@
   pred_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
   stopifnot(all(pred_mat[idx] > 0))
-  stopifnot(all(dat[idx] > 0))
+  stopifnot(all(dat[idx] >= 0))
 
   1/(n*p) * sum(exp(pred_mat[idx]) - pred_mat[idx]*dat[idx])
 }
@@ -21,7 +21,7 @@
   pred_vec <- other_mat %*% current_vec
   idx <- which(!is.na(dat_vec))
   stopifnot(all(pred_vec[idx] > 0))
-  stopifnot(all(dat_vec[idx] > 0))
+  stopifnot(all(dat_vec[idx] >= 0))
 
   1/(n*p) * sum(exp(pred_vec[idx]) - pred_vec[idx]*dat_vec[idx])
 }
@@ -31,7 +31,7 @@
 
   pred_vec <- other_mat %*% current_vec
   idx <- which(!is.na(dat_vec))
-  stopifnot(all(dat_vec[idx] > 0))
+  stopifnot(all(dat_vec[idx] >= 0))
   stopifnot(all(pred_vec[idx] > 0))
 
   tmp <- sapply(idx, function(j){
@@ -47,7 +47,7 @@
   n <- nrow(dat); p <- ncol(dat)
   idx <- which(!is.na(dat))
   stopifnot(all(pred_mat > 0))
-  stopifnot(all(dat[idx] > 0))
+  stopifnot(all(dat[idx] >= 0))
 
   1/(n*p) * sum(exp(pred_mat[idx]) - pred_mat[idx]*dat[idx])
 }
@@ -58,7 +58,7 @@
   n <- nrow(dat); p <- ncol(dat)
   stopifnot(all(!is.na(dat)))
   stopifnot(all(pred_mat > 0))
-  stopifnot(all(dat > 0))
+  stopifnot(all(dat >= 0))
 
   (exp(pred_mat) - dat)/(n*p)
 }
