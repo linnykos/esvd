@@ -58,30 +58,6 @@ test_that(".gradient_vec satisfies the gradient definition", {
   expect_true(all(bool_vec))
 })
 
-test_that(".gradient_vec satisfies the gradient definition with a scalar", {
-  trials <- 100
-
-  bool_vec <- sapply(1:trials, function(x){
-    set.seed(x)
-    dat <- matrix(rpois(40, lambda = 1), nrow = 10, ncol = 4)
-    u_vec <- abs(rnorm(2))
-    u_vec2 <- abs(rnorm(2))
-    v_mat <- abs(matrix(rnorm(8), nrow = 4, ncol = 2))
-
-    i <- sample(1:10, 1)
-    dat_vec <- dat[i,]
-    class(dat_vec) <- c("poisson", class(dat_vec)[length(class(dat_vec))])
-    grad <- .gradient_vec(dat_vec, u_vec, v_mat, scalar = 4, n = nrow(dat), p = ncol(dat))
-
-    res <- .evaluate_objective_single(dat_vec, u_vec, v_mat, scalar = 4, n = nrow(dat), p = ncol(dat))
-    res2 <- .evaluate_objective_single(dat_vec, u_vec2, v_mat, scalar = 4, n = nrow(dat), p = ncol(dat))
-
-    res2 >= res + as.numeric(grad %*% (u_vec2 - u_vec)) - 1e-6
-  })
-
-  expect_true(all(bool_vec))
-})
-
 #################
 
 ## .evaluate_objective is correct
@@ -150,7 +126,7 @@ test_that(".evaluate_objective is correct for rank 1", {
   nll <- sapply(seq_val, function(x){
     u_mat2 <- matrix(x, nrow = 100, ncol = 1)
     v_mat2 <- matrix(x, nrow = 100, ncol = 1)
-    .evaluate_objective(dat, u_mat2, v_mat2, scalar = 2)
+    .evaluate_objective(dat, u_mat2, v_mat2)
   })
 
   min_val <- seq_val[which.min(nll)]
@@ -294,8 +270,8 @@ test_that(".evaluate_objective_mat is the same as .evaluate_objective", {
   pred_mat <- u_mat %*% t(v_mat)
   class(dat) <- c("poisson", class(dat)[length(class(dat))])
 
-  res <- .evaluate_objective_mat(dat, pred_mat, scalar = 2)
-  res2 <- .evaluate_objective(dat, u_mat, v_mat, scalar = 2)
+  res <- .evaluate_objective_mat(dat, pred_mat)
+  res2 <- .evaluate_objective(dat, u_mat, v_mat)
 
   expect_true(abs(res - res2) <= 1e-6)
 })
@@ -325,15 +301,15 @@ test_that(".gradient_mat.poissonn is a proper gradient", {
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x)
-    dat <- abs(matrix(rpois(40, lambda = 1), nrow = 10, ncol = 4))
+    dat <- matrix(rpois(40, lambda = 1), nrow = 10, ncol = 4)
     pred_mat <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
     pred_mat2 <- abs(matrix(rnorm(40), nrow = 10, ncol = 4))
 
     class(dat) <- c("poisson", class(dat)[length(class(dat))])
-    grad <-  .gradient_mat(dat, pred_mat, scalar = 2)
+    grad <-  .gradient_mat(dat, pred_mat)
 
-    res <- .evaluate_objective_mat(dat, pred_mat, scalar = 2)
-    res2 <- .evaluate_objective_mat(dat, pred_mat2, scalar = 2)
+    res <- .evaluate_objective_mat(dat, pred_mat)
+    res2 <- .evaluate_objective_mat(dat, pred_mat2)
 
     res2 >= res + t(as.numeric(grad))%*%as.numeric(pred_mat2 - pred_mat) - 1e-6
   })
@@ -348,7 +324,7 @@ test_that("fit_factorization is appropriate for poisson", {
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
-    dat <- abs(matrix(rexp(25, 1/2), nrow = 5, ncol = 5))
+    dat <- matrix(rexp(25, 1/2), nrow = 5, ncol = 5)
     class(dat) <- c("poisson", class(dat)[length(class(dat))])
     init <- initialization(dat, family = "poisson")
 

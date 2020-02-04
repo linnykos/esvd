@@ -59,30 +59,6 @@ test_that(".gradient_vec satisfies the gradient definition", {
   expect_true(all(bool_vec))
 })
 
-test_that(".gradient_vec satisfies the gradient definition with a scalar", {
-  trials <- 100
-
-  bool_vec <- sapply(1:trials, function(x){
-    set.seed(x)
-    dat <- matrix(rnorm(40), nrow = 10, ncol = 4)
-    u_vec <- rnorm(2)
-    u_vec2 <- rnorm(2)
-    v_mat <- matrix(rnorm(8), nrow = 4, ncol = 2)
-
-    i <- sample(1:10, 1)
-    dat_vec <- dat[i,]
-    class(dat_vec) <- c("gaussian", class(dat_vec)[length(class(dat_vec))])
-    grad <- .gradient_vec(dat_vec, u_vec, v_mat, scalar = 4, n = nrow(dat), p = ncol(dat))
-
-    res <- .evaluate_objective_single(dat_vec, u_vec, v_mat, scalar = 4, n = nrow(dat), p = ncol(dat))
-    res2 <- .evaluate_objective_single(dat_vec, u_vec2, v_mat, scalar = 4, n = nrow(dat), p = ncol(dat))
-
-    res2 >= res + as.numeric(grad %*% (u_vec2 - u_vec)) - 1e-6
-  })
-
-  expect_true(all(bool_vec))
-})
-
 #################
 
 
@@ -152,7 +128,7 @@ test_that(".evaluate_objective is correct for rank 1", {
   nll <- sapply(seq_val, function(x){
     u_mat2 <- matrix(x, nrow = 100, ncol = 1)
     v_mat2 <- matrix(x, nrow = 100, ncol = 1)
-    .evaluate_objective(dat, u_mat2, v_mat2, scalar = 2)
+    .evaluate_objective(dat, u_mat2, v_mat2)
   })
 
   min_val <- seq_val[which.min(nll)]
@@ -296,8 +272,8 @@ test_that(".evaluate_objective_mat is the same as .evaluate_objective", {
   pred_mat <- u_mat %*% t(v_mat)
   class(dat) <- c("gaussian", class(dat)[length(class(dat))])
 
-  res <- .evaluate_objective_mat(dat, pred_mat, scalar = 2)
-  res2 <- .evaluate_objective(dat, u_mat, v_mat, scalar = 2)
+  res <- .evaluate_objective_mat(dat, pred_mat)
+  res2 <- .evaluate_objective(dat, u_mat, v_mat)
 
   expect_true(abs(res - res2) <= 1e-6)
 })
@@ -332,10 +308,10 @@ test_that(".gradient_mat.gaussiann is a proper gradient", {
     pred_mat2 <- matrix(rnorm(40), nrow = 10, ncol = 4)
 
     class(dat) <- c("gaussian", class(dat)[length(class(dat))])
-    grad <-  .gradient_mat(dat, pred_mat, scalar = 2)
+    grad <-  .gradient_mat(dat, pred_mat)
 
-    res <- .evaluate_objective_mat(dat, pred_mat, scalar = 2)
-    res2 <- .evaluate_objective_mat(dat, pred_mat2, scalar = 2)
+    res <- .evaluate_objective_mat(dat, pred_mat)
+    res2 <- .evaluate_objective_mat(dat, pred_mat2)
 
     res2 >= res + t(as.numeric(grad))%*%as.numeric(pred_mat2 - pred_mat) - 1e-6
   })
