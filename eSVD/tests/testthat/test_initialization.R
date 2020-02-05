@@ -169,3 +169,76 @@ test_that("initialization works", {
   expect_true(is.list(res))
 })
 
+#########################
+
+## .project_rank_feasibility is correct
+
+test_that(".project_rank_feasibility works", {
+  set.seed(10)
+  cov_mat <- matrix(0, 10, 10)
+  cov_mat[1:5,1:5] <- 0.3
+  cov_mat[6:10,6:10] <- 0.5
+  diag(cov_mat) <- 1
+
+  dat <- MASS::mvrnorm(n = 50, mu = rep(2, 10), Sigma = cov_mat)
+
+  res <- .project_rank_feasibility(dat, k = 2, direction = ">=")
+
+  expect_true(all(dim(res$matrix) == dim(dat)))
+  expect_true(Matrix::rankMatrix(res$matrix) == 2)
+  expect_true(all(res$matrix >= 0))
+})
+
+test_that(".project_rank_feasibility is able to iterate more than twice", {
+  trials <- 200
+
+  bool_vec <- sapply(1:trials, function(i){
+    set.seed(i)
+    obs <- matrix(rnorm(25), 5, 5)
+    res <- .project_rank_feasibility(obs, k = 2, direction = "<=")
+    res$iter >= 2
+  })
+
+  expect_true(any(bool_vec))
+})
+
+test_that(".project_rank_feasibility can be the same as SVD in simple settings",{
+  set.seed(10)
+  dat <- matrix(rnorm(25, mean = 10), 5, 5)
+  res <-.project_rank_feasibility(dat, k = 2, direction = ">=")
+
+  expect_true(res$iter == 1)
+})
+
+
+test_that(".project_rank_feasibility is doing something meaningful", {
+  # generate a bunch of matrices and their solutions, and see if the approximated
+  #   matrices are indeed the intended solutions
+  trials <- 100
+
+  dat_list <- lapply(1:trials, function(i){
+    set.seed(i)
+    matrix(rnorm(25, mean = 1), 5, 5) # we use a high signal since our method doesn't seem to do that well otherwise...
+  })
+
+  res_list <- lapply(dat_list, function(x){
+    res <- .project_rank_feasibility(x, k = 2, direction = ">=")
+    res
+  })
+
+  iter_vec <- sapply(res_list, function(x){x$iter})
+  expect_true(any(iter_vec >= 2))
+  res_list <- lapply(res_list, function(x){x$matrix})
+
+  # compute the cross-error
+  error_mat <- sapply(1:trials, function(i){
+    vec <- sapply(1:trials, function(j){
+      .l2norm(dat_list[[i]] - res_list[[j]])
+    })
+    vec/min(vec)
+  })
+
+  expect_true(all(diag(error_mat) <= 1.01))
+})
+
+

@@ -16,6 +16,9 @@ initialization <- function(dat, k = 2, family = "exponential",
                            max_iter = 10, tol = 1e-3,
                            verbose = F, ...){
   direction <- .dictate_direction(family)
+  if(!is.na(direction) & !is.na(max_val)){
+    stopifnot((direction == ">=" & max_val > 0) | (direction == "<=" & max_val < 0))
+  }
 
   # initialize
   dat <- .matrix_completion(dat, k = k)
@@ -53,15 +56,15 @@ initialization <- function(dat, k = 2, family = "exponential",
   pmax(dat, 0)
 }
 
-.determine_initial_matrix <- function(dat, family, k, max_val = NA){
+.determine_initial_matrix <- function(dat, family, k, max_val = NA, ...){
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat <= 0)] <- min_val/2
-  pred_mat <- .mean_transformation(dat, family)
+  pred_mat <- .mean_transformation(dat, family, ...)
   direction <- .dictate_direction(family)
 
   class(pred_mat) <- "matrix" #bookeeping purposes
-  .nonnegative_matrix_factorization(pred_mat, k = k, direction = direction,
-                                    max_val = max_val)
+  .project_rank_feasibility(pred_mat, k = k, direction = direction,
+                                    max_val = max_val)$matrix
 }
 
 .projected_gradient_descent <- function(dat, k = 2,
@@ -69,7 +72,7 @@ initialization <- function(dat, k = 2, family = "exponential",
                                         max_iter = 50, tol = 1e-3,
                                         ...){
   n <- nrow(dat); d <- ncol(dat)
-  pred_mat <- .determine_initial_matrix(dat, class(dat)[1], k = k, max_val = max_val)
+  pred_mat <- .determine_initial_matrix(dat, class(dat)[1], k = k, max_val = max_val, ...)
   iter <- 1
   new_obj <- .evaluate_objective_mat(dat, pred_mat, ...)
   old_obj <- Inf
@@ -128,7 +131,7 @@ initialization <- function(dat, k = 2, family = "exponential",
 #' @param gradient_mat \code{n} by \code{d} matrix
 #' @param k numeric
 #' @param max_val numeric or \code{NA}
-#' @param direction "<=" or ">="
+#' @param direction "<=" or ">=" or NA
 #' @param stepsize_init numeric
 #' @param stepdown_factor numeric
 #' @param max_iter numeric
@@ -146,7 +149,7 @@ initialization <- function(dat, k = 2, family = "exponential",
   while(iter > max_iter){
     res <- pred_mat - stepsize*gradient_mat
     new_mat <- .project_rank_feasibility(res, direction = direction,
-                               max_val = max_val)
+                               max_val = max_val)$matrix
 
     if(!any(is.na(new_mat))){
       new_obj <- .evaluate_objective_mat(dat, new_mat, ...)
@@ -166,7 +169,9 @@ initialization <- function(dat, k = 2, family = "exponential",
 .project_rank_feasibility <- function(mat, k, direction, max_val = NA,
                                       max_iter = 50,
                                       give_warning = F){
+  stopifnot(!is.na(max_val) | !is.na(direction))
   if(!is.na(max_val)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
+
   iter <- 1
   tol <- ifelse(direction == "<=", -1, 1)
 
@@ -175,74 +180,31 @@ initialization <- function(dat, k = 2, family = "exponential",
     mat <- res$u_mat %*% t(res$v_mat)
 
     if(direction == "<=") {
-      if(all(mat < 0) && (is.na(max_val) || all(mat > max_val))) return(mat)
+      if(all(mat < 0) && (is.na(max_val) || all(mat > max_val))) return(list(matrix = mat, iter = iter))
 
       if(any(mat < 0)) tol <- min(tol, stats::quantile(mat[mat < 0], probs = 0.95))
       stopifnot(tol < 0)
       mat[mat > 0] <- tol
       if(!is.na(max_val)) mat[mat < max_val] <- max_val
-    }
-    if(direction == ">=") {
-      if(all(mat > 0) && (is.na(max_val) || all(mat < max_val))) return(mat)
+    } else if(direction == ">=") {
+      if(all(mat > 0) && (is.na(max_val) || all(mat < max_val))) return(list(matrix = mat, iter = iter))
 
       if(any(mat > 0)) tol <- max(tol, stats::quantile(mat[mat > 0], probs = 0.05))
       stopifnot(tol > 0)
       mat[mat < 0] <- tol
       if(!is.na(max_val)) mat[mat > max_val] <- max_val
+    } else {
+      # threshold to be within abs(max_val)
+      max_val <- abs(max_val)
+
+      idx <- which(abs(mat) >= max_val)
+      val <- mat[idx]
+      mat[idx] <- sign(val)*max_val
     }
 
     iter <- iter + 1
   }
 
   if(give_warning) warning(".project_rank_feasibility was not successful")
-  NA
-}
-
-.nonnegative_matrix_factorization <- function(mat, k, direction, max_val = NA, tol = 1e-3){
-  if(!is.na(max_val)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
-
-  # corner cases
-  if(direction == "<=" & all(mat > 0)) return(NA)
-  if(direction == ">=" & all(mat < 0)) return(NA)
-
-  # prepare the matrix
-  if(direction == "<=") {
-    mat <- -mat
-    max_val <- -max_val
-  }
-
-  min_val <- stats::quantile(mat[mat > 0], probs = 0.01)
-  stopifnot(min_val > 0)
-  mat[mat < 0] <- min_val
-  if(!is.na(max_val)) mat[mat > max_val] <- max_val
-
-  # perform the nonnegative matrix factorization
-  stopifnot(all(mat > 0))
-  res <- NMF::nmf(mat, rank = k) #requires NMF package to be explicitly loaded
-
-  w_mat <- res@fit@W
-  h_mat <- res@fit@H
-  new_mat <- w_mat %*% h_mat
-
-  # enforce the max constraint by adjusting one matrix
-  idx <- unique(which(new_mat > max_val, arr.ind = T)[,2])
-  if(length(idx) > 0){
-    for(j in idx){
-      ratio <- max_val/max(new_mat[,j])
-      stopifnot(ratio <= 1)
-      h_mat[,j] <- h_mat[,j]*ratio
-    }
-
-    new_mat <- w_mat %*% h_mat
-    stopifnot(all(new_mat <= max_val + 1e-3))
-  }
-
-  stopifnot(new_mat >= 0)
-  new_mat[new_mat < tol] <- tol
-  stopifnot(new_mat > 0)
-
-  # return the matrix
-  if(direction == "<=") new_mat <- -new_mat
-
-  new_mat
+  list(matrix = NA, iter = iter)
 }

@@ -326,17 +326,17 @@ test_that("fit_factorization is appropriate for poisson", {
     set.seed(10*x)
     dat <- matrix(rexp(25, 1/2), nrow = 5, ncol = 5)
     class(dat) <- c("poisson", class(dat)[length(class(dat))])
-    init <- initialization(dat, family = "poisson")
+    init <- initialization(dat, family = "poisson", max_val = 100)
 
     fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                              max_iter = 5, max_val = -100,
+                              max_iter = 5, max_val = 100,
                               family = "poisson")
 
     res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat)
     res2 <- .evaluate_objective(dat, matrix(1, ncol = 1, nrow = 5),
-                                -matrix(1, ncol = 1, nrow = 5))
+                                matrix(1, ncol = 1, nrow = 5))
     res3 <- .evaluate_objective(dat, abs(matrix(rnorm(5), ncol = 1, nrow = 5)),
-                               -abs(matrix(rnorm(5), ncol = 1, nrow = 5)))
+                               abs(matrix(rnorm(5), ncol = 1, nrow = 5)))
 
     res1 < res2 & res1 < res3
   })

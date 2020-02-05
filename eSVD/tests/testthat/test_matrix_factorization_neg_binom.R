@@ -337,7 +337,7 @@ test_that("fit_factorization is appropriate for neg_binom", {
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
-    dat <- abs(matrix(rexp(25, 1/2), nrow = 5, ncol = 5))
+    dat <- matrix(rnbinom(40, size = 10, prob = 0.5), nrow = 5, ncol = 5)
     class(dat) <- c("neg_binom", class(dat)[length(class(dat))])
     init <- initialization(dat, family = "neg_binom")
 

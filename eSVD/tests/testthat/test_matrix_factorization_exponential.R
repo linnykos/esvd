@@ -324,9 +324,9 @@ test_that("fit_factorization is appropriate for exponential", {
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
-    dat <- abs(matrix(rexp(25, 1/2), nrow = 5, ncol = 5))
+    dat <- matrix(rexp(25, 1/2), nrow = 5, ncol = 5)
     class(dat) <- c("exponential", class(dat)[length(class(dat))])
-    init <- initialization(dat, family = "exponential")
+    init <- initialization(dat, family = "exponential", max_val = -100)
 
     fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                               max_iter = 5, max_val = -100,
@@ -343,6 +343,5 @@ test_that("fit_factorization is appropriate for exponential", {
   set.seed(10)
 
   expect_true(all(bool_vec))
-
 })
 

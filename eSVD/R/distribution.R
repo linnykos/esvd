@@ -1,25 +1,36 @@
-.dictate_direction <- function(family = "exponential"){
-  if(family %in% c("exponential", "gaussian")) {
+.dictate_direction <- function(family){
+  direction <- NA
+
+  if(family %in% c("exponential", "neg_binom")) {
     direction <- "<="
-  } else if(family %in% c("poisson")) {
+  } else if(family %in% c("poisson", "curved_gaussian")) {
     direction <- ">="
-  } else {
+  } else if(family != "gaussian") {
     stop("family not found")
   }
 
   direction
 }
 
-.mean_transformation <- function(dat, family = "exponential", tol = 1e-3){
+.mean_transformation <- function(dat, family, tol = 1e-3, ...){
   if(family == "exponential"){
     dat <- -1/dat
-  } else if(family == "gaussian"){
-    dat <- -1/dat
+  } else if(family == "curved_gaussian"){
+    dat <- 1/dat
   } else if(family == "poisson"){
     dat <- log(dat + tol)
-  } else {
+  } else if(family == "neg_binom"){
+    .mean_transformation_neg_binom(dat, tol, ...)
+  } else if(family != "gaussian") {
     stop("family not found")
   }
 
   dat
+}
+
+.mean_transformation_neg_binom <- function(dat, tol, r = NA){
+  if(is.na(NA)) stop("No argument r provided for negative binomial")
+
+  dat_new <- (dat + tol)/r
+  log(dat_new / (1+dat_new))
 }

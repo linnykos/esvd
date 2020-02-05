@@ -346,18 +346,17 @@ test_that(".gradient_mat.curved_gaussiann is a proper gradient", {
 
 #######################
 
-
-test_that("fit_factorization is appropriate for gaussians", {
+test_that("fit_factorization is appropriate for curved gaussians", {
   trials <- 10
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
-    dat <- abs(matrix(rnorm(25, 2, 1), nrow = 5, ncol = 5))
+    dat <- matrix(pmax(rnorm(25, 2, 1), 0), nrow = 5, ncol = 5)
     class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
-    init <- initialization(dat, family = "curved_gaussian")
+    init <- initialization(dat, family = "curved_gaussian", max_val = 100)
 
     fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                             max_iter = 5, max_val = -100,
+                             max_iter = 5, max_val = 100,
                              family = "curved_gaussian")
 
     res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat)
