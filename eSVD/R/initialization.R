@@ -33,10 +33,12 @@ initialization <- function(dat, k = 2, family = "exponential",
   res <- .svd_projection(pred_mat, k = k, factors = T)
   u_mat <- res$u_mat; v_mat <- res$v_mat
 
-  if(direction == "<=") {
-    stopifnot(all(pred_mat[which(!is.na(dat))] < 0))
-  } else {
-    stopifnot(all(pred_mat[which(!is.na(dat))] > 0))
+  if(!is.na(direction)){
+    if(direction == "<=") {
+      stopifnot(all(pred_mat[which(!is.na(dat))] < 0))
+    } else {
+      stopifnot(all(pred_mat[which(!is.na(dat))] > 0))
+    }
   }
 
   list(u_mat = u_mat, v_mat = v_mat)
@@ -170,7 +172,7 @@ initialization <- function(dat, k = 2, family = "exponential",
                                       max_iter = 50,
                                       give_warning = F){
   stopifnot(!is.na(max_val) | !is.na(direction))
-  if(!is.na(max_val)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
+  if(!is.na(max_val) & !is.na(direction)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
 
   iter <- 1
   tol <- ifelse(direction == "<=", -1, 1)
@@ -179,27 +181,30 @@ initialization <- function(dat, k = 2, family = "exponential",
     res <- .svd_projection(mat, k = k, factors = T)
     mat <- res$u_mat %*% t(res$v_mat)
 
-    if(direction == "<=") {
-      if(all(mat < 0) && (is.na(max_val) || all(mat > max_val))) return(list(matrix = mat, iter = iter))
-
-      if(any(mat < 0)) tol <- min(tol, stats::quantile(mat[mat < 0], probs = 0.95))
-      stopifnot(tol < 0)
-      mat[mat > 0] <- tol
-      if(!is.na(max_val)) mat[mat < max_val] <- max_val
-    } else if(direction == ">=") {
-      if(all(mat > 0) && (is.na(max_val) || all(mat < max_val))) return(list(matrix = mat, iter = iter))
-
-      if(any(mat > 0)) tol <- max(tol, stats::quantile(mat[mat > 0], probs = 0.05))
-      stopifnot(tol > 0)
-      mat[mat < 0] <- tol
-      if(!is.na(max_val)) mat[mat > max_val] <- max_val
-    } else {
+    if(is.na(direction)){
+      if(all(abs(mat) <= max_val)) return(list(matrix = mat, iter = iter))
       # threshold to be within abs(max_val)
       max_val <- abs(max_val)
 
       idx <- which(abs(mat) >= max_val)
       val <- mat[idx]
       mat[idx] <- sign(val)*max_val
+
+    } else if (direction == "<=") {
+      if(all(mat < 0) && (is.na(max_val) || all(mat > max_val))) return(list(matrix = mat, iter = iter))
+
+      if(any(mat < 0)) tol <- min(tol, stats::quantile(mat[mat < 0], probs = 0.95))
+      stopifnot(tol < 0)
+      mat[mat > 0] <- tol
+      if(!is.na(max_val)) mat[mat < max_val] <- max_val
+
+    } else{
+      if(all(mat > 0) && (is.na(max_val) || all(mat < max_val))) return(list(matrix = mat, iter = iter))
+
+      if(any(mat > 0)) tol <- max(tol, stats::quantile(mat[mat > 0], probs = 0.05))
+      stopifnot(tol > 0)
+      mat[mat < 0] <- tol
+      if(!is.na(max_val)) mat[mat > max_val] <- max_val
     }
 
     iter <- iter + 1

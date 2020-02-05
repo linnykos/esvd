@@ -43,10 +43,8 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     current_obj <- next_obj
 
     pred_mat <- u_mat%*%t(v_mat)
-    if(direction == "<=") {
-      stopifnot(all(pred_mat <= 0))
-    } else if(direction == ">=") {
-      stopifnot(all(pred_mat >= 0))
+    if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(pred_mat <= 0))
+    } else { stopifnot(all(pred_mat >= 0)) }
     }
 
     if(reparameterize){
@@ -57,11 +55,10 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, parallelized = !is.na(cores), ...)
 
     pred_mat <- u_mat%*%t(v_mat)
-    if(direction == "<=") {
-      stopifnot(all(pred_mat <= 0))
-    } else if(direction == ">=") {
-      stopifnot(all(pred_mat >= 0))
+    if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(pred_mat <= 0))
+      } else { stopifnot(all(pred_mat >= 0)) }
     }
+
 
     if(reparameterize){
       svd_res <- .svd_projection(pred_mat, k = k, factors = T)
@@ -82,10 +79,8 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   tmp <- .reparameterize(u_mat, v_mat)
   u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
   pred_mat <- u_mat%*%t(v_mat)
-  if(direction == "<=") {
-    stopifnot(all(pred_mat < 0))
-  } else if(direction == ">=") {
-    stopifnot(all(pred_mat >= 0))
+  if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(pred_mat <= 0))
+  } else { stopifnot(all(pred_mat >= 0)) }
   }
 
   list(u_mat = u_mat, v_mat = v_mat, obj_vec = obj_vec, res_list = res_list)
@@ -255,30 +250,32 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 .frank_wolfe <- function(grad_vec, other_mat,
                          tol = 0.001, direction = "<=", other_bound = NA){
   stopifnot(!is.na(direction) | !is.na(other_bound))
-  if(!is.na(other_bound)) stopifnot((direction == "<=" & other_bound < 0) | (direction == ">=" & other_bound > 0))
+  if(!is.na(other_bound) & !is.na(direction)) stopifnot((direction == "<=" & other_bound < 0) | (direction == ">=" & other_bound > 0))
 
   k <- length(grad_vec)
-  if(direction == "<=") {
-    other_direction <- ">="
-  } else if(direction == ">="){
-    other_direction <- "<="
-  } else{
+  if(is.na(direction)){
     other_direction <- NA
+  } else if(direction == "<=") {
+    other_direction <- ">="
+  } else {
+    other_direction <- "<="
   }
 
   objective_in <- grad_vec
   constr_mat <- other_mat
   k <- nrow(constr_mat)
 
-  if(direction == "<="){
-    constr_ub <- rep(-tol, k)
-    if(all(is.na(other_bound))) constr_lb <- rep(-Inf, k) else constr_lb <- rep(other_bound, k)
-  } else if(direction == ">=") {
-    constr_lb <- rep(tol, k)
-    if(all(is.na(other_bound))) constr_ub <- rep(Inf, k) else constr_ub <- rep(other_bound, k)
-  } else{
+  if (is.na(direction)){
     constr_lb <- rep(-abs(other_bound), k)
     constr_ub <- rep(abs(other_bound), k)
+
+  } else if(direction == "<="){
+    constr_ub <- rep(-tol, k)
+    if(all(is.na(other_bound))) constr_lb <- rep(-Inf, k) else constr_lb <- rep(other_bound, k)
+
+  } else {
+    constr_lb <- rep(tol, k)
+    if(all(is.na(other_bound))) constr_ub <- rep(Inf, k) else constr_ub <- rep(other_bound, k)
   }
 
   if(all(is.na(other_bound))){
@@ -291,11 +288,14 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
   stopifnot(res$status == 0)
 
-  if(direction == "<="){
-    stopifnot(all(other_mat %*% res$solution <= 0))
-  } else {
-    stopifnot(all(other_mat %*% res$solution >= 0))
+  if(!is.na(direction)){
+    if(direction == "<="){
+      stopifnot(all(other_mat %*% res$solution <= 0))
+    } else {
+      stopifnot(all(other_mat %*% res$solution >= 0))
+    }
   }
+
 
   res$solution
 }
