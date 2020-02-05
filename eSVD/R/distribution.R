@@ -20,7 +20,7 @@
   } else if(family == "poisson"){
     dat <- log(dat + tol)
   } else if(family == "neg_binom"){
-    .mean_transformation_neg_binom(dat, tol, ...)
+    dat <- .mean_transformation_neg_binom(dat, tol, ...)
   } else if(family != "gaussian") {
     stop("family not found")
   }
@@ -28,9 +28,9 @@
   dat
 }
 
-.mean_transformation_neg_binom <- function(dat, tol, r = NA){
-  if(is.na(NA)) stop("No argument r provided for negative binomial")
+.mean_transformation_neg_binom <- function(dat, tol, size = NA){
+  if(is.na(size)) stop("No argument r provided for negative binomial")
 
-  dat_new <- (dat + tol)/r
+  dat_new <- (dat + tol)/size
   log(dat_new / (1+dat_new))
 }

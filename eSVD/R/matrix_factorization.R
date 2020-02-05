@@ -6,7 +6,6 @@
 #' @param max_val maximum value of the inner product (with the correct sign)
 #' @param family either \code{"gaussian"} or \code{"exponential"}
 #' @param reparameterize boolean
-#' @param scalar positive numeric for the Gaussian family
 #' @param tol small positive number to dictate the convergence of the objective function
 #' @param max_iter maximum number of iterations for the algorithm
 #' @param verbose boolean
@@ -18,10 +17,9 @@
 fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
                                family = "exponential",
                                reparameterize = T,
-                               scalar = 2,
                                tol = 1e-3, max_iter = 100,
                                verbose = F, return_path = F,
-                               cores = NA){
+                               cores = NA, ...){
   if(!is.na(cores)) doMC::registerDoMC(cores = cores)
   stopifnot(length(which(dat > 0)) > 0)
   stopifnot(length(which(dat < 0)) == 0)
@@ -36,7 +34,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   direction <- .dictate_direction(class(dat)[1])
 
   current_obj <- Inf
-  next_obj <- .evaluate_objective(dat, u_mat, v_mat, scalar = scalar)
+  next_obj <- .evaluate_objective(dat, u_mat, v_mat, ...)
   obj_vec <- c(next_obj)
   if(verbose) print(paste0("Finished initialization : Current objective is ", next_obj))
   if(return_path) res_list <- list(list(u_mat = u_mat, v_mat = v_mat)) else res_list <- NA
@@ -56,8 +54,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
       u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
     }
 
-    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val,
-                           scalar = scalar, !is.na(cores))
+    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, parallelized = !is.na(cores), ...)
 
     pred_mat <- u_mat%*%t(v_mat)
     if(direction == "<=") {
@@ -71,10 +68,9 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
       u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
     }
 
-    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val,
-                           scalar = scalar, !is.na(cores))
+    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, parallelized = !is.na(cores), ...)
 
-    next_obj <- .evaluate_objective(dat, u_mat, v_mat, scalar = scalar)
+    next_obj <- .evaluate_objective(dat, u_mat, v_mat, ...)
 
 
     if(verbose) print(paste0("Iter ", length(obj_vec), ": Decrease is ", current_obj - next_obj))
@@ -109,7 +105,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 }
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
-                          scalar = 2, parallelized = F, verbose = F){
+                          parallelized = F, verbose = F, ...){
   stopifnot(length(class(dat)) == 2)
   n <- nrow(dat); p <- ncol(dat)
 
@@ -129,8 +125,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
       }
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
       .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val,
-                    n = n, p = p,
-                    scalar = scalar)
+                    n = n, p = p, ...)
     }
 
     lis <- foreach::"%dopar%"(foreach::foreach(i = 1:nrow(current_mat)), func(i))
@@ -148,8 +143,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
       class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
       if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
                                                                 other_mat, max_val = max_val,
-                                                                n = n, p = p,
-                                                                scalar = scalar)
+                                                                n = n, p = p, ...)
     }
   }
 
