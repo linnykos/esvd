@@ -48,7 +48,6 @@
   stopifnot(all(dim(dat) == dim(pred_mat)))
 
   n <- nrow(dat); p <- ncol(dat)
-  stopifnot(all(!is.na(dat)))
 
   1/(n*p) * 2 * (pred_mat - dat)
 }

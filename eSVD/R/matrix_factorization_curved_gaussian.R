@@ -8,8 +8,9 @@
 
   n <- nrow(dat); p <- ncol(dat)
   pred_mat <- u_mat %*% t(v_mat)
-  idx <- which(!is.na(dat))
   stopifnot(all(pred_mat > 0))
+
+  idx <- which(!is.na(dat))
 
   1/(n*p) * sum(-log(pred_mat[idx]) -
         pred_mat[idx]*dat[idx]*scalar^2 +
@@ -21,8 +22,9 @@
   stopifnot(length(current_vec) == ncol(other_mat), nrow(other_mat) == length(dat_vec))
 
   pred_vec <- other_mat %*% current_vec
+  stopifnot(all(pred_vec > 0))
+
   idx <- which(!is.na(dat_vec))
-  stopifnot(all(pred_vec[idx] > 0))
 
   1/(n*p) * sum(-log(pred_vec[idx]) -
         pred_vec[idx]*dat_vec[idx]*scalar^2 +
@@ -33,8 +35,9 @@
   stopifnot(length(current_vec) == ncol(other_mat), nrow(other_mat) == length(dat_vec))
 
   pred_vec <- other_mat %*% current_vec
-  idx <- which(!is.na(dat_vec))
   stopifnot(all(pred_vec > 0))
+
+  idx <- which(!is.na(dat_vec))
 
   tmp <- sapply(idx, function(j){
     other_mat[j,,drop=F]*(- 1/pred_vec[j] - dat_vec[j]*scalar^2 +
@@ -45,10 +48,9 @@
 }
 
 .evaluate_objective_mat.curved_gaussian <- function(dat, pred_mat, scalar = 2, ...){
-  stopifnot(all(dim(dat) == dim(pred_mat)))
+  stopifnot(all(dim(dat) == dim(pred_mat)), all(pred_mat > 0))
 
   n <- nrow(dat); p <- ncol(dat)
-  stopifnot(all(pred_mat > 0))
   idx <- which(!is.na(dat))
 
   1/(n*p) * sum(-log(pred_mat[idx]) -
@@ -57,11 +59,9 @@
 }
 
 .gradient_mat.curved_gaussian <- function(dat, pred_mat, scalar = 2, ...){
-  stopifnot(all(dim(dat) == dim(pred_mat)))
+  stopifnot(all(dim(dat) == dim(pred_mat)), all(pred_mat > 0))
 
   n <- nrow(dat); p <- ncol(dat)
-  stopifnot(all(!is.na(dat)))
-  stopifnot(all(pred_mat > 0))
 
   (-1/(pred_mat) - scalar^2*dat + scalar^2*dat^2*pred_mat)/(n*p)
 }
