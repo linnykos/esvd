@@ -1,153 +1,126 @@
 rm(list=ls())
-set.seed(10)
-cell_pop <- matrix(c(4,10, 25,100,
-                     40,10, 60,80,
-                     60,80, 25,100,
-                     60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
-h <- nrow(cell_pop)
-n_each <- 50
-dat <- do.call(rbind, lapply(1:h, function(x){
-  pos <- stats::runif(n_each)
-  cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 0.1),
-        pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
-}))
-cluster_labels <- rep(1:4, each = 50)
-lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
+trials <- 10
+n <- 50
 
-# res <- .get_curves(dat, cluster_labels, lineages)
+dat_list <- lapply(1:trials, function(x){
+  set.seed(x)
+  u_mat <- matrix(abs(rnorm(50)), ncol = 1)
+  v_mat <- matrix(abs(rnorm(50)), ncol = 1)
+  pred_mat <- u_mat %*% t(v_mat)
 
-########
-cluster_group_list = NA
-use_initialization = F
-reduction_percentage = 0.25
-shrink = 1
-thresh = 0.001
-max_iter = 15
-upscale_vec =  rep(0.5, 4)
+  dat <- pred_mat
+
+  for(i in 1:10){
+    for(j in 1:4){
+      dat[i,j] <- abs(stats::rnorm(1, mean = 1/pred_mat[i,j], sd = 1/(2*pred_mat[i,j])))
+    }
+  }
+
+  dat
+})
+i=1
+# init <- initialization(dat_list[[i]], family = "curved_gaussian", max_val = 100)
+#############
+
+family = "curved_gaussian"
+k = 2
+tol = 1e-3
+max_val = 100
+max_iter = 10
 verbose = F
+dat <- dat_list[[1]]
 
-stopifnot(shrink >= 0 & shrink <= 1)
-
-if(!any(is.na(upscale_vec))){
-  idx_all <- unlist(lapply(1:max(cluster_labels, na.rm = T), function(x){
-    idx <- which(cluster_labels == x)
-    sample(idx, round(upscale_vec[x]*length(idx)), replace = T)
-  }))
-  dat <- dat[idx_all,]
-  cluster_labels <- cluster_labels[idx_all]
+direction <- .dictate_direction(family)
+if(!is.na(direction) & !is.na(max_val)){
+  stopifnot((direction == ">=" & max_val > 0) | (direction == "<=" & max_val < 0))
 }
 
-### setup
-num_lineage <- length(lineages)
-if(any(is.na(cluster_labels))) {
-  idx <- which(is.na(cluster_labels))
-  dat <- dat[-idx,]
-  cluster_labels <- cluster_labels[-idx]
-}
-cluster_mat <- .construct_cluster_matrix(cluster_labels)
-cluster_vec <- 1:ncol(cluster_mat)
-centers <- .compute_cluster_center(dat, cluster_mat)
+# initialize
+dat <- .matrix_completion(dat, k = k)
+if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
 
-W <- .initialize_weight_matrix(cluster_mat, lineages)
+# projected gradient descent
+# pred_mat <- .projected_gradient_descent(dat, k = k, max_val = max_val,
+#                                         direction = direction,
+#                                         max_iter = max_iter,
+#                                         tol = tol)
 
-### initial curves are piecewise linear paths through the tree
-if(verbose) print("Starting to initialize curves")
-s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
-res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
-pcurve_list <- res$pcurve_list; D <- res$D
+#############
 
-if(length(lineages) == 1) {
-  s_list <- lapply(1:num_lineage, function(lin){
-    sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
-    .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F])
-  })
+n <- nrow(dat); d <- ncol(dat)
+# pred_mat <- .determine_initial_matrix(dat, class(dat)[1], k = k, max_val = max_val)
+# iter <- 1
+# new_obj <- .evaluate_objective_mat(dat, pred_mat, ...)
+# old_obj <- Inf
+#
+# while(abs(new_obj - old_obj) > tol & iter < max_iter){
+#   old_obj <- new_obj
+#   gradient_mat <- .gradient_mat(dat, pred_mat, ...)
+#   new_mat <- .adaptive_gradient_step(dat, pred_mat, gradient_mat, k = k,
+#                                      max_val = max_val, direction = direction,
+#                                      ...)
+#
+#   new_obj <- .evaluate_objective_mat(dat, new_mat, ...)
+#   pred_mat <- new_mat
+#   iter <- iter + 1
+# }
+#
+# pred_mat
 
-  res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
-  pcurve_list <- res$pcurve_list; D <- res$D
-  return(pcurve_list)
-}
+####################
 
-### determine curve hierarchy
-avg_order <- .initialize_curve_hierarchy(lineages, cluster_vec)
+min_val <- min(dat[which(dat > 0)])
+dat[which(dat <= 0)] <- min_val/2
+pred_mat <- .mean_transformation(dat, family)
+direction <- .dictate_direction(family)
 
-### track distances between curves and data points to determine convergence
-dist_new <- sum(abs(D[W>0]))
-dist_old <- Inf
+# .project_rank_feasibility(pred_mat, k = k, direction = direction,
+#                           max_val = max_val)$matrix
+
+######################
+
+mat <- pred_mat
+stopifnot(!is.na(max_val) | !is.na(direction))
+if(!is.na(max_val) & !is.na(direction)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
+
+tol2 = 1e-6
 
 iter <- 1
-# while (abs((dist_old - dist_new) >= thresh * dist_old) && iter < max_iter){
-  if(verbose) print(paste0("On iteration ", iter))
-  dist_old <- dist_new
+tol <- ifelse(direction == "<=", -1, 1)
 
-  ### predict each dimension as a function of lambda (pseudotime)
-  s_list <- lapply(1:num_lineage, function(lin){
-    sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
-    .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F])
-  })
+while(iter < max_iter){
+  res <- .svd_projection(mat, k = k, factors = T)
+  mat <- res$u_mat %*% t(res$v_mat)
 
-  if(verbose) print("Refining curves")
-  res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
-  pcurve_list <- res$pcurve_list; D <- res$D
-  dist_new <- sum(D[W>0], na.rm=TRUE)
+  if(is.na(direction)){
+    if(all(abs(mat) <= max_val+tol2)) return(list(matrix = mat, iter = iter))
+    # threshold to be within abs(max_val)
+    max_val <- abs(max_val)
 
-  # shrink together lineages near shared clusters
-  if(verbose) print("Shrinking curves together")
-  #if(shrink > 0){
-    avg_curve_list <- vector("list", length(avg_order))
-    names(avg_curve_list) <- paste0("Average", 1:length(avg_order))
-    pct_shrink <- vector("list", length(avg_order))
+    idx <- which(abs(mat) >= max_val)
+    val <- mat[idx]
+    mat[idx] <- sign(val)*(max_val-tol2)
 
-    ### determine average curves and amount of shrinkage
-    for (i in 1:length(avg_order)) {
-      to_avg_curves <- lapply(avg_order[[i]], function(n_element){
-        if(grepl('Lineage', n_element)){
-          pcurve_list[[n_element]]
-        } else {
-          avg_curve_list[[n_element]]
-        }
-      })
+  } else if (direction == "<=") {
+    if(all(mat < 0+tol2) && (is.na(max_val) || all(mat > max_val-tol2))) return(list(matrix = mat, iter = iter))
 
-      avg <- .construct_average_curve(to_avg_curves, dat)
-      avg_curve_list[[i]] <- avg
+    if(any(mat < 0)) tol <- min(tol, stats::quantile(mat[mat < 0], probs = 0.95))
+    stopifnot(tol < 0)
+    mat[mat > 0] <- tol
+    if(!is.na(max_val)) mat[mat < max_val] <- max_val+tol2
 
-      # find the indicies shared by all the curves
-      common_ind <- which(rowMeans(sapply(to_avg_curves, function(crv){ crv$W > 0 })) == 1)
-      pct_shrink[[i]] <- lapply(to_avg_curves, function(curve) {
-        .percent_shrinkage(curve, common_ind)
-      })
+  } else{
+    print(iter)
+    print(all(mat > 0-tol2))
+    print(all(mat < max_val+tol2))
 
-      pct_shrink[[i]] <- .check_shrinkage(pct_shrink[[i]])
-    }
+    if(all(mat > 0-tol2) && (is.na(max_val) || all(mat < max_val+tol2))) return(list(matrix = mat, iter = iter))
 
-    ### do the shrinking in reverse order
-    #for(i in rev(1:length(avg_curve_list))){
-    i = 1
-      avg_curve <- avg_curve_list[[i]]
-      to_shrink_list <-  lapply(avg_order[[i]], function(n_element){
-        if(grepl('Lineage', n_element)){
-          pcurve_list[[n_element]]
-        } else {
-          avg_curve_list[[n_element]]
-        }
-      })
+    if(any(mat > 0)) tol <- max(tol, stats::quantile(mat[mat > 0], probs = 0.05))
+    stopifnot(tol > 0)
+    mat[mat < 0] <- tol
+    if(!is.na(max_val)) mat[mat > max_val] <- max_val-tol2
+  }
 
-      #shrunk_list <- lapply(1:length(to_shrink_list),function(j){
-      j=1
-        pcurve <- to_shrink_list[[j]]
-        .shrink_to_avg(pcurve, avg_curve,
-                       pct_shrink[[i]][[j]] * shrink, dat)
-     # })
-
-#       for(j in 1:length(avg_order[[i]])){
-#         ns <- avg_order[[i]][[j]]
-#         if(grepl('Lineage', ns)){
-#           pcurve_list[[ns]] <- shrunk_list[[j]]
-#         } else {
-#           avg_curve_list[[ns]] <- shrunk_list[[j]]
-#         }
-#       }
-#     # }
-#  #  }
-#
-#   iter <- iter + 1
-# # }
+  iter <- iter + 1
+}

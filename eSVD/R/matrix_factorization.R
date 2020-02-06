@@ -94,8 +94,8 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   pred_mat <- u_mat %*% t(v_mat)
   svd_res <- svd(pred_mat)
   if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
-  u_mat <- svd_res$u[,1:k] %*% diag(diag_vec)
-  v_mat <- svd_res$v[,1:k] %*% diag(diag_vec)
+  u_mat <- svd_res$u[,1:k,drop = F] %*% diag(diag_vec)
+  v_mat <- svd_res$v[,1:k,drop = F] %*% diag(diag_vec)
   list(u_mat = u_mat, v_mat = v_mat)
 }
 

@@ -421,6 +421,16 @@ test_that(".reparameterize works", {
   expect_true(all(dim(res$v_mat) == dim(v_mat)))
 })
 
+test_that(".reparameterize works for rank 1 matrices", {
+  set.seed(10)
+  u_mat <- matrix(rnorm(50), ncol = 1)
+  v_mat <-matrix(rnorm(50), ncol = 1)
+
+  res <- .reparameterize(u_mat, v_mat)
+
+  expect_true(length(res) == 2)
+})
+
 test_that(".reparameterize preserves the inner products", {
   trials <- 100
 

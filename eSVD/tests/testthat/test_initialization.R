@@ -210,7 +210,6 @@ test_that(".project_rank_feasibility can be the same as SVD in simple settings",
   expect_true(res$iter == 1)
 })
 
-
 test_that(".project_rank_feasibility is doing something meaningful", {
   # generate a bunch of matrices and their solutions, and see if the approximated
   #   matrices are indeed the intended solutions
@@ -239,6 +238,51 @@ test_that(".project_rank_feasibility is doing something meaningful", {
   })
 
   expect_true(all(diag(error_mat) <= 1.01))
+})
+
+test_that(".project_rank_feasibility handles non-convergence settings gracefully", {
+  set.seed(1)
+  n <- 50
+  u_mat <- matrix(abs(rnorm(50)), ncol = 1)
+  v_mat <- matrix(abs(rnorm(50)), ncol = 1)
+  pred_mat <- u_mat %*% t(v_mat)
+
+  dat <- pred_mat
+
+  for(i in 1:10){
+    for(j in 1:4){
+      dat[i,j] <- abs(stats::rnorm(1, mean = 1/pred_mat[i,j], sd = 1/(2*pred_mat[i,j])))
+    }
+  }
+
+  family = "curved_gaussian"
+  k = 2
+  tol = 1e-3
+  max_val = 100
+  max_iter = 10
+  verbose = F
+
+  direction <- .dictate_direction(family)
+  if(!is.na(direction) & !is.na(max_val)){
+    stopifnot((direction == ">=" & max_val > 0) | (direction == "<=" & max_val < 0))
+  }
+
+  # initialize
+  dat <- .matrix_completion(dat, k = k)
+  if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
+
+  min_val <- min(dat[which(dat > 0)])
+  dat[which(dat <= 0)] <- min_val/2
+  pred_mat <- .mean_transformation(dat, family)
+  direction <- .dictate_direction(family)
+
+  res <- .project_rank_feasibility(pred_mat, k = k, direction = direction, max_val = max_val,
+                                   max_iter = max_iter)
+
+  expect_true(is.na(res$iter))
+  expect_true(Matrix::rankMatrix(res$matrix) == 2)
+  expect_true(all(res$matrix >= 0))
+  expect_true(all(res$matrix <= max_val))
 })
 
 
