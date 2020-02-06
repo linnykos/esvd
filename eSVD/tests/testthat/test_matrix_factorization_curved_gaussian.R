@@ -374,21 +374,23 @@ test_that("fit_factorization is appropriate for curved gaussians", {
 
 test_that("fit_factorization is appropriately minimized among rank 1 matrices", {
   trials <- 10
-  n <- 50
+  n <- 20
 
   dat_list <- lapply(1:trials, function(x){
     set.seed(x)
-    u_mat <- matrix(abs(rnorm(50)), ncol = 1)
-    v_mat <- matrix(abs(rnorm(50)), ncol = 1)
+    u_mat <- matrix(abs(rnorm(n)), ncol = 1)
+    v_mat <- matrix(abs(rnorm(n)), ncol = 1)
     pred_mat <- u_mat %*% t(v_mat)
 
     dat <- pred_mat
 
-    for(i in 1:10){
-      for(j in 1:4){
+    for(i in 1:n){
+      for(j in 1:n){
         dat[i,j] <- abs(stats::rnorm(1, mean = 1/pred_mat[i,j], sd = 1/(2*pred_mat[i,j])))
       }
     }
+
+    class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
 
     dat
   })
@@ -400,5 +402,15 @@ test_that("fit_factorization is appropriately minimized among rank 1 matrices", 
                              max_iter = 10, max_val = 100,
                              family = "curved_gaussian")
   })
+
+  # compare the grid of objective values to dataset
+  error_mat <- sapply(1:trials, function(i){
+    vec <- sapply(1:trials, function(j){
+      .evaluate_objective(dat_list[[i]], fit_list[[j]]$u_mat, fit_list[[j]]$v_mat)
+    })
+    (vec - min(vec))/diff(range(vec))
+  })
+
+  expect_true(all(diag(error_mat) <= 1e-6))
 })
 

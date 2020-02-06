@@ -91,7 +91,7 @@ test_that(".evaluate_objective yields a smaller value under truth", {
 
     for(i in 1:10){
       for(j in 1:4){
-        dat[i,j] <- abs(stats::rexp(1, rate = -pred_mat[i,j]))
+        dat[i,j] <- stats::rexp(1, rate = -pred_mat[i,j])
       }
     }
 
@@ -118,7 +118,7 @@ test_that(".evaluate_objective is correct for rank 1", {
 
   for(i in 1:nrow(u_mat)){
     for(j in 1:nrow(v_mat)){
-      dat[i,j] <- abs(stats::rexp(1, rate = -pred_mat[i,j]))
+      dat[i,j] <- stats::rexp(1, rate = -pred_mat[i,j])
     }
   }
 
@@ -221,7 +221,7 @@ test_that(".evaluate_objective_single yields a smaller value under truth", {
 
     for(i in 1:10){
       for(j in 1:4){
-        dat[i,j] <- abs(stats::rexp(1, rate = -pred_mat[i,j]))
+        dat[i,j] <- stats::rexp(1, rate = -pred_mat[i,j])
       }
     }
 
@@ -344,4 +344,47 @@ test_that("fit_factorization is appropriate for exponential", {
 
   expect_true(all(bool_vec))
 })
+
+test_that("fit_factorization is appropriately minimized among rank 1 matrices", {
+  trials <- 10
+  n <- 20
+
+  dat_list <- lapply(1:trials, function(x){
+    set.seed(x)
+    u_mat <- matrix(abs(rnorm(n)), ncol = 1)
+    v_mat <- -matrix(abs(rnorm(n)), ncol = 1)
+    pred_mat <- u_mat %*% t(v_mat)
+
+    dat <- pred_mat
+
+    for(i in 1:n){
+      for(j in 1:n){
+        dat[i,j] <- stats::rexp(1, rate = -pred_mat[i,j])
+      }
+    }
+
+    class(dat) <- c("exponential", class(dat)[length(class(dat))])
+
+    dat
+  })
+
+  fit_list <- lapply(1:trials, function(i){
+    init <- initialization(dat_list[[i]], k = 1, family = "exponential", max_val = -100)
+
+    fit <- fit_factorization(dat_list[[i]], k = 1, u_mat = init$u_mat, v_mat = init$v_mat,
+                             max_iter = 10, max_val = -100,
+                             family = "exponential")
+  })
+
+  # compare the grid of objective values to dataset
+  error_mat <- sapply(1:trials, function(i){
+    vec <- sapply(1:trials, function(j){
+      .evaluate_objective(dat_list[[i]], fit_list[[j]]$u_mat, fit_list[[j]]$v_mat)
+    })
+    (vec - min(vec))/diff(range(vec))
+  })
+
+  expect_true(all(diag(error_mat) <= 1e-6))
+})
+
 

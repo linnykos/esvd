@@ -359,3 +359,48 @@ test_that("fit_factorization is appropriate for neg_binom", {
 
 })
 
+test_that("fit_factorization is appropriately minimized among rank 1 matrices", {
+  trials <- 10
+  n <- 20
+
+  dat_list <- lapply(1:trials, function(x){
+    set.seed(x)
+    u_mat <- matrix(abs(rnorm(n)), ncol = 1)
+    v_mat <- -matrix(abs(rnorm(n)), ncol = 1)
+    pred_mat <- u_mat %*% t(v_mat)
+
+    dat <- pred_mat
+
+    for(i in 1:n){
+      for(j in 1:n){
+        dat[i,j] <- stats::rnbinom(1, size = 10, prob = 1-exp(pred_mat[i,j]))
+      }
+    }
+
+    class(dat) <- c("neg_binom", class(dat)[length(class(dat))])
+
+    dat
+  })
+
+  fit_list <- lapply(1:trials, function(i){
+    init <- initialization(dat_list[[i]], k = 1, family = "neg_binom", max_val = -100, size = 10)
+
+    fit <- fit_factorization(dat_list[[i]], k = 1, u_mat = init$u_mat, v_mat = init$v_mat,
+                             max_iter = 10, max_val = -100,
+                             family = "neg_binom", size = 10)
+  })
+
+  # compare the grid of objective values to dataset
+  error_mat <- sapply(1:trials, function(i){
+    vec <- sapply(1:trials, function(j){
+      .evaluate_objective(dat_list[[i]], fit_list[[j]]$u_mat, fit_list[[j]]$v_mat, size = 10)
+    })
+    (vec - min(vec))/diff(range(vec))
+  })
+
+  expect_true(all(diag(error_mat) <= 1e-6))
+})
+
+
+
+
