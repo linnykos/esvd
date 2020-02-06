@@ -11,7 +11,7 @@
 #'
 #' @return list
 #' @export
-initialization <- function(dat, k = 2, family = "exponential",
+initialization <- function(dat, k = 2, family,
                            max_val = NA,
                            max_iter = 10, tol = 1e-3,
                            verbose = F, ...){

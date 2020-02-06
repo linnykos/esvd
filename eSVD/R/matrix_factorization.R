@@ -15,7 +15,7 @@
 #' @return list
 #' @export
 fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
-                               family = "exponential",
+                               family,
                                reparameterize = T,
                                tol = 1e-3, max_iter = 100,
                                verbose = F, return_path = F,

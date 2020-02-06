@@ -113,7 +113,7 @@ test_that(".adaptive_gradient_step always gives solutions within the constraint"
 test_that(".projected_gradient_descent works", {
   set.seed(10)
   dat <- abs(matrix(rnorm(100), 10, 10))
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+  class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
   direction <- .dictate_direction(class(dat)[1])
 
   res <- .projected_gradient_descent(dat, k = 2, max_iter = 5,
@@ -129,7 +129,7 @@ test_that(".projected_gradient_descent decreases the value", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x)
     dat <- abs(matrix(rnorm(100), 10, 10))
-    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
     direction <- .dictate_direction(class(dat)[1])
 
     original_res <- .determine_initial_matrix(dat, class(dat)[1], k = 2)
@@ -153,18 +153,18 @@ test_that("initialization works", {
   set.seed(10)
   true_val <- 1/2
   u_mat <- matrix(true_val, nrow = 100, ncol = 1)
-  v_mat <- -matrix(true_val, nrow = 100, ncol = 1)
+  v_mat <- matrix(true_val, nrow = 100, ncol = 1)
   pred_mat <- u_mat %*% t(v_mat)
   dat <- pred_mat
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+  class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
 
   for(i in 1:nrow(u_mat)){
     for(j in 1:nrow(v_mat)){
-      dat[i,j] <- abs(stats::rnorm(1, mean = -1/pred_mat[i,j], sd = -1/(2*pred_mat[i,j])))
+      dat[i,j] <- abs(stats::rnorm(1, mean = 1/pred_mat[i,j], sd = 1/(2*pred_mat[i,j])))
     }
   }
 
-  res <- initialization(dat, k = 2, family = "gaussian", max_val = -1000)
+  res <- initialization(dat, k = 2, family = "gaussian", max_val = 100)
 
   expect_true(is.list(res))
 })
