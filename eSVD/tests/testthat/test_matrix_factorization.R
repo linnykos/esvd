@@ -5,9 +5,9 @@ library(NMF)
 
 test_that(".optimize_row works", {
   set.seed(20)
-  dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+  dat <- matrix(rexp(40), nrow = 10, ncol = 4)
 
-  res <- initialization(dat)
+  res <- initialization(dat, family = "exponential")
   u_mat <- res$u_mat
   v_mat <- res$v_mat
   i <- 1
@@ -25,9 +25,9 @@ test_that(".optimize_row actually lowers the objective", {
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
-    dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+    dat <- matrix(rexp(40), nrow = 10, ncol = 4)
 
-    res <- initialization(dat, max_val = -100)
+    res <- initialization(dat, max_val = -100, family = "exponential")
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     i <- sample(1:10, 1)
@@ -53,7 +53,7 @@ test_that(".optimize_row works the other way", {
     set.seed(x*10)
     dat <-  matrix(rexp(40), nrow = 10, ncol = 4)
 
-    res <- initialization(dat, max_val = -100)
+    res <- initialization(dat, max_val = -100, family = "exponential")
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     j <- sample(1:4, 1)
@@ -97,10 +97,10 @@ test_that(".optimize_row respects an upper bound", {
 
 test_that(".optimize_mat works", {
   set.seed(20)
-  dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+  dat <- matrix(rexp(40), nrow = 10, ncol = 4)
   class(dat) <- c("exponential", class(dat))
 
-  res <- initialization(dat, max_val = -100)
+  res <- initialization(dat, max_val = -100, family = "exponential")
   u_mat <- res$u_mat
   v_mat <- res$v_mat
 
@@ -113,10 +113,10 @@ test_that(".optimize_mat works", {
 
 test_that(".optimize_mat works with parallelization", {
   set.seed(20)
-  dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+  dat <- matrix(rexp(40), nrow = 10, ncol = 4)
   class(dat) <- c("exponential", class(dat))
 
-  res <- initialization(dat, max_val = -100)
+  res <- initialization(dat, max_val = -100, family = "exponential")
   u_mat <- res$u_mat
   v_mat <- res$v_mat
 
@@ -133,11 +133,11 @@ test_that(".optimize_mat keeps the negative constraint", {
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
-    dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+    dat <- matrix(rexp(40), nrow = 10, ncol = 4)
     class(dat) <- c("exponential", class(dat))
     bool <- sample(c(T, F), 1)
 
-    res <- initialization(dat, max_val = -100)
+    res <- initialization(dat, max_val = -100, family = "exponential")
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     if(bool){
@@ -190,11 +190,11 @@ test_that(".optimize_mat lowers the objective value", {
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
-    dat <- abs(matrix(rexp(40), nrow = 10, ncol = 4))
+    dat <- matrix(rexp(40), nrow = 10, ncol = 4)
     class(dat) <- c("exponential", class(dat))
     bool <- sample(c(T, F), 1)
 
-    res <- initialization(dat, max_val = -100)
+    res <- initialization(dat, max_val = -100, family = "exponential")
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     obj1 <- .evaluate_objective(dat, u_mat, v_mat)

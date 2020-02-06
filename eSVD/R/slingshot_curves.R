@@ -78,6 +78,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
     }))
     dat <- dat[idx_all,]
     cluster_labels <- cluster_labels[idx_all]
+  } else {
+    idx_all <- 1:nrow(dat)
   }
 
   ### setup
@@ -468,11 +470,14 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   stopifnot(length(pct) == length(pcurve$lambda))
   # pct <- pct[which(pcurve$lambda_long > 0)]
   lambda <- pcurve$lambda
+
   s <- sapply(1:p, function(i){
     orig <- pcurve$s[,i]
-    avg <- stats::approx(x = avg_curve$lambda,
+
+    # suppressing warnings to avoid errors to non-unique values to avg_curve$lambda
+    suppressWarnings(avg <- stats::approx(x = avg_curve$lambda,
                      y = avg_curve$s[,i], xout = lambda,
-                     rule = 2)$y
+                     rule = 2)$y)
     avg * pct + orig * (1-pct)
   })
 

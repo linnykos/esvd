@@ -261,10 +261,10 @@ test_that(".get_curves works", {
   res <- .get_curves(dat, cluster_labels, lineages)
 
   expect_true(length(res) == length(lineages))
-  expect_true(all(sapply(res, class) == "principal_curve"))
+  expect_true(all(sapply(res$pcurve_list, class) == "principal_curve"))
 
   #plot(dat[,1], dat[,2], asp = T)
-  #lines(res$Curve1, col = "red", lwd = 2); lines(res$Curve2, col = "blue", lwd = 2)
+  #lines(res$pcurve_list$Curve1, col = "red", lwd = 2); lines(res$pcurve_list$Curve2, col = "blue", lwd = 2)
 })
 
 
@@ -277,10 +277,10 @@ test_that(".get_curves works for a harder example", {
   res <- .get_curves(dat, cluster_labels, lineages)
 
   expect_true(length(res) == length(lineages))
-  expect_true(all(sapply(res, class) == "principal_curve"))
+  expect_true(all(sapply(res$pcurve_list, class) == "principal_curve"))
 
   #plot(dat[,1], dat[,2], asp = T)
-  #for(i in 1:length(res)){lines(res[[i]], col = i, lwd = 2)}
+  #for(i in 1:length(res)){lines(res$pcurve_list[[i]], col = i, lwd = 2)}
 })
 
 test_that(".get_curves finds reasonable curves", {
@@ -303,7 +303,7 @@ test_that(".get_curves finds reasonable curves", {
 
   bool_vec <- sapply(1:length(res), function(x){
     all(sapply(1:(length(lineages[[x]])-1), function(y){
-      mean(res[[x]]$lambda[((y-1)*50+1):(y*50)]) < mean(res[[x]]$lambda[(y*50+1):((y+1)*50)])
+      mean(res$pcurve_list[[x]]$lambda[((y-1)*50+1):(y*50)]) < mean(res$pcurve_list[[x]]$lambda[(y*50+1):((y+1)*50)])
     }))
   })
 
@@ -331,8 +331,8 @@ test_that("slingshot works", {
   res <- slingshot(dat, cluster_labels, starting_cluster = 1)
 
   expect_true(is.list(res))
-  expect_true(length(res) == 2)
-  expect_true(all(names(res) == c("lineages", "curves")))
+  expect_true(length(res) == 3)
+  expect_true(all(names(res) == c("lineages", "curves", "idx")))
 
   #plot(dat[,1], dat[,2], asp = T)
   #for(i in 1:length(res$curves)){lines(res$curves[[i]], col = i+1, lwd = 2)}
@@ -378,8 +378,8 @@ test_that("slingshot works with an artifical example", {
   res <- slingshot(dat, cluster_labels, starting_cluster = 1)
 
   expect_true(is.list(res))
-  expect_true(length(res) == 2)
-  expect_true(all(names(res) == c("lineages", "curves")))
+  expect_true(length(res) == 3)
+  expect_true(all(names(res) == c("lineages", "curves", "idx")))
 })
 
 ############
