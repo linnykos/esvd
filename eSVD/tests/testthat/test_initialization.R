@@ -169,6 +169,23 @@ test_that("initialization works", {
   expect_true(is.list(res))
 })
 
+test_that("initialization respects max_val", {
+  trials <- 25
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(x*10)
+    dat <- matrix(rexp(40), nrow = 10, ncol = 4)
+
+    res <- initialization(dat, max_val = -100, family = "exponential")
+    u_mat <- res$u_mat
+    v_mat <- res$v_mat
+
+    all(abs(u_mat %*% t(v_mat)) <= 100)
+  })
+
+  expect_true(all(bool_vec))
+})
+
 #########################
 
 ## .project_rank_feasibility is correct
@@ -285,4 +302,21 @@ test_that(".project_rank_feasibility handles non-convergence settings gracefully
   expect_true(all(res$matrix <= max_val))
 })
 
+###########################3
 
+## .absolute_threshold is correct
+
+test_that(".absolute_threshold works", {
+  mat <- matrix(1:25, 5, 5)
+  res <- .absolute_threshold(mat, direction = ">=", max_val = 10)
+
+  expect_true(all(dim(mat) == dim(res)))
+  expect_true(all(res <= 10))
+})
+
+test_that(".absolute_threshold correctly sets things below the threshold", {
+  mat <- -matrix(abs(rnorm(100)), 10, 10)
+  res <- .absolute_threshold(mat, direction = "<=", max_val = -2.5)
+
+  expect_true(all(res >= -2.5))
+})

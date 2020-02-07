@@ -16,7 +16,7 @@ Imports:
     igraph,
     clplite,
     softImpute,
-    NMF,
+    svd,
     plot3D
 Suggests:
     testthat

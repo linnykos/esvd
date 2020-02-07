@@ -95,7 +95,7 @@ initialization <- function(dat, k = 2, family,
 
 .svd_projection <- function(mat, k, factors = F,
                             u_alone = F, v_alone = F){
-  res <- svd(mat)
+  res <- svd::propack.svd(mat, neig = k)
 
   if(k == 1){
     diag_mat <- matrix(res$d[1], 1, 1)
@@ -168,7 +168,7 @@ initialization <- function(dat, k = 2, family,
 
 # alternating projection heuristic to find intersection of two sets
 .project_rank_feasibility <- function(mat, k, direction, max_val = NA,
-                                      max_iter = 50, tol = 1e-6){
+                                      max_iter = 10, tol = 1e-6){
   stopifnot(!is.na(max_val) | !is.na(direction))
   if(!is.na(max_val) & !is.na(direction)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
 
@@ -182,9 +182,9 @@ initialization <- function(dat, k = 2, family,
     if(is.na(direction)){
       if(all(abs(mat) <= max_val+tol)) return(list(matrix = mat, iter = iter))
     } else if (direction == "<=") {
-      if(all(mat < 0+tol) && (is.na(max_val) || all(mat > max_val-tol))) return(list(matrix = mat, iter = iter))
+      if(all(mat < 0) && (is.na(max_val) || all(mat > max_val-tol))) return(list(matrix = mat, iter = iter))
     } else {
-      if(all(mat > 0-tol) && (is.na(max_val) || all(mat < max_val+tol))) return(list(matrix = mat, iter = iter))
+      if(all(mat > 0) && (is.na(max_val) || all(mat < max_val+tol))) return(list(matrix = mat, iter = iter))
     }
 
     mat <- .absolute_threshold(mat, direction, max_val)
@@ -193,43 +193,34 @@ initialization <- function(dat, k = 2, family,
   }
 
   # if the alternating projection strategy above failed, use a SBM-projection
-  mat_org <- .absolute_threshold(mat, direction, max_val)
+  mat_org <- .absolute_threshold(mat_org, direction, max_val)
   mat <- .sbm_projection(mat_org, k)
 
   list(matrix = mat, iter = NA)
 }
 
-.absolute_threshold <- function(mat, direction, max_val = NA, tol = 1e-4){
+.absolute_threshold <- function(mat, direction, max_val = NA, tol2 = 1e-4){
   if(is.na(direction)){
     max_val <- abs(max_val)
 
     idx <- which(abs(mat) >= max_val)
     val <- mat[idx]
-    mat[idx] <- sign(val)*(max_val-tol)
+    mat[idx] <- sign(val)*(max_val-tol2)
 
   } else if (direction == "<=") {
 
-    if(any(mat < 0)) tol <- min(tol, stats::quantile(mat[mat < 0], probs = 0.95))
+    if(any(mat < 0)) tol <- min(max(mat[mat < 0]), -tol2)
     stopifnot(tol < 0)
     mat[mat > 0] <- tol
-    if(!is.na(max_val)) mat[mat < max_val] <- max_val+tol
+    if(!is.na(max_val)) mat[mat < max_val] <- max_val+tol2
 
   } else {
 
-    if(any(mat > 0)) tol <- max(tol, stats::quantile(mat[mat > 0], probs = 0.05))
+    if(any(mat > 0)) tol <- max(min(mat[mat > 0]), tol2)
     stopifnot(tol > 0)
     mat[mat < 0] <- tol
-    if(!is.na(max_val)) mat[mat > max_val] <- max_val-tol
+    if(!is.na(max_val)) mat[mat > max_val] <- max_val-tol2
   }
 
   mat
 }
-
-
-
-
-
-
-
-
-
