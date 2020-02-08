@@ -95,7 +95,11 @@ initialization <- function(dat, k = 2, family,
 
 .svd_projection <- function(mat, k, factors = F,
                             u_alone = F, v_alone = F){
-  res <- RSpectra::svds(mat, k = k)
+  res <- tryCatch({
+    RSpectra::svds(mat, k = k)
+  }, error = function(e){
+    svd(mat)
+  })
 
   if(k == 1){
     diag_mat <- matrix(res$d[1], 1, 1)
@@ -193,13 +197,13 @@ initialization <- function(dat, k = 2, family,
   }
 
   # if the alternating projection strategy above failed, use a SBM-projection
-  mat_org <- .absolute_threshold(mat_org, direction, max_val)
-  mat <- .sbm_projection(mat_org, k)
+  mat <- .absolute_threshold(mat_org, direction, max_val)
+  res <- .dcsbm_projection(mat, k)
 
-  list(matrix = mat, iter = NA)
+  list(matrix = res$mat, iter = NA)
 }
 
-.absolute_threshold <- function(mat, direction, max_val = NA, tol2 = 1e-4){
+.absolute_threshold <- function(mat, direction, max_val = NA, tol2 = 1e-3){
   if(is.na(direction)){
     max_val <- abs(max_val)
 
@@ -211,14 +215,14 @@ initialization <- function(dat, k = 2, family,
 
     if(any(mat < 0)) tol <- min(max(mat[mat < 0]), -tol2)
     stopifnot(tol < 0)
-    mat[mat > 0] <- tol
+    mat[mat > -tol] <- tol
     if(!is.na(max_val)) mat[mat < max_val] <- max_val+tol2
 
   } else {
 
     if(any(mat > 0)) tol <- max(min(mat[mat > 0]), tol2)
     stopifnot(tol > 0)
-    mat[mat < 0] <- tol
+    mat[mat < tol] <- tol
     if(!is.na(max_val)) mat[mat > max_val] <- max_val-tol2
   }
 
