@@ -16,7 +16,7 @@ Imports:
     igraph,
     clplite,
     softImpute,
-    svd,
+    RSpectra,
     plot3D
 Suggests:
     testthat

@@ -92,7 +92,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   stopifnot(ncol(u_mat) == ncol(v_mat))
   k <- ncol(u_mat)
   pred_mat <- u_mat %*% t(v_mat)
-  svd_res <- svd::propack.svd(pred_mat, neig = k+1)
+  svd_res <- RSpectra::svds(pred_mat, k = k)
   if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
   u_mat <- svd_res$u[,1:k,drop = F] %*% diag(diag_vec)
   v_mat <- svd_res$v[,1:k,drop = F] %*% diag(diag_vec)

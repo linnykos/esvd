@@ -58,9 +58,9 @@ initialization <- function(dat, k = 2, family,
   pmax(dat, 0)
 }
 
-.determine_initial_matrix <- function(dat, family, k, max_val = NA, ...){
-  min_val <- min(dat[which(dat > 0)])
-  dat[which(dat <= 0)] <- min_val/2
+.determine_initial_matrix <- function(dat, family, k, max_val = NA, tol = 1e-3, ...){
+  min_val <- max(min(dat[which(dat > 0)]), tol)
+  dat[which(dat <= min_val)] <- min_val/2
   pred_mat <- .mean_transformation(dat, family, ...)
   direction <- .dictate_direction(family)
 
@@ -95,7 +95,7 @@ initialization <- function(dat, k = 2, family,
 
 .svd_projection <- function(mat, k, factors = F,
                             u_alone = F, v_alone = F){
-  res <- svd::propack.svd(mat, neig = k)
+  res <- RSpectra::svds(mat, k = k)
 
   if(k == 1){
     diag_mat <- matrix(res$d[1], 1, 1)
