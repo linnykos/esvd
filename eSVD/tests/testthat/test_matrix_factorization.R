@@ -340,7 +340,7 @@ test_that("fit_factorization works with curved Gaussian and missing values", {
 
 test_that("fit_factorization gives similar results if only one value is missing", {
   set.seed(10)
-  dat <- abs(matrix(rexp(100), nrow = 10, ncol = 10))
+  dat <- matrix(rexp(100), nrow = 10, ncol = 10)
 
   dat2 <- dat; dat2[2,1] <- NA
   dat3 <- dat
@@ -431,7 +431,6 @@ test_that(".reparameterize works for rank 1 matrices", {
   expect_true(length(res) == 2)
 })
 
-# TRIAL 80 DOESN'T WORK. It's sensitive to that one for some reason...
 test_that(".reparameterize preserves the inner products", {
   trials <- 100
 

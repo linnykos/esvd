@@ -53,3 +53,60 @@ test_that(".dcsbm_projection works (asymmetric case)", {
   expect_true(length(res) == 4)
   expect_true(all(dim(res$base_mat) == c(n,n)))
 })
+
+test_that(".dcsbm_projection keeps an estimate that is within the range of mat", {
+  load("../assets/dcsbm1.RData")
+  res <- .dcsbm_projection(mat, k = 2)
+
+  expect_true(min(res$mat) > 0)
+  expect_true(max(res$mat) <= max(mat))
+})
+
+
+test_that(".dcsbm_projection optimizes its respective model", {
+  trials <- 20
+  n <- 100; d <- 80; k <- 2
+
+  dat_list <- lapply(1:trials, function(i){
+    set.seed(i)
+    b_mat <- matrix(sample(10:100, 4), 2, 2)
+    theta_row <- runif(n, min = 0.5)
+    theta_col <- runif(d, min = 0.5)
+
+    cluster_row <- sample(1:2, size = n, replace = T)
+    cluster_col <- sample(1:2, size = d, replace = T)
+
+    p_mat <- matrix(NA, n, d)
+    mat <- matrix(NA, n, d)
+    for(i in 1:n){
+      for(j in 1:d){
+        p_mat[i,j] <- theta_row[i]*theta_col[j]*b_mat[cluster_row[i], cluster_col[j]]
+
+        mat[i,j] <- abs(stats::rnorm(1, p_mat[i,j]))
+      }
+    }
+
+    list(p_mat = p_mat, mat = mat)
+  })
+
+  fit_list <- lapply(1:length(dat_list), function(i){
+    set.seed(i)
+    .dcsbm_projection(dat_list[[i]]$mat, k = 2)$mat
+  })
+
+  bool_vec <- sapply(1:length(dat_list), function(i){
+    min(fit_list[[i]] > 0) & max(fit_list[[i]]) < max(dat_list[[i]]$mat)
+  })
+
+  expect_true(all(bool_vec))
+
+  error_mat <- sapply(1:length(dat_list), function(i){
+    vec <- sapply(1:length(fit_list), function(j){
+      .l2norm(fit_list[[j]] - dat_list[[i]]$p_mat)
+    })
+
+    vec/min(vec)
+  })
+
+  expect_true(all(diag(error_mat) <= 1+1e-6))
+})

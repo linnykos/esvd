@@ -37,6 +37,21 @@ test_that(".svd_projection works with factors", {
   expect_true(all(dim(res$v_mat) == c(ncol(dat), 2)))
 })
 
+test_that(".svd_projection works on a difficult example", {
+  load("../assets/svd1.RData")
+  res <- .svd_projection(mat, k = 2)
+
+  expect_true(all(dim(mat) == dim(res)))
+})
+
+test_that(".svd_projection works on another difficult example", {
+  load("../assets/svd2.RData")
+  expect_true(Matrix::rankMatrix(mat) == 2)
+  res <- .svd_projection(mat, k = 2)
+
+  expect_true(sum(abs(mat - res)) <= 1e-6)
+})
+
 ############
 
 ## .adaptive_gradient_step is correct
@@ -211,7 +226,7 @@ test_that(".project_rank_feasibility is able to iterate more than twice", {
 
   bool_vec <- sapply(1:trials, function(i){
     set.seed(i)
-    obs <- matrix(rnorm(25), 5, 5)
+    obs <- matrix(abs(rnorm(25)), 5, 5)
     res <- .project_rank_feasibility(obs, k = 2, direction = "<=")
     res$iter >= 2
   })
@@ -221,7 +236,7 @@ test_that(".project_rank_feasibility is able to iterate more than twice", {
 
 test_that(".project_rank_feasibility can be the same as SVD in simple settings",{
   set.seed(10)
-  dat <- matrix(rnorm(25, mean = 10), 5, 5)
+  dat <- matrix(abs(rnorm(25, mean = 10)), 5, 5)
   res <-.project_rank_feasibility(dat, k = 2, direction = ">=")
 
   expect_true(res$iter == 1)
@@ -234,7 +249,7 @@ test_that(".project_rank_feasibility is doing something meaningful", {
 
   dat_list <- lapply(1:trials, function(i){
     set.seed(i)
-    matrix(rnorm(25, mean = 1), 5, 5) # we use a high signal since our method doesn't seem to do that well otherwise...
+    matrix(abs(rnorm(25, mean = 1)), 5, 5) # we use a high signal since our method doesn't seem to do that well otherwise...
   })
 
   res_list <- lapply(dat_list, function(x){

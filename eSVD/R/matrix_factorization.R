@@ -92,10 +92,22 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   stopifnot(ncol(u_mat) == ncol(v_mat))
   k <- ncol(u_mat)
   pred_mat <- u_mat %*% t(v_mat)
-  svd_res <- RSpectra::svds(pred_mat, k = k)
+
+  if(min(dim(pred_mat)) > k+2){
+    svd_res <- tryCatch({
+      # ask for more singular values than needed to ensure stability
+      RSpectra::svds(pred_mat, k = k + 2)
+    }, error = function(e){
+      svd(pred_mat)
+    })
+  } else {
+    svd_res <- svd(pred_mat)
+  }
+
   if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
   u_mat <- svd_res$u[,1:k,drop = F] %*% diag(diag_vec)
   v_mat <- svd_res$v[,1:k,drop = F] %*% diag(diag_vec)
+
   list(u_mat = u_mat, v_mat = v_mat)
 }
 

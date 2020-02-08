@@ -95,11 +95,19 @@ initialization <- function(dat, k = 2, family,
 
 .svd_projection <- function(mat, k, factors = F,
                             u_alone = F, v_alone = F){
-  res <- tryCatch({
-    RSpectra::svds(mat, k = k)
-  }, error = function(e){
-    svd(mat)
-  })
+  stopifnot(min(dim(mat)) >= k)
+
+  if(min(dim(mat)) > k+2){
+    res <- tryCatch({
+      # ask for more singular values than needed to ensure stability
+      RSpectra::svds(mat, k = k + 2)
+    }, error = function(e){
+      svd(mat)
+    })
+  } else {
+    res <- svd(mat)
+  }
+
 
   if(k == 1){
     diag_mat <- matrix(res$d[1], 1, 1)
@@ -172,7 +180,7 @@ initialization <- function(dat, k = 2, family,
 
 # alternating projection heuristic to find intersection of two sets
 .project_rank_feasibility <- function(mat, k, direction, max_val = NA,
-                                      max_iter = 10, tol = 1e-6){
+                                      max_iter = 20, tol = 1e-6){
   stopifnot(!is.na(max_val) | !is.na(direction))
   if(!is.na(max_val) & !is.na(direction)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
 
@@ -213,14 +221,16 @@ initialization <- function(dat, k = 2, family,
 
   } else if (direction == "<=") {
 
-    if(any(mat < 0)) tol <- min(max(mat[mat < 0]), -tol2)
+    tol <- -tol2
+    if(any(mat < 0)) tol <- min(max(mat[mat < 0]), tol)
     stopifnot(tol < 0)
     mat[mat > -tol] <- tol
     if(!is.na(max_val)) mat[mat < max_val] <- max_val+tol2
 
   } else {
 
-    if(any(mat > 0)) tol <- max(min(mat[mat > 0]), tol2)
+    tol <- tol2
+    if(any(mat > 0)) tol <- max(min(mat[mat > 0]), tol)
     stopifnot(tol > 0)
     mat[mat < tol] <- tol
     if(!is.na(max_val)) mat[mat > max_val] <- max_val-tol2

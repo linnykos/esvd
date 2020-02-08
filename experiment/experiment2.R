@@ -41,7 +41,7 @@ n <- nrow(dat); d <- ncol(dat)
 
 min_val <- max(min(dat[which(dat > 0)]), tol)
 dat[which(dat <= min_val)] <- min_val/2
-pred_mat <- .mean_transformation(dat, family, ...)
+pred_mat <- .mean_transformation(dat, family)
 direction <- .dictate_direction(family)
 
 # .project_rank_feasibility(pred_mat, k = k, direction = direction,
