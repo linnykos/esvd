@@ -257,7 +257,7 @@ test_that(".project_rank_feasibility is doing something meaningful", {
   expect_true(all(diag(error_mat) <= 1.01))
 })
 
-test_that(".project_rank_feasibility handles non-convergence settings gracefully", {
+test_that(".project_rank_feasibility handles non-convergence settings gracefully (special example)", {
   set.seed(1)
   n <- 50
   u_mat <- matrix(abs(rnorm(50)), ncol = 1)
