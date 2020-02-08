@@ -12,7 +12,7 @@
   list(row_clustering = row_clustering, col_clustering = col_clustering)
 }
 
-# from https://arxiv.org/pdf/1612.04717.pdf
+# inspired partially by https://arxiv.org/pdf/1612.04717.pdf
 .form_prediction_dcsbm <- function(mat, row_clustering, col_clustering){
   n <- nrow(mat); d <- ncol(mat)
 
@@ -28,14 +28,34 @@
     }
   }
 
-  theta_row <- sapply(1:n, function(i){
-    sum(mat[i,])/sum(o_mat[row_clustering[i],])
-  })
-  theta_col <- sapply(1:d, function(j){
-    sum(mat[,j])/sum(o_mat[,col_clustering[j]])
-  })
+  o_mat <- o_mat*max(mat)/max(o_mat)
 
-  list(o_mat = o_mat, theta_row = theta_row, theta_col = theta_col)
+  base_mat <- sapply(1:ncol(mat), function(i){
+    o_mat[row_clustering, col_clustering[i]]
+  })
+  res_mat <- mat/base_mat
+
+  class(res_mat) <- "matrix" #bookkeeping purposes
+  nmf_res <- NMF::nmf(res_mat, rank = 1)
+
+  theta_row <- nmf_res@fit@W
+  theta_col <- nmf_res@fit@H
+  theta_mat <- theta_row %*% theta_col
+  svd_res <- .svd_projection(theta_mat, k = 1, factors = T, u_alone = F, v_alone = F)
+  theta_row <- abs(svd_res$u_mat)
+  theta_col <- abs(svd_res$v_mat)
+
+  theta_row[theta_row >= 1] <- 1
+  theta_col[theta_col >= 1] <- 1
+
+  # theta_row <- sapply(1:n, function(i){
+  #   sum(mat[i,])/sum(o_mat[row_clustering[i],])
+  # })
+  # theta_col <- sapply(1:d, function(j){
+  #   sum(mat[,j])/sum(o_mat[,col_clustering[j]])
+  # })
+
+  list(o_mat = o_mat, theta_row = as.numeric(theta_row), theta_col = as.numeric(theta_col))
 }
 
 .dcsbm_projection <- function(mat, k){
