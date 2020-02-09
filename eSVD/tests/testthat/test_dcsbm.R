@@ -1,11 +1,10 @@
 context("Testing DCSBM")
 
-## .dcsbm_projection is correct
+## .sbm_projection is correct
 
-test_that(".dcsbm_projection works (symmetric case)", {
+test_that(".sbm_projection works (symmetric case)", {
   set.seed(10)
   n <- 100
-  theta_vec <- runif(n, min = 0.5, max = 1)
   b_mat <- matrix(c(0.9, 0.2, 0.2, 0.9), 2, 2)
   cluster_vec <- rep(1:2, each = n/2)
 
@@ -13,7 +12,7 @@ test_that(".dcsbm_projection works (symmetric case)", {
   mat <- matrix(NA, n, n)
   for(i in 1:n){
     for(j in 1:n){
-      p_mat[i,j] <- theta_vec[i]*theta_vec[j]*b_mat[cluster_vec[i], cluster_vec[j]]
+      p_mat[i,j] <- b_mat[cluster_vec[i], cluster_vec[j]]
       p_mat[j,i] <- p_mat[i,j]
 
       mat[i,j] <- stats::rbinom(1, 1, p = p_mat[i,j])
@@ -21,18 +20,15 @@ test_that(".dcsbm_projection works (symmetric case)", {
     }
   }
 
-  res <- .dcsbm_projection(mat, k = 2)
+  res <- .sbm_projection(mat, k = 2)
 
-  expect_true(is.list(res))
-  expect_true(length(res) == 4)
-  expect_true(all(dim(res$base_mat) == c(n,n)))
+  expect_true(is.matrix(res))
+  expect_true(all(dim(res) == dim(mat)))
 })
 
-test_that(".dcsbm_projection works (asymmetric case)", {
+test_that(".sbm_projection works (asymmetric case)", {
   set.seed(10)
   n <- 500; d <- 250
-  theta_row <- runif(n, min = 0.5, max = 1)
-  theta_col <- runif(d, min = 0.5, max = 1)
   b_mat <- matrix(c(0.9, 0.2, 0.1, 0.8), 2, 2)
   cluster_row <- rep(1:2, each = n/2)
   cluster_col <- rep(1:2, each = n/2)
@@ -41,37 +37,34 @@ test_that(".dcsbm_projection works (asymmetric case)", {
   mat <- matrix(NA, n, d)
   for(i in 1:n){
     for(j in 1:d){
-      p_mat[i,j] <- theta_row[i]*theta_col[j]*b_mat[cluster_row[i], cluster_col[j]]
+      p_mat[i,j] <- b_mat[cluster_row[i], cluster_col[j]]
 
       mat[i,j] <- stats::rbinom(1, 1, p = p_mat[i,j])
     }
   }
 
-  res <- .dcsbm_projection(mat, k = 2)
+  res <- .sbm_projection(mat, k = 2)
 
-  expect_true(is.list(res))
-  expect_true(length(res) == 4)
-  expect_true(all(dim(res$base_mat) == c(n,n)))
+  expect_true(is.matrix(res))
+  expect_true(all(dim(res) == dim(mat)))
 })
 
-test_that(".dcsbm_projection keeps an estimate that is within the range of mat", {
-  load("../assets/dcsbm1.RData")
-  res <- .dcsbm_projection(mat, k = 2)
+test_that(".sbm_projection keeps an estimate that is within the range of mat", {
+  load("../assets/sbm1.RData")
+  res <- .sbm_projection(mat, k = 2)
 
-  expect_true(min(res$mat) > 0)
-  expect_true(max(res$mat) <= max(mat))
+  expect_true(min(res) > 0)
+  expect_true(max(res) <= max(mat))
 })
 
 
-test_that(".dcsbm_projection optimizes its respective model", {
+test_that(".sbm_projection optimizes its respective model", {
   trials <- 20
   n <- 100; d <- 80; k <- 2
 
   dat_list <- lapply(1:trials, function(i){
     set.seed(i)
     b_mat <- matrix(sample(10:100, 4), 2, 2)
-    theta_row <- runif(n, min = 0.5)
-    theta_col <- runif(d, min = 0.5)
 
     cluster_row <- sample(1:2, size = n, replace = T)
     cluster_col <- sample(1:2, size = d, replace = T)
@@ -80,7 +73,7 @@ test_that(".dcsbm_projection optimizes its respective model", {
     mat <- matrix(NA, n, d)
     for(i in 1:n){
       for(j in 1:d){
-        p_mat[i,j] <- theta_row[i]*theta_col[j]*b_mat[cluster_row[i], cluster_col[j]]
+        p_mat[i,j] <- b_mat[cluster_row[i], cluster_col[j]]
 
         mat[i,j] <- abs(stats::rnorm(1, p_mat[i,j]))
       }
@@ -91,7 +84,7 @@ test_that(".dcsbm_projection optimizes its respective model", {
 
   fit_list <- lapply(1:length(dat_list), function(i){
     set.seed(i)
-    .dcsbm_projection(dat_list[[i]]$mat, k = 2)$mat
+    .sbm_projection(dat_list[[i]]$mat, k = 2)
   })
 
   bool_vec <- sapply(1:length(dat_list), function(i){

@@ -206,9 +206,9 @@ initialization <- function(dat, k = 2, family,
 
   # if the alternating projection strategy above failed, use a SBM-projection
   mat <- .absolute_threshold(mat_org, direction, max_val)
-  res <- .dcsbm_projection(mat, k)
+  res <- .sbm_projection(mat, k)
 
-  list(matrix = res$mat, iter = NA)
+  list(matrix = res, iter = NA)
 }
 
 .absolute_threshold <- function(mat, direction, max_val = NA, tol2 = 1e-3){

@@ -17,7 +17,6 @@ Imports:
     clplite,
     softImpute,
     RSpectra,
-    NMF,
     plot3D
 Suggests:
     testthat
