@@ -5,7 +5,6 @@
 #' @param v_mat initial factorization, of size \code{d} by \code{k}
 #' @param max_val maximum value of the inner product (with the correct sign)
 #' @param family either \code{"gaussian"} or \code{"exponential"}
-#' @param reparameterize boolean
 #' @param tol small positive number to dictate the convergence of the objective function
 #' @param max_iter maximum number of iterations for the algorithm
 #' @param verbose boolean
@@ -16,7 +15,6 @@
 #' @export
 fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
                                family,
-                               reparameterize = T,
                                tol = 1e-3, max_iter = 100,
                                verbose = F, return_path = F,
                                cores = NA, ...){
@@ -47,10 +45,9 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     } else { stopifnot(all(pred_mat >= 0)) }
     }
 
-    if(reparameterize){
-      svd_res <- .svd_projection(pred_mat, k = k, factors = T)
-      u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
-    }
+    # reparameterize
+    tmp <- .reparameterize(u_mat, v_mat)
+    u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, parallelized = !is.na(cores), ...)
 
@@ -59,11 +56,9 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
       } else { stopifnot(all(pred_mat >= 0)) }
     }
 
-
-    if(reparameterize){
-      svd_res <- .svd_projection(pred_mat, k = k, factors = T)
-      u_mat <- svd_res$u_mat; v_mat <- svd_res$v_mat
-    }
+    # reparameterize
+    tmp <- .reparameterize(u_mat, v_mat)
+    u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
     v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, parallelized = !is.na(cores), ...)
 
@@ -78,6 +73,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
   tmp <- .reparameterize(u_mat, v_mat)
   u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
+
   pred_mat <- u_mat%*%t(v_mat)
   if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(pred_mat <= 0))
   } else { stopifnot(all(pred_mat >= 0)) }
