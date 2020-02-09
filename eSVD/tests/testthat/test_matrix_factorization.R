@@ -404,49 +404,4 @@ test_that("fit_factorization can roughly recover the all 1's matrix", {
   expect_true(all(bool_vec))
 })
 
-####################
-
-## .reparameterize is correct
-
-test_that(".reparameterize works", {
-  set.seed(10)
-  u_mat <- MASS::mvrnorm(60, rep(0, 5), diag(5))
-  v_mat <- MASS::mvrnorm(50, rep(1, 5), 2*diag(5))
-
-  res <- .reparameterize(u_mat, v_mat)
-
-  expect_true(is.list(res))
-  expect_true(length(res) == 2)
-  expect_true(all(dim(res$u_mat) == dim(u_mat)))
-  expect_true(all(dim(res$v_mat) == dim(v_mat)))
-})
-
-test_that(".reparameterize works for rank 1 matrices", {
-  set.seed(10)
-  u_mat <- matrix(rnorm(50), ncol = 1)
-  v_mat <-matrix(rnorm(50), ncol = 1)
-
-  res <- .reparameterize(u_mat, v_mat)
-
-  expect_true(length(res) == 2)
-})
-
-test_that(".reparameterize preserves the inner products", {
-  trials <- 100
-
-  bool_vec <- sapply(1:trials, function(x){
-    set.seed(10*x)
-    u_mat <- MASS::mvrnorm(5, rep(0, 5), diag(5))
-    v_mat <- MASS::mvrnorm(5, rep(1, 5), 2*diag(5))
-
-    res <- .reparameterize(u_mat, v_mat)
-
-    pred_mat <- u_mat %*% t(v_mat)
-    pred_mat2 <- res$u_mat %*% t(res$v_mat)
-
-    sum(abs(pred_mat - pred_mat2)) <= 1e-6
-  })
-
-  expect_true(sum(bool_vec) >= 99)
-})
 

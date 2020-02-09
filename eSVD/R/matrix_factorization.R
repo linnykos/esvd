@@ -88,21 +88,6 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
 #########
 
-.reparameterize <- function(u_mat, v_mat){
-  stopifnot(ncol(u_mat) == ncol(v_mat))
-  k <- ncol(u_mat)
-
-  svd_u <- svd(u_mat)
-  svd_v <- svd(v_mat)
-
-  svd_3 <- svd(.diag_matrix(svd_u$d) %*% t(svd_u$v) %*% svd_v$v %*% .diag_matrix(svd_u$d))
-
-  u_mat <- u_mat %*% svd_3$u %*% .diag_matrix(sqrt(svd_3$d))
-  v_mat <- v_mat %*% svd_3$v %*% .diag_matrix(sqrt(svd_3$d))
-
-  list(u_mat = u_mat, v_mat = v_mat)
-}
-
 .diag_matrix <- function(vec){
   k <- length(vec)
   if(k == 1) {

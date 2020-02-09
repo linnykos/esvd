@@ -1,4 +1,9 @@
 .identification <- function(cov_x, cov_y, check = F){
+  stopifnot(all(dim(cov_x) == dim(cov_y)), nrow(cov_x) == ncol(cov_x))
+  if(nrow(cov_x) == 1){
+    return(matrix((as.numeric(cov_y)/as.numeric(cov_x))^(1/4), 1, 1))
+  }
+
   eigen_x <- eigen(cov_x)
   eigen_y <- eigen(cov_y)
 
@@ -44,3 +49,11 @@
 # cov_x = matrix(c(2,1,1,2),2,2); cov_y = matrix(c(5,-1,-1,5),2,2)
 # T_mat = .identification(cov_x, cov_y)
 # T_mat %*% cov_x %*% t(T_mat); solve(t(T_mat)) %*% cov_y %*% solve(T_mat)
+
+.reparameterize <- function(u_mat, v_mat){
+  stopifnot(ncol(u_mat) == ncol(v_mat))
+
+  res <- .identification(t(u_mat) %*% u_mat, t(v_mat) %*% v_mat)
+
+  list(u_mat = u_mat %*% t(res), v_mat = v_mat %*% solve(res))
+}
