@@ -344,11 +344,11 @@ test_that("fit_factorization is appropriate for gaussians", {
 
     res1 < res2 & res1 < res3
   })
-  set.seed(10)
 
   expect_true(all(bool_vec))
 
 })
+
 
 
 test_that("fit_factorization is appropriately minimized among rank 1 matrices", {
@@ -391,6 +391,32 @@ test_that("fit_factorization is appropriately minimized among rank 1 matrices", 
   })
 
   expect_true(all(diag(error_mat) <= 1e-6))
+})
+
+
+test_that("fit_factorization is about the (roughly) same as SVD", {
+  trials <- 10
+
+  diff_val <- sapply(1:trials, function(x){
+    set.seed(11*x)
+    dat <- matrix(abs(rnorm(25, 2, 1)), nrow = 5, ncol = 5)
+    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    init <- initialization(dat, family = "gaussian", max_val = 100)
+
+    fit <- fit_factorization(dat, k=2, u_mat = init$u_mat, v_mat = init$v_mat,
+                             max_iter = 50, max_val = 100,
+                             family = "gaussian")
+    pred_mat1 <- fit$u_mat %*% t(fit$v_mat)
+
+    svd_res <- svd(dat)
+    pred_mat2 <- svd_res$u[,1:2]%*%diag(svd_res$d[1:2])%*%t(svd_res$v[,1:2])
+
+    sum(abs(pred_mat1 - pred_mat2))
+  })
+
+  expect_true(is.numeric(diff_val))
+  # nothing specifically being tested here, just wanted to see what the numeric difference is
+  ## seems to be room for future improvement
 })
 
 

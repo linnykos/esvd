@@ -37,6 +37,23 @@ test_that(".svd_projection works with factors", {
   expect_true(all(dim(res$v_mat) == c(ncol(dat), 2)))
 })
 
+test_that(".svd_projection correctly returns the matrix if the matrix is already low-rank", {
+  trials <- 100
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(x)
+    u_mat <- matrix(rnorm(50), 25, 2)
+    v_mat <- matrix(rnorm(60), 30, 2)
+    dat <- u_mat %*% t(v_mat)
+
+    res <- .svd_projection(dat, k = 2, factors = F)
+
+    sum(abs(res - dat)) <= 1e-6
+  })
+
+  expect_true(all(bool_vec))
+})
+
 test_that(".svd_projection works on a difficult example", {
   load("../assets/svd1.RData")
   res <- .svd_projection(mat, k = 2)
