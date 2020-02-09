@@ -1,91 +1,53 @@
 rm(list=ls())
-set.seed(1)
-n <- 50
-u_mat <- matrix(abs(rnorm(50)), ncol = 1)
-v_mat <- matrix(abs(rnorm(50)), ncol = 1)
+set.seed(10)
+u_mat <- MASS::mvrnorm(60, rep(0, 5), diag(5))
+v_mat <- MASS::mvrnorm(50, rep(1, 5), 2*diag(5))
+n <- nrow(u_mat)
+p <- nrow(v_mat)
+
 pred_mat <- u_mat %*% t(v_mat)
+svd_res <- svd(pred_mat)
+u_sol <- (n/p)^(1/4)*svd_res$u[,1:5] %*% diag(sqrt(svd_res$d[1:5]))
+v_sol <- (p/n)^(1/4)*svd_res$v[,1:5] %*% diag(sqrt(svd_res$d[1:5]))
 
-dat <- pred_mat
+t(u_sol) %*% u_sol/n
+t(v_sol) %*% v_sol/p
 
-for(i in 1:10){
-  for(j in 1:4){
-    dat[i,j] <- abs(stats::rnorm(1, mean = 1/pred_mat[i,j], sd = 1/(2*pred_mat[i,j])))
-  }
-}
+##############################
 
-family = "curved_gaussian"
-k = 2
-tol = 1e-3
-max_val = 100
-max_iter = 10
-verbose = F
+svd_u <- svd(u_mat)
+svd_v <- svd(v_mat)
 
-direction <- .dictate_direction(family)
-if(!is.na(direction) & !is.na(max_val)){
-  stopifnot((direction == ">=" & max_val > 0) | (direction == "<=" & max_val < 0))
-}
+svd_3 <- svd(.diag_matrix(svd_u$d) %*% t(svd_u$v) %*% svd_v$v %*% .diag_matrix(svd_u$d))
 
-# initialize
-dat <- .matrix_completion(dat, k = k)
-if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
+u_atm <- (n/p)^(1/4)*u_mat %*% svd_3$u %*% .diag_matrix(sqrt(svd_3$d))
+v_atm <- (p/n)^(1/4)*v_mat %*% svd_3$v %*% .diag_matrix(sqrt(svd_3$d))
 
-min_val <- min(dat[which(dat > 0)])
-dat[which(dat <= 0)] <- min_val/2
-pred_mat <- .mean_transformation(dat, family)
-direction <- .dictate_direction(family)
+zz = u_mat %*% svd_3$u
+t(zz) %*% zz
 
-n <- nrow(dat); d <- ncol(dat)
-# pred_mat <- .determine_initial_matrix(dat, class(dat)[1], k = k, max_val = max_val)
+###########################
 
-#####################
+zz = .identification(t(u_mat)%*%u_mat, t(v_mat)%*%v_mat)
+eigen_res <- eigen(zz %*% t(u_mat) %*% u_mat %*% t(zz))
 
-min_val <- max(min(dat[which(dat > 0)]), tol)
-dat[which(dat <= min_val)] <- min_val/2
-pred_mat <- .mean_transformation(dat, family)
-direction <- .dictate_direction(family)
 
-# .project_rank_feasibility(pred_mat, k = k, direction = direction,
-#                           max_val = max_val)$matrix
+u_atm = t(sapply(1:nrow(u_mat), function(i){
+  zz %*% u_mat[i,]
+}))
+u_atm2 <- u_mat %*% t(zz)
+u_atm3 <- u_mat %*% t(zz) %*% eigen_res$vectors
 
-####################
+v_atm = t(sapply(1:nrow(v_mat), function(i){
+  solve(t(zz)) %*% v_mat[i,]
+}))
+v_atm2 <- v_mat %*% solve(zz)
+v_atm3 <- v_mat %*% solve(zz) %*% eigen_res$vectors
 
-mat <- pred_mat
-stopifnot(!is.na(max_val) | !is.na(direction))
-if(!is.na(max_val) & !is.na(direction)) stopifnot((direction == "<=" & max_val < 0) | (direction == ">=" & max_val > 0))
+t(u_atm3) %*% u_atm3
+t(v_atm3) %*% v_atm3
 
-mat_org <- mat
-iter <- 1
-
-while(iter < max_iter){
-  res <- .svd_projection(mat, k = k, factors = T)
-  mat <- res$u_mat %*% t(res$v_mat)
-
-  if(is.na(direction)){
-    if(all(abs(mat) <= max_val+tol)) return(list(matrix = mat, iter = iter))
-  } else if (direction == "<=") {
-    if(all(mat < 0) && (is.na(max_val) || all(mat > max_val-tol))) return(list(matrix = mat, iter = iter))
-  } else {
-    if(all(mat > 0) && (is.na(max_val) || all(mat < max_val+tol))) return(list(matrix = mat, iter = iter))
-  }
-
-  mat <- .absolute_threshold(mat, direction, max_val)
-
-  iter <- iter + 1
-}
-
-mat <- .absolute_threshold(mat_org, direction, max_val)
-# res <- .dcsbm_projection(mat, k)
-
-#########################
-
-res <- .spectral_clustering(mat, k)
-row_clustering <- res$row_clustering
-col_clustering <- res$col_clustering
-
-res <- .form_prediction_dcsbm(mat, row_clustering, col_clustering)
-
-base_mat <- sapply(1:ncol(mat), function(i){
-  res$o_mat[row_clustering, col_clustering[i]]
-})
-
-base_mat <- diag(res$theta_row) %*% base_mat %*% diag(res$theta_col)
+pred_mat <- u_mat %*% t(v_mat)
+pred_mat[1:5,1:5]
+pred_mat3 <- u_atm3 %*% t(v_atm3)
+pred_mat3[1:5,1:5]

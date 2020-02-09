@@ -35,7 +35,10 @@
     stopifnot(sum(abs(mat1 - mat2)) <= 1e-6)
   }
 
-  T_mat
+  # adjust the transformation so it yields a diagonal matrix
+  eig_res <- eigen(T_mat %*% cov_x %*% t(T_mat))
+
+  t(eig_res$vectors) %*% T_mat
 }
 
 # cov_x = matrix(c(2,1,1,2),2,2); cov_y = matrix(c(5,-1,-1,5),2,2)

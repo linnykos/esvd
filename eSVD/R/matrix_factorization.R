@@ -91,24 +91,25 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 .reparameterize <- function(u_mat, v_mat){
   stopifnot(ncol(u_mat) == ncol(v_mat))
   k <- ncol(u_mat)
-  pred_mat <- u_mat %*% t(v_mat)
 
-  if(min(dim(pred_mat)) > k+2){
-    svd_res <- tryCatch({
-      # ask for more singular values than needed to ensure stability
-      RSpectra::svds(pred_mat, k = k + 2)
-    }, error = function(e){
-      svd(pred_mat)
-    })
-  } else {
-    svd_res <- svd(pred_mat)
-  }
+  svd_u <- svd(u_mat)
+  svd_v <- svd(v_mat)
 
-  if(k == 1) diag_vec <- as.matrix(sqrt(svd_res$d[1:k])) else diag_vec <- sqrt(svd_res$d[1:k])
-  u_mat <- svd_res$u[,1:k,drop = F] %*% diag(diag_vec)
-  v_mat <- svd_res$v[,1:k,drop = F] %*% diag(diag_vec)
+  svd_3 <- svd(.diag_matrix(svd_u$d) %*% t(svd_u$v) %*% svd_v$v %*% .diag_matrix(svd_u$d))
+
+  u_mat <- u_mat %*% svd_3$u %*% .diag_matrix(sqrt(svd_3$d))
+  v_mat <- v_mat %*% svd_3$v %*% .diag_matrix(sqrt(svd_3$d))
 
   list(u_mat = u_mat, v_mat = v_mat)
+}
+
+.diag_matrix <- function(vec){
+  k <- length(vec)
+  if(k == 1) {
+    matrix(vec, 1, 1)
+  } else {
+    diag(vec)
+  }
 }
 
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,

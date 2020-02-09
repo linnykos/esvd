@@ -19,4 +19,6 @@ test_that(".identification is correct", {
   cov_y2 <- solve(t(res)) %*% cov_y %*% solve(res)
 
   expect_true(sum(abs(cov_x2 - cov_y2)) <= 1e-6)
+  expect_true(abs(sum(cov_x2) - sum(diag(cov_x2))) <= 1e-6)
+  expect_true(abs(sum(cov_y2) - sum(diag(cov_y2))) <= 1e-6)
 })
