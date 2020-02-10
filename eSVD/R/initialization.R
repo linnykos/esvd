@@ -59,8 +59,7 @@ initialization <- function(dat, k = 2, family,
 }
 
 .determine_initial_matrix <- function(dat, family, k, max_val = NA, tol = 1e-3, ...){
-  min_val <- max(min(dat[which(dat > 0)]), tol)
-  dat[which(dat <= min_val)] <- min_val/2
+  dat[which(dat <= tol)] <- tol/2
   pred_mat <- .mean_transformation(dat, family, ...)
   direction <- .dictate_direction(family)
 

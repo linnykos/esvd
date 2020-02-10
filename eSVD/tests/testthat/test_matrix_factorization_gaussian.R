@@ -322,6 +322,36 @@ test_that(".gradient_mat.gaussiann is a proper gradient", {
 
 #######################
 
+### Gaussian specific tests: initialization
+
+
+test_that("fit_factorization is about the (roughly) same as SVD", {
+  trials <- 10
+
+  diff_val <- sapply(1:trials, function(x){
+    set.seed(13*x)
+    dat <- matrix(abs(rnorm(25, 2, 1)), nrow = 5, ncol = 5)
+    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    init <- initialization(dat, family = "gaussian", max_val = 100)
+
+    pred_mat1 <- init$u_mat %*% t(init$v_mat)
+
+    svd_res <- svd(dat)
+    pred_mat2 <- svd_res$u[,1:2]%*%diag(svd_res$d[1:2])%*%t(svd_res$v[,1:2])
+
+    sum(abs(pred_mat1 - pred_mat2))
+  })
+
+  expect_true(sum(abs(diff_val)) <= 1e-6)
+})
+
+
+
+
+###########################3
+
+### Gaussian specific tests: fit_factorzation
+
 
 test_that("fit_factorization is appropriate for gaussians", {
   trials <- 10
@@ -414,10 +444,10 @@ test_that("fit_factorization is about the (roughly) same as SVD", {
     sum(abs(pred_mat1 - pred_mat2))
   })
 
-  expect_true(is.numeric(diff_val))
-  # nothing specifically being tested here, just wanted to see what the numeric difference is
-  ## seems to be room for future improvement
+  expect_true(sum(abs(diff_val)) <= 1e-6)
 })
+
+
 
 
 
