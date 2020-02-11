@@ -1,6 +1,6 @@
 rm(list=ls())
 library(simulation)
-library(singlecell)
+library(eSVD)
 library(NMF)
 source("../simulation/factorization_generator.R")
 
@@ -36,8 +36,8 @@ criterion <- function(dat, vec, y){
 
   # # Our method
   set.seed(10)
-  init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
-  tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  init <- eSVD::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
+  tmp <- eSVD::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                        family = "gaussian",  reparameterize = T,
                                        max_iter = 100, max_val = vec["max_val"],
                                        scalar = vec["scalar"],
@@ -45,7 +45,7 @@ criterion <- function(dat, vec, y){
                                        verbose = F)
 
   res_our <- tmp$u_mat
-  curves_our <- singlecell::slingshot(res_our[,1:vec["k"]], cluster_labels,
+  curves_our <- eSVD::slingshot(res_our[,1:vec["k"]], cluster_labels,
                                       starting_cluster = 1,
                                       verbose = F)
 
@@ -123,7 +123,7 @@ cluster_identifier <- as.numeric(apply(idx, 1, function(x){
 }))
 
 # compute the population lineage
-pop_lineage <- singlecell::slingshot(pop_res$cell_mat,
+pop_lineage <- eSVD::slingshot(pop_res$cell_mat,
                                      rep(1:4, each = n_pop),
                                      starting_cluster = 1, verbose = F, reduction_percentage = 0.1)
 

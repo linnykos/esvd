@@ -27,12 +27,12 @@ dim(dat_impute)
 
 # png("../figure/main/data.png", height = 2400, width = 1000, res = 300, units = "px")
 # par(mar = rep(0.5, 4))
-# singlecell:::.plot_singlecell(dat)
+# eSVD:::.plot_singlecell(dat)
 # graphics.off()
 #
 # png("../figure/main/data_impute.png", height = 2400, width = 1000, res = 300, units = "px")
 # par(mar = rep(0.5, 4))
-# singlecell:::.plot_singlecell(dat_impute)
+# eSVD:::.plot_singlecell(dat_impute)
 # graphics.off()
 
 rm(list = c("idx1", "idx2", "idx", "res_descend", "res_list", "k", "tmp"))

@@ -16,18 +16,18 @@ for(i in 1:length(cluster_group_list)){
 
 
 p <- 3
-our_curves <- singlecell::slingshot(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+our_curves <- eSVD::slingshot(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                     cluster_group_list = cluster_group_list,
                                     verbose = F, upscale_vec = upscale_vec)
 
 set.seed(10)
-our_bootstrap_list <- singlecell::bootstrap_curves(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+our_bootstrap_list <- eSVD::bootstrap_curves(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                                    cluster_group_list = cluster_group_list, trials = 100,
                                                    upscale_vec = upscale_vec, cores = ncores)
 
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
-our_sd_val <- singlecell::compute_curve_sd(our_curves, our_bootstrap_list)
+our_sd_val <- eSVD::compute_curve_sd(our_curves, our_bootstrap_list)
 
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
@@ -35,18 +35,18 @@ save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 tmp <- svd(dat_impute)
 naive_embedding <- tmp$u[,1:p] %*% diag(sqrt(tmp$d[1:p]))
-naive_curves <- singlecell::slingshot(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+naive_curves <- eSVD::slingshot(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                     cluster_group_list = cluster_group_list,
                                     verbose = F, upscale_vec = upscale_vec)
 
 set.seed(10)
-naive_bootstrap_list <- singlecell::bootstrap_curves(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+naive_bootstrap_list <- eSVD::bootstrap_curves(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                                    cluster_group_list = cluster_group_list, trials = 100,
                                                    upscale_vec = upscale_vec, cores = ncores)
 
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
-naive_sd_val <- singlecell::compute_curve_sd(naive_curves, naive_bootstrap_list)
+naive_sd_val <- eSVD::compute_curve_sd(naive_curves, naive_bootstrap_list)
 
 rm(list = c("tmp"))
 print(paste0(Sys.time(), ": Finished clustering"))

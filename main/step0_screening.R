@@ -6,17 +6,17 @@ dat <- marques$counts
 cell_types <- unique(marques$cell.info$cell.type)
 
 set.seed(10)
-# cell_idx <- unlist(lapply(cell_types, function(x){
-#   tmp <- which(marques$cell.info$cell.type == x)
-#   sample(tmp, round(length(tmp)/1.5))
-# }))
+cell_idx <- unlist(lapply(cell_types, function(x){
+  tmp <- which(marques$cell.info$cell.type == x)
+  sample(tmp, round(length(tmp)))
+}))
 cell_idx <- 1:nrow(dat)
 dat <- dat[cell_idx,]
 dim(dat)
 
 # # remove genes with too many 0's
 zz <- apply(dat, 2, function(x){length(which(x!=0))})
-dat <- dat[,which(zz > 30)]
+dat <- dat[,which(zz > 30)] # WARNING: CHANGE THIS TO PERCENTAGE
 
 # try a series of SPCAs
 k <- 5
@@ -30,7 +30,6 @@ spca_func <- function(i){
   print(paste0("Finished SPC for level ", i))
   res
 }
-
 
 res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 

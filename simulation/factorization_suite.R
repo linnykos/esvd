@@ -1,6 +1,6 @@
 rm(list=ls())
 library(simulation)
-library(singlecell)
+library(eSVD)
 library(NMF)
 source("../simulation/factorization_generator.R")
 
@@ -46,7 +46,7 @@ criterion <- function(dat, vec, y){
   # SVD
   tmp <- svd(dat$dat)
   res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
-  curves_svd <- singlecell::slingshot(res_svd[,1:vec["k"]], cluster_labels,
+  curves_svd <- eSVD::slingshot(res_svd[,1:vec["k"]], cluster_labels,
                                       starting_cluster = 1,
                                       verbose = F)
 
@@ -55,7 +55,7 @@ criterion <- function(dat, vec, y){
   # ICA
   tmp <- ica::icafast(dat$dat, nc = vec["k"])
   res_ica <- tmp$S
-  curves_ica <- singlecell::slingshot(res_ica[,1:vec["k"]], cluster_labels,
+  curves_ica <- eSVD::slingshot(res_ica[,1:vec["k"]], cluster_labels,
                                       starting_cluster = 1,
                                       verbose = F)
 
@@ -64,7 +64,7 @@ criterion <- function(dat, vec, y){
   # tsne
   tmp <- Rtsne::Rtsne(dat$dat, perplexity = 30)
   res_tsne <- tmp$Y
-  curves_tsne <- singlecell::slingshot(res_tsne[,1:vec["k"]], cluster_labels,
+  curves_tsne <- eSVD::slingshot(res_tsne[,1:vec["k"]], cluster_labels,
                                        starting_cluster = 1,
                                        verbose = F)
 
@@ -72,8 +72,8 @@ criterion <- function(dat, vec, y){
 
   # # Our method
   set.seed(10)
-  init <- singlecell::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
-  tmp <- singlecell::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  init <- eSVD::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
+  tmp <- eSVD::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                family = "gaussian",  reparameterize = T,
                                max_iter = 100, max_val = vec["max_val"],
                                scalar = vec["scalar"],
@@ -81,7 +81,7 @@ criterion <- function(dat, vec, y){
                                verbose = F)
 
   res_our <- tmp$u_mat
-  curves_our <- singlecell::slingshot(res_our[,1:vec["k"]], cluster_labels,
+  curves_our <- eSVD::slingshot(res_our[,1:vec["k"]], cluster_labels,
                                       starting_cluster = 1,
                                       verbose = F)
 
@@ -92,7 +92,7 @@ criterion <- function(dat, vec, y){
   dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat$dat)))
   tmp <- zinbwave::zinbwave(dat_se, K = vec["k"], maxiter.optimize = 100)
   res_zinb <- tmp@reducedDims$zinbwave
-  curves_zinb <- singlecell::slingshot(res_zinb[,1:vec["k"]], cluster_labels,
+  curves_zinb <- eSVD::slingshot(res_zinb[,1:vec["k"]], cluster_labels,
                                        starting_cluster = 1,
                                        verbose = F)
 
@@ -102,13 +102,13 @@ criterion <- function(dat, vec, y){
   set.seed(10)
   tmp <- pCMF::pCMF(dat$dat, K = vec["k"], sparsity = F, verbose = F)
   res_pcmf <- tmp$factor$U
-  curves_pcmf <- singlecell::slingshot(res_pcmf[,1:2], cluster_labels,
+  curves_pcmf <- eSVD::slingshot(res_pcmf[,1:2], cluster_labels,
                                        starting_cluster = 1,
                                        verbose = F)
 
   # print("fin6")
 
-  curves_truth <- singlecell::slingshot(dat$truth, cluster_labels,
+  curves_truth <- eSVD::slingshot(dat$truth, cluster_labels,
                                         starting_cluster = 1,
                                         verbose = F)
 
