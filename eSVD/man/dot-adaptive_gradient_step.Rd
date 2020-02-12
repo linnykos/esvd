@@ -4,9 +4,18 @@
 \alias{.adaptive_gradient_step}
 \title{Adaptive projective gradient descent}
 \usage{
-.adaptive_gradient_step(dat, pred_mat, gradient_mat, k, max_val = NA,
-  direction = "<=", stepsize_init = 100, stepdown_factor = 2,
-  max_iter = 20, ...)
+.adaptive_gradient_step(
+  dat,
+  pred_mat,
+  gradient_mat,
+  k,
+  max_val = NA,
+  direction = "<=",
+  stepsize_init = 100,
+  stepdown_factor = 2,
+  max_iter = 20,
+  ...
+)
 }
 \arguments{
 \item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}
@@ -19,7 +28,7 @@
 
 \item{max_val}{numeric or \code{NA}}
 
-\item{direction}{"<=" or ">="}
+\item{direction}{"<=" or ">=" or NA}
 
 \item{stepsize_init}{numeric}
 

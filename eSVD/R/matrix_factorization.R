@@ -10,6 +10,7 @@
 #' @param verbose boolean
 #' @param return_path boolean
 #' @param cores positive integer
+#' @param ... additional parameters for the distribution
 #'
 #' @return list
 #' @export

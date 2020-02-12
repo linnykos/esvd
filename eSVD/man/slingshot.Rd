@@ -4,9 +4,19 @@
 \alias{slingshot}
 \title{Use slingshot to estimate the cell development trajectories}
 \usage{
-slingshot(dat, cluster_labels, starting_cluster, cluster_group_list = NA,
-  use_initialization = F, reduction_percentage = 0.25, shrink = 1,
-  thresh = 0.001, max_iter = 15, upscale_vec = NA, verbose = F)
+slingshot(
+  dat,
+  cluster_labels,
+  starting_cluster,
+  cluster_group_list = NA,
+  use_initialization = F,
+  reduction_percentage = 0.25,
+  shrink = 1,
+  thresh = 0.001,
+  max_iter = 15,
+  upscale_vec = NA,
+  verbose = F
+)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}

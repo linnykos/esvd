@@ -4,12 +4,13 @@ Version: 0.0.0.9000
 Authors@R: person("Kevin", "Lin", email = "klin1234@gmail.com", role = c("aut", "cre"))
 Description: Assuming each row and column of a matrix is associated with a low-dimensional vector, eSVD estimates an embedding for each cell with respect to a hierarchical model where the inner product between the row's and column's latent vectors is the natural parameter of a one-parameter exponential family random variable.
 Depends:
-    R (>= 3.3.0)
+    R (>= 3.5.0)
 License: MIT +file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
     MASS,
+    Matrix,
     foreach,
     doMC,
     princurve,
@@ -20,4 +21,4 @@ Imports:
     plot3D
 Suggests:
     testthat
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2

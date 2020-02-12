@@ -273,7 +273,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @param cluster_mat 0-1 matrix output of \code{.construct_cluster_matrix()} that
 #' has \code{n} rows and \code{k} column
 #'
-#' @return
+#' @return a vector of numbers
 .determine_idx_lineage <- function(lineage, cluster_mat){
   sort(unique(unlist(lapply(as.numeric(lineage), function(x){
     which(cluster_mat[,x] == 1)

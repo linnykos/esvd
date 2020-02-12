@@ -4,8 +4,15 @@
 \alias{bootstrap_curves}
 \title{Bootstrap the curves via resampleing of each cluster}
 \usage{
-bootstrap_curves(dat, cluster_labels, starting_cluster, cluster_group_list,
-  trials = 100, cores = NA, ...)
+bootstrap_curves(
+  dat,
+  cluster_labels,
+  starting_cluster,
+  cluster_group_list,
+  trials = 100,
+  cores = NA,
+  ...
+)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}

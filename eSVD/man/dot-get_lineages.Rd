@@ -4,8 +4,13 @@
 \alias{.get_lineages}
 \title{Estimate the lineages (via Slingshot)}
 \usage{
-.get_lineages(dat, cluster_labels, starting_cluster,
-  cluster_group_list = NA, use_initialization = F)
+.get_lineages(
+  dat,
+  cluster_labels,
+  starting_cluster,
+  cluster_group_list = NA,
+  use_initialization = F
+)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}

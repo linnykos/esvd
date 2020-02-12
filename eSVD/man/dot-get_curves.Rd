@@ -4,8 +4,16 @@
 \alias{.get_curves}
 \title{Estimate the slingshot curves}
 \usage{
-.get_curves(dat, cluster_labels, lineages, shrink = 1, thresh = 0.001,
-  max_iter = 15, upscale_vec = NA, verbose = F)
+.get_curves(
+  dat,
+  cluster_labels,
+  lineages,
+  shrink = 1,
+  thresh = 0.001,
+  max_iter = 15,
+  upscale_vec = NA,
+  verbose = F
+)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}

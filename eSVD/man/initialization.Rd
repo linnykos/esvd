@@ -4,8 +4,16 @@
 \alias{initialization}
 \title{Initialization for matrix factorization}
 \usage{
-initialization(dat, k = 2, family = "exponential", max_val = NA,
-  max_iter = 10, tol = 0.001, verbose = F, ...)
+initialization(
+  dat,
+  k = 2,
+  family,
+  max_val = NA,
+  max_iter = 10,
+  tol = 0.001,
+  verbose = F,
+  ...
+)
 }
 \arguments{
 \item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}

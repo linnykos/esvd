@@ -1,4 +1,4 @@
-context("Testing DCSBM")
+context("Testing SBM")
 
 ## .sbm_projection is correct
 

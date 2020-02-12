@@ -1,5 +1,4 @@
 context("Test matrix factorization")
-library(NMF)
 
 ## .optimize_row is correct
 

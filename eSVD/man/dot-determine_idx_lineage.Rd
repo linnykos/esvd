@@ -12,6 +12,9 @@
 \item{cluster_mat}{0-1 matrix output of \code{.construct_cluster_matrix()} that
 has \code{n} rows and \code{k} column}
 }
+\value{
+a vector of numbers
+}
 \description{
 Determine which samples are part of a lineage
 }

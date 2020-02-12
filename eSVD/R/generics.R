@@ -60,7 +60,6 @@
 #' @param ... other parameters
 #'
 #' @return  \code{n} by \code{d} matrix
-#' @export
 .gradient_mat <- function(dat, pred_mat, ...){
   stopifnot(all(dim(dat) == dim(pred_mat)))
 

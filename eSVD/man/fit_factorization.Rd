@@ -4,10 +4,19 @@
 \alias{fit_factorization}
 \title{Fit the factorization}
 \usage{
-fit_factorization(dat, u_mat, v_mat, max_val = NA,
-  family = "exponential", reparameterize = T, scalar = 2,
-  tol = 0.001, max_iter = 100, verbose = F, return_path = F,
-  cores = NA)
+fit_factorization(
+  dat,
+  u_mat,
+  v_mat,
+  max_val = NA,
+  family,
+  tol = 0.001,
+  max_iter = 100,
+  verbose = F,
+  return_path = F,
+  cores = NA,
+  ...
+)
 }
 \arguments{
 \item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}
@@ -20,10 +29,6 @@ fit_factorization(dat, u_mat, v_mat, max_val = NA,
 
 \item{family}{either \code{"gaussian"} or \code{"exponential"}}
 
-\item{reparameterize}{boolean}
-
-\item{scalar}{positive numeric for the Gaussian family}
-
 \item{tol}{small positive number to dictate the convergence of the objective function}
 
 \item{max_iter}{maximum number of iterations for the algorithm}
@@ -33,6 +38,8 @@ fit_factorization(dat, u_mat, v_mat, max_val = NA,
 \item{return_path}{boolean}
 
 \item{cores}{positive integer}
+
+\item{...}{additional parameters for the distribution}
 }
 \value{
 list

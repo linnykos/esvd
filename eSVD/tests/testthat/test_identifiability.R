@@ -1,5 +1,4 @@
 context("Test identifiability")
-library(NMF)
 
 test_that(".identification works", {
   res <- .identification(diag(5), 2*diag(5))
@@ -118,3 +117,4 @@ test_that(".reparameterize yields diagonal covariances", {
 
   expect_true(all(bool_vec))
 })
+
