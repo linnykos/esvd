@@ -89,7 +89,7 @@ rm(list=var_all)
 
 paramMat <- cbind(c(1:3, rep(4,5)), c(rep(1,3), 1:5), 3, 50)
 colnames(paramMat) <- c("distr", "param", "k", "max_iter")
-trials <- 5
+trials <- 20
 ncores <- 20
 doMC::registerDoMC(cores = ncores)
 
@@ -120,10 +120,10 @@ criterion <- function(dat, vec, y){
 
   set.seed(10)
   if(vec["distr"] == 1){
-    init <- eSVD::initialization(dat, family = "gaussian", k = vec["k"], max_val = 100)
+    init <- eSVD::initialization(dat, family = "gaussian", k = vec["k"], max_val = 400)
     tmp <- eSVD::fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "gaussian",
-                                   max_iter = vec["max_iter"], max_val = 100,
+                                   max_iter = vec["max_iter"], max_val = 400,
                                    return_path = F, cores = ncores,
                                    verbose = F)
 
@@ -161,7 +161,7 @@ criterion <- function(dat, vec, y){
                                    family = "curved_gaussian", scalar = vec["param"],
                                    max_iter = vec["max_iter"], max_val = 100,
                                    return_path = F, cores = ncores,
-                                   verbose = T)
+                                   verbose = F)
 
     pred_mat <- tmp$u_mat %*% t(tmp$v_mat)
     pred_val <- 1/pred_mat[missing_idx]
