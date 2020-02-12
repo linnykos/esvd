@@ -132,10 +132,10 @@ criterion <- function(dat, vec, y){
     pred_val <- pred_mat[missing_idx]
 
   } else if(vec["distr"] == 2){
-    init <- eSVD::initialization(dat, family = "exponential", k = vec["k"], max_val = 100)
+    init <- eSVD::initialization(dat, family = "exponential", k = vec["k"], max_val = -100)
     tmp <- eSVD::fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "exponential",
-                                   max_iter = vec["max_iter"], max_val = 100,
+                                   max_iter = vec["max_iter"], max_val = -100,
                                    return_path = F, cores = ncores,
                                    verbose = F)
 
@@ -144,10 +144,10 @@ criterion <- function(dat, vec, y){
 
 
   } else if(vec["distr"] == 3){
-    init <- eSVD::initialization(dat, family = "poisson", k = vec["k"], max_val = -100)
+    init <- eSVD::initialization(dat, family = "poisson", k = vec["k"], max_val = 100)
     tmp <- eSVD::fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "poisson",
-                                   max_iter = vec["max_iter"], max_val = -100,
+                                   max_iter = vec["max_iter"], max_val = 100,
                                    return_path = F, cores = ncores,
                                    verbose = F)
 
@@ -159,9 +159,9 @@ criterion <- function(dat, vec, y){
                                  scalar = vec["param"])
     tmp <- eSVD::fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "curved_gaussian", scalar = vec["param"],
-                                   max_iter = vec["max_iter"], max_val = -100,
+                                   max_iter = vec["max_iter"], max_val = 100,
                                    return_path = F, cores = ncores,
-                                   verbose = F)
+                                   verbose = T)
 
     pred_mat <- tmp$u_mat %*% t(tmp$v_mat)
     pred_val <- 1/pred_mat[missing_idx]
@@ -169,6 +169,8 @@ criterion <- function(dat, vec, y){
 
   list(fit = tmp, pred_val = pred_val, missing_val = missing_val)
 }
+
+##
 
 ##########################################
 
