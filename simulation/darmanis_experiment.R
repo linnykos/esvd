@@ -170,7 +170,7 @@ criterion <- function(dat, vec, y){
   list(fit = tmp, pred_val = pred_val, missing_val = missing_val)
 }
 
-##
+## zz <- criterion(rule(paramMat[1,]), paramMat[1,], 1)
 
 ##########################################
 
