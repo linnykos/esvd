@@ -1,4 +1,4 @@
 library(testthat)
-library(singlecell)
+library(eSVD)
 
-test_check("singlecell")
+test_check("eSVD")
