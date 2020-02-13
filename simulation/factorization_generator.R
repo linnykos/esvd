@@ -1,4 +1,4 @@
-generate_natural_mat <- function(cell_pop, gene_pop, n_each, d_each, sigma){
+generate_natural_mat <- function(cell_pop, gene_pop, n_each, d_each, sigma, modifier){
   h <- nrow(cell_pop)
   cell_mat <- do.call(rbind, lapply(1:h, function(x){
     pos <- stats::runif(n_each)
@@ -17,18 +17,9 @@ generate_natural_mat <- function(cell_pop, gene_pop, n_each, d_each, sigma){
   }))
   d <- nrow(gene_mat)
 
-  # form observations
-  gram_mat <- cell_mat %*% t(gene_mat) #natural parameter
-  svd_res <- svd(gram_mat)
-  cell_mat <- svd_res$u[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
-  gene_mat <- svd_res$v[,1:k] %*% diag(sqrt(svd_res$d[1:k]))
+  res <- eSVD:::.reparameterize(cell_mat*sqrt(modifier), gene_mat*sqrt(modifier))
 
-  res <- eSVD:::.reparameterize(cell_mat, gene_mat)
-  cell_mat <- res$u_mat; gene_mat <- res$v_mat
-
-  nat_mat <- cell_mat %*% t(gene_mat)
-
-  list(nat_mat = nat_mat, cell_mat = cell_mat, gene_mat = gene_mat)
+  list(nat_mat = res$u_mat %*% t(res$v_mat), cell_mat =  res$u_mat, gene_mat = res$v_mat)
 }
 
 generate_dropout <- function(obs_mat, total){
@@ -51,6 +42,8 @@ generate_dropout <- function(obs_mat, total){
 
 #####################
 
+# for all the following distributions, assume nat_mat contain strictly positive entries, then transform accordingly
+
 # draw a poisson from the inner product
 generator_pcmf_poisson <- function(nat_mat, dropout_prob = 0.5, ...){
   n <- nrow(nat_mat); d <- ncol(nat_mat)
@@ -70,16 +63,31 @@ generator_pcmf_poisson <- function(nat_mat, dropout_prob = 0.5, ...){
   obs_mat
 }
 
+generator_esvd_poisson <- function(nat_mat, ...){
+  n <- nrow(nat_mat); d <- ncol(nat_mat)
+
+  obs_mat <- matrix(0, ncol = d, nrow = n)
+  for(i in 1:n){
+    for(j in 1:d){
+      obs_mat[i,j] <- rpois(1, exp(nat_mat[i,j]))
+    }
+  }
+
+  obs_mat
+}
+
+##########
+
 # draw a negative binomial from the exponential of inner product
-generator_zinb_nb <- function(nat_mat, theta = rep(100, ncol(nat_mat)), ...){
+generator_zinb_nb <- function(nat_mat, r_vec = rep(100, ncol(nat_mat)), ...){
   n <- nrow(nat_mat); d <- ncol(nat_mat)
 
   obs_mat <- matrix(0, ncol = d, nrow = n)
   dropout_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
-      p <- exp(nat_mat[i,j])/(exp(nat_mat[i,j])+theta[j])
-      r <- theta[j]
+      p <- exp(nat_mat[i,j])/(exp(nat_mat[i,j])+r_vec[j])
+      r <- r_vec[j]
       obs_mat[i,j] <- rnbinom(1, size = r, prob = p)
 
       dropout_mat[i,j] <- rbinom(1, size = 1, prob = 1/(1+exp(-nat_mat[i,j])))
@@ -91,6 +99,22 @@ generator_zinb_nb <- function(nat_mat, theta = rep(100, ncol(nat_mat)), ...){
 
   obs_mat
 }
+
+generator_esvd_nb <- function(nat_mat, r = 100,  ...){
+  n <- nrow(nat_mat); d <- ncol(nat_mat)
+
+  obs_mat <- matrix(0, ncol = d, nrow = n)
+  for(i in 1:n){
+    for(j in 1:d){
+      p <- 1-exp(-nat_mat[i,j]) # remember the p param in rnbinom is "flipped" in R
+      obs_mat[i,j] <- rnbinom(1, size = r, prob = p)
+    }
+  }
+
+  obs_mat
+}
+
+#############
 
 # draw an exponential from the negative of the natural parameter
 generator_exponential <- function(nat_mat, ...){
@@ -107,7 +131,7 @@ generator_exponential <- function(nat_mat, ...){
 }
 
 # draw a gaussian from the natural parameter
-generator_gaussian <- function(nat_mat, sd_val = 0.25, ...){
+generator_gaussian <- function(nat_mat, sd_val = 0.25, tol = 1e-3, ...){
   n <- nrow(nat_mat); d <- ncol(nat_mat)
 
   obs_mat <- matrix(0, ncol = d, nrow = n)
@@ -117,23 +141,23 @@ generator_gaussian <- function(nat_mat, sd_val = 0.25, ...){
     }
   }
 
-  obs_mat[obs_mat < 0] <- 0
+  obs_mat[obs_mat < 0] <- tol
 
   obs_mat
 }
 
 # draw a gaussian from the negative of the natural parameter
-generator_curved_gaussian <- function(nat_mat, alpha = 2, ...){
+generator_curved_gaussian <- function(nat_mat, scalar = 2, tol = 1e-3, ...){
   n <- nrow(nat_mat); d <- ncol(nat_mat)
 
   obs_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- rnorm(1, 1/nat_mat[i,j], sd = 1/(alpha*nat_mat[i,j]))
+      obs_mat[i,j] <- rnorm(1, 1/nat_mat[i,j], sd = 1/(scalar*nat_mat[i,j]))
     }
   }
 
-  obs_mat[obs_mat < 0] <- 0
+  obs_mat[obs_mat < 0] <- tol
 
   obs_mat
 }

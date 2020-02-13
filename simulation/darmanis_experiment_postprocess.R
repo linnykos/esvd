@@ -9,6 +9,6 @@ for(i in 1:len){
 
   plot_mat <- do.call(rbind, plot_mat)
 
-  plot(plot_mat[,1], plot_mat[,2], asp = T, main = i)
+  plot(plot_mat[,1], plot_mat[,2], asp = T, main = i, pch = 16)
   lines(c(-1e3,1e3), c(-1e3, 1e3), col = "red", lty = 2, lwd = 2)
 }
