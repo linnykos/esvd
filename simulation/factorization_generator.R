@@ -1,4 +1,4 @@
-generate_natural_mat <- function(cell_pop, gene_pop, n_each, d_each, sigma, modifier, tol = 1e-3){
+generate_natural_mat <- function(cell_pop, gene_pop, n_each, d_each, sigma, modifier, tol = 1){
   h <- nrow(cell_pop)
   cell_mat <- do.call(rbind, lapply(1:h, function(x){
     pos <- stats::runif(n_each)
