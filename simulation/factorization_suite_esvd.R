@@ -6,10 +6,10 @@ source("../simulation/factorization_generator.R")
 paramMat <- cbind(50, 120, 5,
                   2, 2, 100, 50,
                   rep(1:4, each = 8),
-                  rep(c(1, 1/150, 1/50, 1/1000), each = 8),
+                  rep(c(1, 1/400, 1/50, 1/1000), each = 8),
                   rep(c(1,2, rep(3,3), rep(4,3)), times = 4),
                   rep(c(1,1, c(50, 100, 200), c(1,2,4)), times = 4),
-                  rep(c(1000, rep(100, 7)), times = 4))
+                  rep(c(3000, rep(100, 7)), times = 4))
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "true_scalar", "true_r", "max_iter",
                         "true_distr",
@@ -17,7 +17,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
-trials <- 2
+trials <- 20
 ncores <- 20
 
 ################
@@ -72,8 +72,8 @@ criterion <- function(dat, vec, y){
 
   set.seed(10)
   if(vec["fitting_distr"] == 1){
-    init <- eSVD::initialization(dat_obs, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
-    fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
+    init <- eSVD::initialization(dat_NA, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
+    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "gaussian",
                                    max_iter = vec["max_iter"], max_val = vec["max_val"],
                                    return_path = F, cores = ncores,
@@ -84,8 +84,8 @@ criterion <- function(dat, vec, y){
     pred_val <- pred_mat[missing_idx]
 
   } else if(vec["fitting_distr"] == 2){
-    init <- eSVD::initialization(dat_obs, family = "poisson", k = vec["k"], max_val = vec["max_val"])
-    fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
+    init <- eSVD::initialization(dat_NA, family = "poisson", k = vec["k"], max_val = vec["max_val"])
+    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "poisson",
                                    max_iter = vec["max_iter"], max_val = vec["max_val"],
                                    return_path = F, cores = ncores,
@@ -96,9 +96,9 @@ criterion <- function(dat, vec, y){
 
 
   } else if(vec["fitting_distr"] == 3){
-    init <- eSVD::initialization(dat_obs, family = "neg_binom", k = vec["k"], max_val = -vec["max_val"],
+    init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = -vec["max_val"],
                                  size = vec["fitting_param"])
-    fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
+    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "neg_binom", size = vec["fitting_param"],
                                    max_iter = vec["max_iter"], max_val = -vec["max_val"],
                                    return_path = F, cores = ncores,
@@ -108,9 +108,9 @@ criterion <- function(dat, vec, y){
     pred_val <- (vec["fitting_param"]*exp(pred_mat)/(1-exp(pred_mat)))[missing_idx]
 
   } else {
-    init <- eSVD::initialization(dat_obs, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
+    init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
                                  scalar = vec["fitting_param"])
-    fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
+    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "curved_gaussian", scalar = vec["fitting_param"],
                                    max_iter = vec["max_iter"], max_val = vec["max_val"],
                                    return_path = F, cores = ncores,
@@ -123,7 +123,7 @@ criterion <- function(dat, vec, y){
   list(fit = fit$u_mat, truth = dat$truth, pred_val = pred_val, missing_val = missing_val)
 }
 
-## i <- 32; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
+## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
 ## i <- 12; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 ############
