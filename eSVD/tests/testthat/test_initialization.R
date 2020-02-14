@@ -218,6 +218,17 @@ test_that("initialization respects max_val", {
   expect_true(all(bool_vec))
 })
 
+
+test_that("initialization is meaningful for a tricky instance", {
+  load("../assets/initialization1.RData")
+
+  res <- initialization(dat, family = "curved_gaussian", k = 2, max_val = 100,
+                        scalar = 4)
+
+  pred_mat <- res$u_mat %*% t(res$v_mat)
+  expect_true(length(unique(pred_mat)) >= prod(dim(pred_mat))/2)
+})
+
 #########################
 
 ## .project_rank_feasibility is correct

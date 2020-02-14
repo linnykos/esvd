@@ -3,7 +3,7 @@ library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 0.5,
+paramMat <- cbind(50, 120, 5,
                   2, 2, 100, 50,
                   rep(1:4, each = 8),
                   rep(c(1, 1/150, 1/50, 1/1000), each = 8),
@@ -17,7 +17,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
-trials <- 20
+trials <- 5
 ncores <- 20
 
 ################
@@ -36,6 +36,7 @@ rule <- function(vec){
   modifier <- vec["modifier"]
 
   res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma, modifier)
+  # plot(res$cell_mat[,1], res$cell_mat[,2], asp = T, col = rep(1:4, each = n_each), pch = 16)
   nat_mat <- res$nat_mat
 
   if(vec["true_distr"] == 1){
@@ -122,7 +123,7 @@ criterion <- function(dat, vec, y){
   list(fit = fit$u_mat, truth = dat$truth, pred_val = pred_val, missing_val = missing_val)
 }
 
-## i <- 20; y <- 20; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 32; y <- 20; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 ############
 

@@ -1,10 +1,11 @@
-generate_natural_mat <- function(cell_pop, gene_pop, n_each, d_each, sigma, modifier){
+generate_natural_mat <- function(cell_pop, gene_pop, n_each, d_each, sigma, modifier, tol = 1e-3){
   h <- nrow(cell_pop)
   cell_mat <- do.call(rbind, lapply(1:h, function(x){
     pos <- stats::runif(n_each)
     cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = sigma),
           pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = sigma))
   }))
+  cell_mat <- pmax(cell_mat, tol)
   n <- nrow(cell_mat)
   k <- ncol(cell_mat)
 
@@ -15,6 +16,7 @@ generate_natural_mat <- function(cell_pop, gene_pop, n_each, d_each, sigma, modi
     cbind(pos*gene_pop[x,1] + (1-pos)*gene_pop[x,3] + stats::rnorm(d_each, sd = sigma),
           pos*gene_pop[x,2] + (1-pos)*gene_pop[x,4] + stats::rnorm(d_each, sd = sigma))
   }))
+  gene_mat <- pmax(gene_mat, tol)
   d <- nrow(gene_mat)
 
   res <- eSVD:::.reparameterize(cell_mat*sqrt(modifier), gene_mat*sqrt(modifier))

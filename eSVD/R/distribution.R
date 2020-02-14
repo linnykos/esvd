@@ -14,9 +14,9 @@
 
 .mean_transformation <- function(dat, family, tol = 1e-3, ...){
   if(family == "exponential"){
-    dat <- -1/dat
+    dat <- -1/(dat+1)
   } else if(family == "curved_gaussian"){
-    dat <- 1/dat
+    dat <- 1/(dat+1)
   } else if(family == "poisson"){
     dat <- log(dat + tol)
   } else if(family == "neg_binom"){
