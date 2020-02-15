@@ -4,11 +4,11 @@ library(eSVD)
 source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 5,
-                  2, 2, 100, 50,
+                  2, 2, 50, 50,
                   rep(1:4, each = 8),
-                  rep(c(1, 1/400, 1/50, 1/1000), each = 8),
+                  rep(c(1, 1/400, 1/350, 1/1000), each = 8),
                   rep(c(1,2, rep(3,3), rep(4,3)), times = 4),
-                  rep(c(1,1, c(50, 100, 200), c(1,2,4)), times = 4),
+                  rep(c(1,1, c(25, 50, 200), c(1,2,4)), times = 4),
                   rep(c(3000, rep(100, 7)), times = 4))
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "true_scalar", "true_r", "max_iter",
@@ -17,7 +17,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
-trials <- 20
+trials <- 5
 ncores <- 20
 
 ################
@@ -49,7 +49,7 @@ rule <- function(vec){
     obs_mat <- round(generator_curved_gaussian(nat_mat, scalar = vec["true_scalar"]))
   }
 
-  list(dat = obs_mat, truth = res$cell_mat)
+  list(dat = obs_mat, truth = res$cell_mat, nat_mat = nat_mat)
 }
 
 criterion <- function(dat, vec, y){
@@ -82,6 +82,7 @@ criterion <- function(dat, vec, y){
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- pred_mat[missing_idx]
+    expected_val <- dat$nat_mat[missing_idx]
 
   } else if(vec["fitting_distr"] == 2){
     init <- eSVD::initialization(dat_NA, family = "poisson", k = vec["k"], max_val = vec["max_val"])
@@ -93,6 +94,7 @@ criterion <- function(dat, vec, y){
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- exp(pred_mat[missing_idx])
+    expected_val <- exp(dat$nat_mat[missing_idx])
 
 
   } else if(vec["fitting_distr"] == 3){
@@ -106,6 +108,7 @@ criterion <- function(dat, vec, y){
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- (vec["fitting_param"]*exp(pred_mat)/(1-exp(pred_mat)))[missing_idx]
+    expected_val <- (vec["true_r"]*exp(dat$nat_mat)/(1-exp(dat$nat_mat)))[missing_idx]
 
   } else {
     init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
@@ -118,9 +121,11 @@ criterion <- function(dat, vec, y){
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- 1/pred_mat[missing_idx]
+    expected_val <- 1/dat$nat_mat[missing_idx]
   }
 
-  list(fit = fit$u_mat, truth = dat$truth, pred_val = pred_val, missing_val = missing_val)
+  list(fit = fit$u_mat, truth = dat$truth, pred_val = pred_val, missing_val = missing_val,
+       expected_val = expected_val)
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
