@@ -17,7 +17,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
-trials <- 5
+trials <- 20
 ncores <- 20
 
 ################
