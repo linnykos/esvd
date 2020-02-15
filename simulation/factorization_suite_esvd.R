@@ -96,7 +96,6 @@ criterion <- function(dat, vec, y){
     pred_val <- exp(pred_mat[missing_idx])
     expected_val <- exp(dat$nat_mat[missing_idx])
 
-
   } else if(vec["fitting_distr"] == 3){
     init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = -vec["max_val"],
                                  size = vec["fitting_param"])
@@ -108,7 +107,7 @@ criterion <- function(dat, vec, y){
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- (vec["fitting_param"]*exp(pred_mat)/(1-exp(pred_mat)))[missing_idx]
-    expected_val <- (vec["true_r"]*exp(dat$nat_mat)/(1-exp(dat$nat_mat)))[missing_idx]
+    expected_val <- (vec["true_r"]*exp(-dat$nat_mat)/(1-exp(-dat$nat_mat)))[missing_idx]
 
   } else {
     init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
@@ -129,7 +128,7 @@ criterion <- function(dat, vec, y){
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
-## i <- 12; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 19; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 ############
 
