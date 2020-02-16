@@ -15,10 +15,10 @@ for(i in 1:nrow(missing_idx)){
 }
 missing_idx <- which(is.na(dat_impute_NA))
 
-k <- 4
-lambda0_val <- softImpute::lambda0(dat_impute_NA)
-res_naive <- softImpute::softImpute(dat_impute_NA, rank.max = k, lambda = min(30, lambda0_val/100))
-pred_naive <- res_naive$u %*% diag(res_naive$d) %*% t(res_naive$v)
+# k <- 4
+# lambda0_val <- softImpute::lambda0(dat_impute_NA)
+# res_naive <- softImpute::softImpute(dat_impute_NA, rank.max = k, lambda = min(30, lambda0_val/100))
+# pred_naive <- res_naive$u %*% diag(res_naive$d) %*% t(res_naive$v)
 
 rm(list = c("n", "d", "lambda0_val", "res_hvg"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
