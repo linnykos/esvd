@@ -15,7 +15,7 @@ for(i in 1:nrow(missing_idx)){
 }
 missing_idx <- which(is.na(dat_impute_NA))
 
-k <- 3
+k <- 5
 # lambda0_val <- softImpute::lambda0(dat_impute_NA)
 # res_naive <- softImpute::softImpute(dat_impute_NA, rank.max = k, lambda = min(30, lambda0_val/100))
 # pred_naive <- res_naive$u %*% diag(res_naive$d) %*% t(res_naive$v)

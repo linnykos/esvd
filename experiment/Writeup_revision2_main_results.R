@@ -1,6 +1,8 @@
 rm(list=ls())
 load("../results/step4_factorization.RData")
 
+quality_vec
+
 # diagnostic of eSVD
 idx <- which.min(quality_vec)
 pred_mat <- 1/(res_list[[idx]]$u_mat %*% t(res_list[[idx]]$v_mat))
@@ -12,15 +14,15 @@ y_val_top <- sapply(x_val, function(x){stats::qnorm(0.75, mean = x, sd = x/scala
 y_val_bottom <- sapply(x_val, function(x){stats::qnorm(0.25, mean = x, sd = x/scalar_val)})
 
 plot(NA, asp = T, pch = 16,
-     xlim = c(0, max(c(-pred_mat[missing_idx], dat_impute[missing_idx]))),
-     ylim = c(0, max(c(-pred_mat[missing_idx], dat_impute[missing_idx]))),
+     xlim = c(0, max(c(pred_mat[missing_idx], dat_impute[missing_idx]))),
+     ylim = c(0, max(c(pred_mat[missing_idx], dat_impute[missing_idx]))),
      main = "eSVD embedding:\nMatrix-completion diagnostic",
      xlab = "Predicted value", ylab = "Observed but masked value",
      cex.lab = 1.25, cex.axis = 1.25)
 
 polygon(c(x_val, rev(x_val)), c(y_val_top, rev(y_val_bottom)), col = rgb(1,0,0,0.2),
         border = NA, density = 30, angle = -45)
-points(-pred_mat[missing_idx], dat_impute[missing_idx], pch = 16,
+points(pred_mat[missing_idx], dat_impute[missing_idx], pch = 16,
        col = rgb(0,0,0,0.2))
 
 lines(rep(0,2), c(-1e10,1e10), col = "red", lwd = 1)
