@@ -22,8 +22,8 @@ for(i in 1:length(scalar_vec)){
     }))))
 
     dat_impute_NA <- dat_impute
-    for(i in 1:nrow(missing_idx)){
-      dat_impute_NA[missing_idx[i,1], missing_idx[i,2]] <- NA
+    for(k in 1:nrow(missing_idx)){
+      dat_impute_NA[missing_idx[k,1], missing_idx[k,2]] <- NA
     }
     missing_idx <- which(is.na(dat_impute_NA))
 
