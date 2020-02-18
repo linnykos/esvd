@@ -5,6 +5,7 @@ max_val <- 5000
 scalar_vec <- seq(1, 5, by = 0.5)
 res_list <- vector("list", length(scalar_vec))
 cv_trials <- 10
+n <- nrow(dat_impute); d <- ncol(dat_impute)
 
 for(i in 1:length(scalar_vec)){
   print(paste0("Trying scalar value = ", scalar_vec[i]))
