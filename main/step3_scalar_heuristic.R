@@ -2,27 +2,53 @@ set.seed(10)
 load(paste0("../results/step2_naive_svd", suffix, ".RData"))
 
 max_val <- 5000
-scalar_vec <- 1:5
+scalar_vec <- seq(1, 5, by = 0.5)
 res_list <- vector("list", length(scalar_vec))
+cv_trials <- 10
 
 for(i in 1:length(scalar_vec)){
   print(paste0("Trying scalar value = ", scalar_vec[i]))
-  init <- eSVD::initialization(dat_impute_NA, family = family,
-                                       k = k, max_val = max_val)
-  res_list[[i]] <- eSVD::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                   family = family,
-                                                   max_iter = 100, max_val = max_val,
-                                                   scalar = scalar_vec[i],
-                                                   return_path = F, cores = ncores,
-                                                   verbose = T)
-  save.image(paste0("../results/step3_scalar_heuristic", suffix, "_tmp.RData"))
+  res_list[[i]] <- vector("list", cv_trials)
+
+  for(j in 1:cv_trials){
+    print(paste0("On trial ", j))
+    # set missing values
+    set.seed(10*j)
+    missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
+      cbind(x, sample(1:d, 4))
+    }))), do.call(rbind, (lapply(1:d, function(x){
+      cbind(sample(1:n, 4), d)
+    }))))
+
+    dat_impute_NA <- dat_impute
+    for(i in 1:nrow(missing_idx)){
+      dat_impute_NA[missing_idx[i,1], missing_idx[i,2]] <- NA
+    }
+    missing_idx <- which(is.na(dat_impute_NA))
+
+    # fit
+    init <- eSVD::initialization(dat_impute_NA, family = family,
+                                 k = k, max_val = max_val)
+    res_list[[i]][[j]] <- eSVD::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                                             family = family,
+                                             max_iter = 100, max_val = max_val,
+                                             scalar = scalar_vec[i],
+                                             return_path = F, cores = ncores,
+                                             verbose = T)
+    save.image(paste0("../results/step3_scalar_heuristic", suffix, "_tmp.RData"))
+  }
 }
 
 .l2norm <- function(x){sqrt(sum(x^2))}
 quality_vec <- sapply(res_list, function(x){
-  pred_mat <- 1/(x$u_mat %*% t(x$v_mat))
 
-  mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
+  mat_list <- lapply(x, function(y){
+    pred_mat <- 1/(y$u_mat %*% t(y$v_mat))
+
+    cbind(dat_impute[missing_idx], pred_mat[missing_idx])
+  })
+
+  mat <- do.call(rbind, mat_list)
 
   pca_res <- stats::princomp(mat)
   diag_vec <- c(1,1)
