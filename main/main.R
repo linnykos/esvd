@@ -9,6 +9,7 @@ doMC::registerDoMC(cores = ncores)
 
 # source("../main/step0_screening.R")
 # source("../main/step1_imputing.R")
+dat_impute <- dat_impute/6
 source("../main/step2_naive_svd.R")
 source("../main/step3_scalar_heuristic.R")
 source("../main/step4_factorization.R")
