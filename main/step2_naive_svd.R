@@ -1,6 +1,8 @@
 set.seed(10)
 load(paste0("../results/step1_imputing", suffix, ".RData"))
 
+dat_impute <- dat_impute/6 #REMOVE THIS LINE LATER
+
 n <- nrow(dat_impute); d <- ncol(dat_impute)
 set.seed(10)
 missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
