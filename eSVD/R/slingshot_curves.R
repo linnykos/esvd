@@ -360,7 +360,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   t(sapply(1:length(lambda), function(i){
     weights <- kernel_func(lambda[i], lambda)
-    as.numeric(colSums(diag(weights) %*% dat))/sum(weights)
+    as.numeric(colSums(weights * dat))/sum(weights)
   }))
 }
 
