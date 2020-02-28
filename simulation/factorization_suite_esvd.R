@@ -6,9 +6,9 @@ source("../simulation/factorization_generator.R")
 paramMat <- cbind(50, 120, 10,
                   2, 2, 50, 50,
                   rep(1:4, each = 8),
-                  rep(c(1, 1/400, 1/350, 1/1000), each = 8),
+                  rep(c(1/27, 1/800, 1/250, 1/1000), each = 8),
                   rep(c(1,2, rep(3,3), rep(4,3)), times = 4),
-                  rep(c(1,1, c(25, 50, 200), c(1,2,4)), times = 4),
+                  rep(c(1,1, c(10, 50, 200), c(1,2,4)), times = 4),
                   rep(c(3000, rep(100, 7)), times = 4))
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "true_scalar", "true_r", "max_iter",
