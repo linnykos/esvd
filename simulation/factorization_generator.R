@@ -53,7 +53,7 @@ generator_pcmf_poisson <- function(nat_mat, dropout_prob = 0.5, ...){
   obs_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- rpois(1, nat_mat[i,j])
+      obs_mat[i,j] <- stats::rpois(1, nat_mat[i,j])
     }
   }
 
@@ -71,7 +71,7 @@ generator_esvd_poisson <- function(nat_mat, ...){
   obs_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- rpois(1, exp(nat_mat[i,j]))
+      obs_mat[i,j] <- stats::rpois(1, exp(nat_mat[i,j]))
     }
   }
 
@@ -90,9 +90,9 @@ generator_zinb_nb <- function(nat_mat, r_vec = rep(100, ncol(nat_mat)), ...){
     for(j in 1:d){
       p <- exp(nat_mat[i,j])/(exp(nat_mat[i,j])+r_vec[j])
       r <- r_vec[j]
-      obs_mat[i,j] <- rnbinom(1, size = r, prob = p)
+      obs_mat[i,j] <- stats::rnbinom(1, size = r, prob = p)
 
-      dropout_mat[i,j] <- rbinom(1, size = 1, prob = 1/(1+exp(-nat_mat[i,j])))
+      dropout_mat[i,j] <- stats::rbinom(1, size = 1, prob = 1/(1+exp(-nat_mat[i,j])))
     }
   }
 
@@ -109,7 +109,7 @@ generator_esvd_nb <- function(nat_mat, size = 100,  ...){
   for(i in 1:n){
     for(j in 1:d){
       p <- 1-exp(-nat_mat[i,j]) # remember the p param in rnbinom is "flipped" in R
-      obs_mat[i,j] <- rnbinom(1, size = size, prob = p)
+      obs_mat[i,j] <- stats::rnbinom(1, size = size, prob = p)
     }
   }
 
@@ -125,7 +125,7 @@ generator_exponential <- function(nat_mat, ...){
   obs_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- rexp(1, nat_mat[i,j])
+      obs_mat[i,j] <- stats::rexp(1, nat_mat[i,j])
     }
   }
 
@@ -139,7 +139,7 @@ generator_gaussian <- function(nat_mat, sd_val = 0.25, tol = 1e-3, ...){
   obs_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- rnorm(1, nat_mat[i,j], sd = sd_val)
+      obs_mat[i,j] <- stats::rnorm(1, nat_mat[i,j], sd = sd_val)
     }
   }
 
@@ -155,7 +155,7 @@ generator_curved_gaussian <- function(nat_mat, scalar = 2, tol = 1e-3, ...){
   obs_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
-      obs_mat[i,j] <- rnorm(1, 1/nat_mat[i,j], sd = 1/(scalar*nat_mat[i,j]))
+      obs_mat[i,j] <- stats::rnorm(1, 1/nat_mat[i,j], sd = 1/(scalar*nat_mat[i,j]))
     }
   }
 
