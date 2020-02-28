@@ -26,7 +26,7 @@ test_that(".optimize_row actually lowers the objective", {
     set.seed(x*10)
     dat <- matrix(rexp(40), nrow = 10, ncol = 4)
 
-    res <- initialization(dat, max_val = -100, family = "exponential")
+    res <- initialization(dat, max_val = 100, family = "exponential")
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     i <- sample(1:10, 1)
@@ -52,7 +52,7 @@ test_that(".optimize_row works the other way", {
     set.seed(x*10)
     dat <-  matrix(rexp(40), nrow = 10, ncol = 4)
 
-    res <- initialization(dat, max_val = -100, family = "exponential")
+    res <- initialization(dat, max_val = 100, family = "exponential")
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     j <- sample(1:4, 1)
@@ -75,7 +75,7 @@ test_that(".optimize_row respects an upper bound", {
   set.seed(20)
   dat <- matrix(rexp(40), nrow = 10, ncol = 4)
 
-  res <- initialization(dat, max_val = -5, family = "exponential")
+  res <- initialization(dat, max_val = 5, family = "exponential")
   u_mat <- res$u_mat
   v_mat <- res$v_mat
   expect_true(all(u_mat %*% t(v_mat) >= -5-1e-6))
@@ -99,7 +99,7 @@ test_that(".optimize_mat works", {
   dat <- matrix(rexp(40), nrow = 10, ncol = 4)
   class(dat) <- c("exponential", class(dat))
 
-  res <- initialization(dat, max_val = -100, family = "exponential")
+  res <- initialization(dat, max_val = 100, family = "exponential")
   u_mat <- res$u_mat
   v_mat <- res$v_mat
 
@@ -115,7 +115,7 @@ test_that(".optimize_mat works with parallelization", {
   dat <- matrix(rexp(40), nrow = 10, ncol = 4)
   class(dat) <- c("exponential", class(dat))
 
-  res <- initialization(dat, max_val = -100, family = "exponential")
+  res <- initialization(dat, max_val = 100, family = "exponential")
   u_mat <- res$u_mat
   v_mat <- res$v_mat
 
@@ -136,7 +136,7 @@ test_that(".optimize_mat keeps the negative constraint", {
     class(dat) <- c("exponential", class(dat))
     bool <- sample(c(T, F), 1)
 
-    res <- initialization(dat, max_val = -100, family = "exponential")
+    res <- initialization(dat, max_val = 100, family = "exponential")
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     if(bool){
@@ -193,7 +193,7 @@ test_that(".optimize_mat lowers the objective value", {
     class(dat) <- c("exponential", class(dat))
     bool <- sample(c(T, F), 1)
 
-    res <- initialization(dat, max_val = -100, family = "exponential")
+    res <- initialization(dat, max_val = 100, family = "exponential")
     u_mat <- res$u_mat
     v_mat <- res$v_mat
     obj1 <- .evaluate_objective(dat, u_mat, v_mat)
@@ -233,10 +233,10 @@ test_that(".frank_wolfe is able to solve the following LP", {
 test_that("fit_factorization works", {
   set.seed(10)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
-  init <- initialization(dat, max_val = -100, family = "exponential")
+  init <- initialization(dat, max_val = 100, family = "exponential")
 
   res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                            max_val = -100, family = "exponential")
+                            max_val = 100, family = "exponential")
 
   expect_true(is.list(res))
   expect_true(nrow(res$u_mat) == nrow(dat))
@@ -285,10 +285,10 @@ test_that("fit_factorization works with missing values", {
   set.seed(5)
   dat <- matrix(rexp(20), nrow = 5, ncol = 4)
   dat[sample(prod(dim(dat)), 5)] <- NA
-  init <- initialization(dat, max_val = -100, family = "exponential")
+  init <- initialization(dat, max_val = 100, family = "exponential")
 
   res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                            max_val = -100, family = "exponential")
+                            max_val = 100, family = "exponential")
 
   expect_true(is.list(res))
   expect_true(nrow(res$u_mat) == nrow(dat))
@@ -303,10 +303,10 @@ test_that("fit_factorization respects the negative constraint", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- matrix(rexp(20), nrow = 5, ncol = 4)
-    init <- initialization(dat, max_val = -100, family = "exponential")
+    init <- initialization(dat, max_val = 100, family = "exponential")
 
     res <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                              max_val = -100, family = "exponential")
+                              max_val = 100, family = "exponential")
 
     pred_mat <- res$u_mat %*% t(res$v_mat)
 
@@ -359,7 +359,15 @@ test_that("fit_factorization gives similar results if only one value is missing"
   res3 <- fit_factorization(dat3, u_mat = init3$u_mat, v_mat = init3$v_mat,
                              max_val = 100, max_iter = 100, family = "curved_gaussian")
 
-  expect_true(.l2norm(res$u_mat - res2$u_mat) < .l2norm(res$u_mat - res3$u_mat))
+  # compute the error, keeping in mind signs can be flipped
+  diff1 <- sum(sapply(1:ncol(res$u_mat), function(i){
+    min(.l2norm(res$u_mat[,i] - res2$u_mat[,i]), .l2norm(res$u_mat[,i] + res2$u_mat[,i]))
+  }))
+  diff2 <- sum(sapply(1:ncol(res$u_mat), function(i){
+    min(.l2norm(res$u_mat[,i] - res3$u_mat[,i]), .l2norm(res$u_mat[,i] + res3$u_mat[,i]))
+  }))
+
+  expect_true(diff1 < diff2)
 })
 
 test_that("fit_factorization respects contraints for all values, even the missing ones", {
@@ -385,10 +393,10 @@ test_that("fit_factorization can roughly recover the all 1's matrix", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
     dat <- matrix(rexp(100), nrow = 10, ncol = 10)
-    init <- initialization(dat, max_val = -100, family = "exponential")
+    init <- initialization(dat, max_val = 100, family = "exponential")
 
     fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                                          max_iter = 5, max_val = -100, family = "exponential")
+                                          max_iter = 5, max_val = 100, family = "exponential")
 
     res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat)
     res2 <- .evaluate_objective(dat, matrix(1, ncol = 1, nrow = 10),

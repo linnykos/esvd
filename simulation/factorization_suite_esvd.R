@@ -3,7 +3,7 @@ library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 5,
+paramMat <- cbind(50, 120, 10,
                   2, 2, 50, 50,
                   rep(1:4, each = 8),
                   rep(c(1, 1/400, 1/350, 1/1000), each = 8),
@@ -97,11 +97,11 @@ criterion <- function(dat, vec, y){
     expected_val <- exp(dat$nat_mat[missing_idx])
 
   } else if(vec["fitting_distr"] == 3){
-    init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = -vec["max_val"],
+    init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
                                  size = vec["fitting_param"])
     fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "neg_binom", size = vec["fitting_param"],
-                                   max_iter = vec["max_iter"], max_val = -vec["max_val"],
+                                   max_iter = vec["max_iter"], max_val = vec["max_val"],
                                    return_path = F, cores = ncores,
                                    verbose = F)
 

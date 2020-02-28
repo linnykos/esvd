@@ -26,11 +26,13 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
             ncol(u_mat) == ncol(v_mat))
   k <- ncol(u_mat)
   if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
+  if(!is.na(max_val)) stopifnot(max_val >= 0)
 
   idx <- which(!is.na(dat))
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat == 0)] <- min_val/2
   direction <- .dictate_direction(class(dat)[1])
+  if(!is.na(direction) && direction == "<=" && !is.na(max_val)) max_val <- -max_val
 
   current_obj <- Inf
   next_obj <- .evaluate_objective(dat, u_mat, v_mat, ...)

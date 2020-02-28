@@ -16,8 +16,8 @@ initialization <- function(dat, k = 2, family,
                            max_iter = 10, tol = 1e-3,
                            verbose = F, ...){
   direction <- .dictate_direction(family)
-  if(!is.na(direction) & !is.na(max_val)){
-    stopifnot((direction == ">=" & max_val > 0) | (direction == "<=" & max_val < 0))
+  if(!is.na(max_val)){
+    if(!is.na(direction) && direction == "<=") max_val <- -max_val
   }
 
   # initialize

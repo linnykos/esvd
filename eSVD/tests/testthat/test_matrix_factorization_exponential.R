@@ -326,10 +326,10 @@ test_that("fit_factorization is appropriate for exponential", {
     set.seed(10*x)
     dat <- matrix(rexp(25, 1/2), nrow = 5, ncol = 5)
     class(dat) <- c("exponential", class(dat)[length(class(dat))])
-    init <- initialization(dat, family = "exponential", max_val = -100)
+    init <- initialization(dat, family = "exponential", max_val = 100)
 
     fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                              max_iter = 5, max_val = -100,
+                              max_iter = 5, max_val = 100,
                               family = "exponential")
 
     res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat)
@@ -369,10 +369,10 @@ test_that("fit_factorization is appropriately minimized among rank 1 matrices", 
   })
 
   fit_list <- lapply(1:trials, function(i){
-    init <- initialization(dat_list[[i]], k = 1, family = "exponential", max_val = -100)
+    init <- initialization(dat_list[[i]], k = 1, family = "exponential", max_val = 100)
 
     fit <- fit_factorization(dat_list[[i]], k = 1, u_mat = init$u_mat, v_mat = init$v_mat,
-                             max_iter = 10, max_val = -100,
+                             max_iter = 10, max_val = 100,
                              family = "exponential")
   })
 

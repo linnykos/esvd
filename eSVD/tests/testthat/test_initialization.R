@@ -208,7 +208,7 @@ test_that("initialization respects max_val", {
     set.seed(x*10)
     dat <- matrix(rexp(40), nrow = 10, ncol = 4)
 
-    res <- initialization(dat, max_val = -100, family = "exponential")
+    res <- initialization(dat, max_val = 100, family = "exponential")
     u_mat <- res$u_mat
     v_mat <- res$v_mat
 
@@ -339,7 +339,6 @@ test_that(".project_rank_feasibility handles non-convergence settings gracefully
   res <- .project_rank_feasibility(pred_mat, k = k, direction = direction, max_val = max_val,
                                    max_iter = max_iter)
 
-  expect_true(is.na(res$iter))
   expect_true(Matrix::rankMatrix(res$matrix) == 2)
   expect_true(all(res$matrix >= 0))
   expect_true(all(res$matrix <= max_val))
