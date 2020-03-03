@@ -103,7 +103,7 @@
 
     # populate distance matrix for all edges between one cluster in level k and
     #   one leaf cluster in level k-1
-    stopifnot(any(unlist(tree_list) %in% cluster_group_list[[i]]))
+    stopifnot(!any(unlist(tree_list) %in% cluster_group_list[[i]]))
     edge_mat2 <- .enumerate_dist_between_levels(dist_mat, tree_list, cluster_group_list[[i]])
 
     # populate distance matrix between all clusters in level k
@@ -125,7 +125,7 @@
                                         output = "vpath")$vpath
 
     # find all unique paths
-    tree_list <- .find_all_unique_paths(path_list)
+    tree_list <- .find_all_unique_paths(path_list, starting_cluster)
   }
 
   names(tree_list) <- paste('Lineage', seq_along(tree_list), sep='')
@@ -183,6 +183,8 @@
 # }
 
 .enumerate_dist_from_trees <- function(dist_mat, tree_list){
+  if(all(sapply(tree_list, length) == 1)) return(numeric(0))
+
   edge_list <- lapply(1:length(tree_list), function(i){
     if(length(tree_list[[i]]) > 1){
 
@@ -198,7 +200,7 @@
   do.call(rbind, edge_list)
 }
 
-.enumerate_dist_between_levels <- function(dist_mat, dist_mat2, tree_list, cluster_vec){
+.enumerate_dist_between_levels <- function(dist_mat, tree_list, cluster_vec){
   # enumerate all the leaves, one for each tree
   leaf_vec <- sapply(tree_list, function(x){x[length(x)]})
   stopifnot(length(leaf_vec) == length(unique(leaf_vec)))
@@ -215,7 +217,8 @@
   edge_mat
 }
 
-.enumerate_dist_within_levels <- function(dist_mat, dist_mat2, cluster_vec){
+.enumerate_dist_within_levels <- function(dist_mat, cluster_vec){
+  if(length(cluster_vec) < 2) return(numeric(0))
   combn_mat <- utils::combn(length(cluster_vec), 2)
 
   edge_mat <- lapply(1:ncol(combn_mat), function(i){
@@ -253,16 +256,25 @@
   lineages
 }
 
-.find_all_unique_paths <- function(path_list){
+.find_all_unique_paths <- function(path_list, starting_cluster){
+  # remove all paths that do not have the correct starting_cluster
+  path_list <- path_list[which(sapply(path_list, function(x){x[1] == starting_cluster}))]
+  stopifnot(length(path_list) >= 1)
+
   len <- length(path_list)
 
+  # remove any paths strictly contained in another
   bool_vec <- sapply(1:len, function(x){
     !any(sapply(path_list[-x], function(y){
       all(path_list[[x]] %in% y)
     }))
   })
 
-  path_list[which(bool_vec)]
+  path_list <- path_list[which(bool_vec)]
+
+  lapply(path_list, function(x){
+    as.numeric(x)
+  })
 }
 
 ########
