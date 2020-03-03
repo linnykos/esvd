@@ -25,7 +25,7 @@ col_name <- c("orange", rep("bluish green", 2), rep("yellow", 6), rep("skyblue",
 order_vec <- c(3, 5.1, 5.2, seq(6.1, 6.6, by = 0.1), 4.1, 4.2, 2, 1)
 col_info <- data.frame(name = levels(cell_type_vec),
                        idx = sort(unique(cluster_labels)),
-                       order = order_vec,
+                         order = order_vec,
                        col_name = col_name,
                        col_code = col_vec)
 num_order_vec <- c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))
