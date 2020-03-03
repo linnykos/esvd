@@ -38,6 +38,11 @@
     }
   }
 
+  if(all(is.na(cluster_group_list))){
+
+  } else {
+
+  }
   ### construct the spt (shortest path tree)
   g <- .construct_graph_hierarchy(dist_mat, cluster_labels = cluster_labels,
                                   cluster_group_list = cluster_group_list)
@@ -85,55 +90,143 @@
 
 .construct_graph_hierarchy <- function(dist_mat, cluster_labels, cluster_group_list,
                starting_cluster = 1){
+  n <- length(cluster_labels)
+  len <- length(cluster_group_list)
+  stopifnot(len > 1)
+  tree_list <- list(c(starting_cluster))
 
-  n <- nrow(dist_mat)
+  # iterate through all the levels in the cluster_group_list
+  for(i in 2:len){
+    # for each level k, first populate a new distance matrix with distances of all
+    #  trees up until level k-1
+    edge_mat1 <- .enumerate_dist_from_trees(dist_mat, tree_list)
 
-  g <- igraph::graph.empty(n = n, directed = T)
+    # populate distance matrix for all edges between one cluster in level k and
+    #   one leaf cluster in level k-1
+    stopifnot(any(unlist(tree_list) %in% cluster_group_list[[i]]))
+    edge_mat2 <- .enumerate_dist_between_levels(dist_mat, tree_list, cluster_group_list[[i]])
 
-  edge_mat <- .populate_edge_matrix(cluster_labels, cluster_group_list)
+    # populate distance matrix between all clusters in level k
+    edge_mat3 <- .enumerate_dist_within_levels(dist_mat, cluster_group_list[[i]])
 
-  # populate the graph
-  for(j in 1:ncol(edge_mat)){
-    idx1 <- edge_mat[1,j]; idx2 <- edge_mat[2,j]
+    # populate igraph object
+    edge_mat <- do.call(rbind, list(edge_mat1, edge_mat2, edge_mat3))
+    g <- igraph::graph.empty(n = n, directed = T)
 
-    g <- igraph::add_edges(g, edges = c(idx1, idx2),
-                           attr = list(weight = dist_mat[idx1, idx2]))
+    for(j in 1:nrow(edge_mat)){
+      idx1 <- edge_mat[j,1]; idx2 <- edge_mat[j,2]
+
+      g <- igraph::add_edges(g, edges = c(idx1, idx2),
+                             attr = list(weight = dist_mat[idx1, idx2]))
+    }
+
+    # find shortest path tree
+    path_list <- igraph::shortest_paths(g, from = starting_cluster,
+                                        output = "vpath")$vpath
+
+    # find all unique paths
+    tree_list <- .find_all_unique_paths(path_list)
   }
+
+  names(tree_list) <- paste('Lineage', seq_along(tree_list), sep='')
+
+  tree_list
+
+  # n <- nrow(dist_mat)
+  #
+  # g <- igraph::graph.empty(n = n, directed = T)
+  #
+  # edge_mat <- .populate_edge_matrix(cluster_labels, cluster_group_list)
+  #
+  # # populate the graph
+  # for(j in 1:ncol(edge_mat)){
+  #   idx1 <- edge_mat[1,j]; idx2 <- edge_mat[2,j]
+  #
+  #   g <- igraph::add_edges(g, edges = c(idx1, idx2),
+  #                          attr = list(weight = dist_mat[idx1, idx2]))
+  # }
 
   g
 }
 
-.populate_edge_matrix <- function(cluster_labels, cluster_group_list = NA){
-  if(all(!is.na(cluster_group_list))){
-    k <- length(cluster_group_list)
+# .populate_edge_matrix <- function(cluster_labels, cluster_group_list = NA){
+#   if(all(!is.na(cluster_group_list))){
+#     k <- length(cluster_group_list)
+#
+#     # add edges within each group
+#     edge_mat1 <- lapply(1:k, function(i){
+#       m <- length(cluster_group_list[[i]])
+#       if(m >= 2){
+#         combn_mat <- utils::combn(m, 2)
+#         combn_mat[1,] <- cluster_group_list[[i]][combn_mat[1,]]
+#         combn_mat[2,] <- cluster_group_list[[i]][combn_mat[2,]]
+#         combn_mat <- cbind(combn_mat, combn_mat[c(2,1),]) #the reverse edges
+#       } else {
+#         numeric(0)
+#       }
+#     })
+#     edge_mat1 <- do.call(cbind, edge_mat1)
+#
+#     # add edges between groups
+#     edge_mat2 <- lapply(1:(k-1), function(i){
+#       t(as.matrix(expand.grid(cluster_group_list[[i]], cluster_group_list[[i+1]])))
+#     })
+#     edge_mat2 <- do.call(cbind, edge_mat2)
+#     edge_mat <- cbind(edge_mat1, edge_mat2)
+#
+#   } else {
+#     edge_mat <- utils::combn(length(unique(cluster_labels)), 2)
+#     edge_mat <- cbind(edge_mat, edge_mat[c(2,1),]) #the reverse edges
+#   }
+#
+#   edge_mat
+# }
 
-    # add edges within each group
-    edge_mat1 <- lapply(1:k, function(i){
-      m <- length(cluster_group_list[[i]])
-      if(m >= 2){
-        combn_mat <- utils::combn(m, 2)
-        combn_mat[1,] <- cluster_group_list[[i]][combn_mat[1,]]
-        combn_mat[2,] <- cluster_group_list[[i]][combn_mat[2,]]
-        combn_mat <- cbind(combn_mat, combn_mat[c(2,1),]) #the reverse edges
-      } else {
-        numeric(0)
-      }
-    })
-    edge_mat1 <- do.call(cbind, edge_mat1)
+.enumerate_dist_from_trees <- function(dist_mat, tree_list){
+  edge_list <- lapply(1:length(tree_list), function(i){
+    if(length(tree_list[[i]]) > 1){
 
-    # add edges between groups
-    edge_mat2 <- lapply(1:(k-1), function(i){
-      t(as.matrix(expand.grid(cluster_group_list[[i]], cluster_group_list[[i+1]])))
-    })
-    edge_mat2 <- do.call(cbind, edge_mat2)
-    edge_mat <- cbind(edge_mat1, edge_mat2)
+      t(sapply(1:(length(tree_list[[i]])-1), function(j){
+        idx1 <- tree_list[[i]][j]
+        idx2 <- tree_list[[i]][j+1]
 
-  } else {
-    edge_mat <- utils::combn(length(unique(cluster_labels)), 2)
-    edge_mat <- cbind(edge_mat, edge_mat[c(2,1),]) #the reverse edges
-  }
+        c(idx1, idx2, dist_mat[idx1, idx2])
+      }))
+    }
+  })
+
+  do.call(rbind, edge_list)
+}
+
+.enumerate_dist_between_levels <- function(dist_mat, dist_mat2, tree_list, cluster_vec){
+  # enumerate all the leaves, one for each tree
+  leaf_vec <- sapply(tree_list, function(x){x[length(x)]})
+  stopifnot(length(leaf_vec) == length(unique(leaf_vec)))
+
+  node_pairings <- as.matrix(expand.grid(leaf_vec, cluster_vec))
+
+  edge_mat <- t(sapply(1:nrow(node_pairings), function(i){
+    idx1 <- node_pairings[i,1]
+    idx2 <- node_pairings[i,2]
+
+    c(idx1, idx2, dist_mat[idx1, idx2])
+  }))
 
   edge_mat
+}
+
+.enumerate_dist_within_levels <- function(dist_mat, dist_mat2, cluster_vec){
+  combn_mat <- utils::combn(length(cluster_vec), 2)
+
+  edge_mat <- lapply(1:ncol(combn_mat), function(i){
+    idx1 <- cluster_vec[combn_mat[1,i]]
+    idx2 <- cluster_vec[combn_mat[2,i]]
+
+    matrix(c(idx1, idx2, dist_mat[idx1, idx2], idx2, idx1, dist_mat[idx1, idx2]),
+           nrow = 2, ncol = 3, byrow = T)
+  })
+
+  do.call(rbind, edge_mat)
 }
 
 #' Construct the lineages
