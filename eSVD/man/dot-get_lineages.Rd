@@ -32,12 +32,7 @@ A list of cluster indices, with \code{starting_cluster} starting as
 its first element
 }
 \description{
-Note: I removed the functionality to explicitly label a ending cluster
-(might put back in later?).
-}
-\details{
-Note: I removed the Omega parameter, which, to my understanding,
-controls if a lineage (i.e. tree) is split into two separate lineages.
-
-Code adapted from https://github.com/kstreet13/slingshot.
+Code adapted from https://github.com/kstreet13/slingshot. See
+our paper for a list of changes to adapt the original Slingshot code
+to our setting
 }
