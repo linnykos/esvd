@@ -83,6 +83,7 @@ criterion <- function(dat, vec, y){
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- pred_mat[missing_idx]
     expected_val <- dat$nat_mat[missing_idx]
+    fitting_param <- vec["fitting_param"]
 
   # poisson
   } else if(vec["fitting_distr"] == 2){
@@ -96,6 +97,7 @@ criterion <- function(dat, vec, y){
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- exp(pred_mat[missing_idx])
     expected_val <- exp(dat$nat_mat[missing_idx])
+    fitting_param <- vec["fitting_param"]
 
   # negative binomial
   } else if(vec["fitting_distr"] == 3){
@@ -121,7 +123,7 @@ criterion <- function(dat, vec, y){
                                    verbose = F)
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
-    pred_val <- (vec["fitting_param"]*exp(pred_mat)/(1-exp(pred_mat)))[missing_idx]
+    pred_val <- (fitting_param*exp(pred_mat)/(1-exp(pred_mat)))[missing_idx]
     expected_val <- (vec["true_r"]*exp(-dat$nat_mat)/(1-exp(-dat$nat_mat)))[missing_idx]
 
   # curved gaussian
@@ -164,14 +166,15 @@ criterion <- function(dat, vec, y){
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- -1/pred_mat[missing_idx]
     expected_val <- 1/dat$nat_mat[missing_idx]
+    fitting_param <- vec["fitting_param"]
   }
 
   list(fit = fit$u_mat, truth = dat$truth, pred_val = pred_val, missing_val = missing_val,
-       expected_val = expected_val)
+       expected_val = expected_val, fitting_param = fitting_param)
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
-## i <- 9; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 4; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 ############
 
