@@ -76,5 +76,10 @@ for(i in 1:nrow(missing_idx)){
 missing_idx <- which(is.na(dat_NA))
 missing_val <- dat_obs[missing_idx]
 
-
+init <- eSVD::initialization(dat_obs, family = "poisson", k = vec["k"], max_val = vec["max_val"])
+fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
+                               family = "poisson",
+                               max_iter = vec["max_iter"], max_val = vec["max_val"],
+                               return_path = F, cores = ncores,
+                               verbose = F)
 

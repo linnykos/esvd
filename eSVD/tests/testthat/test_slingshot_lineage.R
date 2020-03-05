@@ -15,52 +15,29 @@ test_that(".compute_cluster_distances works", {
 
 ##########
 
-## .populate_edge_matrix is correct
+## .construct_graph is correct
 
-test_that(".populate_edge_matrix works", {
-  cluster_labels <- rep(1:4, each = 50)
-  res <- .populate_edge_matrix(cluster_labels, cluster_group_list = NA)
-
-  expect_true(is.matrix(res))
-  expect_true(all(dim(res) == c(2, 4*3)))
-})
-
-test_that(".populate_edge_matrix works", {
-  cluster_labels <- rep(1:6, each = 50)
-  cluster_group_list <- list(c(1,2,3), c(4,5,6))
-  res <- .populate_edge_matrix(cluster_labels, cluster_group_list = cluster_group_list)
-
-  expect_true(is.matrix(res))
-  expect_true(all(dim(res) == c(2, 2*(3*2) + 3^2)))
-})
-
-##########
-
-## .construct_graph_hierarchy is correct
-
-test_that(".construct_graph_hierarchy works", {
+test_that(".construct_graph works", {
   set.seed(10)
   dat <- MASS::mvrnorm(n = 200, mu = rep(0, 5), Sigma = diag(5))
   cluster_labels <- rep(1:4, each = 50)
 
   dist_mat <- .compute_cluster_distances(dat, cluster_labels)
-  res <- .construct_graph_hierarchy(dist_mat, cluster_labels = cluster_labels,
-                                    cluster_group_list = NA)
+  res <- .construct_graph(dist_mat)
 
   expect_true(class(res) == "igraph")
   expect_true(igraph::vcount(res) == 4)
-  expect_true(igraph::ecount(res) == 4*3)
-  expect_true(igraph::is_directed(res))
+  expect_true(igraph::ecount(res) == 4*3/2)
+  expect_true(!igraph::is_directed(res))
 })
 
-test_that(".construct_graph_hierarchy has meaningful weights", {
+test_that(".construct_graph has meaningful weights", {
   set.seed(20)
   dat <- MASS::mvrnorm(n = 200, mu = rep(0, 5), Sigma = diag(5))
   cluster_labels <- rep(1:4, each = 50)
 
   dist_mat <- .compute_cluster_distances(dat, cluster_labels)
-  g <- .construct_graph_hierarchy(dist_mat, cluster_labels = cluster_labels,
-                                    cluster_group_list = NA)
+  g <- .construct_graph(dist_mat)
 
   weight_mat <- cbind(igraph::as_edgelist(g, names = T), igraph::edge_attr(g, "weight", index = igraph::E(g)))
 
@@ -80,7 +57,72 @@ test_that(".construct_graph_hierarchy has meaningful weights", {
   expect_true(all(sum(unlist(res)) <= 1e-6))
 })
 
-###########
+##################
+
+## .construct_lineage_from_hierarchy is correct
+
+test_that(".construct_lineage_from_hierarchy works", {
+  set.seed(10)
+  cluster_labels <- sample(1:10, 200, replace = T)
+  dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
+  cluster_group_list <- list(1, c(2:5), c(6:8), c(9:10))
+
+  res <- .get_lineages(dat, cluster_labels, cluster_group_list, starting_cluster = 1)
+
+  expect_true(is.list(res))
+})
+
+test_that(".construct_lineage_from_hierarchy outputs a lineage that respects the cluster_group_list", {
+  set.seed(10)
+  cluster_labels <- sample(1:10, 200, replace = T)
+  dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
+  cluster_group_list <- list(1, c(2:5), c(6:8), c(9:10))
+  cluster_encoding <- c(1, rep(2,4), rep(3,3), rep(4,2))
+
+  res <- .get_lineages(dat, cluster_labels, cluster_group_list, starting_cluster = 1)
+
+  # make sure all clusters are somewhere
+  expect_true(length(unique(unlist(res))) == 10)
+  for(i in 1:length(res)){
+    tmp <- cluster_encoding[res[[i]]]
+    expect_true(all(diff(tmp) >= 0))
+  }
+})
+
+test_that(".construct_lineage_from_hierarchy has hierarchical that matters", {
+  # construct a very simple example with spherical gaussians
+  set.seed(10)
+  cluster_labels <- rep(1:4, each = 100)
+  dat <- rbind(MASS::mvrnorm(100, rep(0, 2), diag(2)),
+               MASS::mvrnorm(100, rep(2, 2), diag(2)),
+               MASS::mvrnorm(100, rep(-2, 2), diag(2)),
+               MASS::mvrnorm(100, c(0.5, 0), diag(2)))
+  cluster_group_list <- list(1, c(2:3), 4)
+
+  res <- .get_lineages(dat, cluster_labels, cluster_group_list, starting_cluster = 1)
+  res2 <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
+
+  # if cluster_group_list is provided, get the desired order
+  if(length(res[[1]]) == 2){
+    expect_true(all(res[[1]] == c(1,3)))
+    expect_true(all(res[[2]] == c(1,2,4)))
+  } else {
+    expect_true(all(res[[2]] == c(1,3)))
+    expect_true(all(res[[1]] == c(1,2,4)))
+  }
+
+  # if cluster_group_list is not provided, simply go for the shortest path lineage
+  if(length(res2[[1]]) == 2){
+    expect_true(all(res2[[1]] == c(1,3)))
+    expect_true(all(res2[[2]] == c(1,4,2)))
+  } else {
+    expect_true(all(res2[[2]] == c(1,3)))
+    expect_true(all(res2[[1]] == c(1,4,2)))
+  }
+})
+
+
+##################
 
 ## .construct_lineages is correct
 
@@ -103,8 +145,7 @@ test_that(".construct_lineages finds the right lineage for a specific configurat
   dist_mat <- .compute_cluster_distances(dat, cluster_labels)
 
   ### construct the spt
-  g <- .construct_graph_hierarchy(dist_mat, cluster_labels = cluster_labels,
-                                  cluster_group_list = NA)
+  g <- .construct_graph(dist_mat)
   res <- .construct_lineages(g, starting_cluster = 1)
 
   expect_true(length(res) == 2)
@@ -146,4 +187,14 @@ test_that(".get_lineages finds the right lineage for a specific configuration", 
   expect_true(all(res[[1]] == c(1,3,2)) | all(res[[2]] == c(1,3,2)))
   expect_true(all(res[[1]] == c(1,3,4)) | all(res[[2]] == c(1,3,4)))
   expect_true(any(res[[1]] != res[[2]]))
+})
+
+test_that(".get_lineages work for an artifical example", {
+  set.seed(10)
+  cluster_labels <- sample(1:10, 200, replace = T)
+  dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
+
+  res <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
+
+  expect_true(is.list(res))
 })
