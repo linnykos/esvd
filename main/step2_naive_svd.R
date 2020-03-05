@@ -1,25 +1,55 @@
 set.seed(10)
 load(paste0("../results/step1_imputing", suffix, ".RData"))
 
+max_val <- 5000
 n <- nrow(dat_impute); d <- ncol(dat_impute)
-set.seed(10)
-missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
-  cbind(x, sample(1:d, 4))
-}))), do.call(rbind, (lapply(1:d, function(x){
-  cbind(sample(1:n, 4), d)
-}))))
-
-dat_impute_NA <- dat_impute
-for(i in 1:nrow(missing_idx)){
-  dat_impute_NA[missing_idx[i,1], missing_idx[i,2]] <- NA
-}
-missing_idx <- which(is.na(dat_impute_NA))
-
+cv_trials <- 5
+naive_res_list <- vector("list", length(cv_trials))
 k <- 5
-# lambda0_val <- softImpute::lambda0(dat_impute_NA)
-# res_naive <- softImpute::softImpute(dat_impute_NA, rank.max = k, lambda = min(30, lambda0_val/100))
-# pred_naive <- res_naive$u %*% diag(res_naive$d) %*% t(res_naive$v)
 
-rm(list = c("n", "d", "lambda0_val", "res_hvg"))
+# generate list of missing indices
+missing_idx_list <- lapply(1:cv_trials, function(j){
+  set.seed(10*j)
+  missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
+    cbind(x, sample(1:d, 4))
+  }))), do.call(rbind, (lapply(1:d, function(x){
+    cbind(sample(1:n, 4), d)
+  }))))
+
+  dat_impute_NA <- dat_impute
+  for(tmp in 1:nrow(missing_idx)){
+    dat_impute_NA[missing_idx[tmp,1], missing_idx[tmp,2]] <- NA
+  }
+
+  which(is.na(dat_impute_NA))
+})
+
+for(j in 1:cv_trials){
+  print(paste0("On trial ", j))
+
+  # set missing values
+  dat_impute_NA <- dat_impute
+  dat_impute_NA[missing_idx_list[[j]]] <- NA
+
+  # fit
+  set.seed(10)
+  init <- eSVD::initialization(dat_impute_NA, family = "gaussian",
+                               k = k, max_val = max_val)
+  fit <- eSVD::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                                                family = "gaussian",
+                                                max_iter = 50, max_val = max_val,
+                                                return_path = F, cores = ncores,
+                                                verbose = T)
+
+  pred_mat <- fit$u_mat %*% t(fit$v_mat)
+  pred_val <- pred_mat[missing_idx_list[[j]]]
+  observed_val <- dat_impute[missing_idx_list[[j]]]
+
+  naive_res_list[[j]] <- cbind(pred_val, observed_val)
+
+  save.image(paste0("../results/step2_naive_svd", suffix, "_tmp.RData"))
+}
+
+rm(list = c("init", "fit", "dat_impute_NA", "j"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
 save.image(paste0("../results/step2_naive_svd", suffix, ".RData"))

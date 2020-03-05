@@ -24,6 +24,6 @@ dim(dat_impute)
 # eSVD:::.plot_singlecell(dat_impute)
 # graphics.off()
 
-rm(list = c("idx1", "idx2", "idx", "res_descend", "res_list", "k", "tmp"))
+rm(list = c("idx1", "idx2", "idx", "res_descend", "res_list", "k", "tmp", "dat"))
 print(paste0(Sys.time(), ": Finished imputing"))
 save.image(paste0("../results/step1_imputing", suffix, ".RData"))
