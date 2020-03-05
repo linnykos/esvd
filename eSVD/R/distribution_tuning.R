@@ -25,11 +25,11 @@ tuning <- function(dat, u_mat, v_mat, family, r_min = 1, r_max = 100){
     sum((dat - pred_mat)^2/(pred_mat + pred_mat^2/x))/2
   })
 
-  r_seq[which.min(abs(vec - prod(dim(dat))))]
+  max(r_seq[which.min(abs(vec - prod(dim(dat))))], 1)
 }
 
 .tuning_curved_gaussian <- function(dat, u_mat, v_mat){
   pred_mat <- -1/(u_mat %*% t(v_mat))
 
-  (prod(dim(dat))/(sum((dat - pred_mat)^2/(pred_mat)^2)))^(1/2)
+  max((prod(dim(dat))/(sum((dat - pred_mat)^2/(pred_mat)^2)))^(1/2), 1)
 }
