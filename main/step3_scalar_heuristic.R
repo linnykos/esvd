@@ -28,6 +28,7 @@ for(i in 2:fitting_iter){
 
   scalar_val_vec[i] <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family = "curved_gaussian")
 }
+scalar_val <- scalar_val_vec[fitting_iter]
 
 # next, apply the missing value diagnostic
 res_list <- vector("list", length(cv_trials))
