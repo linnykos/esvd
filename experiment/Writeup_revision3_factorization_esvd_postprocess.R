@@ -124,7 +124,8 @@ main_vec <- c("Gaussian (fixed variance)", "Poisson",
               "Neg. bin. (size = 200)",
               "Curved Gaussian (scalar = 1)",
               "Curved Gaussian (scalar = 2)",
-              "Curved Gaussian (scalar = 4)")
+              "Curved Gaussian (scalar = 4)",
+              "Exponential")
 
 for(k in 1:4){
   png(filename = paste0("../figure/experiment/Revision_writeup3_simulation_missing_", k, ".png"),
@@ -132,14 +133,12 @@ for(k in 1:4){
       units = "px")
 
   par(mfrow = c(3,3), mar = c(4,4,4,0.5))
-  for(i in 1:8){
+  for(i in 1:9){
     plot_mat <- lapply(1:length(res[[(k-1)*8+i]]), function(j){
       cbind(res[[(k-1)*8+i]][[j]]$missing_val, res[[(k-1)*8+i]][[j]]$pred_val)
     })
 
     if(length(plot_mat) > 1) plot_mat <- do.call(rbind, plot_mat) else plot_mat <- plot_mat[[1]]
-
-
 
     seq_val <- seq(0, 4000, length.out = 500)
     if(i == 1){
@@ -166,13 +165,20 @@ for(k in 1:4){
       y_top <- sapply(seq_val, function(x){
         stats::qnbinom(0.9, size = size, prob = size/(size+x))
       })
-    } else {
+    } else if(i %in% (6:8)){
       scalar <- as.numeric(paramMat[i,"fitting_param"])
       y_bot <- sapply(seq_val, function(x){
         stats::qnorm(0.1, mean = x, sd = x/scalar)
       })
       y_top <- sapply(seq_val, function(x){
         stats::qnorm(0.9, mean = x, sd = x/scalar)
+      })
+    } else {
+      y_bot <- sapply(seq_val, function(x){
+        stats::qexp(0.1, rate = 1/x)
+      })
+      y_top <- sapply(seq_val, function(x){
+        stats::qexp(0.9, rate = 1/x)
       })
     }
 
@@ -208,7 +214,8 @@ main_vec <- c("Gaussian (fixed variance)", "Poisson",
               "Neg. bin. (size = 200)",
               "Curved Gaussian (scalar = 1)",
               "Curved Gaussian (scalar = 2)",
-              "Curved Gaussian (scalar = 4)")
+              "Curved Gaussian (scalar = 4)",
+              "Exponential")
 
 for(k in 1:4){
   png(filename = paste0("../figure/experiment/Revision_writeup3_simulation_embedding_", k, ".png"),
@@ -216,7 +223,7 @@ for(k in 1:4){
       units = "px")
 
   par(mfrow = c(3,3), mar = c(4,4,4,0.5))
-  for(i in 1:8){
+  for(i in 1:9){
     plot(res[[(k-1)*8+i]][[1]]$fit[,1], res[[(k-1)*8+i]][[1]]$fit[,2], col = rep(1:4, each = paramMat[1,"n_each"]), pch = 16,
          xlab = "Latent dimension 1", ylab = "Latent dimension 2", main =
            paste0(main_vec[i], ifelse(i == correct_idx[k], "\n(True model)", "")), asp = T)
