@@ -1,5 +1,6 @@
 rm(list=ls())
 load("../results/step5_clustering.RData")
+scalar_val
 
 # first the diagnostic plots
 # first up, fixed variance gaussian
