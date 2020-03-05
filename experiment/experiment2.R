@@ -75,7 +75,7 @@ dat_obs <- dat$dat
 ###########
 
 pred_mat <- -1/(fit$u_mat %*% t(fit$v_mat))
-(prod(dim(dat_obs))/(sum((dat_obs-pred_mat)^2/(pred_mat[,2])^2)))^(1/2)
+(prod(dim(dat_obs))/(sum((dat_obs-pred_mat)^2/(pred_mat)^2)))^(1/2)
 
 #######################################
 
@@ -99,7 +99,7 @@ fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
 
 pred_mat <- exp(fit$u_mat %*% t(fit$v_mat))
 
-r_seq <- 1:200
+r_seq <- seq(1,50,length.out=100)
 vec <- sapply(r_seq, function(x){
   sum((dat_obs - pred_mat)^2/(pred_mat + pred_mat^2/x))/2
 })

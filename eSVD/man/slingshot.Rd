@@ -10,7 +10,7 @@ slingshot(
   starting_cluster,
   cluster_group_list = NA,
   use_initialization = F,
-  reduction_percentage = 0.25,
+  reduction_percentage = 0.1,
   shrink = 1,
   thresh = 0.001,
   max_iter = 15,

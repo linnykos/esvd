@@ -27,7 +27,7 @@ fit_factorization(
 
 \item{max_val}{maximum value of the inner product (with the correct sign)}
 
-\item{family}{either \code{"gaussian"} or \code{"exponential"}}
+\item{family}{character such as \code{"gaussian"} or \code{"exponential"}}
 
 \item{tol}{small positive number to dictate the convergence of the objective function}
 
