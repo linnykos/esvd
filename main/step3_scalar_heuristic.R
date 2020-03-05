@@ -5,12 +5,12 @@ load(paste0("../results/step2_naive_svd", suffix, ".RData"))
 set.seed(10)
 init <- eSVD::initialization(dat_impute, family = "exponential",
                              k = k, max_val = max_val)
-fit <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
+exp_fit <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
                                family = "exponential",
                                max_iter = 50, max_val = max_val,
                                return_path = F, cores = ncores,
                                verbose = T)
-scalar_val <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family = "curved_gaussian")
+scalar_val <- eSVD::tuning(dat_impute, exp_fit$u_mat, exp_fit$v_mat, family = "curved_gaussian")
 
 # next, apply the missing value diagnostic
 res_list <- vector("list", length(cv_trials))

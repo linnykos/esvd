@@ -9,7 +9,7 @@
 #'
 #' @return value
 #' @export
-tuning <- function(dat, u_mat, v_mat, family, r_min = 1, r_max = 100){
+tuning <- function(dat, u_mat, v_mat, family){
   if(family == "neg_binom"){
     .tuning_neg_binom(dat, u_mat, v_mat, r_min, r_max)
   } else {
@@ -17,10 +17,10 @@ tuning <- function(dat, u_mat, v_mat, family, r_min = 1, r_max = 100){
   }
 }
 
-.tuning_neg_binom <- function(dat, u_mat, v_mat, r_min = 1, r_max = 100){
+.tuning_neg_binom <- function(dat, u_mat, v_mat){
   pred_mat <- exp(u_mat %*% t(v_mat))
 
-  r_seq <- r_min:r_max
+  r_seq <- 1:100
   vec <- sapply(r_seq, function(x){
     sum((dat - pred_mat)^2/(pred_mat + pred_mat^2/x))/2
   })
@@ -29,7 +29,11 @@ tuning <- function(dat, u_mat, v_mat, family, r_min = 1, r_max = 100){
 }
 
 .tuning_curved_gaussian <- function(dat, u_mat, v_mat){
-  pred_mat <- -1/(u_mat %*% t(v_mat))
+  pred_mat <- 1/(u_mat %*% t(v_mat))
 
-  max((prod(dim(dat))/(sum((dat - pred_mat)^2/(pred_mat)^2)))^(1/2), 1)
+  target_val <- sum((dat - pred_mat)^2)/prod(dim(dat))
+  r_seq <- seq(1, 10, length.out = 101)
+  proposed_val <- sapply(r_seq, function(x){sum((pred_mat/x)^2)/prod(dim(dat))})
+
+  r_seq[which.min(abs(target_val - proposed_val))]
 }

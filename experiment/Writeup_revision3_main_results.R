@@ -1,6 +1,26 @@
 rm(list=ls())
 load("../results/step5_clustering.RData")
 
+# first the diagnostic plots
+# first up, fixed variance gaussian
+all_mat <- do.call(rbind, naive_res_list)
+plot(all_mat[,1], all_mat[,2], pch = 16, col = rgb(0.5, 0.5, 0.5, 0.5), asp = T)
+
+# next, for curved Gaussian
+all_mat <- do.call(rbind, res_list)
+plot(all_mat[,1], all_mat[,2], pch = 16, col = rgb(0.5, 0.5, 0.5, 0.5), asp = T)
+lines(c(-1e6,1e6), c(-1e6, 1e6), col = "red", lwd = 2, lty = 2)
+
+pca_res <- stats::prcomp(all_mat[,2:1], center = F, scale = F)
+
+x_val <- seq(1, 1e5, length.out = 100)
+y_val_top <- sapply(x_val, function(x){stats::qnorm(0.9, mean = x, sd = x/scalar_val)})
+y_val_bottom <- sapply(x_val, function(x){stats::qnorm(0.1, mean = x, sd = x/scalar_val)})
+
+lines(c(-1e10,1e10)*pca_res$rotation[2,1], c(-1e10,1e10)*pca_res$rotation[1,1],
+      col = "blue", lwd = 2, lty = 2)
+
+#########################################
 
 color_func <- function(alpha = 0.2){
   c(rgb(240/255, 228/255, 66/255, alpha), #yellow
