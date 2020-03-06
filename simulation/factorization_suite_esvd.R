@@ -114,7 +114,8 @@ criterion <- function(dat, vec, y){
 
       # repetition
       fitting_vec <- rep(NA, vec["fitting_iter"])
-      fitting_vec[1] <- eSVD::tuning(dat_obs, -fit$u_mat, fit$v_mat, family = "neg_binom")
+      fitting_vec[1] <- eSVD::tuning(dat_obs, -fit$u_mat, fit$v_mat, family_to = "neg_binom",
+                                     family_from = "poisson")
 
       for(i in 2:vec["fitting_iter"]){
         init <- eSVD::initialization(dat_obs, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
@@ -125,7 +126,8 @@ criterion <- function(dat, vec, y){
                                        return_path = F, cores = ncores,
                                        verbose = F)
 
-        fitting_vec[i] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "neg_binom")
+        fitting_vec[i] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family_to = "neg_binom",
+                                       family_from = "neg_binom")
       }
       fitting_param <- fitting_vec[length(fitting_vec)]
 
@@ -159,7 +161,8 @@ criterion <- function(dat, vec, y){
 
       # repetition
       fitting_vec <- rep(NA, vec["fitting_iter"])
-      fitting_vec[1] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "curved_gaussian")
+      fitting_vec[1] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family_to = "curved_gaussian",
+                                     family_from = "exponential")
 
       for(i in 2:vec["fitting_iter"]){
         init <- eSVD::initialization(dat_obs, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
@@ -170,7 +173,8 @@ criterion <- function(dat, vec, y){
                                        return_path = F, cores = ncores,
                                        verbose = F)
 
-        fitting_vec[i] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "curved_gaussian")
+        fitting_vec[i] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family_to = "curved_gaussian",
+                                       family_from = "curved_gaussian")
       }
       fitting_param <- fitting_vec[length(fitting_vec)]
 
