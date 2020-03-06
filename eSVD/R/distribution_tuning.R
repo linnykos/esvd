@@ -18,7 +18,7 @@ tuning <- function(dat, u_mat, v_mat, family){
 }
 
 .tuning_neg_binom <- function(dat, u_mat, v_mat){
-  pred_mat <- exp(u_mat %*% t(v_mat))
+  pred_mat <- exp(-u_mat %*% t(v_mat))
 
   target_val <- sum((dat - pred_mat)^2)/prod(dim(dat))
   r_seq <- 1:100
