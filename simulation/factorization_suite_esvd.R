@@ -118,9 +118,9 @@ criterion <- function(dat, vec, y){
 
       for(i in 2:vec["fitting_iter"]){
         init <- eSVD::initialization(dat_obs, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
-                                     scalar = fitting_vec[i-1])
+                                     size = fitting_vec[i-1])
         fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
-                                       family = "neg_binom", scalar = fitting_vec[i-1],
+                                       family = "neg_binom", size = fitting_vec[i-1],
                                        max_iter = vec["max_iter"], max_val = vec["max_val"],
                                        return_path = F, cores = ncores,
                                        verbose = F)
