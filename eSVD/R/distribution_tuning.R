@@ -18,13 +18,16 @@ tuning <- function(dat, u_mat, v_mat, family){
 }
 
 .tuning_neg_binom <- function(dat, u_mat, v_mat){
-  pred_mat <- exp(-u_mat %*% t(v_mat))
+  p_mat <- exp(u_mat %*% t(v_mat))
 
-  target_val <- sum((dat - pred_mat)^2)/prod(dim(dat))
   r_seq <- 1:100
-  proposed_val <- sapply(r_seq, function(x){sum((pred_mat + pred_mat^2/x))/prod(dim(dat))})
+  proposed_val <- t(sapply(r_seq, function(x){
+    pred_mat <- x*p_mat/(1-p_mat)
+    c(sum((dat - pred_mat)^2)/prod(dim(dat)),
+      sum((pred_mat + pred_mat^2/x))/prod(dim(dat)))
+  }))
 
-  r_seq[which.min(abs(target_val - proposed_val))]
+  r_seq[which.min(abs(proposed_val[,1] - proposed_val[,2]))]
 }
 
 .tuning_curved_gaussian <- function(dat, u_mat, v_mat){
