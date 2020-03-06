@@ -117,15 +117,15 @@ criterion <- function(dat, vec, y){
       fitting_vec[1] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "neg_binom")
 
       for(i in 2:vec["fitting_iter"]){
-        init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
-                                     scalar = fitting_param)
-        fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+        init <- eSVD::initialization(dat_obs, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
+                                     scalar = fitting_vec[i-1])
+        fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
                                        family = "neg_binom", scalar = fitting_vec[i-1],
                                        max_iter = vec["max_iter"], max_val = vec["max_val"],
                                        return_path = F, cores = ncores,
                                        verbose = F)
 
-        fitting_vec[i] <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family = "neg_binom")
+        fitting_vec[i] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "neg_binom")
       }
       fitting_param <- fitting_vec[length(fitting_vec)]
 
@@ -162,15 +162,15 @@ criterion <- function(dat, vec, y){
       fitting_vec[1] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "curved_gaussian")
 
       for(i in 2:vec["fitting_iter"]){
-        init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
-                                     scalar = fitting_param)
-        fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+        init <- eSVD::initialization(dat_obs, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
+                                     scalar = fitting_vec[i-1])
+        fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
                                        family = "curved_gaussian", scalar = fitting_vec[i-1],
                                        max_iter = vec["max_iter"], max_val = vec["max_val"],
                                        return_path = F, cores = ncores,
                                        verbose = F)
 
-        fitting_vec[i] <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family = "curved_gaussian")
+        fitting_vec[i] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "curved_gaussian")
       }
       fitting_param <- fitting_vec[length(fitting_vec)]
 
@@ -214,7 +214,7 @@ criterion <- function(dat, vec, y){
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
-## i <- 27; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 18; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 ############
 

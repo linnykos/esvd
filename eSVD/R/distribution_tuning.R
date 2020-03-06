@@ -11,7 +11,7 @@
 #' @export
 tuning <- function(dat, u_mat, v_mat, family){
   if(family == "neg_binom"){
-    .tuning_neg_binom(dat, u_mat, v_mat, r_min, r_max)
+    .tuning_neg_binom(dat, u_mat, v_mat)
   } else {
     .tuning_curved_gaussian(dat, u_mat, v_mat)
   }
