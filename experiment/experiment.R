@@ -1,85 +1,82 @@
 rm(list=ls())
-library(simulation)
-library(eSVD)
-source("../simulation/factorization_generator.R")
+load("../results/step5_clustering.RData")
 
-paramMat <- cbind(50, 120, 10,
-                  2, 50, 2, 50,
-                  rep(1:4, each = 7),
-                  rep(c(1/27, 1/800, 1/250, 1/1000), each = 7),
-                  rep(c(1 ,2, rep(3,2), rep(4,2), 5), times = 4),
-                  rep(c(1, 1, 50, NA, 2, NA, 1), times = 4),
-                  rep(c(3000, rep(100, 6)), times = 4))
-colnames(paramMat) <- c("n_each", "d_each", "sigma",
-                        "k", "true_r",  "true_scalar", "max_iter",
-                        "true_distr",
-                        "modifier",
-                        "fitting_distr",
-                        "fitting_param",
-                        "max_val")
-trials <- 5
-ncores <- 20
+cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
+cell_type_vec <- as.factor(cell_type_vec)
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
 
-################
+upscale_vec <- rep(NA, length(unique(cluster_labels)))
+size_vec <- sapply(cluster_group_list, function(x){length(which(cluster_labels %in% x))})
+for(i in 1:length(cluster_group_list)){
+  upscale_vec[cluster_group_list[[i]]] <- (max(size_vec)/size_vec[i])^(1/2)
+}
 
-cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
-                     40,10, 60,80, 60,80, 100, 25),
-                   nrow = 4, ncol = 4, byrow = T)
-gene_pop <- matrix(c(20,90, 25,100,
-                     90,20, 100,25)/20, nrow = 2, ncol = 4, byrow = T)
+p <- 3
+our_curves <- eSVD::slingshot(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                              cluster_group_list = cluster_group_list,
+                              verbose = T, upscale_vec = upscale_vec,
+                              reduction_percentage = 0.25)
+our_curves$lineages
 
-rule <- function(vec){
-  n_each <- vec["n_each"]
-  d_each <- vec["d_each"]
-  sigma <- vec["sigma"]
-  total <- vec["total"]
-  modifier <- vec["modifier"]
 
-  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma, modifier)
-  # plot(res$cell_mat[,1], res$cell_mat[,2], asp = T, col = rep(1:4, each = n_each), pch = 16)
-  nat_mat <- res$nat_mat
+#####################
 
-  if(vec["true_distr"] == 1){
-    obs_mat <- round(generator_gaussian(nat_mat))
-  } else if(vec["true_distr"] == 2){
-    obs_mat <- generator_esvd_poisson(nat_mat)
-  } else if(vec["true_distr"] == 3 ){
-    obs_mat <- generator_esvd_nb(nat_mat, size = vec["true_r"])
-  } else {
-    obs_mat <- round(generator_curved_gaussian(nat_mat, scalar = vec["true_scalar"]))
+color_func <- function(alpha = 0.2){
+  c(rgb(240/255, 228/255, 66/255, alpha), #yellow
+    rgb(86/255, 180/255, 233/255, alpha), #skyblue
+    rgb(0/255, 158/255, 115/255, alpha), #bluish green
+    rgb(0/255, 114/255, 178/255,alpha), #blue
+    rgb(230/255, 159/255, 0/255,alpha), #orange
+    rgb(210/255, 198/255, 36/255, alpha)) #darker yellow
+}
+
+cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
+cell_type_vec <- as.factor(cell_type_vec)
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
+
+
+col_vec <- color_func(1)[c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))]
+col_name <- c("orange", rep("bluish green", 2), rep("yellow", 6), rep("skyblue", 2), rep("orange", 2))
+order_vec <- c(3, 5.1, 5.2, seq(6.1, 6.6, by = 0.1), 4.1, 4.2, 2, 1)
+col_info <- data.frame(name = levels(cell_type_vec),
+                       idx = sort(unique(cluster_labels)),
+                       order = order_vec,
+                       col_name = col_name,
+                       col_code = col_vec)
+col_info
+num_order_vec <- c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))
+col_vec3 <- color_func(0.3)[num_order_vec]
+
+mean_vec <- t(sapply(1:13, function(i){
+  idx <- which(cluster_labels == i)
+  colMeans(res_our$u_mat[idx,])
+}))
+
+combn_mat <- combn(3,2)
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+  plot(x = res_our$u_mat[,i], y = res_our$u_mat[,j],
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       col = col_vec3[cluster_labels], pch = 16,
+       main = ifelse(k == 2, "eSVD embedding and trajectories\n(Curved Gaussian)","")
+  )
+
+  curves <- our_curves$curves
+  for(ll in 1:length(curves)){
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
+          lty = 3, lwd = 2)
   }
 
-  list(dat = obs_mat, truth = res$cell_mat, nat_mat = nat_mat)
+  text(mean_vec[,i], mean_vec[,j], labels = as.character(col_info$order), col = "black", cex = 1, font = 2)
 }
-
-i <- 4; y <- 1;
-set.seed(y)
-vec <- paramMat[i,]
-dat <- rule(vec)
-
-
-
-set.seed(10*y)
-
-dat_obs <- dat$dat
-n <- nrow(dat_obs); d <- ncol(dat_obs)
-missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
-  cbind(x, sample(1:d, 2))
-}))), do.call(rbind, (lapply(1:d, function(x){
-  cbind(sample(1:n, 2), d)
-}))))
-
-dat_NA <- dat_obs
-for(i in 1:nrow(missing_idx)){
-  dat_NA[missing_idx[i,1], missing_idx[i,2]] <- NA
-}
-missing_idx <- which(is.na(dat_NA))
-missing_val <- dat_obs[missing_idx]
-
-init <- eSVD::initialization(dat_obs, family = "poisson", k = vec["k"], max_val = vec["max_val"])
-fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
-                               family = "poisson",
-                               max_iter = vec["max_iter"], max_val = vec["max_val"],
-                               return_path = F, cores = ncores,
-                               verbose = F)
 

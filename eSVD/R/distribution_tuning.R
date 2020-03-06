@@ -20,12 +20,11 @@ tuning <- function(dat, u_mat, v_mat, family){
 .tuning_neg_binom <- function(dat, u_mat, v_mat){
   pred_mat <- exp(u_mat %*% t(v_mat))
 
+  target_val <- sum((dat - pred_mat)^2)/prod(dim(dat))
   r_seq <- 1:100
-  vec <- sapply(r_seq, function(x){
-    sum((dat - pred_mat)^2/(pred_mat + pred_mat^2/x))/2
-  })
+  proposed_val <- sapply(r_seq, function(x){sum((pred_mat + pred_mat^2/x))/prod(dim(dat))})
 
-  max(r_seq[which.min(abs(vec - prod(dim(dat))))], 1)
+  r_seq[which.min(abs(target_val - proposed_val))]
 }
 
 .tuning_curved_gaussian <- function(dat, u_mat, v_mat){

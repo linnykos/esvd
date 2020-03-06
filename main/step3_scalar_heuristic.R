@@ -27,6 +27,8 @@ for(i in 2:fitting_iter){
                                      verbose = T)
 
   scalar_val_vec[i] <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family = "curved_gaussian")
+
+  save.image(paste0("../results/step3_scalar_heuristic", suffix, "_tmp.RData"))
 }
 scalar_val <- scalar_val_vec[fitting_iter]
 

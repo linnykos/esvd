@@ -4,14 +4,14 @@ library(eSVD)
 source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 10,
-                  2, 50, 2, 50,
+                  2, 50, 2, 50, 10,
                   rep(1:4, each = 7),
                   rep(c(1/27, 1/800, 1/250, 1/1000), each = 7),
                   rep(c(1 ,2, rep(3,2), rep(4,2), 5), times = 4),
                   rep(c(1, 1, 50, NA, 2, NA, 1), times = 4),
                   rep(c(3000, rep(100, 6)), times = 4))
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
-                        "k", "true_r",  "true_scalar", "max_iter",
+                        "k", "true_r",  "true_scalar", "max_iter", "fitting_iter",
                         "true_distr",
                         "modifier",
                         "fitting_distr",
@@ -84,6 +84,7 @@ criterion <- function(dat, vec, y){
     pred_val <- pred_mat[missing_idx]
     expected_val <- dat$nat_mat[missing_idx]
     fitting_param <- vec["fitting_param"]
+    fitting_vec <- NA
 
   # poisson
   } else if(vec["fitting_distr"] == 2){
@@ -98,10 +99,12 @@ criterion <- function(dat, vec, y){
     pred_val <- exp(pred_mat[missing_idx])
     expected_val <- exp(dat$nat_mat[missing_idx])
     fitting_param <- vec["fitting_param"]
+    fitting_vec <- NA
 
   # negative binomial
   } else if(vec["fitting_distr"] == 3){
     if(is.na(vec["fitting_param"])){
+      # initial fit
       init <- eSVD::initialization(dat_obs, family = "poisson", k = vec["k"], max_val = vec["max_val"])
       fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
                                      family = "poisson",
@@ -109,9 +112,26 @@ criterion <- function(dat, vec, y){
                                      return_path = F, cores = ncores,
                                      verbose = F)
 
-      fitting_param <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "neg_binom")
+      # repetition
+      fitting_vec <- rep(NA, vec["fitting_iter"])
+      fitting_vec[1] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "neg_binom")
+
+      for(i in 2:vec["fitting_iter"]){
+        init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
+                                     scalar = fitting_param)
+        fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                                       family = "neg_binom", scalar = fitting_vec[i-1],
+                                       max_iter = vec["max_iter"], max_val = vec["max_val"],
+                                       return_path = F, cores = ncores,
+                                       verbose = F)
+
+        fitting_vec[i] <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family = "neg_binom")
+      }
+      fitting_param <- fitting_vec[length(fitting_vec)]
+
     } else {
       fitting_param <- vec["fitting_param"]
+      fitting_vec <- NA
     }
 
     init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
@@ -129,6 +149,7 @@ criterion <- function(dat, vec, y){
   # curved gaussian
   } else if(vec["fitting_distr"] == 4){
     if(is.na(vec["fitting_param"])){
+      # initial fit
       init <- eSVD::initialization(dat_obs, family = "exponential", k = vec["k"], max_val = vec["max_val"])
       fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
                                      family = "exponential",
@@ -136,9 +157,26 @@ criterion <- function(dat, vec, y){
                                      return_path = F, cores = ncores,
                                      verbose = F)
 
-      fitting_param <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "curved_gaussian")
+      # repetition
+      fitting_vec <- rep(NA, vec["fitting_iter"])
+      fitting_vec[1] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "curved_gaussian")
+
+      for(i in 2:vec["fitting_iter"]){
+        init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
+                                     scalar = fitting_param)
+        fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                                       family = "curved_gaussian", scalar = fitting_vec[i-1],
+                                       max_iter = vec["max_iter"], max_val = vec["max_val"],
+                                       return_path = F, cores = ncores,
+                                       verbose = F)
+
+        fitting_vec[i] <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family = "curved_gaussian")
+      }
+      fitting_param <- fitting_vec[length(fitting_vec)]
+
     } else {
       fitting_param <- vec["fitting_param"]
+      fitting_vec <- NA
     }
 
     init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
@@ -167,10 +205,12 @@ criterion <- function(dat, vec, y){
     pred_val <- -1/pred_mat[missing_idx]
     expected_val <- 1/dat$nat_mat[missing_idx]
     fitting_param <- vec["fitting_param"]
+    fitting_vec <- NA
   }
 
   list(fit = fit$u_mat, truth = dat$truth, pred_val = pred_val, missing_val = missing_val,
-       expected_val = expected_val, fitting_param = fitting_param)
+       expected_val = expected_val, fitting_param = fitting_param,
+       fitting_vec = fitting_vec)
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
