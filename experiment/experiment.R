@@ -54,7 +54,7 @@ rule <- function(vec){
 
 #################3
 
-i <- 18; y <- 1
+i <- 27; y <- 1
 set.seed(y)
 vec <- paramMat[i,]
 dat <- rule(vec)
@@ -78,57 +78,26 @@ missing_val <- dat_obs[missing_idx]
 
 set.seed(10)
 
-init <- eSVD::initialization(dat_obs, family = "poisson", k = vec["k"], max_val = vec["max_val"])
+init <- eSVD::initialization(dat_obs, family = "exponential", k = vec["k"], max_val = vec["max_val"])
 fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
-                               family = "poisson",
+                               family = "exponential",
                                max_iter = vec["max_iter"], max_val = vec["max_val"],
                                return_path = F, cores = ncores,
                                verbose = F)
 
 # repetition
 fitting_vec <- rep(NA, vec["fitting_iter"])
-# fitting_vec[1] <- eSVD::tuning(dat_obs, -fit$u_mat, fit$v_mat, family = "neg_binom")
 
-dat <- dat_obs
-u_mat <- fit$u_mat
-v_mat <- fit$v_mat
+############
 
-pred_mat <- exp(u_mat %*% t(v_mat))
+dat = dat_obs
+u_mat = fit$u_mat
+v_mat = fit$v_mat
+
+pred_mat <- 1/(-u_mat %*% t(v_mat))
 
 target_val <- sum((dat - pred_mat)^2)/prod(dim(dat))
-r_seq <- 1:100
-proposed_val <- t(sapply(r_seq, function(x){
-  sum((pred_mat + pred_mat^2/x))/prod(dim(dat))
-}))
+r_seq <- seq(1, 10, length.out = 101)
+proposed_val <- sapply(r_seq, function(x){sum((pred_mat/x)^2)/prod(dim(dat))})
 
-fitting_vec[1] <- r_seq[which.min(abs(target_val - proposed_val))]
-
-###################
-
-i = 2
-init <- eSVD::initialization(dat_obs, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
-                             size = fitting_vec[i-1])
-fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
-                               family = "neg_binom", size = fitting_vec[i-1],
-                               max_iter = vec["max_iter"], max_val = vec["max_val"],
-                               return_path = F, cores = ncores,
-                               verbose = F)
-
-fitting_vec[i] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family = "neg_binom")
-
-########
-dat <- dat_obs
-u_mat <- fit$u_mat
-v_mat <- fit$v_mat
-
-p_mat <- exp(u_mat %*% t(v_mat))
-p_mat[1:5,1:5]
-
-r_seq <- 1:100
-proposed_val <- t(sapply(r_seq, function(x){
-  pred_mat <- x*p_mat/(1-p_mat)
-  c(sum((dat - pred_mat)^2)/prod(dim(dat)),
-    sum((pred_mat + pred_mat^2/x))/prod(dim(dat)))
-}))
-
-r_seq[which.min(abs(proposed_val[,1] - proposed_val[,2]))]
+r_seq[which.min(abs(target_val - proposed_val))]

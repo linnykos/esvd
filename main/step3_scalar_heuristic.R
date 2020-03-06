@@ -11,7 +11,8 @@ exp_fit <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$
                                max_iter = 50, max_val = max_val,
                                return_path = F, cores = ncores,
                                verbose = T)
-scalar_val_init <- eSVD::tuning(dat_impute, exp_fit$u_mat, exp_fit$v_mat, family = "curved_gaussian")
+scalar_val_init <- eSVD::tuning(dat_impute, exp_fit$u_mat, exp_fit$v_mat, family_to = "curved_gaussian",
+                                family_from = "exponential")
 
 ## fit 5 times, each time alternating between scalar_val and fitting
 fitting_iter <- 5
@@ -26,7 +27,8 @@ for(i in 2:fitting_iter){
                                      return_path = F, cores = ncores,
                                      verbose = T)
 
-  scalar_val_vec[i] <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family = "curved_gaussian")
+  scalar_val_vec[i] <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family_to = "curved_gaussian",
+                                    family_from = "curved_gaussian")
 
   save.image(paste0("../results/step3_scalar_heuristic", suffix, "_tmp.RData"))
 }

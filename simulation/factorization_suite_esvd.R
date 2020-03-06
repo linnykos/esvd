@@ -114,7 +114,7 @@ criterion <- function(dat, vec, y){
 
       # repetition
       fitting_vec <- rep(NA, vec["fitting_iter"])
-      fitting_vec[1] <- eSVD::tuning(dat_obs, -fit$u_mat, fit$v_mat, family_to = "neg_binom",
+      fitting_vec[1] <- eSVD::tuning(dat_obs, fit$u_mat, fit$v_mat, family_to = "neg_binom",
                                      family_from = "poisson")
 
       for(i in 2:vec["fitting_iter"]){
