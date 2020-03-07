@@ -2,7 +2,7 @@ rm(list=ls())
 labels_file <- "/raid6/Kevin/singlecell_data/Cleaned/Darmanis/Darmanis_label.csv"
 dat_file <- "/raid6/Kevin/singlecell_data/Cleaned/Darmanis/Darmanis_expr.csv"
 
-ncores <- 20
+ncores <- 10
 doMC::registerDoMC(cores = ncores)
 
 ########
@@ -29,7 +29,7 @@ dat <- as.matrix(dat)
 # try a series of SPCAs
 k <- 5
 lvls <- 20
-v_seq <- exp(seq(log(1), log(ncol(dat)), length.out = lvls))
+v_seq <- exp(seq(log(1), log(sqrt(ncol(dat))/2), length.out = lvls))
 res_list <- vector("list", lvls)
 
 spca_func <- function(i){
