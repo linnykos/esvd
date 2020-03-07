@@ -42,8 +42,7 @@ print("Starting SPCA")
 res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
 tmp_spca_mat <- cbind(v_seq, t(sapply(res_list, function(x){c(length(unique(sort(unlist(apply(x$v, 2, function(y){which(y != 0)}))))), x$prop.var.explained[5])})))
-idx_spca <- which.min(abs(tmp_spca_mat[,3] - 0.9))
-if(length(idx_spca) == 0) idx_spca <- nrow(tmp_spca_mat)
+idx_spca <- which.min(abs(tmp_spca_mat[,3] - 0.6))
 
 print("Starting DESCEND")
 res_descend <- descend::runDescend(t(dat), n.cores = ncores)
