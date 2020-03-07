@@ -65,10 +65,11 @@ dat_impute <- dat_impute * 1000/max(dat_impute)
 
 # make missing values
 n <- nrow(dat_impute); d <- ncol(dat_impute)
+set.seed(10)
 missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
   cbind(x, sample(1:d, 2))
 }))), do.call(rbind, (lapply(1:d, function(x){
-  cbind(sample(1:n, 2), d)
+  cbind(sample(1:n, 2), x)
 }))))
 
 dat_NA <- dat_impute

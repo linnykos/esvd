@@ -60,7 +60,7 @@ criterion <- function(dat, vec, y){
   missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
     cbind(x, sample(1:d, 2))
   }))), do.call(rbind, (lapply(1:d, function(x){
-    cbind(sample(1:n, 2), d)
+    cbind(sample(1:n, 2), x)
   }))))
 
   dat_NA <- dat_obs

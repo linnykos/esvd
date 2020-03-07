@@ -13,7 +13,7 @@ missing_idx_list <- lapply(1:cv_trials, function(j){
   missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
     cbind(x, sample(1:d, 4))
   }))), do.call(rbind, (lapply(1:d, function(x){
-    cbind(sample(1:n, 4), d)
+    cbind(sample(1:n, 4), x)
   }))))
 
   dat_impute_NA <- dat_impute
