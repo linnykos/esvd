@@ -35,11 +35,10 @@ save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 #########
 
-# tmp <- svd(dat_impute)
-# naive_embedding <- tmp$u[,1:p] %*% diag(sqrt(tmp$d[1:p]))
-# naive_curves <- eSVD::slingshot(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-#                                     cluster_group_list = cluster_group_list,
-#                                     verbose = F, upscale_vec = upscale_vec)
+svd_curves <- slingshot(res_svd[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                        cluster_group_list = cluster_group_list,
+                        verbose = T, upscale_vec = upscale_vec, reduction_percentage = 0.25)
+
 #
 # set.seed(10)
 # naive_bootstrap_list <- eSVD::bootstrap_curves(naive_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],

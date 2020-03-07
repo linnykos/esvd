@@ -18,7 +18,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_param",
                         "max_val")
 trials <- 5
-ncores <- 10
+ncores <- 20
 
 ################
 
@@ -197,10 +197,9 @@ criterion <- function(dat, vec, y){
 
   # exponential
   } else {
-    init <- eSVD::initialization(dat_NA, family = "exponential", k = vec["k"], max_val = vec["max_val"],
-                                 scalar = vec["fitting_param"])
+    init <- eSVD::initialization(dat_NA, family = "exponential", k = vec["k"], max_val = vec["max_val"])
     fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                   family = "exponential", scalar = vec["fitting_param"],
+                                   family = "exponential",
                                    max_iter = vec["max_iter"], max_val = vec["max_val"],
                                    return_path = F, cores = ncores,
                                    verbose = F)

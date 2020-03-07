@@ -3,7 +3,7 @@ set.seed(10)
 library(eSVD)
 
 suffix <- ""
-ncores <- 10
+ncores <- 20
 doMC::registerDoMC(cores = ncores)
 
 # source("../main/step0_screening.R")

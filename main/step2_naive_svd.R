@@ -50,6 +50,9 @@ for(j in 1:cv_trials){
   save.image(paste0("../results/step2_naive_svd", suffix, "_tmp.RData"))
 }
 
-rm(list = c("init", "fit", "dat_impute_NA", "j"))
+tmp <- svd(dat_impute)
+res_svd <- tmp$u[,1:k] %*% diag(sqrt(tmp$d[1:k]))
+
+rm(list = c("init", "fit", "dat_impute_NA", "j", "tmp"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
 save.image(paste0("../results/step2_naive_svd", suffix, ".RData"))

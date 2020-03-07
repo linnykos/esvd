@@ -70,7 +70,6 @@ preprocess_data <- function(dat, label_vec){
   list(dat = dat[,idx], label_vec = label_vec, spca_list = res_list, res_hvg = res_hvg)
 }
 
-
 dat_preprocessed <- vector("list", 7)
 
 save.image("../experiment/tmp.RData")
