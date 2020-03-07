@@ -28,8 +28,8 @@ dat <- as.matrix(dat)
 
 # try a series of SPCAs
 k <- 5
-lvls <- 10
-v_seq <- exp(seq(log(1), log(log(ncol(dat))/5), length.out = lvls))
+lvls <- 20
+v_seq <- exp(seq(log(1), log(ncol(dat)), length.out = lvls))
 res_list <- vector("list", lvls)
 
 spca_func <- function(i){
@@ -42,7 +42,7 @@ print("Starting SPCA")
 res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
 tmp_spca_mat <- cbind(v_seq, t(sapply(res_list, function(x){c(length(unique(sort(unlist(apply(x$v, 2, function(y){which(y != 0)}))))), x$prop.var.explained[5])})))
-idx_spca <- which(tmp_spca_mat[,2] == min(tmp_spca_mat[which(tmp_spca_mat[,2] >= 50),2]))
+idx_spca <- which.min(abs(tmp_spca_mat[,3] - 0.9))
 if(length(idx_spca) == 0) idx_spca <- nrow(tmp_spca_mat)
 
 print("Starting DESCEND")
