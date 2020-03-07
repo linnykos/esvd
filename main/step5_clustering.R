@@ -15,9 +15,10 @@ for(i in 1:length(cluster_group_list)){
 }
 
 p <- 3
+set.seed(10)
 our_curves <- eSVD::slingshot(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                     cluster_group_list = cluster_group_list,
-                                    verbose = T, upscale_vec = upscale_vec)
+                                    verbose = T, upscale_vec = upscale_vec, reduction_percentage = 0.25)
 
 save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 

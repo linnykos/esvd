@@ -27,6 +27,7 @@
 
   ### construct the distance matrix
   dist_mat <- .compute_cluster_distances(dat, cluster_labels)
+  dist_mat <- dist_mat^2
   if(use_initialization){
     bool_mat <- .initial_edges(dat, cluster_labels)
     if(all(rowSums(bool_mat) >= 1)){

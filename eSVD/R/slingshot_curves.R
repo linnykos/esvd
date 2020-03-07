@@ -29,14 +29,15 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                       shrink = 1, thresh = 0.001, max_iter = 15,
                       upscale_vec = NA, verbose = F){
 
+
+  if(verbose) print("Starting to infer lineages")
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
+                            cluster_group_list = cluster_group_list,
+                            use_initialization = use_initialization)
+
   # adjust down
   reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
   dat2 <- dat/reduction_factor
-
-  if(verbose) print("Starting to infer lineages")
-  lineages <- .get_lineages(dat2, cluster_labels, starting_cluster = starting_cluster,
-                            cluster_group_list = cluster_group_list,
-                            use_initialization = use_initialization)
 
   if(verbose) print("Starting to infer curves")
   res <- .get_curves(dat2, cluster_labels, lineages, shrink = shrink,

@@ -12,11 +12,18 @@ table(as.numeric(sapply(res, function(x){
 
 ################################
 
-correct_idx <- c(1, 10, 20, 31)
+correct_idx <- c(1, 9, 18, 27)
+med_size_est <- median(sapply(res[[correct_idx[3]]], function(x){
+  x$fitting_param
+}))
+med_alpha_est <- median(sapply(res[[correct_idx[4]]], function(x){
+  x$fitting_param
+}))
 main_vec <- c("Gaussian\n(constant variance)", "Poisson",
-              "Negative binomial\n(size = 50)", "Curved Gaussian\n(alpha = 2)")
+              paste0("Negative binomial\n(true size = 50, est. size = ", round(med_size_est, 2), ")"),
+              paste0("Curved Gaussian\n(true alpha = 2, est. alpha = ", round(med_alpha_est, 2), ")"))
 main_vec2 <- c("Gaussian (constant variance)", "Poisson",
-               "Negative binomial (size = 50)", "Curved Gaussian (alpha = 2)")
+               paste0("Negative binomial (size = 50)"), "Curved Gaussian (alpha = 2)")
 
 png(filename = "../figure/experiment/Revision_writeup3_simulation_missing_value.png",
     height = 2250, width = 2250, res = 300,
@@ -117,25 +124,32 @@ graphics.off()
 
 ################################
 
-correct_idx <- c(1, 2, 4, 7)
-main_vec <- c("Gaussian (fixed variance)", "Poisson",
-              "Neg. bin. (size = 25)",
-              "Neg. bin. (size = 50)",
-              "Neg. bin. (size = 200)",
-              "Curved Gaussian (scalar = 1)",
-              "Curved Gaussian (scalar = 2)",
-              "Curved Gaussian (scalar = 4)",
-              "Exponential")
+correct_idx <- c(1, 2, 3, 5)
 
 for(k in 1:4){
+  med_size_est <- median(sapply(res[[(k-1)*7+4]], function(x){
+    x$fitting_param
+  }))
+  med_alpha_est <- median(sapply(res[[(k-1)*7+6]], function(x){
+    x$fitting_param
+  }))
+
+  main_vec <- c("Gaussian (fixed variance)", "Poisson",
+                "Neg. bin. (oralce size = 50)",
+                paste0("Neg. bin. (avg. est. size = ", round(med_size_est, 2), ")"),
+                "Curved Gaussian (oracle alpha = 2)",
+                paste0("Curved Gaussian (est. alpha = ", round(med_alpha_est, 2), ")"),
+                "Exponential")
+
+
   png(filename = paste0("../figure/experiment/Revision_writeup3_simulation_missing_", k, ".png"),
-      height = 2500, width = 2500, res = 300,
+      height = 2000, width = 2500, res = 300,
       units = "px")
 
-  par(mfrow = c(3,3), mar = c(4,4,4,0.5))
-  for(i in 1:9){
-    plot_mat <- lapply(1:length(res[[(k-1)*8+i]]), function(j){
-      cbind(res[[(k-1)*8+i]][[j]]$missing_val, res[[(k-1)*8+i]][[j]]$pred_val)
+  par(mfrow = c(2,3), mar = c(4,4,4,0.5))
+  for(i in 1:6){
+    plot_mat <- lapply(1:length(res[[(k-1)*7+i]]), function(j){
+      cbind(res[[(k-1)*7+i]][[j]]$missing_val, res[[(k-1)*7+i]][[j]]$pred_val)
     })
 
     if(length(plot_mat) > 1) plot_mat <- do.call(rbind, plot_mat) else plot_mat <- plot_mat[[1]]
@@ -159,6 +173,7 @@ for(k in 1:4){
       })
     } else if(i %in% c(3:5)){
       size <- as.numeric(paramMat[i,"fitting_param"])
+      if(is.na(size)) size <- med_size_est
       y_bot <- sapply(seq_val, function(x){
         stats::qnbinom(0.1, size = size, prob = size/(size+x))
       })
@@ -167,6 +182,7 @@ for(k in 1:4){
       })
     } else if(i %in% (6:8)){
       scalar <- as.numeric(paramMat[i,"fitting_param"])
+      if(is.na(scalar)) scalar <- med_alpha_est
       y_bot <- sapply(seq_val, function(x){
         stats::qnorm(0.1, mean = x, sd = x/scalar)
       })
@@ -207,24 +223,31 @@ for(k in 1:4){
 
 #################################
 
-correct_idx <- c(1, 2, 4, 7)
-main_vec <- c("Gaussian (fixed variance)", "Poisson",
-              "Neg. bin. (size = 25)",
-              "Neg. bin. (size = 50)",
-              "Neg. bin. (size = 200)",
-              "Curved Gaussian (scalar = 1)",
-              "Curved Gaussian (scalar = 2)",
-              "Curved Gaussian (scalar = 4)",
-              "Exponential")
+correct_idx <- c(1, 2, 3, 5)
 
 for(k in 1:4){
+  med_size_est <- median(sapply(res[[(k-1)*7+4]], function(x){
+    x$fitting_param
+  }))
+  med_alpha_est <- median(sapply(res[[(k-1)*7+6]], function(x){
+    x$fitting_param
+  }))
+
+  main_vec <- c("Gaussian (fixed variance)", "Poisson",
+                "Neg. bin. (oralce size = 50)",
+                paste0("Neg. bin. (avg. est. size = ", round(med_size_est, 2), ")"),
+                "Curved Gaussian (oracle alpha = 2)",
+                paste0("Curved Gaussian (est. alpha = ", round(med_alpha_est, 2), ")"),
+                "Exponential")
+
   png(filename = paste0("../figure/experiment/Revision_writeup3_simulation_embedding_", k, ".png"),
-      height = 2500, width = 2500, res = 300,
+      height = 2000, width = 2500, res = 300,
       units = "px")
 
-  par(mfrow = c(3,3), mar = c(4,4,4,0.5))
-  for(i in 1:9){
-    plot(res[[(k-1)*8+i]][[1]]$fit[,1], res[[(k-1)*8+i]][[1]]$fit[,2], col = rep(1:4, each = paramMat[1,"n_each"]), pch = 16,
+  par(mfrow = c(2,3), mar = c(4,4,4,0.5))
+
+  for(i in 1:6){
+    plot(res[[(k-1)*7+i]][[1]]$fit[,1], res[[(k-1)*7+i]][[1]]$fit[,2], col = rep(1:4, each = paramMat[1,"n_each"]), pch = 16,
          xlab = "Latent dimension 1", ylab = "Latent dimension 2", main =
            paste0(main_vec[i], ifelse(i == correct_idx[k], "\n(True model)", "")), asp = T)
   }
