@@ -1,3 +1,35 @@
+#' Compute mean from natural parameter matrix
+#'
+#' @param nat_mat matrix
+#' @param family character
+#' @param ... additional parameters for distribution
+#'
+#' @return matrix
+#' @export
+compute_mean <- function(nat_mat, family, ...){
+  if(family == "gaussian") {
+    return(nat_mat)
+  } else if(family == "poisson"){
+    exp(nat_mat)
+  } else if(family == "neg_binom"){
+    .compute_mean_neg_binom(nat_mat, ...)
+  } else if(family == "exponential"){
+    -1/nat_mat
+  } else if(family == "curved_gaussian"){
+    1/nat_mat
+  } else {
+    stop("family not found")
+  }
+}
+
+######
+
+.compute_mean_neg_binom <- function(nat_mat, size){
+  if(is.na(size)) stop("No argument size provided for negative binomial")
+
+  size*exp(nat_mat)/(1-exp(nat_mat))
+}
+
 .dictate_direction <- function(family){
   direction <- NA
 
@@ -29,8 +61,10 @@
 }
 
 .mean_transformation_neg_binom <- function(dat, tol, size = NA){
-  if(is.na(size)) stop("No argument r provided for negative binomial")
+  if(is.na(size)) stop("No argument size provided for negative binomial")
 
   dat_new <- (dat + tol)/size
   log(dat_new / (1+dat_new))
 }
+
+

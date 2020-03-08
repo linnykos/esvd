@@ -20,6 +20,7 @@ idx <- which(tab/sum(tab) <= 0.05)
 
 dat <- dat[which(!label_vec %in% names(tab[idx])),]
 label_vec <- label_vec[which(!label_vec %in% names(tab[idx]))]
+label_vec <- as.factor(as.character(label_vec))
 
 # next remove genes
 tmp <- apply(dat, 2, function(x){sum(x != 0)})
