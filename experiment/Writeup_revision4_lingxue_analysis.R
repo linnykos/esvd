@@ -55,9 +55,9 @@ for(i in 1:length(labels_file_vec)){
   res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
   spca_mat <- cbind(v_seq, t(sapply(res_list, function(x){c(length(unique(sort(unlist(apply(x$v, 2, function(y){which(y != 0)}))))), x$prop.var.explained[5])})))
-  idx <- which.min(spca_mat[,2] == ncol(dat))
+  idx <- min(which(spca_mat[,2] == ncol(dat)))
   target_var <- spca_mat[idx,3]
-  idx <- min(intersect(spca_mat[,2] >= 15, spca_mat[,3] >= 0.8*target_var))
+  idx <- min(intersect(which(spca_mat[,2] >= 15), which(spca_mat[,3] >= 0.8*target_var)))
   spca_idx <- sort(unlist(apply(res_list[[idx]]$v, 2, function(x){which(x != 0)})))
 
   res_descend <- descend::runDescend(t(dat), n.cores = ncores)
@@ -65,7 +65,7 @@ for(i in 1:length(labels_file_vec)){
   descend_idx <- which(colnames(dat) %in% res_hvg$HVG.genes)
 
   gene_idx <- sort(unique(c(spca_idx, descend_idx)))
-  dat_impute <- dat[,idx]
+  dat_impute <- dat[,gene_idx]
 
   reweight_factor <- rowSums(dat_impute)
   dat_impute <- t(sapply(1:nrow(dat_impute), function(x){dat_impute[x,]/reweight_factor[x]}))
