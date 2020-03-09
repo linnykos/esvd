@@ -66,3 +66,5 @@ for(i in 1:length(labels_file_vec)){
 }
 
 save.image("../results/lingxue_spca_idx.RData")
+
+## lapply(preprocessing_list, function(x){x$spca_mat})
