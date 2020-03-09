@@ -121,7 +121,7 @@ poisson_fit <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = i
 save.image("../results/darmanis.RData")
 
 # exponential fit
-init <- eSVD::initialization(dat_impute, family = "exponential", k = k, max_val = max_val)
+init <- eSVD::initialization(dat_NA, family = "exponential", k = k, max_val = max_val)
 exponential_fit_missing <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                family = "exponential",
                                max_iter = max_iter, max_val = max_val,
@@ -130,7 +130,7 @@ exponential_fit_missing <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v
 save.image("../results/darmanis.RData")
 
 init <- eSVD::initialization(dat_impute, family = "exponential", k = k, max_val = max_val)
-exponential_fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+exponential_fit <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
                                                    family = "exponential",
                                                    max_iter = max_iter, max_val = max_val,
                                                    return_path = F, cores = ncores,
@@ -138,7 +138,7 @@ exponential_fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = i
 save.image("../results/darmanis.RData")
 
 # negative binomial fit
-neg_bin_param <- eSVD::tuning(dat_impute, exponential_fit$u_mat, exponential_fit$v_mat, family_to = "neg_binom",
+neg_bin_param <- eSVD::tuning(dat_impute, poisson_fit$u_mat, poisson_fit$v_mat, family_to = "neg_binom",
                               family_from = "poisson")
 for(i in 1:fitting_iter){
   init <- eSVD::initialization(dat_impute, family = "neg_binom", k = k, max_val = max_val,
@@ -173,7 +173,7 @@ neg_binom_fit <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat =
 save.image("../results/darmanis.RData")
 
 # curved gaussian fit
-curved_gaussian_param <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family_to = "curved_gaussian",
+curved_gaussian_param <- eSVD::tuning(dat_impute, exponential_fit$u_mat, exponential_fit$v_mat, family_to = "curved_gaussian",
                                       family_from = "exponential")
 for(i in 1:fitting_iter){
   init <- eSVD::initialization(dat_impute, family = "curved_gaussian", k = k, max_val = max_val,

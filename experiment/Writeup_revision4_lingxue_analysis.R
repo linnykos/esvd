@@ -147,7 +147,7 @@ for(num in 1:length(preprocessing_list)){
   save.image("../results/lingxue_analysis.RData")
 
   # exponential fit
-  init <- eSVD::initialization(dat_impute, family = "exponential", k = k, max_val = max_val)
+  init <- eSVD::initialization(dat_NA, family = "exponential", k = k, max_val = max_val)
   fit_list[[5]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                                      family = "exponential",
                                                      max_iter = max_iter, max_val = max_val,
@@ -156,7 +156,7 @@ for(num in 1:length(preprocessing_list)){
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_impute, family = "exponential", k = k, max_val = max_val)
-  fit_list[[6]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+  fit_list[[6]] <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
                                              family = "exponential",
                                              max_iter = max_iter, max_val = max_val,
                                              return_path = F, cores = ncores,
@@ -164,7 +164,7 @@ for(num in 1:length(preprocessing_list)){
   save.image("../results/lingxue_analysis.RData")
 
   # negative binomial fit
-  neg_bin_param <- eSVD::tuning(dat_impute, exponential_fit$u_mat, exponential_fit$v_mat, family_to = "neg_binom",
+  neg_bin_param <- eSVD::tuning(dat_impute, fit_list[[4]]$u_mat, fit_list[[4]]$v_mat, family_to = "neg_binom",
                                 family_from = "poisson")
   for(i in 1:fitting_iter){
     init <- eSVD::initialization(dat_impute, family = "neg_binom", k = k, max_val = max_val,
@@ -199,7 +199,7 @@ for(num in 1:length(preprocessing_list)){
   save.image("../results/lingxue_analysis.RData")
 
   # curved gaussian fit
-  curved_gaussian_param <- eSVD::tuning(dat_impute, fit$u_mat, fit$v_mat, family_to = "curved_gaussian",
+  curved_gaussian_param <- eSVD::tuning(dat_impute, fit_list[[6]]$u_mat, fit_list[[6]]$v_mat, family_to = "curved_gaussian",
                                         family_from = "exponential")
   for(i in 1:fitting_iter){
     init <- eSVD::initialization(dat_impute, family = "curved_gaussian", k = k, max_val = max_val,
