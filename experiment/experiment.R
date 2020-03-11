@@ -1,60 +1,65 @@
 rm(list=ls())
-set.seed(10)
-n <- 100
-u_mat <- abs(matrix(rnorm(2*n), nrow = n, ncol = 2))
-v_mat <- -abs(matrix(rnorm(2*n), nrow = n, ncol = 2))
-pred_mat <- u_mat %*% t(v_mat)
-dat <- pred_mat
+library(simulation)
+library(eSVD)
+source("../simulation/factorization_generator.R")
 
-for(i in 1:n){
-  for(j in 1:n){
-    dat[i,j] <- stats::rnbinom(1, size = 50, prob = 1-exp(pred_mat[i,j]))
+paramMat <- cbind(50, 120, 10,
+                  2, 50, 2, 50, 10,
+                  rep(1:4, each = 7),
+                  rep(c(1/27, 1/800, 1/250, 1/1000), each = 7),
+                  rep(c(1 ,2, rep(3,2), rep(4,2), 5), times = 4),
+                  rep(c(1, 1, 50, NA, 2, NA, 1), times = 4),
+                  rep(c(3000, rep(100, 6)), times = 4))
+colnames(paramMat) <- c("n_each", "d_each", "sigma",
+                        "k", "true_r",  "true_scalar", "max_iter", "fitting_iter",
+                        "true_distr",
+                        "modifier",
+                        "fitting_distr",
+                        "fitting_param",
+                        "max_val")
+trials <- 5
+ncores <- 10
+
+################
+
+cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
+                     40,10, 60,80, 60,80, 100, 25),
+                   nrow = 4, ncol = 4, byrow = T)
+gene_pop <- matrix(c(20,90, 25,100,
+                     90,20, 100,25)/20, nrow = 2, ncol = 4, byrow = T)
+
+rule <- function(vec){
+  n_each <- vec["n_each"]
+  d_each <- vec["d_each"]
+  sigma <- vec["sigma"]
+  total <- vec["total"]
+  modifier <- vec["modifier"]
+
+  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma, modifier)
+  # plot(res$cell_mat[,1], res$cell_mat[,2], asp = T, col = rep(1:4, each = n_each), pch = 16)
+  nat_mat <- res$nat_mat
+
+  if(vec["true_distr"] == 1){
+    obs_mat <- round(generator_gaussian(nat_mat))
+  } else if(vec["true_distr"] == 2){
+    obs_mat <- generator_esvd_poisson(nat_mat)
+  } else if(vec["true_distr"] == 3 ){
+    obs_mat <- generator_esvd_nb(nat_mat, scalar = vec["true_r"])
+  } else {
+    obs_mat <- round(generator_curved_gaussian(nat_mat, scalar = vec["true_scalar"]))
   }
+
+  list(dat = obs_mat, truth = res$cell_mat, nat_mat = nat_mat)
 }
 
-family = "neg_binom"
-max_val = 100
-k = 1
-iter_max = 5
-search_min = 1
-search_max = 2000
-search_iter = 10
-search_grid = 10
+y <- 1
+set.seed(y)
+vec <- paramMat[18,]
+dat <- rule(vec)
 
-missing_vec <- construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 2)
-dat_NA <- dat
-dat_NA[missing_vec] <- NA
 
-#######
 
-# fit initial fit
-family_initial <- ifelse(family == "neg_binom", "poisson", "exponential")
-fit <- .tuning_fit(dat_NA, family = family_initial, scalar = NA, max_val = 100, k = 1)
 
-###
 
-# determine initial param
-scalar_vec <- rep(NA, iter_max)
-missing_idx <- which(is.na(dat))
-scalar_vec[1] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family_initial,
-                                      search_min = search_min,
-                                      search_max = search_max,
-                                      search_iter = search_iter,
-                                      search_grid = search_grid,
-                                      idx = missing_idx)
 
-for(i in 2:iter_max){
-  fit <- .tuning_fit(dat_NA, family = family, scalar = scalar_vec[i-1], max_val = 100, k = 1)
-  scalar_vec[i] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family,
-                                        scalar = scalar_vec[i-1],
-                                        search_min = search_min,
-                                        search_max = search_max,
-                                        search_iter = search_iter,
-                                        search_grid = search_grid, max_val = 100, k = 1,
-                                        idx = missing_idx)
-}
 
-nat_mat <- fit$u_mat %*% t(fit$v_mat)
-
-plot(pred_mat, nat_mat, asp = T, pch = 16)
-lines(c(-1e5,1e5), c(-1e5,1e5), col = "red", lwd = 2, lty = 2)

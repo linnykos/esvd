@@ -18,7 +18,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_param",
                         "max_val")
 trials <- 5
-ncores <- 20
+ncores <- 10
 
 ################
 
@@ -161,7 +161,7 @@ criterion <- function(dat, vec, y){
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
-## i <- 27; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 18; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 ############
 

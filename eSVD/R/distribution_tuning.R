@@ -7,17 +7,20 @@
 #' @param search_max positive intger, larger than \code{search_min}
 #' @param search_iter positive integer
 #' @param search_grid positive integer
+#' @param verbose boolean
 #' @param ... all remaining parameters needed for either \code{initialization} or \code{matrix_factorization}
 #'
 #' @return vector of length \code{search_iter}
 #' @export
 tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
-                   search_max = 2000, search_iter = 10, search_grid = 10, ...){
+                   search_max = 2000, search_iter = 10, search_grid = 10,
+                   verbose = F, ...){
   stopifnot(search_max > search_min)
 
   # fit initial fit
   family_initial <- ifelse(family == "neg_binom", "poisson", "exponential")
   fit <- .tuning_fit(dat, family = family_initial, scalar = NA, ...)
+  if(verbose) print("Finished initial fit")
 
   # determine initial param
   scalar_vec <- rep(NA, iter_max)
@@ -26,16 +29,21 @@ tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
                                         search_max = search_max,
                                         search_iter = search_iter,
                                         search_grid = search_grid, ...)
+  if(verbose) print("Finished initial search")
 
   # iterate between fitting and parameter estimation
   for(i in 2:iter_max){
     fit <- .tuning_fit(dat, family = family, scalar = scalar_vec[i-1], ...)
+    if(verbose) print(paste0("Finished fit on iteration ", i))
+
     scalar_vec[i] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family,
                                           scalar = scalar_vec[i-1],
                                           search_min = search_min,
                                           search_max = search_max,
                                           search_iter = search_iter,
                                           search_grid = search_grid,...)
+
+    if(verbose) print(paste0("Finished search on iteration ", i))
   }
 
   scalar_vec
