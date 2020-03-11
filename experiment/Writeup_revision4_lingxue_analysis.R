@@ -173,18 +173,18 @@ for(num in 1:length(preprocessing_list)){
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_NA, family = "neg_binom", k = k, max_val = max_val,
-                               size = neg_bin_param)
+                               scalar = neg_bin_param)
   fit_list[[7]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                   family = "neg_binom", size = neg_bin_param,
+                                                   family = "neg_binom", scalar = neg_bin_param,
                                                    max_iter = max_iter, max_val = max_val,
                                                    return_path = F, cores = ncores,
                                                    verbose = F)
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_impute, family = "neg_binom", k = k, max_val = max_val,
-                               size = neg_bin_param)
+                               scalar = neg_bin_param)
   fit_list[[8]] <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
-                                           family = "neg_binom", size = neg_bin_param,
+                                           family = "neg_binom", scalar = neg_bin_param,
                                            max_iter = max_iter, max_val = max_val,
                                            return_path = F, cores = ncores,
                                            verbose = F)
