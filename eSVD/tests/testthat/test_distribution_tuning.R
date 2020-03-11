@@ -135,7 +135,7 @@ test_that(".tuning_fit works", {
                      max_val = 100, max_iter = 10, k = 2)
 
   expect_true(is.list(res))
-  expect_true(c("u_mat", "v_mat") %in% names(res))
+  expect_true(all(c("u_mat", "v_mat") %in% names(res)))
 })
 
 test_that(".tuning_fit can work under randomly generated rank 1 cases", {
@@ -154,7 +154,7 @@ test_that(".tuning_fit can work under randomly generated rank 1 cases", {
       }
     }
 
-    res <- .tuning_fit(dat, family = "neg_binom", scalar = scalar, max_val = 100,
+    res <- .tuning_fit(dat, family = "neg_binom", scalar = 10, max_val = 100,
                        max_iter = 10, k = 2)
 
     is.list(res) & c("u_mat", "v_mat") %in% names(res)
@@ -176,6 +176,8 @@ test_that(".tuning_param_search works", {
   v_mat <- matrix(log(prob), nrow = ncol(dat), ncol = 1)
 
   res <- .tuning_param_search(dat, u_mat, v_mat, family = "neg_binom")
+
+  expect_true(res > 1)
 })
 
 test_that(".tuning_param_search works on a more realistic setting for poisson", {

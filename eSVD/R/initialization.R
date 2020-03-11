@@ -51,7 +51,12 @@ initialization <- function(dat, k = 2, family,
   if(any(is.na(dat))){
     lambda0_val <- softImpute::lambda0(dat)
     res <- softImpute::softImpute(dat, rank.max = k, lambda = min(30, lambda0_val/100))
-    pred_naive <- res$u %*% diag(res$d) %*% t(res$v)
+    if(k == 1){
+      diag_mat <- matrix(res$d[1], 1, 1)
+    } else {
+      diag_mat <- diag(res$d)
+    }
+    pred_naive <- res$u %*% diag_mat %*% t(res$v)
     dat[which(is.na(dat))] <- pred_naive[which(is.na(dat))]
   }
 
