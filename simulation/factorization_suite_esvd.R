@@ -73,6 +73,8 @@ criterion <- function(dat, vec, y){
                                    verbose = F)
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
+    pred_nat <- pred_mat[missing_idx]
+    true_nat <- dat$nat_mat[missing_idx]
     pred_val <- eSVD::compute_mean(pred_mat, family = "gaussian")[missing_idx]
     expected_val <- eSVD::compute_mean(dat$nat_mat, family = "gaussian")[missing_idx]
     fitting_param <- vec["fitting_param"]
@@ -88,6 +90,8 @@ criterion <- function(dat, vec, y){
                                    verbose = F)
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
+    pred_nat <- pred_mat[missing_idx]
+    true_nat <- dat$nat_mat[missing_idx]
     pred_val <- eSVD::compute_mean(pred_mat, family = "poisson")[missing_idx]
     expected_val <- eSVD::compute_mean(dat$nat_mat, family = "gaussian")[missing_idx]
     fitting_param <- vec["fitting_param"]
@@ -114,6 +118,8 @@ criterion <- function(dat, vec, y){
                                    verbose = F)
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
+    pred_nat <- pred_mat[missing_idx]
+    true_nat <- -dat$nat_mat[missing_idx]
     pred_val <- eSVD::compute_mean(pred_mat, family = "neg_binom", scalar = fitting_param)[missing_idx]
     expected_val <- eSVD::compute_mean(-dat$nat_mat, family = "neg_binom", scalar = vec["true_r"])[missing_idx]
 
@@ -138,6 +144,8 @@ criterion <- function(dat, vec, y){
                                    verbose = F)
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
+    pred_nat <- pred_mat[missing_idx]
+    true_nat <- dat$nat_mat[missing_idx]
     pred_val <- eSVD::compute_mean(pred_mat, family = "curved_gaussian", scalar = fitting_param)[missing_idx]
     expected_val <- eSVD::compute_mean(dat$nat_mat, family = "curved_gaussian", scalar = fitting_param)[missing_idx]
 
@@ -151,13 +159,17 @@ criterion <- function(dat, vec, y){
                                    verbose = F)
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
+    pred_nat <- pred_mat[missing_idx]
+    true_nat <- -dat$nat_mat[missing_idx]
     pred_val <- eSVD::compute_mean(pred_mat, family = "exponential")[missing_idx]
     expected_val <- eSVD::compute_mean(-dat$nat_mat, family = "exponential")[missing_idx]
     fitting_param <- vec["fitting_param"]
     fitting_vec <- NA
   }
 
-  list(fit = fit$u_mat, truth = dat$truth, pred_val = pred_val, missing_val = missing_val,
+  list(fit = fit$u_mat, truth = dat$truth,
+       pred_nat = pred_nat, true_nat = true_nat,
+       pred_val = pred_val, missing_val = missing_val,
        expected_val = expected_val, fitting_param = fitting_param,
        fitting_vec = fitting_vec)
 }
