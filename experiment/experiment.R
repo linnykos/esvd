@@ -66,6 +66,51 @@ dat_NA[missing_idx] <- NA
 
 missing_val <- dat_obs[missing_idx]
 
-fitting_vec <- eSVD::tuning_scalar(dat_obs, family = "neg_binom",
-                                   max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"],
-                                   verbose = T, return_path = F, cores = ncores)
+# fitting_vec <- eSVD::tuning_scalar(dat_obs, family = "neg_binom",
+#                                    max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"],
+#                                    verbose = T, return_path = F, cores = ncores)
+
+dat = dat_obs
+family = "neg_binom"
+iter_max = 5
+search_min = 1
+search_max = 2000
+search_iter = 10
+search_grid = 10
+verbose = F
+
+stopifnot(search_max > search_min)
+
+# fit initial fit
+family_initial <- ifelse(family == "neg_binom", "poisson", "exponential")
+fit <- eSVD:::.tuning_fit(dat, family = family_initial, scalar = NA, max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"],
+                   return_path = F, cores = ncores)
+
+#########
+
+u_mat = fit$u_mat
+v_mat = fit$v_mat
+family = family_initial
+
+stopifnot(ncol(u_mat) == ncol(v_mat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat))
+k <- ncol(u_mat); n <- nrow(dat); p <- ncol(dat)
+df_val <- n*p - (n*k + p*k)
+
+stopifnot(df_val > 0)
+
+nat_mat <- u_mat %*% t(v_mat)
+mean_mat_tmp <- eSVD::compute_mean(nat_mat, family, scalar = 1)
+recompute_mean <- family == "neg_binom"
+
+lo_val <- search_min
+hi_val <- search_max
+min_val <- Inf
+
+scalar_seq <- seq(lo_val, hi_val, length.out = search_grid)
+obj_seq <- sapply(scalar_seq, function(scalar){
+  eSVD:::.compute_tuning_objective(dat, family, nat_mat, mean_mat_tmp, scalar = scalar,
+                            recompute_mean = recompute_mean)
+})
+
+eSVD:::.compute_tuning_objective(dat, family, nat_mat, mean_mat_tmp, scalar = 10,
+                                 recompute_mean = recompute_mean)

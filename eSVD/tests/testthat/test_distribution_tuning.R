@@ -56,6 +56,15 @@ test_that(".recompute_mean can recompute mean", {
   expect_true(all(res == mean_mat))
 })
 
+test_that(".recompute_mean computes the mean correctly", {
+  nat_mat <- -matrix(seq(0.1, 1, length.out = 10), 5, 2)
+  scalar <- 10
+  mean_mat <- compute_mean(nat_mat, family = "neg_binom", scalar = 2)
+  res <- .recompute_mean(nat_mat, mean_mat, scalar, recompute_mean = T)
+
+  expect_true(sum(abs(res - scalar*exp(nat_mat)/(1-exp(nat_mat)))) <= 1e-6)
+})
+
 test_that(".recompute_mean respects different scalars", {
   nat_mat <- -matrix(seq(0.1, 1, length.out = 10), 5, 2)
   mean_mat <- compute_mean(nat_mat, family = "neg_binom", scalar = 10)
