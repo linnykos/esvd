@@ -59,10 +59,9 @@
 #' @param pred_mat \code{n} by \code{d} matrix where each entry represents the natural parameter of the corresponding entry in \code{dat}
 #' @param ... other parameters
 #'
-#' @return  \code{n} by \code{d} matrix
+#' @return \code{n} by \code{d} matrix
 .gradient_mat <- function(dat, pred_mat, ...){
   stopifnot(all(dim(dat) == dim(pred_mat)))
 
   UseMethod(".gradient_mat")
 }
-

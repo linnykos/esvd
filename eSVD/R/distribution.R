@@ -10,12 +10,16 @@ compute_mean <- function(nat_mat, family, ...){
   if(family == "gaussian") {
     return(nat_mat)
   } else if(family == "poisson"){
+    stopifnot(all(nat_mat > 0))
     exp(nat_mat)
   } else if(family == "neg_binom"){
+    stopifnot(all(nat_mat < 0))
     .compute_mean_neg_binom(nat_mat, ...)
   } else if(family == "exponential"){
+    stopifnot(all(nat_mat < 0))
     -1/nat_mat
   } else if(family == "curved_gaussian"){
+    stopifnot(all(nat_mat > 0))
     1/nat_mat
   } else {
     stop("family not found")
@@ -24,10 +28,10 @@ compute_mean <- function(nat_mat, family, ...){
 
 ######
 
-.compute_mean_neg_binom <- function(nat_mat, size){
-  if(is.na(size)) stop("No argument size provided for negative binomial")
+.compute_mean_neg_binom <- function(nat_mat, scalar){
+  if(is.na(scalar)) stop("No argument scalar provided for negative binomial")
 
-  size*exp(nat_mat)/(1-exp(nat_mat))
+  scalar*exp(nat_mat)/(1-exp(nat_mat))
 }
 
 .dictate_direction <- function(family){
@@ -60,10 +64,10 @@ compute_mean <- function(nat_mat, family, ...){
   dat
 }
 
-.mean_transformation_neg_binom <- function(dat, tol, size = NA){
-  if(is.na(size)) stop("No argument size provided for negative binomial")
+.mean_transformation_neg_binom <- function(dat, tol, scalar = NA){
+  if(is.na(scalar)) stop("No argument scalar provided for negative binomial")
 
-  dat_new <- (dat + tol)/size
+  dat_new <- (dat + tol)/scalar
   log(dat_new / (1+dat_new))
 }
 
