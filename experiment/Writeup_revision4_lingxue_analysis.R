@@ -15,7 +15,7 @@ dat_file_vec <- c("/raid6/Kevin/singlecell_data/Cleaned/Baron_human1/Baron_human
                   "/raid6/Kevin/singlecell_data/Cleaned/Baron_mouse2/Baron_mouse2_expr.csv",
                   "/raid6/Kevin/singlecell_data/Cleaned/Darmanis/Darmanis_expr.csv")
 
-ncores <- 10
+ncores <- 20
 doMC::registerDoMC(cores = ncores)
 
 # preprocessing_list <- vector("list", length(dat_file_vec))
