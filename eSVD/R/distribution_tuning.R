@@ -1,7 +1,5 @@
-tuning <- function(dat, family, iter_max = 5, search_min = 1,
+tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
                    search_max = 2000, search_iter = 10, search_grid = 10, ...){
-  # set class
-  if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
 
   # fit initial fit
   family_initial <- ifelse(family == "neg_binom", "poisson", "exponential")
@@ -19,6 +17,7 @@ tuning <- function(dat, family, iter_max = 5, search_min = 1,
   for(i in 2:iter_max){
     fit <- .tuning_fit(dat, family = family, scalar = scalar_vec[i-1], ...)
     scalar_vec[i] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family,
+                                          scalar = scalar_vec[i-1],
                                           search_min = search_min,
                                           search_max = search_max,
                                           search_iter = search_iter,

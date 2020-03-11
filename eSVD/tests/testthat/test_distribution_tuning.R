@@ -234,3 +234,56 @@ test_that(".tuning_param_search works on a more realistic setting for curved gau
 
   expect_true(res > 1)
 })
+
+#########################
+
+## tuning_scalar works
+
+test_that("tuning_scalar works", {
+  set.seed(10)
+  scalar <- 50
+  prob <- 0.25
+  dat <- matrix(stats::rnbinom(200, size = scalar, prob = 1-prob), 10, 20)
+  res <- tuning_scalar(dat, family = "neg_binom", max_val = 100, k = 1)
+
+  expect_true(is.numeric(res))
+  expect_true(all(res >= 1))
+})
+
+test_that("tuning_scalar works for rank 1 negative binomial", {
+  set.seed(10)
+  u_mat <- abs(matrix(rnorm(60), nrow = 30, ncol = 2))
+  v_mat <- -abs(matrix(rnorm(60), nrow = 30, ncol = 2))
+  pred_mat <- u_mat %*% t(v_mat)
+  dat <- pred_mat
+
+  for(i in 1:30){
+    for(j in 1:30){
+      dat[i,j] <- stats::rnbinom(1, size = 50, prob = 1-exp(pred_mat[i,j]))
+    }
+  }
+
+  res <- tuning_scalar(dat, family = "neg_binom", max_val = 100, k = 1)
+
+  expect_true(is.numeric(res))
+  expect_true(all(res >= 1))
+})
+
+test_that("tuning_scalar works for rank 1 curved gaussian", {
+  set.seed(10)
+  u_mat <- abs(matrix(rnorm(60), nrow = 30, ncol = 2))
+  v_mat <- abs(matrix(rnorm(60), nrow = 30, ncol = 2))
+  pred_mat <- u_mat %*% t(v_mat)
+  dat <- pred_mat
+
+  for(i in 1:30){
+    for(j in 1:30){
+      dat[i,j] <- max(stats::rnorm(1, mean = 1/pred_mat[i,j], sd = 1/(2*pred_mat[i,j])), 1e-3)
+    }
+  }
+
+  res <- tuning_scalar(dat, family = "curved_gaussian", max_val = 100, k = 1)
+
+  expect_true(is.numeric(res))
+  expect_true(all(res >= 1))
+})

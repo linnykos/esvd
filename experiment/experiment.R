@@ -1,53 +1,41 @@
+rm(list=ls())
 set.seed(10)
-u_mat <- abs(matrix(rnorm(60), nrow = 30, ncol = 2))
-v_mat <- -abs(matrix(rnorm(60), nrow = 30, ncol = 2))
-pred_mat <- u_mat %*% t(v_mat)
-dat <- pred_mat
+scalar <- 50
+prob <- 0.25
+dat <- matrix(stats::rnbinom(200, size = scalar, prob = 1-prob), 10, 20)
+# res <- tuning_scalar(dat, family = "neg_binom", max_val = 100, k = 1)
 
-for(i in 1:30){
-  for(j in 1:30){
-    dat[i,j] <- stats::rnbinom(1, size = 50, prob = 1-exp(pred_mat[i,j]))
-  }
-}
-
-init <- .tuning_fit(dat, family = "poisson", max_val = 100, max_iter = 10, k = 1)
-
+family = "neg_binom"
+max_val = 100
+k = 1
+iter_max = 5
 search_min = 1
 search_max = 2000
-search_iter = 15
+search_iter = 10
 search_grid = 10
-
-u_mat <- init$u_mat
-v_mat <- init$v_mat
-family <- "poisson"
 
 #######
 
-stopifnot(ncol(u_mat) == ncol(v_mat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat))
-k <- ncol(u_mat); n <- nrow(dat); p <- ncol(dat)
-df_val <- n*p - (n*k + p*k)
-stopifnot(df_val > 0)
+# fit initial fit
+family_initial <- ifelse(family == "neg_binom", "poisson", "exponential")
+fit <- .tuning_fit(dat, family = family_initial, scalar = NA, max_val = 100, k = 1)
 
-nat_mat <- u_mat %*% t(v_mat)
-mean_mat_tmp <- compute_mean(nat_mat, family, scalar = 1)
-recompute_mean <- family == "neg_binom"
+###
 
-lo_val <- search_min
-hi_val <- search_max
-min_val <- Inf
-for(iter in 1:search_iter){
-  scalar_seq <- seq(lo_val, hi_val, length.out = search_grid)
-  obj_seq <- sapply(scalar_seq, function(scalar){
-    .compute_tuning_objective(dat, family, nat_mat, mean_mat_tmp, scalar = scalar,
-                              recompute_mean = recompute_mean)
-  })
-  plot(scalar_seq, obj_seq, main = iter)
+# determine initial param
+scalar_vec <- rep(NA, iter_max)
+scalar_vec[1] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family_initial,
+                                      search_min = search_min,
+                                      search_max = search_max,
+                                      search_iter = search_iter,
+                                      search_grid = search_grid)
 
-  prev_min <- min_val
-  min_val <- scalar_seq[which.min(abs(obj_seq - df_val))]
-
-  #if(abs(prev_min - min_val) <= 1e-3) break()
-  width <- abs(hi_val - lo_val)
-  lo_val <- max(min_val - width/4, 1)
-  hi_val <- min(min_val + width/4, search_max)
+for(i in 2:iter_max){
+  fit <- .tuning_fit(dat, family = family, scalar = scalar_vec[i-1], max_val = 100, k = 1)
+  scalar_vec[i] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family,
+                                        scalar = scalar_vec[i-1],
+                                        search_min = search_min,
+                                        search_max = search_max,
+                                        search_iter = search_iter,
+                                        search_grid = search_grid, max_val = 100, k = 1)
 }
