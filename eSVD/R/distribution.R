@@ -28,7 +28,7 @@ compute_mean <- function(nat_mat, family, ...){
 
 ######
 
-.compute_mean_neg_binom <- function(nat_mat, scalar){
+.compute_mean_neg_binom <- function(nat_mat, scalar, ...){
   if(is.na(scalar)) stop("No argument scalar provided for negative binomial")
 
   scalar*exp(nat_mat)/(1-exp(nat_mat))
@@ -64,7 +64,7 @@ compute_mean <- function(nat_mat, family, ...){
   dat
 }
 
-.mean_transformation_neg_binom <- function(dat, tol, scalar = NA){
+.mean_transformation_neg_binom <- function(dat, tol, scalar = NA, ...){
   if(is.na(scalar)) stop("No argument scalar provided for negative binomial")
 
   dat_new <- (dat + tol)/scalar

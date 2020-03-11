@@ -97,7 +97,8 @@ criterion <- function(dat, vec, y){
   } else if(vec["fitting_distr"] == 3){
     if(is.na(vec["fitting_param"])){
       fitting_vec <- eSVD::tuning_scalar(dat_obs, family = "neg_binom",
-                                         max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"])
+                                         max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"],
+                                         return_path = F, cores = ncores)
       fitting_param <- fitting_vec[length(fitting_vec)]
     } else {
       fitting_param <- vec["fitting_param"]
@@ -114,13 +115,14 @@ criterion <- function(dat, vec, y){
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- eSVD::compute_mean(pred_mat, family = "neg_binom", scalar = fitting_param)[missing_idx]
-    expected_val <- eSVD::compute_mean(dat$nat_mat, family = "neg_binom", scalar = vec["true_r"])[missing_idx]
+    expected_val <- eSVD::compute_mean(-dat$nat_mat, family = "neg_binom", scalar = vec["true_r"])[missing_idx]
 
   # curved gaussian
   } else if(vec["fitting_distr"] == 4){
     if(is.na(vec["fitting_param"])){
       fitting_vec <- eSVD::tuning_scalar(dat_obs, family = "curved_gaussian",
-                                         max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"])
+                                         max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"],
+                                         return_path = F, cores = ncores)
       fitting_param <- fitting_vec[length(fitting_vec)]
     } else {
       fitting_param <- vec["fitting_param"]
@@ -150,7 +152,7 @@ criterion <- function(dat, vec, y){
 
     pred_mat <- fit$u_mat %*% t(fit$v_mat)
     pred_val <- eSVD::compute_mean(pred_mat, family = "exponential")[missing_idx]
-    expected_val <- eSVD::compute_mean(dat$nat_mat, family = "exponential")[missing_idx]
+    expected_val <- eSVD::compute_mean(-dat$nat_mat, family = "exponential")[missing_idx]
     fitting_param <- vec["fitting_param"]
     fitting_vec <- NA
   }
@@ -161,7 +163,7 @@ criterion <- function(dat, vec, y){
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
-## i <- 18; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 16; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 
 ############
 

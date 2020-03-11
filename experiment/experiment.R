@@ -57,9 +57,15 @@ set.seed(y)
 vec <- paramMat[18,]
 dat <- rule(vec)
 
+set.seed(10*y)
 
+dat_obs <- dat$dat
+missing_idx <- eSVD::construct_missing_values(n = nrow(dat_obs), p = ncol(dat_obs), num_val = 2)
+dat_NA <- dat_obs
+dat_NA[missing_idx] <- NA
 
+missing_val <- dat_obs[missing_idx]
 
-
-
-
+fitting_vec <- eSVD::tuning_scalar(dat_obs, family = "neg_binom",
+                                   max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"],
+                                   verbose = T, return_path = F, cores = ncores)
