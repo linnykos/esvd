@@ -1,6 +1,5 @@
-tuning <- function(dat, family, iter_max = 5, binary_search_min = 1,
-                   binary_search_max = 2000, binary_search_iter = 15,
-                   binary_search_tol = 1e-3, ...){
+tuning <- function(dat, family, iter_max = 5, search_min = 1,
+                   search_max = 2000, search_iter = 10, search_grid = 10, ...){
   # set class
   if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
 
@@ -10,20 +9,20 @@ tuning <- function(dat, family, iter_max = 5, binary_search_min = 1,
 
   # determine initial param
   scalar_vec <- rep(NA, iter_max)
-  scalar_vec[1] <- .tuning_param_binary_search(dat, fit$u_mat, fit$v_mat, family = family_initial, initial = T,
-                                        binary_search_min = binary_search_min,
-                                        binary_search_max = binary_search_max,
-                                        binary_search_iter = binary_search_iter,
-                                        binary_search_tol = binary_search_tol, ...)
+  scalar_vec[1] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family_initial,
+                                        search_min = search_min,
+                                        search_max = search_max,
+                                        search_iter = search_iter,
+                                        search_grid = search_grid, ...)
 
   # iterate between fitting and parameter estimation
   for(i in 2:iter_max){
     fit <- .tuning_fit(dat, family = family, scalar = scalar_vec[i-1], ...)
-    scalar_vec[i] <- .tuning_param_binary_search(dat, fit$u_mat, fit$v_mat, family = family, initial = T,
-                                                 binary_search_min = binary_search_min,
-                                                 binary_search_max = binary_search_max,
-                                                 binary_search_iter = binary_search_iter,
-                                                 binary_search_tol = binary_search_tol, ...)
+    scalar_vec[i] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family,
+                                          search_min = search_min,
+                                          search_max = search_max,
+                                          search_iter = search_iter,
+                                          search_grid = search_grid,...)
   }
 
   scalar_vec
@@ -40,9 +39,9 @@ tuning <- function(dat, family, iter_max = 5, binary_search_min = 1,
 
 ###########
 
-.tuning_param_binary_search <- function(dat, u_mat, v_mat, family, initial = F, binary_search_min = 1,
-                                        binary_search_max = 2000, binary_search_iter = 15,
-                                        binary_search_tol = 1e-3, ...){
+.tuning_param_search <- function(dat, u_mat, v_mat, family, search_min = 1,
+                                        search_max = 2000, search_iter = 10,
+                                        search_grid = 10, ...){
   stopifnot(ncol(u_mat) == ncol(v_mat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat))
   k <- ncol(u_mat); n <- nrow(dat); p <- ncol(dat)
   df_val <- n*p - (n*k + p*k)
@@ -50,33 +49,28 @@ tuning <- function(dat, family, iter_max = 5, binary_search_min = 1,
 
   nat_mat <- u_mat %*% t(v_mat)
   mean_mat_tmp <- compute_mean(nat_mat, family, scalar = 1)
-  recompute_mean <- (family == "neg" & intial)
+  recompute_mean <- family == "neg_binom"
 
-  lo_val <- binary_search_min
-  obj_lo <- .compute_tuning_objective(dat, family, nat_mat, mean_mat_tmp, scalar = lo_val, recompute_mean = recompute_mean)
+  lo_val <- search_min
+  hi_val <- search_max
+  min_val <- Inf
 
-  hi_val <- binary_search_max
-  obj_hi <- .compute_tuning_objective(dat, family, nat_mat, mean_mat_tmp, scalar = binary_search_max, recompute_mean = recompute_mean)
+  for(iter in 1:search_iter){
+    scalar_seq <- seq(lo_val, hi_val, length.out = search_grid)
+    obj_seq <- sapply(scalar_seq, function(scalar){
+      .compute_tuning_objective(dat, family, nat_mat, mean_mat_tmp, scalar = scalar,
+                                recompute_mean = recompute_mean)
+    })
 
-  obj_prev <- Inf; obj_current <- Inf
+    prev_min <- min_val
+    min_val <- scalar_seq[which.min(abs(obj_seq - df_val))]
 
-  while(iter <= binary_search_iter){
-    mid_val <- (lo_val + hi_val)/2
-    obj_mid <- .compute_tuning_objective(dat, family, nat_mat, mean_mat_tmp, scalar = mid_val, recompute_mean = recompute_mean)
-
-    if(sign(obj_lo - df_val) != sign(obj_mid - df_val)){
-      hi_val <- mid_val
-    } else {
-      lo_val <- mid_val
-    }
-
-    obj_current <- obj_mid
-    if(abs(obj_current - obj_prev) <= binary_search_tol) break()
-
-    iter <- iter + 1
+    width <- abs(hi_val - lo_val)
+    lo_val <- max(min_val - width/4, 1)
+    hi_val <- min(min_val + width/4, search_max)
   }
 
-  mid_val
+  min_val
 }
 
 .compute_tuning_objective <- function(dat, family, nat_mat, mean_mat, scalar, recompute_mean){
@@ -96,7 +90,7 @@ tuning <- function(dat, family, iter_max = 5, binary_search_min = 1,
 }
 
 .compute_variance <- function(mean_mat, family, scalar){
-  if(family == "neg_binom"){
+  if(family %in% c("neg_binom", "poisson")){
     mean_mat + mean_mat^2/scalar
   } else {
     # this means it's curved gaussian
