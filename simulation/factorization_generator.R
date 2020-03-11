@@ -102,14 +102,14 @@ generator_zinb_nb <- function(nat_mat, r_vec = rep(100, ncol(nat_mat)), ...){
   obs_mat
 }
 
-generator_esvd_nb <- function(nat_mat, size = 100,  ...){
+generator_esvd_nb <- function(nat_mat, scalar = 100,  ...){
   n <- nrow(nat_mat); d <- ncol(nat_mat)
 
   obs_mat <- matrix(0, ncol = d, nrow = n)
   for(i in 1:n){
     for(j in 1:d){
       p <- 1-exp(-nat_mat[i,j]) # remember the p param in rnbinom is "flipped" in R
-      obs_mat[i,j] <- stats::rnbinom(1, size = size, prob = p)
+      obs_mat[i,j] <- stats::rnbinom(1, size = scalar, prob = p)
     }
   }
 

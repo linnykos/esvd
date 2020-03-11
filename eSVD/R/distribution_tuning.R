@@ -1,5 +1,19 @@
+#' Tuning negative binomial or curved Gaussian scalar
+#'
+#' @param dat \code{n} by \code{p} data matrix
+#' @param family character (either \code{"neg_binom"} or \code{"curved_gaussian"})
+#' @param iter_max positive intger
+#' @param search_min positive intger
+#' @param search_max positive intger, larger than \code{search_min}
+#' @param search_iter positive integer
+#' @param search_grid positive integer
+#' @param ... all remaining parameters needed for either \code{initialization} or \code{matrix_factorization}
+#'
+#' @return vector of length \code{search_iter}
+#' @export
 tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
                    search_max = 2000, search_iter = 10, search_grid = 10, ...){
+  stopifnot(search_max > search_min)
 
   # fit initial fit
   family_initial <- ifelse(family == "neg_binom", "poisson", "exponential")
