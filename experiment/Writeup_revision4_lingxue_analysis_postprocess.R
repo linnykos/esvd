@@ -1,6 +1,7 @@
 rm(list=ls())
 load("../results/lingxue_analysis.RData")
 
+# 1,2,3,4,5
 # which dataset to investigate?
 dat_num <- 7
 label_vec <- preprocessing_list[[dat_num]]$label_vec

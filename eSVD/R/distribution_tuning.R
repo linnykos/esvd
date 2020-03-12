@@ -88,7 +88,7 @@ tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
     min_val <- scalar_seq[which.min(abs(obj_seq - df_val))]
 
     width <- abs(hi_val - lo_val)
-    lo_val <- max(min_val - width/4, 1)
+    lo_val <- max(min_val - width/4, search_min)
     hi_val <- min(min_val + width/4, search_max)
   }
 
