@@ -166,11 +166,11 @@ for(num in 1:length(preprocessing_list)){
   #################
 
   # negative binomial fit
-  tmp <- eSVD::tuning_scalar(dat_impute, family = "neg_binom",
+  neg_bin_vec <- eSVD::tuning_scalar(dat_impute, family = "neg_binom",
                              max_iter = max_iter, max_val = max_val, k = k,
                              return_path = F, cores = ncores, iter_max = 10,
                              search_min = 1, search_max = 4000)
-  neg_bin_param <- tmp[length(tmp)]
+  neg_bin_param <- neg_bin_vec[length(tmp)]
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_NA, family = "neg_binom", k = k, max_val = max_val,
@@ -194,11 +194,11 @@ for(num in 1:length(preprocessing_list)){
   #################
 
   # curved gaussian fit
-  tmp <- eSVD::tuning_scalar(dat_impute, family = "curved_gaussian",
+  curved_gaussian_vec <- eSVD::tuning_scalar(dat_impute, family = "curved_gaussian",
                              max_iter = max_iter, max_val = max_val, k = k,
                              return_path = F, cores = ncores, iter_max = 10,
                              search_min = 0.1, search_max = 10)
-  curved_gaussian_param <- tmp[length(tmp)]
+  curved_gaussian_param <- curved_gaussian_vec[length(tmp)]
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = k, max_val = max_val,
@@ -218,8 +218,8 @@ for(num in 1:length(preprocessing_list)){
                                                  return_path = F, cores = ncores,
                                                  verbose = F)
 
-  fit_list[[11]] <- neg_bin_param
-  fit_list[[12]] <-curved_gaussian_param
+  fit_list[[11]] <- neg_bin_vec
+  fit_list[[12]] <- curved_gaussian_vec
 
   fit_all_list[[num]] <- fit_list
 
