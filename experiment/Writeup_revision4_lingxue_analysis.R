@@ -105,7 +105,7 @@ for(num in 1:length(preprocessing_list)){
   # parameters to fit
   max_iter <- 50
   max_val <- 3000
-  k <- 5
+  k <- 3
   fitting_iter <- 5
 
   # gaussian fit
