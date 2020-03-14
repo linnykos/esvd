@@ -83,46 +83,34 @@ load("../results/lingxue_analysis.RData")
 
 sapply(preprocessing_list, function(x){dim(x$dat_impute)})
 
-fit_all_list <- vector("list", length(preprocessing_list))
-## now do all the fits
-for(num in 1:length(preprocessing_list)){
-  dat_impute <- preprocessing_list[[num]]$dat_impute
+######################################
 
-  fit_list <- vector("list", 12)
+fitting_func <- function(dat_impute, k){
+  max_iter <- 50
+  max_val <- 3000
+  fitting_iter <- 5
+
+  fit_list <- vector("list", 13)
   names(fit_list) <- c("gaussian_missing", "gaussian", "poisson_missing", "poisson",
                        "exponential_missing", "exponential", "neg_binom_missing",
                        "neg_binom", "curved_gaussian_missing", "curved_gaussian",
                        "neg_bin_param", "curved_gaussian_param")
 
-  n <- nrow(dat_impute); d <- ncol(dat_impute)
-  set.seed(10)
-  missing_idx <- eSVD::construct_missing_values(n = nrow(dat_impute), p = ncol(dat_impute), num_val = 2)
-
-  dat_NA <- dat_impute
-  dat_NA[missing_idx] <- NA
-  missing_val <- dat_impute[missing_idx]
-
-  # parameters to fit
-  max_iter <- 50
-  max_val <- 3000
-  k <- 3
-  fitting_iter <- 5
-
   # gaussian fit
   init <- eSVD::initialization(dat_NA, family = "gaussian", k = k, max_val = max_val)
   fit_list[[1]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                  family = "gaussian",
-                                                  max_iter = max_iter, max_val = max_val,
-                                                  return_path = F, cores = ncores,
-                                                  verbose = F)
+                                           family = "gaussian",
+                                           max_iter = max_iter, max_val = max_val,
+                                           return_path = F, cores = ncores,
+                                           verbose = F)
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_impute, family = "gaussian", k = k, max_val = max_val)
   fit_list[[2]] <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
-                                          family = "gaussian",
-                                          max_iter = max_iter, max_val = max_val,
-                                          return_path = F, cores = ncores,
-                                          verbose = F)
+                                           family = "gaussian",
+                                           max_iter = max_iter, max_val = max_val,
+                                           return_path = F, cores = ncores,
+                                           verbose = F)
   save.image("../results/lingxue_analysis.RData")
 
   #################
@@ -130,18 +118,18 @@ for(num in 1:length(preprocessing_list)){
   # poisson fit
   init <- eSVD::initialization(dat_NA, family = "poisson", k = k, max_val = max_val)
   fit_list[[3]]  <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                 family = "poisson",
-                                                 max_iter = max_iter, max_val = max_val,
-                                                 return_path = F, cores = ncores,
-                                                 verbose = F)
+                                            family = "poisson",
+                                            max_iter = max_iter, max_val = max_val,
+                                            return_path = F, cores = ncores,
+                                            verbose = F)
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_impute, family = "poisson", k = k, max_val = max_val)
   fit_list[[4]] <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
-                                         family = "poisson",
-                                         max_iter = max_iter, max_val = max_val,
-                                         return_path = F, cores = ncores,
-                                         verbose = F)
+                                           family = "poisson",
+                                           max_iter = max_iter, max_val = max_val,
+                                           return_path = F, cores = ncores,
+                                           verbose = F)
   save.image("../results/lingxue_analysis.RData")
 
   #################
@@ -149,37 +137,37 @@ for(num in 1:length(preprocessing_list)){
   # exponential fit
   init <- eSVD::initialization(dat_NA, family = "exponential", k = k, max_val = max_val)
   fit_list[[5]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                     family = "exponential",
-                                                     max_iter = max_iter, max_val = max_val,
-                                                     return_path = F, cores = ncores,
-                                                     verbose = F)
+                                           family = "exponential",
+                                           max_iter = max_iter, max_val = max_val,
+                                           return_path = F, cores = ncores,
+                                           verbose = F)
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_impute, family = "exponential", k = k, max_val = max_val)
   fit_list[[6]] <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
-                                             family = "exponential",
-                                             max_iter = max_iter, max_val = max_val,
-                                             return_path = F, cores = ncores,
-                                             verbose = F)
+                                           family = "exponential",
+                                           max_iter = max_iter, max_val = max_val,
+                                           return_path = F, cores = ncores,
+                                           verbose = F)
   save.image("../results/lingxue_analysis.RData")
 
   #################
 
   # negative binomial fit
   neg_bin_vec <- eSVD::tuning_scalar(dat_impute, family = "neg_binom",
-                             max_iter = max_iter, max_val = max_val, k = k,
-                             return_path = F, cores = ncores, iter_max = 10,
-                             search_min = 1, search_max = 4000)
+                                     max_iter = max_iter, max_val = max_val, k = k,
+                                     return_path = F, cores = ncores, iter_max = 10,
+                                     search_min = 1, search_max = 4000)
   neg_bin_param <- neg_bin_vec[length(tmp)]
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_NA, family = "neg_binom", k = k, max_val = max_val,
                                scalar = neg_bin_param)
   fit_list[[7]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                   family = "neg_binom", scalar = neg_bin_param,
-                                                   max_iter = max_iter, max_val = max_val,
-                                                   return_path = F, cores = ncores,
-                                                   verbose = F)
+                                           family = "neg_binom", scalar = neg_bin_param,
+                                           max_iter = max_iter, max_val = max_val,
+                                           return_path = F, cores = ncores,
+                                           verbose = F)
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_impute, family = "neg_binom", k = k, max_val = max_val,
@@ -195,31 +183,57 @@ for(num in 1:length(preprocessing_list)){
 
   # curved gaussian fit
   curved_gaussian_vec <- eSVD::tuning_scalar(dat_impute, family = "curved_gaussian",
-                             max_iter = max_iter, max_val = max_val, k = k,
-                             return_path = F, cores = ncores, iter_max = 10,
-                             search_min = 0.1, search_max = 10)
+                                             max_iter = max_iter, max_val = max_val, k = k,
+                                             return_path = F, cores = ncores, iter_max = 10,
+                                             search_min = 0.1, search_max = 10)
   curved_gaussian_param <- curved_gaussian_vec[length(tmp)]
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = k, max_val = max_val,
                                scalar = curved_gaussian_param)
   fit_list[[9]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                         family = "curved_gaussian", scalar = curved_gaussian_param,
-                                                         max_iter = max_iter, max_val = max_val,
-                                                         return_path = F, cores = ncores,
-                                                         verbose = F)
+                                           family = "curved_gaussian", scalar = curved_gaussian_param,
+                                           max_iter = max_iter, max_val = max_val,
+                                           return_path = F, cores = ncores,
+                                           verbose = F)
   save.image("../results/lingxue_analysis.RData")
 
   init <- eSVD::initialization(dat_impute, family = "curved_gaussian", k = k, max_val = max_val,
                                scalar = curved_gaussian_param)
   fit_list[[10]] <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat = init$v_mat,
-                                                 family = "curved_gaussian", scalar = curved_gaussian_param,
-                                                 max_iter = max_iter, max_val = max_val,
-                                                 return_path = F, cores = ncores,
-                                                 verbose = F)
+                                            family = "curved_gaussian", scalar = curved_gaussian_param,
+                                            max_iter = max_iter, max_val = max_val,
+                                            return_path = F, cores = ncores,
+                                            verbose = F)
 
   fit_list[[11]] <- neg_bin_vec
   fit_list[[12]] <- curved_gaussian_vec
+  fit_list[[13]] <- missing_idx
+
+  fit_list
+}
+
+######
+
+fit_all_list <- vector("list", length(preprocessing_list))
+## now do all the fits
+for(num in 1:length(preprocessing_list)){
+  dat_impute <- preprocessing_list[[num]]$dat_impute
+
+  n <- nrow(dat_impute); d <- ncol(dat_impute)
+  set.seed(10)
+  missing_idx <- eSVD::construct_missing_values(n = nrow(dat_impute), p = ncol(dat_impute), num_val = 2)
+
+  dat_NA <- dat_impute
+  dat_NA[missing_idx] <- NA
+  missing_val <- dat_impute[missing_idx]
+
+  # parameters to fit
+  k_vec <- 3:5
+
+  #### INVESTIGATE THE TUNING MORE FIRST
+
+
 
   fit_all_list[[num]] <- fit_list
 
