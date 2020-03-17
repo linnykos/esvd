@@ -41,6 +41,7 @@ tuning_scalar <- function(dat, family, iter_max = 5,
     if(verbose) print(paste0("Finished fit on iteration ", i))
 
     scalar_vec[i] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family,
+                                          idx = missing_idx,
                                           scalar = scalar_vec[i-1],
                                           search_min = search_min,
                                           search_max = search_max, ...)
@@ -67,7 +68,7 @@ tuning_scalar <- function(dat, family, iter_max = 5,
                                  search_min = 1, search_max = 2000, ...){
   stopifnot(ncol(u_mat) == ncol(v_mat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat))
   k <- ncol(u_mat); n <- nrow(dat); p <- ncol(dat)
-  if(length(idx) != prod(dim(dat))){
+  if(length(idx) == prod(dim(dat))){
     df_val <- n*p - (n*k + p*k)
   } else {
     df_val <- length(idx)
