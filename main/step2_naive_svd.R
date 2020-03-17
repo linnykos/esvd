@@ -10,18 +10,7 @@ k <- 5
 # generate list of missing indices
 missing_idx_list <- lapply(1:cv_trials, function(j){
   set.seed(10*j)
-  missing_idx <- rbind(do.call(rbind, (lapply(1:n, function(x){
-    cbind(x, sample(1:d, 4))
-  }))), do.call(rbind, (lapply(1:d, function(x){
-    cbind(sample(1:n, 4), x)
-  }))))
-
-  dat_impute_NA <- dat_impute
-  for(tmp in 1:nrow(missing_idx)){
-    dat_impute_NA[missing_idx[tmp,1], missing_idx[tmp,2]] <- NA
-  }
-
-  which(is.na(dat_impute_NA))
+  eSVD::construct_missing_values(n = n, p = d, num_val = 4)
 })
 
 for(j in 1:cv_trials){

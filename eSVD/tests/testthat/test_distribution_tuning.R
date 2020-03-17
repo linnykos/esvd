@@ -159,13 +159,14 @@ test_that("tuning_scalar works", {
 
 test_that("tuning_scalar works for rank 1 negative binomial", {
   set.seed(10)
-  u_mat <- abs(matrix(rnorm(60), nrow = 30, ncol = 2))
-  v_mat <- -abs(matrix(rnorm(60), nrow = 30, ncol = 2))
+  n <- 150
+  u_mat <- abs(matrix(rnorm(n), nrow = n, ncol = 1))
+  v_mat <- -abs(matrix(rnorm(n), nrow = n, ncol = 1))
   pred_mat <- u_mat %*% t(v_mat)
   dat <- pred_mat
 
-  for(i in 1:30){
-    for(j in 1:30){
+  for(i in 1:n){
+    for(j in 1:n){
       dat[i,j] <- stats::rnbinom(1, size = 50, prob = 1-exp(pred_mat[i,j]))
     }
   }

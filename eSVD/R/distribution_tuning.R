@@ -12,26 +12,32 @@
 #'
 #' @return vector of length \code{search_iter}
 #' @export
-tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
-                   search_max = 2000,
-                   verbose = F, ...){
+tuning_scalar <- function(dat, family, iter_max = 5,
+                          search_min = 1,
+                          search_max = 2000,
+                          verbose = F, ...){
   stopifnot(search_max > search_min)
+  missing_idx <- eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat))
 
   # fit initial fit
   family_initial <- ifelse(family == "neg_binom", "poisson", "exponential")
-  fit <- .tuning_fit(dat, family = family_initial, scalar = NA, ...)
+  dat_NA <- dat; dat_NA[missing_idx] <- NA
+  missing_val <- dat[missing_idx]
+  fit <- .tuning_fit(dat_NA, family = family_initial, scalar = NA, ...)
   if(verbose) print("Finished initial fit")
 
   # determine initial param
   scalar_vec <- rep(NA, iter_max)
-  scalar_vec[1] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family_initial,
+  scalar_vec[1] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat,
+                                        family = family_initial,
+                                        idx = missing_idx,
                                         search_min = search_min,
                                         search_max = search_max, ...)
   if(verbose) print("Finished initial search")
 
   # iterate between fitting and parameter estimation
   for(i in 2:iter_max){
-    fit <- .tuning_fit(dat, family = family, scalar = scalar_vec[i-1], ...)
+    fit <- .tuning_fit(dat_NA, family = family, scalar = scalar_vec[i-1], ...)
     if(verbose) print(paste0("Finished fit on iteration ", i))
 
     scalar_vec[i] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family,
@@ -57,21 +63,27 @@ tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
 ###########
 
 .tuning_param_search <- function(dat, u_mat, v_mat, family,
+                                 idx = 1:prod(dim(dat)),
                                  search_min = 1, search_max = 2000, ...){
   stopifnot(ncol(u_mat) == ncol(v_mat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat))
   k <- ncol(u_mat); n <- nrow(dat); p <- ncol(dat)
-  df_val <- n*p - (n*k + p*k)
+  if(length(idx) != prod(dim(dat))){
+    df_val <- n*p - (n*k + p*k)
+  } else {
+    df_val <- length(idx)
+  }
 
   stopifnot(df_val > 0)
 
   nat_mat <- u_mat %*% t(v_mat)
+
   fn <- function(x){
     mean_mat <- compute_mean(nat_mat, family, scalar = x)
     if(family %in% c("neg_binom")){
-      abs(sum(dat/mean_mat) - df_val)
+      abs(sum(dat[idx]/mean_mat[idx]) - df_val)
     } else {
       var_mat <- .compute_variance(mean_mat, family, scalar = x)
-      abs(sum((dat-mean_mat)^2/var_mat) - df_val)
+      abs(sum((dat[idx]-mean_mat[idx])^2/var_mat[idx]) - df_val)
     }
   }
 
@@ -85,15 +97,5 @@ tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
   } else {
     # this means it's curved gaussian
     (mean_mat/scalar)^2
-  }
-}
-
-.compute_gradient <- function(dat, mean_mat, var_mat, df_val, family, scalar){
-  sign_val <- sign(sum((dat-mean_mat)^2/var_mat) - df_val)
-
-  if(family %in% c("neg_binom", "poisson")){
-    sign_val*sum((dat - mean_mat)^2/var_mat^2*(mean_mat/scalar)^2)
-  } else {
-    sign_val*(2*scalar*sum((dat - mean_mat)^2/mean_mat^2))
   }
 }
