@@ -1,8 +1,8 @@
 rm(list=ls())
 set.seed(10)
-n <- 100
-u_mat <- abs(matrix(rnorm(2*n), nrow = n, ncol = 2))
-v_mat <- -abs(matrix(rnorm(2*n), nrow = n, ncol = 2))
+n <- 150
+u_mat <- abs(matrix(rnorm(n), nrow = n, ncol = 1))
+v_mat <- -abs(matrix(rnorm(n), nrow = n, ncol = 1))
 pred_mat <- u_mat %*% t(v_mat)
 dat <- pred_mat
 
@@ -12,33 +12,14 @@ for(i in 1:n){
   }
 }
 
-family = "neg_binom"
-max_val = 100
-k = 1
+res <- tuning_scalar(dat, family = "neg_binom", max_val = 100, k = 1)
+param <- res[length(res)]
 
-missing_vec <- construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 2)
-dat_NA <- dat
-dat_NA[missing_vec] <- NA
+init <- initialization(dat, family = "neg_binom", scalar = param, max_val = 100, k = 1)
+fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                  family =  "neg_binom", scalar = param,  max_val = 100, k = 1)
 
-#######
+nat_mat <- fit$u_mat %*% t(fit$v_mat)
+mean_mat <- compute_mean(nat_mat, family = "neg_binom", scalar = param)
 
-# fit initial fit
-family_initial <- ifelse(family == "neg_binom", "poisson", "exponential")
-fit <- .tuning_fit(dat_NA, family = family_initial, scalar = NA, max_val = 100, k = 1)
-
-#######
-
-# init <- initialization(dat_NA, family = family_initial, max_val = 100, k = 1)
-
-#####
-
-direction <- .dictate_direction(family)
-if(!is.na(max_val)){
-  if(!is.na(direction) && direction == "<=") max_val <- -max_val
-}
-
-# initialize
-# dat <- .matrix_completion(dat_NA, k = k)
-
-#############
-
+plot(mean_mat, dat, asp = T)

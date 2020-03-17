@@ -67,20 +67,16 @@ tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
   nat_mat <- u_mat %*% t(v_mat)
   fn <- function(x){
     mean_mat <- compute_mean(nat_mat, family, scalar = x)
-    var_mat <- .compute_variance(mean_mat, family, scalar = x)
-    abs(sum((dat-mean_mat)^2/var_mat) - df_val)
+    if(family %in% c("neg_binom")){
+      abs(sum(dat/mean_mat) - df_val)
+    } else {
+      var_mat <- .compute_variance(mean_mat, family, scalar = x)
+      abs(sum((dat-mean_mat)^2/var_mat) - df_val)
+    }
   }
 
-  gr <- function(x){
-    mean_mat <- compute_mean(nat_mat, family, scalar = x)
-    var_mat <- .compute_variance(mean_mat, family, scalar = x)
-    .compute_gradient(dat, mean_mat, var_mat, df_val, family, scalar = x)
-  }
-
-  res <- stats::optim(par = (search_min+search_max)/2, fn = fn, gr = gr,
-                      method = "L-BFGS-B",
-                      lower = search_min, upper = search_max)
-  res$par
+  res <- stats::optimize(fn, interval = c(search_min, search_max))
+  res$minimum
 }
 
 .compute_variance <- function(mean_mat, family, scalar){

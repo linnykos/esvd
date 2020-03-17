@@ -33,7 +33,7 @@ scalar_vec[1] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family
 
 # iterate between fitting and parameter estimation
 for(i in 2:iter_max){
-  fit <- .tuning_fit(dat, family = family, scalar = scalar_vec[i-1], max_val = 100, k = 1)
+  fit <- .tuning_fit(dat, family = family, scalar = scalar_vec[i-1],  max_val = 100, k = 1)
   if(verbose) print(paste0("Finished fit on iteration ", i))
 
   scalar_vec[i] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family,
@@ -48,8 +48,8 @@ for(i in 2:iter_max){
 
 u_mat = fit$u_mat
 v_mat = fit$v_mat
-#family = "neg_binom"
-family = family_initial
+family = "neg_binom"
+#family = family_initial
 
 stopifnot(ncol(u_mat) == ncol(v_mat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat))
 k <- ncol(u_mat); n <- nrow(dat); p <- ncol(dat)
@@ -61,9 +61,18 @@ nat_mat <- u_mat %*% t(v_mat)
 
 fn <- function(x){
   mean_mat <- compute_mean(nat_mat, family, scalar = x)
-  var_mat <- .compute_variance(mean_mat, family, scalar = x)
-  abs(sum((dat-mean_mat)^2/var_mat) - df_val)
+  abs(sum(dat/mean_mat) - df_val)
 }
 
-fn(scalar_vec[1])
+
+# res <- stats::optim(par = (search_min+search_max)/2, fn = fn, gr = gr,
+#                     method = "L-BFGS-B",
+#                     lower = search_min, upper = search_max)
+res <- stats::optimize(fn, interval = c(search_min, search_max))
+
+fn(1)
 fn(50)
+fn(res$minimum)
+
+mean_mat <- compute_mean(nat_mat, family, scalar = scalar_vec[length(scalar_vec)])
+plot(mean_mat, dat, asp = T)
