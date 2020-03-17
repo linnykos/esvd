@@ -13,7 +13,7 @@
 #' @return vector of length \code{search_iter}
 #' @export
 tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
-                   search_max = 2000, search_iter = 10, search_grid = 10,
+                   search_max = 2000,
                    verbose = F, ...){
   stopifnot(search_max > search_min)
 
@@ -65,8 +65,6 @@ tuning_scalar <- function(dat, family, iter_max = 5, search_min = 1,
   stopifnot(df_val > 0)
 
   nat_mat <- u_mat %*% t(v_mat)
-  mean_mat_base <- compute_mean(nat_mat, family, scalar = 1)
-
   fn <- function(x){
     mean_mat <- compute_mean(nat_mat, family, scalar = x)
     var_mat <- .compute_variance(mean_mat, family, scalar = x)
