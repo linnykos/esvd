@@ -194,14 +194,14 @@ test_that("tuning_scalar works does something reasonable for negative binomial",
   res <- tuning_scalar(dat, family = "neg_binom", max_val = 100, k = 1)
   param <- res[length(res)]
 
-  df_val <- length(missing_idx)
-  missing_idx <- eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat))
-  dat_NA <- dat; dat_NA[missing_idx] <- NA
+  missing_idx <- construct_missing_values(n = nrow(dat), p = ncol(dat))
+  idx <- missing_idx
+  df_val <- length(idx)
+  dat_NA <- dat; dat_NA[idx] <- NA
   fit <- .tuning_fit(dat_NA, family = "neg_binom", scalar = param, max_val = 100, k = 1)
   nat_mat <- fit$u_mat %*% t(fit$v_mat)
   mean_mat <- compute_mean(nat_mat, family = "neg_binom", scalar = param)
   target_val <- abs(sum(dat[idx]/mean_mat[idx]) - df_val)
-
 
   # try a bogus value too smal
   fit <- .tuning_fit(dat_NA, family = "neg_binom", scalar = 1, max_val = 100, k = 1)
