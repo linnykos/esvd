@@ -1,8 +1,16 @@
-rm(list=ls())
 set.seed(10)
-scalar <- 50
-prob <- 0.95
-dat <- matrix(stats::rnbinom(50*100, size = scalar, prob = 1-prob), 50, 100)
+n <- 100
+u_mat <- abs(matrix(rnorm(n), nrow = n, ncol = 1))
+v_mat <- -abs(matrix(rnorm(n), nrow = n, ncol = 1))
+pred_mat <- u_mat %*% t(v_mat)
+dat <- pred_mat
+
+for(i in 1:n){
+  for(j in 1:n){
+    dat[i,j] <- stats::rnbinom(1, size = 50, prob = 1-exp(pred_mat[i,j]))
+  }
+}
+
 mean(dat)
 var(as.numeric(dat))
 # res <- tuning_scalar(dat, family = "neg_binom", max_val = 100, k = 1)

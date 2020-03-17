@@ -159,7 +159,7 @@ test_that("tuning_scalar works", {
 
 test_that("tuning_scalar works for rank 1 negative binomial", {
   set.seed(10)
-  n <- 150
+  n <- 100
   u_mat <- abs(matrix(rnorm(n), nrow = n, ncol = 1))
   v_mat <- -abs(matrix(rnorm(n), nrow = n, ncol = 1))
   pred_mat <- u_mat %*% t(v_mat)
@@ -177,15 +177,57 @@ test_that("tuning_scalar works for rank 1 negative binomial", {
   expect_true(all(res >= 1))
 })
 
-test_that("tuning_scalar works for rank 1 curved gaussian", {
-  set.seed(10)
-  u_mat <- abs(matrix(rnorm(60), nrow = 30, ncol = 2))
-  v_mat <- abs(matrix(rnorm(60), nrow = 30, ncol = 2))
+test_that("tuning_scalar works does something reasonable for negative binomial", {
+  set.seed(20)
+  n <- 100
+  u_mat <- abs(matrix(rnorm(n), nrow = n, ncol = 1))
+  v_mat <- -abs(matrix(rnorm(n), nrow = n, ncol = 1))
   pred_mat <- u_mat %*% t(v_mat)
   dat <- pred_mat
 
-  for(i in 1:30){
-    for(j in 1:30){
+  for(i in 1:n){
+    for(j in 1:n){
+      dat[i,j] <- stats::rnbinom(1, size = 50, prob = 1-exp(pred_mat[i,j]))
+    }
+  }
+
+  res <- tuning_scalar(dat, family = "neg_binom", max_val = 100, k = 1)
+  param <- res[length(res)]
+
+  df_val <- length(missing_idx)
+  missing_idx <- eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat))
+  dat_NA <- dat; dat_NA[missing_idx] <- NA
+  fit <- .tuning_fit(dat_NA, family = "neg_binom", scalar = param, max_val = 100, k = 1)
+  nat_mat <- fit$u_mat %*% t(fit$v_mat)
+  mean_mat <- compute_mean(nat_mat, family = "neg_binom", scalar = param)
+  target_val <- abs(sum(dat[idx]/mean_mat[idx]) - df_val)
+
+
+  # try a bogus value too smal
+  fit <- .tuning_fit(dat_NA, family = "neg_binom", scalar = 1, max_val = 100, k = 1)
+  nat_mat <- fit$u_mat %*% t(fit$v_mat)
+  mean_mat <- compute_mean(nat_mat, family = "neg_binom", scalar = 1)
+  alt_val1 <- abs(sum(dat[idx]/mean_mat[idx]) - df_val)
+
+  # another value too large
+  fit <- .tuning_fit(dat_NA, family = "neg_binom", scalar = 100, max_val = 100, k = 1)
+  nat_mat <- fit$u_mat %*% t(fit$v_mat)
+  mean_mat <- compute_mean(nat_mat, family = "neg_binom", scalar = 100)
+  alt_val2 <- abs(sum(dat[idx]/mean_mat[idx]) - df_val)
+
+  expect_true(target_val <= alt_val1 & target_val <= alt_val2)
+})
+
+test_that("tuning_scalar works for rank 1 curved gaussian", {
+  set.seed(10)
+  n <- 100
+  u_mat <- abs(matrix(rnorm(n), nrow = n, ncol = 1))
+  v_mat <- abs(matrix(rnorm(n), nrow = n, ncol = 1))
+  pred_mat <- u_mat %*% t(v_mat)
+  dat <- pred_mat
+
+  for(i in 1:n){
+    for(j in 1:n){
       dat[i,j] <- max(stats::rnorm(1, mean = 1/pred_mat[i,j], sd = 1/(2*pred_mat[i,j])), 1e-3)
     }
   }
