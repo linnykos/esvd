@@ -4,12 +4,12 @@ library(eSVD)
 source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 10,
-                  2, 50, 2, 50, 10,
-                  rep(1:4, each = 7),
-                  rep(c(1/27, 1/800, 1/250, 1/1000), each = 7),
-                  rep(c(1 ,2, rep(3,2), rep(4,2), 5), times = 4),
-                  rep(c(1, 1, 50, NA, 2, NA, 1), times = 4),
-                  rep(c(3000, rep(100, 6)), times = 4))
+                  rep(rep(1:3, each = 4), times = 4), 50, 2, 50, 10,
+                  rep(1:4, each = 12),
+                  rep(c(1/27, 1/800, 1/250, 1/1000), each = 12),
+                  rep(1:4, times = 12),
+                  rep(c(1, 1, NA, NA), times = 12),
+                  rep(c(3000, rep(100, 3)), times = 4))
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "true_r",  "true_scalar", "max_iter", "fitting_iter",
                         "true_distr",
@@ -18,7 +18,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_param",
                         "max_val")
 trials <- 5
-ncores <- 10
+ncores <- 20
 
 ################
 
@@ -102,7 +102,8 @@ criterion <- function(dat, vec, y){
     if(is.na(vec["fitting_param"])){
       fitting_vec <- eSVD::tuning_scalar(dat_obs, family = "neg_binom",
                                          max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"],
-                                         return_path = F, cores = ncores, iter_max = 10)
+                                         return_path = F, cores = ncores, iter_max = 10,
+                                         search_min = 1, search_max = 2*max(dat_obs))
       fitting_param <- fitting_vec[length(fitting_vec)]
     } else {
       fitting_param <- vec["fitting_param"]
@@ -124,11 +125,12 @@ criterion <- function(dat, vec, y){
     expected_val <- eSVD::compute_mean(-dat$nat_mat, family = "neg_binom", scalar = vec["true_r"])[missing_idx]
 
   # curved gaussian
-  } else if(vec["fitting_distr"] == 4){
+  } else {
     if(is.na(vec["fitting_param"])){
       fitting_vec <- eSVD::tuning_scalar(dat_obs, family = "curved_gaussian",
                                          max_iter = vec["max_iter"], max_val = vec["max_val"], k = vec["k"],
-                                         return_path = F, cores = ncores, iter_max = 5)
+                                         return_path = F, cores = ncores, iter_max = 10,
+                                         search_min = 0.5, search_max = 10)
       fitting_param <- fitting_vec[length(fitting_vec)]
     } else {
       fitting_param <- vec["fitting_param"]
@@ -149,22 +151,6 @@ criterion <- function(dat, vec, y){
     pred_val <- eSVD::compute_mean(pred_mat, family = "curved_gaussian", scalar = fitting_param)[missing_idx]
     expected_val <- eSVD::compute_mean(dat$nat_mat, family = "curved_gaussian", scalar = fitting_param)[missing_idx]
 
-  # exponential
-  } else {
-    init <- eSVD::initialization(dat_NA, family = "exponential", k = vec["k"], max_val = vec["max_val"])
-    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                   family = "exponential",
-                                   max_iter = vec["max_iter"], max_val = vec["max_val"],
-                                   return_path = F, cores = ncores,
-                                   verbose = F)
-
-    pred_mat <- fit$u_mat %*% t(fit$v_mat)
-    pred_nat <- pred_mat[missing_idx]
-    true_nat <- -dat$nat_mat[missing_idx]
-    pred_val <- eSVD::compute_mean(pred_mat, family = "exponential")[missing_idx]
-    expected_val <- eSVD::compute_mean(-dat$nat_mat, family = "exponential")[missing_idx]
-    fitting_param <- vec["fitting_param"]
-    fitting_vec <- NA
   }
 
   list(fit = fit$u_mat, truth = dat$truth,
