@@ -80,12 +80,8 @@ tuning_scalar <- function(dat, family, iter_max = 5,
 
   fn <- function(x){
     mean_mat <- compute_mean(nat_mat, family, scalar = x)
-    if(family %in% c("neg_binom")){
-      abs(sum(dat[idx]/mean_mat[idx]) - df_val)
-    } else {
-      var_mat <- .compute_variance(mean_mat, family, scalar = x)
-      abs(sum((dat[idx]-mean_mat[idx])^2/var_mat[idx]) - df_val)
-    }
+    var_mat <- .compute_variance(mean_mat, family, scalar = x)
+    abs(sum((dat[idx]-mean_mat[idx])^2/var_mat[idx]) - df_val)
   }
 
   res <- stats::optimize(fn, interval = c(search_min, search_max))

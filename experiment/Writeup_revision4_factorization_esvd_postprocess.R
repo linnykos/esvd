@@ -4,7 +4,7 @@ load("../results/factorization_esvd.RData")
 
 ################################
 
-correct_idx <- c(1, 9, 18, 27)
+correct_idx <- c(5, 18, 31, 48)
 med_size_est <- median(sapply(res[[correct_idx[3]]], function(x){
   x$fitting_param
 }))
@@ -30,7 +30,7 @@ for(k in 1:4){
   if(length(plot_mat) > 1) plot_mat <- do.call(rbind, plot_mat) else plot_mat <- plot_mat[[1]]
 
   seq_val <- seq(0, 4000, length.out = 500)
-  if(i == 1){
+  if(i == 5){
     # estimate std
     sd_val <- stats::sd(plot_mat[,1] - plot_mat[,2])
 
@@ -40,14 +40,14 @@ for(k in 1:4){
     y_top <- sapply(seq_val, function(x){
       stats::qnorm(0.9, mean = x, sd = sd_val)
     })
-  } else if(i == 10){
+  } else if(i == 18){
     y_bot <- sapply(seq_val, function(x){
       stats::qpois(0.1, lambda = x)
     })
     y_top <- sapply(seq_val, function(x){
       stats::qpois(0.9, lambda = x)
     })
-  } else if(i == 20){
+  } else if(i == 31){
     size <- as.numeric(paramMat[i,"true_r"])
     y_bot <- sapply(seq_val, function(x){
       stats::qnbinom(0.1, size = size, prob = size/(size+x))
