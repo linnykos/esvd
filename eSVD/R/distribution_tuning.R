@@ -5,8 +5,6 @@
 #' @param iter_max positive intger
 #' @param search_min positive intger
 #' @param search_max positive intger, larger than \code{search_min}
-#' @param search_iter positive integer
-#' @param search_grid positive integer
 #' @param verbose boolean
 #' @param ... all remaining parameters needed for either \code{initialization} or \code{matrix_factorization}
 #'

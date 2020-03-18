@@ -10,8 +10,7 @@ tuning_scalar(
   iter_max = 5,
   search_min = 1,
   search_max = 2000,
-  search_iter = 10,
-  search_grid = 10,
+  verbose = F,
   ...
 )
 }
@@ -26,9 +25,7 @@ tuning_scalar(
 
 \item{search_max}{positive intger, larger than \code{search_min}}
 
-\item{search_iter}{positive integer}
-
-\item{search_grid}{positive integer}
+\item{verbose}{boolean}
 
 \item{...}{all remaining parameters needed for either \code{initialization} or \code{matrix_factorization}}
 }
