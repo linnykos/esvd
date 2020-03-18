@@ -80,7 +80,6 @@ doMC::registerDoMC(cores = ncores)
 # rm(list=c("dat"))
 # save.image("../results/lingxue_data_preprocessed.RData")
 load("../results/lingxue_data_preprocessed.RData")
-ncores <- 2
 
 sapply(preprocessing_list, function(x){dim(x$dat_impute)})
 
