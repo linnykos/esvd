@@ -113,38 +113,35 @@ graphics.off()
 
 ################################
 
-correct_idx <- c(1, 2, 3, 5)
+correct_idx <- c(5:8)
 
 for(k in 1:4){
-  med_size_est <- median(sapply(res[[(k-1)*7+4]], function(x){
-    x$fitting_param
-  }))
-  med_alpha_est <- median(sapply(res[[(k-1)*7+6]], function(x){
-    x$fitting_param
-  }))
+  med_param <- sapply(res[((k-1)*12+1):(k*12)], function(x){
+    round(median(sapply(x, function(y){y$fitting_param})),1)
+  })
 
-  main_vec <- c("Gaussian (fixed variance)", "Poisson",
-                "Neg. bin. (oralce size = 50)",
-                paste0("Neg. bin. (avg. est. size = ", round(med_size_est, 2), ")"),
-                "Curved Gaussian (oracle alpha = 2)",
-                paste0("Curved Gaussian (est. alpha = ", round(med_alpha_est, 2), ")"),
-                "Exponential")
+  main_vec <- unlist(lapply(1:3, function(kk){
+    c(paste0("Gaussian (k = ", kk, ")"),
+      paste0("Poisson (k = ", kk, ")"),
+      paste0("Neg. bin.\n(k = ", kk , ", est. size = ", med_param[(kk-1)*4+3], ")"),
+      paste0("Curved Gaussian\n(k = ", kk , ", est. alpha = ", med_param[(kk-1)*4+4], ")"))
+  }))
 
 
   png(filename = paste0("../figure/experiment/Revision_writeup4_simulation_missing_", k, ".png"),
-      height = 2000, width = 2500, res = 300,
+      height = 2000, width = 2750, res = 300,
       units = "px")
 
-  par(mfrow = c(2,3), mar = c(4,4,4,0.5))
-  for(i in 1:6){
-    plot_mat <- lapply(1:length(res[[(k-1)*7+i]]), function(j){
-      cbind(res[[(k-1)*7+i]][[j]]$missing_val, res[[(k-1)*7+i]][[j]]$pred_val)
+  par(mfrow = c(3,4), mar = c(4,4,4,0.5))
+  for(i in 1:12){
+    plot_mat <- lapply(1:length(res[[(k-1)*12+i]]), function(j){
+      cbind(res[[(k-1)*12+i]][[j]]$missing_val, res[[(k-1)*12+i]][[j]]$pred_val)
     })
 
     if(length(plot_mat) > 1) plot_mat <- do.call(rbind, plot_mat) else plot_mat <- plot_mat[[1]]
 
     seq_val <- seq(0, 4000, length.out = 500)
-    if(i == 1){
+    if(i %in% seq(1, 12, by=4)){
       sd_val <- stats::sd(plot_mat[,1] - plot_mat[,2])
 
       y_bot <- sapply(seq_val, function(x){
@@ -153,37 +150,28 @@ for(k in 1:4){
       y_top <- sapply(seq_val, function(x){
         stats::qnorm(0.9, mean = x, sd = sd_val)
       })
-    } else if(i == 2){
+    } else if(i %in% seq(2, 12, by=4)){
       y_bot <- sapply(seq_val, function(x){
         stats::qpois(0.1, lambda = x)
       })
       y_top <- sapply(seq_val, function(x){
         stats::qpois(0.9, lambda = x)
       })
-    } else if(i %in% c(3:5)){
-      size <- as.numeric(paramMat[i,"fitting_param"])
-      if(is.na(size)) size <- med_size_est
+    } else if(i %in% seq(3, 12, by=4)){
+      size <- med_param[i]
       y_bot <- sapply(seq_val, function(x){
         stats::qnbinom(0.1, size = size, prob = size/(size+x))
       })
       y_top <- sapply(seq_val, function(x){
         stats::qnbinom(0.9, size = size, prob = size/(size+x))
       })
-    } else if(i %in% (6:8)){
-      scalar <- as.numeric(paramMat[i,"fitting_param"])
-      if(is.na(scalar)) scalar <- med_alpha_est
+    } else {
+      scalar <- med_param[i]
       y_bot <- sapply(seq_val, function(x){
         stats::qnorm(0.1, mean = x, sd = x/scalar)
       })
       y_top <- sapply(seq_val, function(x){
         stats::qnorm(0.9, mean = x, sd = x/scalar)
-      })
-    } else {
-      y_bot <- sapply(seq_val, function(x){
-        stats::qexp(0.1, rate = 1/x)
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qexp(0.9, rate = 1/x)
       })
     }
 
@@ -204,7 +192,6 @@ for(k in 1:4){
 
     pca_res <- stats::prcomp(plot_mat, center = F, scale = F)
     lines(c(0, 1e6), c(0, 1e6*pca_res$rotation[2,1]/pca_res$rotation[1,1]), col = "blue", lwd = 2, lty = 2)
-
   }
 
   graphics.off()
@@ -212,33 +199,31 @@ for(k in 1:4){
 
 #################################
 
-correct_idx <- c(1, 2, 3, 5)
+correct_idx <- c(5:8)
 
 for(k in 1:4){
-  med_size_est <- median(sapply(res[[(k-1)*7+4]], function(x){
-    x$fitting_param
-  }))
-  med_alpha_est <- median(sapply(res[[(k-1)*7+6]], function(x){
-    x$fitting_param
+  med_param <- sapply(res[((k-1)*12+5):(k*12)], function(x){
+    round(median(sapply(x, function(y){y$fitting_param})),1)
+  })
+
+  main_vec <- unlist(lapply(2:3, function(kk){
+    c(paste0("Gaussian (k = ", kk, ")"),
+      paste0("Poisson (k = ", kk, ")"),
+      paste0("Neg. bin.\n(k = ", kk , ", est. size = ", med_param[(kk-1)*4+3-4], ")"),
+      paste0("Curved Gaussian\n(k = ", kk , ", est. alpha = ", med_param[(kk-1)*4+4-4], ")"))
   }))
 
-  main_vec <- c("Gaussian (fixed variance)", "Poisson",
-                "Neg. bin. (oralce size = 50)",
-                paste0("Neg. bin. (avg. est. size = ", round(med_size_est, 2), ")"),
-                "Curved Gaussian (oracle alpha = 2)",
-                paste0("Curved Gaussian (est. alpha = ", round(med_alpha_est, 2), ")"),
-                "Exponential")
 
   png(filename = paste0("../figure/experiment/Revision_writeup4_simulation_embedding_", k, ".png"),
-      height = 2000, width = 2500, res = 300,
+      height = 2000, width = 3500, res = 300,
       units = "px")
 
-  par(mfrow = c(2,3), mar = c(4,4,4,0.5))
+  par(mfrow = c(2,4), mar = c(4,4,4,0.5))
 
-  for(i in 1:6){
-    plot(res[[(k-1)*7+i]][[1]]$fit[,1], res[[(k-1)*7+i]][[1]]$fit[,2], col = rep(1:4, each = paramMat[1,"n_each"]), pch = 16,
+  for(i in 5:12){
+    plot(res[[(k-1)*12+i]][[1]]$fit[,1], res[[(k-1)*12+i]][[1]]$fit[,2], col = rep(1:4, each = paramMat[1,"n_each"]), pch = 16,
          xlab = "Latent dimension 1", ylab = "Latent dimension 2", main =
-           paste0(main_vec[i], ifelse(i == correct_idx[k], "\n(True model)", "")), asp = T)
+           paste0(main_vec[i-4], ifelse(i == correct_idx[k], "\n(True model)", "")), asp = T)
   }
 
   graphics.off()

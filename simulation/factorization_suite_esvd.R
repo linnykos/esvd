@@ -161,7 +161,7 @@ criterion <- function(dat, vec, y){
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
-## i <- 48; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 31; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 ## neg_binom: i = 31; curved_gaussian: i = 48
 ############
 
