@@ -50,6 +50,16 @@ tuning_scalar <- function(dat, family, iter_max = 5,
   scalar_vec
 }
 
+goodness_heuristic <- function(dat, nat_mat, family, missing_idx = 1:prod(dim(dat)), ...){
+  pred_mat <- compute_mean(nat_mat, family = family)
+
+  tmp_mat <- cbind(dat[missing_idx], pred_mat[missing_idx])
+
+  interval_mat <- sapply(tmp_mat[,2], function(x){
+    .compute_prediction_interval_from_mean(x, family = family, ...)
+  })
+}
+
 ################
 
 .tuning_fit <- function(dat, family, scalar, ...){

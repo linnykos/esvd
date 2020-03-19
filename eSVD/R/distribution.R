@@ -73,4 +73,7 @@ compute_mean <- function(nat_mat, family, ...){
   log(dat_new / (1+dat_new))
 }
 
+.compute_prediction_interval_from_mean <- function(x){
+  x
+}
 
