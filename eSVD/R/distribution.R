@@ -73,7 +73,38 @@ compute_mean <- function(nat_mat, family, ...){
   log(dat_new / (1+dat_new))
 }
 
-.compute_prediction_interval_from_mean <- function(x){
-  x
+.compute_prediction_interval_from_mean <- function(val, family, width, ...){
+  stopifnot(width >= 0, width <= 1)
+
+  lower_val <- 0.5-width/2; upper_val <- 0.5+width/2
+
+  if(family == "exponential"){
+    c(stats::qexp(lower_val, rate = 1/val), stats::qexp(upper_val, rate = 1/val))
+  } else if(family == "poisson"){
+    c(stats::qpois(lower_val, lambda = val), stats::qpois(upper_val, lambda = val))
+  } else if(family == "gaussian"){
+    .compute_prediction_interval_gaussian(val, width, lower_val, upper_val, ...)
+  } else if(family == "neg_binom"){
+    .compute_prediction_interval_neg_binom(val, width, lower_val, upper_val,  ...)
+  } else {
+    .compute_prediction_interval_curved_gaussian(val, width, lower_val, upper_val, ...)
+  }
 }
 
+.compute_prediction_interval_gaussian <- function(val, width, lower_val, upper_val, scalar, ...){
+  if(is.na(scalar)) stop("No argument scalar provided for gaussian")
+
+  c(stats::qnorm(lower_val, mean = val, sd = scalar), stats::qnorm(upper_val, mean = val, sd = scalar))
+}
+
+.compute_prediction_interval_neg_binom <- function(val, width, lower_val, upper_val, scalar, ...){
+  if(is.na(scalar)) stop("No argument scalar provided for negative binomial")
+
+  c(stats::qnbinom(lower_val, size = scalar, mu = val), stats::qnbinom(upper_val, size = scalar, mu = val))
+}
+
+.compute_prediction_interval_curved_gaussian <- function(val, width, lower_val, upper_val, scalar, ...){
+  if(is.na(scalar)) stop("No argument scalar provided for curved gaussian")
+
+  c(stats::qnorm(lower_val, mean = val, sd = val/scalar), stats::qnorm(upper_val, mean = val, sd = val/scalar))
+}

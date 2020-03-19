@@ -33,8 +33,6 @@ for(dat_num in 1:length(fit_all_list)){
 
 for(dat_num in 1:length(fit_all_list)){
   dat_impute <- preprocessing_list[[dat_num]]$dat_impute
-  set.seed(10)
-  missing_idx <- construct_missing_values(n = nrow(dat_impute), p = ncol(dat_impute), num_val = 2)
 
   family_vec <- c("gaussian", "poisson", "exponential", "neg_binom", "curved_gaussian")
   main_vec <- c("Gaussian", "Poisson", "Exponential", "Negative binomial", "Curved Gaussian")
@@ -246,72 +244,24 @@ distribution_vec <- c("gaussian", "poisson", "neg_binom", "curved_gaussian")
 
 # testing
 for(i in 1:7){
-  png(filename = paste0("../figure/experiment/Revision_writeup4_lingxue_test_", i, ".png"),
+  png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup4_lingxue_test_", i, ".png"),
       height = 3000, width = 4000, res = 300,
       units = "px")
+  dat <- preprocessing_list[[i]]$dat_impute
+
   par(mfrow = c(3,4))
   for(j in 1:3){
-    scalar_vec <- c(NA, NA, fit_all_list[[i]][[j]]$neg_bin_param[length(fit_all_list[[i]][[j]]$neg_bin_param)],
+    scalar_vec <- c(1, 1, fit_all_list[[i]][[j]]$neg_bin_param[length(fit_all_list[[i]][[j]]$neg_bin_param)],
                     fit_all_list[[i]][[j]]$curved_gaussian_param[length(fit_all_list[[i]][[j]]$curved_gaussian_param)])
 
     for(k in 1:4){
       scalar <- scalar_vec[k]
       nat_mat <- fit_all_list[[i]][[j]][[k]]$u_mat %*% t(fit_all_list[[i]][[j]][[k]]$v_mat)
-      mean_mat <- compute_mean(nat_mat, family = distribution_vec[k], scalar = scalar)
 
-      plot_mat <- cbind(preprocessing_list[[i]]$dat_impute[fit_all_list[[i]][[j]]$missing_idx],
-                        mean_mat[fit_all_list[[i]][[j]]$missing_idx])
-
-      seq_val <- seq(0, 4000, length.out = 500)
-      if(k == 1){
-        sd_val <- stats::sd(plot_mat[,1] - plot_mat[,2])
-
-        y_bot <- sapply(seq_val, function(x){
-          stats::qnorm(0.1, mean = x, sd = sd_val)
-        })
-        y_top <- sapply(seq_val, function(x){
-          stats::qnorm(0.9, mean = x, sd = sd_val)
-        })
-      } else if(k == 2){
-        y_bot <- sapply(seq_val, function(x){
-          stats::qpois(0.1, lambda = x)
-        })
-        y_top <- sapply(seq_val, function(x){
-          stats::qpois(0.9, lambda = x)
-        })
-      } else if(k == 3){
-        y_bot <- sapply(seq_val, function(x){
-          stats::qnbinom(0.1, size = scalar, prob = scalar/(scalar+x))
-        })
-        y_top <- sapply(seq_val, function(x){
-          stats::qnbinom(0.9, size = scalar, prob = scalar/(scalar+x))
-        })
-      } else {
-        y_bot <- sapply(seq_val, function(x){
-          stats::qnorm(0.1, mean = x, sd = x/scalar)
-        })
-        y_top <- sapply(seq_val, function(x){
-          stats::qnorm(0.9, mean = x, sd = x/scalar)
-        })
-      }
-
-      plot(NA, asp = T, main = paste0("k = ", j, ", distribution = ", k), pch = 16,
-           xlim = range(plot_mat), ylim = range(plot_mat),
-           xlab = "Predicted missing value", ylab = "Observed value")
-
-      polygon(c(seq_val, rev(seq_val)), c(y_top, rev(y_bot)), col = rgb(1,0,0,0.2),
-              border = NA, density = 30, angle = -45)
-      points(plot_mat[,2], plot_mat[,1], pch = 16, col = rgb(0,0,0,0.2))
-
-      lines(rep(0,2), c(-1e10,1e10), col = "red", lwd = 1)
-      lines(c(-1e10,1e10), rep(0,2), col = "red", lwd = 1)
-      lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
-
-      lines(seq_val, y_bot, col = "red", lty = 2, lwd = 2)
-      lines(seq_val, y_top, col = "red", lty = 2, lwd = 2)
-
-      pca_res <- stats::prcomp(plot_mat, center = F, scale = F)
-      lines(c(0, 1e6), c(0, 1e6*pca_res$rotation[1,1]/pca_res$rotation[2,1]), col = "blue", lwd = 2, lty = 2)
+      plot_prediction_against_observed(dat = dat, nat_mat = nat_mat,
+                                       family = distribution_vec[k], scalar = scalar,
+                                       missing_idx = fit_all_list[[i]][[j]]$missing_idx,
+                                       main = paste0("k = ", j, ", distribution = ", k))
     }
   }
   graphics.off()
