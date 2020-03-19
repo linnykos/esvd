@@ -17,7 +17,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
-trials <- 5
+trials <- 2
 ncores <- 20
 
 ################
@@ -49,7 +49,7 @@ rule <- function(vec){
     obs_mat <- round(generator_curved_gaussian(nat_mat, scalar = vec["true_scalar"]))
   }
 
-  list(dat = obs_mat, truth = res$cell_mat, nat_mat = nat_mat)
+  list(dat = obs_mat, u_mat = res$cell_mat, v_mat = res$gene_mat)
 }
 
 criterion <- function(dat, vec, y){
@@ -72,11 +72,7 @@ criterion <- function(dat, vec, y){
                                    return_path = F, cores = ncores,
                                    verbose = F)
 
-    pred_mat <- fit$u_mat %*% t(fit$v_mat)
-    pred_nat <- pred_mat[missing_idx]
-    true_nat <- dat$nat_mat[missing_idx]
-    pred_val <- eSVD::compute_mean(pred_mat, family = "gaussian")[missing_idx]
-    expected_val <- eSVD::compute_mean(dat$nat_mat, family = "gaussian")[missing_idx]
+    nat_mat <- fit$u_mat %*% t(fit$v_mat)
     fitting_param <- vec["fitting_param"]
     fitting_vec <- NA
 
@@ -89,11 +85,7 @@ criterion <- function(dat, vec, y){
                                    return_path = F, cores = ncores,
                                    verbose = F)
 
-    pred_mat <- fit$u_mat %*% t(fit$v_mat)
-    pred_nat <- pred_mat[missing_idx]
-    true_nat <- dat$nat_mat[missing_idx]
-    pred_val <- eSVD::compute_mean(pred_mat, family = "poisson")[missing_idx]
-    expected_val <- eSVD::compute_mean(dat$nat_mat, family = "gaussian")[missing_idx]
+    nat_mat <- fit$u_mat %*% t(fit$v_mat)
     fitting_param <- vec["fitting_param"]
     fitting_vec <- NA
 
@@ -118,11 +110,7 @@ criterion <- function(dat, vec, y){
                                    return_path = F, cores = ncores,
                                    verbose = F)
 
-    pred_mat <- fit$u_mat %*% t(fit$v_mat)
-    pred_nat <- pred_mat[missing_idx]
-    true_nat <- -dat$nat_mat[missing_idx]
-    pred_val <- eSVD::compute_mean(pred_mat, family = "neg_binom", scalar = fitting_param)[missing_idx]
-    expected_val <- eSVD::compute_mean(-dat$nat_mat, family = "neg_binom", scalar = vec["true_r"])[missing_idx]
+    nat_mat <- fit$u_mat %*% t(fit$v_mat)
 
   # curved gaussian
   } else {
@@ -145,18 +133,14 @@ criterion <- function(dat, vec, y){
                                    return_path = F, cores = ncores,
                                    verbose = F)
 
-    pred_mat <- fit$u_mat %*% t(fit$v_mat)
-    pred_nat <- pred_mat[missing_idx]
-    true_nat <- dat$nat_mat[missing_idx]
-    pred_val <- eSVD::compute_mean(pred_mat, family = "curved_gaussian", scalar = fitting_param)[missing_idx]
-    expected_val <- eSVD::compute_mean(dat$nat_mat, family = "curved_gaussian", scalar = fitting_param)[missing_idx]
-
+    nat_mat <- fit$u_mat %*% t(fit$v_mat)
   }
 
-  list(fit = fit$u_mat, truth = dat$truth,
-       pred_nat = pred_nat, true_nat = true_nat,
-       pred_val = pred_val, missing_val = missing_val,
-       expected_val = expected_val, fitting_param = fitting_param,
+  list(fit_u_mat = fit$u_mat, fit_v_mat = fit$v_mat,
+       true_u_mat = dat$u_mat, true_v_mat = dat$v_mat,
+       dat = dat_obs,
+       missing_idx = missing_idx,
+       fitting_param = fitting_param,
        fitting_vec = fitting_vec)
 }
 

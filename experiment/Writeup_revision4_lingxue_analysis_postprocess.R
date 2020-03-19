@@ -202,4 +202,180 @@ for(dat_num in 1:length(fit_all_list)){
   graphics.off()
 }
 
+###########################3
+
+# updated analysis, temporarily
+rm(list=ls())
+load("../results/lingxue_analysis.RData")
+sapply(fit_all_list, length)
+sapply(fit_list, length)
+
+for(i in 1:3){
+  print(fit_all_list[[2]][[i]]$neg_bin_param)
+}
+
+for(i in 1:3){
+  print(fit_all_list[[2]][[i]]$curved_gaussian_param)
+}
+
+i <- 1
+par(mfrow = c(3,4))
+for(j in 1:3){
+  for(k in 1:4){
+    plot(fit_all_list[[i]][[j]][[k]]$u_mat[,1], fit_all_list[[i]][[j]][[k]]$u_mat[,2],
+         asp = T, col = as.numeric(preprocessing_list[[i]]$label_vec), pch = 16,
+         main = paste0("k = ", j, ", distribution = ", k))
+  }
+}
+
+##########
+distribution_vec <- c("gaussian", "poisson", "neg_binom", "curved_gaussian")
+
+# testing
+i <- 2
+png(filename = paste0("../figure/experiment/Revision_writeup4_lingxue_test_", i, ".png"),
+    height = 3000, width = 4000, res = 300,
+    units = "px")
+par(mfrow = c(3,4))
+for(j in 1:3){
+  scalar_vec <- c(NA, NA, fit_all_list[[i]][[j]]$neg_bin_param[length(fit_all_list[[i]][[j]]$neg_bin_param)],
+                  fit_all_list[[i]][[j]]$curved_gaussian_param[length(fit_all_list[[i]][[j]]$curved_gaussian_param)])
+
+  for(k in 1:4){
+    scalar <- scalar_vec[k]
+    nat_mat <- fit_all_list[[i]][[j]][[k]]$u_mat %*% t(fit_all_list[[i]][[j]][[k]]$v_mat)
+    mean_mat <- compute_mean(nat_mat, family = distribution_vec[k], scalar = scalar)
+
+    plot_mat <- cbind(preprocessing_list[[i]]$dat_impute[fit_all_list[[i]][[j]]$missing_idx],
+                      mean_mat[fit_all_list[[i]][[j]]$missing_idx])
+
+    seq_val <- seq(0, 4000, length.out = 500)
+    if(k == 1){
+      sd_val <- stats::sd(plot_mat[,1] - plot_mat[,2])
+
+      y_bot <- sapply(seq_val, function(x){
+        stats::qnorm(0.1, mean = x, sd = sd_val)
+      })
+      y_top <- sapply(seq_val, function(x){
+        stats::qnorm(0.9, mean = x, sd = sd_val)
+      })
+    } else if(k == 2){
+      y_bot <- sapply(seq_val, function(x){
+        stats::qpois(0.1, lambda = x)
+      })
+      y_top <- sapply(seq_val, function(x){
+        stats::qpois(0.9, lambda = x)
+      })
+    } else if(k == 3){
+      y_bot <- sapply(seq_val, function(x){
+        stats::qnbinom(0.1, size = scalar, prob = scalar/(scalar+x))
+      })
+      y_top <- sapply(seq_val, function(x){
+        stats::qnbinom(0.9, size = scalar, prob = scalar/(scalar+x))
+      })
+    } else {
+      y_bot <- sapply(seq_val, function(x){
+        stats::qnorm(0.1, mean = x, sd = x/scalar)
+      })
+      y_top <- sapply(seq_val, function(x){
+        stats::qnorm(0.9, mean = x, sd = x/scalar)
+      })
+    }
+
+    plot(NA, asp = T, main = paste0("k = ", j, ", distribution = ", k), pch = 16,
+         xlim = range(plot_mat), ylim = range(plot_mat),
+         xlab = "Predicted missing value", ylab = "Observed value")
+
+    polygon(c(seq_val, rev(seq_val)), c(y_top, rev(y_bot)), col = rgb(1,0,0,0.2),
+            border = NA, density = 30, angle = -45)
+    points(plot_mat[,2], plot_mat[,1], pch = 16, col = rgb(0,0,0,0.2))
+
+    lines(rep(0,2), c(-1e10,1e10), col = "red", lwd = 1)
+    lines(c(-1e10,1e10), rep(0,2), col = "red", lwd = 1)
+    lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
+
+    lines(seq_val, y_bot, col = "red", lty = 2, lwd = 2)
+    lines(seq_val, y_top, col = "red", lty = 2, lwd = 2)
+
+    pca_res <- stats::prcomp(plot_mat, center = F, scale = F)
+    lines(c(0, 1e6), c(0, 1e6*pca_res$rotation[1,1]/pca_res$rotation[2,1]), col = "blue", lwd = 2, lty = 2)
+  }
+}
+graphics.off()
+
+# training
+i <- 2
+png(filename = paste0("../figure/experiment/Revision_writeup4_lingxue_train_", i, ".png"),
+    height = 3000, width = 4000, res = 300,
+    units = "px")
+par(mfrow = c(3,4))
+for(j in 1:3){
+  scalar_vec <- c(NA, NA, fit_all_list[[i]][[j]]$neg_bin_param[length(fit_all_list[[i]][[j]]$neg_bin_param)],
+                  fit_all_list[[i]][[j]]$curved_gaussian_param[length(fit_all_list[[i]][[j]]$curved_gaussian_param)])
+
+  for(k in 1:4){
+    scalar <- scalar_vec[k]
+    nat_mat <- fit_all_list[[i]][[j]][[k]]$u_mat %*% t(fit_all_list[[i]][[j]][[k]]$v_mat)
+    mean_mat <- compute_mean(nat_mat, family = distribution_vec[k], scalar = scalar)
+
+    plot_mat <- cbind(preprocessing_list[[i]]$dat_impute[-fit_all_list[[i]][[j]]$missing_idx],
+                      mean_mat[-fit_all_list[[i]][[j]]$missing_idx])
+
+    seq_val <- seq(0, 4000, length.out = 500)
+    if(k == 1){
+      sd_val <- stats::sd(plot_mat[,1] - plot_mat[,2])
+
+      y_bot <- sapply(seq_val, function(x){
+        stats::qnorm(0.1, mean = x, sd = sd_val)
+      })
+      y_top <- sapply(seq_val, function(x){
+        stats::qnorm(0.9, mean = x, sd = sd_val)
+      })
+    } else if(k == 2){
+      y_bot <- sapply(seq_val, function(x){
+        stats::qpois(0.1, lambda = x)
+      })
+      y_top <- sapply(seq_val, function(x){
+        stats::qpois(0.9, lambda = x)
+      })
+    } else if(k == 3){
+      y_bot <- sapply(seq_val, function(x){
+        stats::qnbinom(0.1, size = scalar, prob = scalar/(scalar+x))
+      })
+      y_top <- sapply(seq_val, function(x){
+        stats::qnbinom(0.9, size = scalar, prob = scalar/(scalar+x))
+      })
+    } else {
+      y_bot <- sapply(seq_val, function(x){
+        stats::qnorm(0.1, mean = x, sd = x/scalar)
+      })
+      y_top <- sapply(seq_val, function(x){
+        stats::qnorm(0.9, mean = x, sd = x/scalar)
+      })
+    }
+
+    plot(NA, asp = T, main = paste0("k = ", j, ", distribution = ", k), pch = 16,
+         xlim = range(plot_mat), ylim = range(plot_mat),
+         xlab = "Predicted missing value", ylab = "Observed value")
+
+    polygon(c(seq_val, rev(seq_val)), c(y_top, rev(y_bot)), col = rgb(1,0,0,0.2),
+            border = NA, density = 30, angle = -45)
+    points(plot_mat[,2], plot_mat[,1], pch = 16, col = rgb(0,0,0,0.2))
+
+    lines(rep(0,2), c(-1e10,1e10), col = "red", lwd = 1)
+    lines(c(-1e10,1e10), rep(0,2), col = "red", lwd = 1)
+    lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
+
+    lines(seq_val, y_bot, col = "red", lty = 2, lwd = 2)
+    lines(seq_val, y_top, col = "red", lty = 2, lwd = 2)
+
+    pca_res <- stats::prcomp(plot_mat, center = F, scale = F)
+    lines(c(0, 1e6), c(0, 1e6*pca_res$rotation[1,1]/pca_res$rotation[2,1]), col = "blue", lwd = 2, lty = 2)
+  }
+}
+graphics.off()
+
+
+
+
 

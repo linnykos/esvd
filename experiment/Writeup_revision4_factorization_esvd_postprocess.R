@@ -17,7 +17,7 @@ main_vec <- c("Gaussian\n(constant variance)", "Poisson",
 main_vec2 <- c("Gaussian (constant variance)", "Poisson",
                paste0("Negative binomial (size = 50)"), "Curved Gaussian (alpha = 2)")
 
-png(filename = "../figure/experiment/Revision_writeup4_simulation_missing_value.png",
+png(filename = "../figure/experiment/Revision_writeup4_simulation_testing.png",
     height = 2250, width = 2250, res = 300,
     units = "px")
 par(mfrow = c(2,2))
@@ -128,7 +128,7 @@ for(k in 1:4){
   }))
 
 
-  png(filename = paste0("../figure/experiment/Revision_writeup4_simulation_missing_", k, ".png"),
+  png(filename = paste0("../figure/experiment/Revision_writeup4_simulation_testing_", k, ".png"),
       height = 2000, width = 2750, res = 300,
       units = "px")
 
@@ -196,6 +196,11 @@ for(k in 1:4){
 
   graphics.off()
 }
+
+################################
+# training
+
+
 
 #################################
 

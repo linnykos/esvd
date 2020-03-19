@@ -127,7 +127,7 @@ fitting_func <- function(dat_impute, k, missing_idx){
   neg_bin_vec <- eSVD::tuning_scalar(dat_impute, family = "neg_binom",
                                      max_iter = max_iter, max_val = max_val, k = k,
                                      return_path = F, cores = ncores, iter_max = iter_max,
-                                     search_min = 1, search_max = 4000)
+                                     search_min = 1, search_max = 10000)
   neg_bin_param <- neg_bin_vec[length(neg_bin_vec)]
   save.image("../results/lingxue_analysis_tmp.RData")
 
