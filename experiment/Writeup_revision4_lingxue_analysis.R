@@ -132,13 +132,14 @@ fitting_func <- function(dat_impute, k, missing_idx){
     set.seed(10)
     init <- eSVD::initialization(dat_NA, family = "neg_binom", k = k, max_val = max_val,
                                  scalar = scalar)
-    eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "neg_binom", scalar = scalar,
                             max_iter = max_iter, max_val = max_val,
                             return_path = F, cores = ncores,
                             verbose = F)
     save.image("../results/lingxue_analysis_tmp.RData")
 
+    fit
   })
 
   names(fit_list[[3]]) <- paste0("neg_binom:", as.character(neg_binom_vec))
@@ -152,12 +153,14 @@ fitting_func <- function(dat_impute, k, missing_idx){
     set.seed(10)
     init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = k, max_val = max_val,
                                  scalar = scalar)
-    eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                             family = "curved_gaussian", scalar = scalar,
                             max_iter = max_iter, max_val = max_val,
                             return_path = F, cores = ncores,
                             verbose = F)
     save.image("../results/lingxue_analysis_tmp.RData")
+
+    fit
   })
 
   names(fit_list[[4]]) <- paste0("curved_gaussian:", as.character(curved_gaussian_vec))

@@ -1,0 +1,44 @@
+plot_prediction_against_observed <- function(dat, nat_mat, family, missing_idx = 1:prod(dim(dat)),
+                                             seq_max = NA, width = 0.8, scalar = NA, plot = T, ...){
+  pred_mat <- compute_mean(nat_mat, family = family, scalar = scalar)
+  tmp_mat <- cbind(dat[missing_idx], pred_mat[missing_idx])
+
+  pca_res <- stats::prcomp(tmp_mat, center = F, scale = F)
+  rad <- 2/5*max(tmp_mat[,1])
+  ang <- as.numeric(acos(abs(c(0,1) %*% pca_res$rotation[,1])))
+
+  if(plot){
+    if(is.na(seq_max)) seq_max <- max(c(pred_mat, dat))
+    seq_vec <- seq(0, seq_max, length.out = 500)
+
+    interval_mat <- sapply(seq_vec, function(x){
+      .compute_prediction_interval_from_mean(x, family = family, width = width, scalar = scalar)
+    })
+
+    graphics::plot(NA, asp = T, xlim = range(tmp_mat), ylim = range(tmp_mat),
+                   xlab = "Predicted value", ylab = "Observed value", ...)
+
+    graphics::polygon(c(seq_vec, rev(seq_vec)), c(interval_mat[2,], rev(interval_mat[1,])), col = rgb(1,0,0,0.2),
+                      border = NA, density = 30, angle = -45)
+    graphics::points(tmp_mat[,2], tmp_mat[,1], pch = 16, col = rgb(0,0,0,0.2))
+
+    graphics::lines(rep(0, 2), c(-2*seq_max, 2*seq_max), col = "red", lwd = 1)
+    graphics::lines(c(-2*seq_max, 2*seq_max), rep(0, 2), col = "red", lwd = 1)
+    graphics::lines(c(-2*seq_max, 2*seq_max), c(-2*seq_max, 2*seq_max), col = "red", lwd = 2)
+
+    graphics::lines(seq_vec, interval_mat[1,], col = "red", lty = 2, lwd = 2)
+    graphics::lines(seq_vec, interval_mat[2,], col = "red", lty = 2, lwd = 2)
+
+    graphics::lines(c(0, 2*seq_max), c(0, 2*seq_max*pca_res$rotation[1,1]/pca_res$rotation[2,1]), col = "blue", lwd = 2, lty = 2)
+
+    radian_seq <- seq(0, ang, length.out = 100)
+    x_circ <- rad * cos(radian_seq)
+    y_circ <- rad * sin(radian_seq)
+    graphics::lines(x_circ, y_circ, lty = 2)
+    graphics::text(x = rad , y = 2/5*rad, pos = 4, label = paste0(round(ang * 180/pi, 1), " degrees"))
+
+    invisible()
+  } else {
+    return(ang * 180/pi)
+  }
+}
