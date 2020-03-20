@@ -83,8 +83,8 @@ load("../results/lingxue_data_preprocessed.RData")
 sapply(preprocessing_list, function(x){dim(x$dat_impute)})
 
 ncores <- 20
-neg_binom_vec <- c(50, 100, 500, 1000, 2500, 5000, 10000)
-curved_gaussian_vec <- c(0.1, 0.25, 0.5, 1, 1.5, 2, 4)
+neg_binom_vec <- c(50, 100, 500, 1000, 5000, 1e4, 1e6)
+curved_gaussian_vec <- c(0.1, 0.5, 1, 1.5, 2, 4, 100)
 
 ######################################
 
@@ -176,7 +176,7 @@ fitting_func <- function(dat_impute, k, missing_idx){
 fit_all_list <- vector("list", length(preprocessing_list))
 
 ## now do all the fits
-for(num in 1:length(preprocessing_list)){
+for(num in 1:6){
   print(paste0("Working on dataset ", num))
   dat_impute <- preprocessing_list[[num]]$dat_impute
 
@@ -190,6 +190,28 @@ for(num in 1:length(preprocessing_list)){
   for(i in 1:3){
     print(paste0("Working on dimension ", k_vec[i]))
     fit_list[[i]] <-  fitting_func(dat_impute, k_vec[i], missing_idx)
+    save.image("../results/lingxue_analysis.RData")
+  }
+
+  fit_all_list[[num]] <- fit_list
+  save.image("../results/lingxue_analysis.RData")
+}
+
+## now do all the fits
+for(num in 1:6){
+  print(paste0("Working on dataset ", num))
+  dat_impute <- preprocessing_list[[num]]$dat_impute
+
+  set.seed(20)
+  missing_idx2 <- eSVD::construct_missing_values(n = nrow(dat_impute), p = ncol(dat_impute), num_val = 2)
+
+  # parameters to fit
+  k_vec <- 3:5
+
+  fit_list <- vector("list", length(k_vec))
+  for(i in 1:3){
+    print(paste0("Working on dimension ", k_vec[i]))
+    fit_list[[i]] <-  fitting_func(dat_impute, k_vec[i], missing_idx2)
     save.image("../results/lingxue_analysis.RData")
   }
 

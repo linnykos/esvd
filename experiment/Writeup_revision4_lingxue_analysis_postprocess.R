@@ -5,245 +5,78 @@ load("../results/lingxue_analysis.RData")
 lapply(fit_all_list, function(x){x$neg_bin_param})
 lapply(fit_all_list, function(x){x$curved_gaussian_param})
 
-# 1,2,3,4,5
-# which dataset to investigate?
-for(dat_num in 1:length(fit_all_list)){
-  label_vec <- preprocessing_list[[dat_num]]$label_vec
-  label_num <- as.numeric(label_vec)
+num_datasets <- 7
 
-  main_vec <- c("Gaussian", "Poisson", "Exponential", "Negative binomial", "Curved Gaussian")
-  main_vec[4] <- paste0(main_vec[4], ": Size=", round(fit_all_list[[dat_num]]$neg_bin_param[length(fit_all_list[[dat_num]]$neg_bin_param)], 2))
-  main_vec[5] <- paste0(main_vec[5], ": Alpha=", round(fit_all_list[[dat_num]]$curved_gaussian_param[length(fit_all_list[[dat_num]]$curved_gaussian_param)],2))
-  idx_vec <- seq(1, 9, by = 2)
+# select best neg binom or curved gaussian
+for(i in 1:num_datasets){ # loop over datasets
+  for(k in 1:3){
+    vec <- sapply(1:7, function(j){
+      dat_impute <- preprocessing_list[[i]]$dat_impute
+      u_mat <- fit_all_list[[i]][[k]]$neg_binom_missing[[j]]$u_mat
+      v_mat <- fit_all_list[[i]][[k]]$neg_binom_missing[[j]]$v_mat
+      nat_mat <- u_mat  %*% t(v_mat)
+      missing_idx <- fit_all_list[[i]][[k]]$missing_idx
 
-  png(filename = paste0("../figure/experiment/Revision_writeup4_lingxue_embedding_", dat_num, "_k", k, ".png"),
-      height = 2000, width = 2500, res = 300,
-      units = "px")
-  par(mfrow = c(2:3))
-  for(i in 1:5){
-    plot(fit_all_list[[dat_num]][[idx_vec[i]]]$u_mat[,1], fit_all_list[[dat_num]][[idx_vec[i]]]$u_mat[,2],
-         asp = T, col = c(1:5)[label_num],
-         xlab = "Latent dimension 1", ylab = "Latent dimension 2",
-         pch = 16, main = paste0("Dataset ", dat_num, main_vec[i]))
-  }
-  graphics.off()
-}
+      plot_prediction_against_observed(dat_impute, nat_mat, family = "neg_binom", missing_idx = missing_idx,
+                                       scalar = neg_binom_vec[j], plot = F)
+    })
 
-###############################
-
-for(dat_num in 1:length(fit_all_list)){
-  dat_impute <- preprocessing_list[[dat_num]]$dat_impute
-
-  family_vec <- c("gaussian", "poisson", "exponential", "neg_binom", "curved_gaussian")
-  main_vec <- c("Gaussian", "Poisson", "Exponential", "Negative binomial", "Curved Gaussian")
-  main_vec[4] <- paste0(main_vec[4], ": Size=", round(fit_all_list[[dat_num]]$neg_bin_param[length(fit_all_list[[dat_num]]$neg_bin_param)], 2))
-  main_vec[5] <- paste0(main_vec[5], ": Alpha=", round(fit_all_list[[dat_num]]$curved_gaussian_param[length(fit_all_list[[dat_num]]$curved_gaussian_param)],2))
-  idx_vec <- seq(1, 9, by = 2)
-
-  png(filename = paste0("../figure/experiment/Revision_writeup4_lingxue_missing_", dat_num, "_k", k, ".png"),
-      height = 2000, width = 2500, res = 300,
-      units = "px")
-  par(mfrow = c(2:3))
-  for(i in 1:5){
-    nat_mat <- fit_all_list[[dat_num]][[idx_vec[i]]]$u_mat %*% t(fit_all_list[[dat_num]][[idx_vec[i]]]$v_mat)
-    scalar <- ifelse(family_vec[i] == "curved_gaussian", fit_all_list[[dat_num]]$curved_gaussian_param[length(fit_all_list[[dat_num]]$curved_gaussian_param)],
-                     fit_all_list[[dat_num]]$neg_bin_param[length(fit_all_list[[dat_num]]$neg_bin_param)])
-    pred_mat <- compute_mean(nat_mat, family = family_vec[i], scalar = scalar)
-
-    plot_mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
-
-    seq_val <- seq(0, 4000, length.out = 500)
-    if(i == 1){
-      sd_val <- stats::sd(plot_mat[,1] - plot_mat[,2])
-
-      y_bot <- sapply(seq_val, function(x){
-        stats::qnorm(0.1, mean = x, sd = sd_val)
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qnorm(0.9, mean = x, sd = sd_val)
-      })
-    } else if(i == 2){
-      y_bot <- sapply(seq_val, function(x){
-        stats::qpois(0.1, lambda = x)
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qpois(0.9, lambda = x)
-      })
-    } else if(i == 3){
-      y_bot <- sapply(seq_val, function(x){
-        stats::qexp(0.1, rate = 1/x)
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qexp(0.9, rate = 1/x)
-      })
-    } else if(i == 4){
-      y_bot <- sapply(seq_val, function(x){
-        stats::qnbinom(0.1, size = scalar, prob = scalar/(scalar+x))
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qnbinom(0.9, size = scalar, prob = scalar/(scalar+x))
-      })
-    } else {
-      y_bot <- sapply(seq_val, function(x){
-        stats::qnorm(0.1, mean = x, sd = x/scalar)
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qnorm(0.9, mean = x, sd = x/scalar)
-      })
-    }
-
-    plot(NA, asp = T, main = paste0("Dataset ", dat_num, "\n", main_vec[i]), pch = 16,
-         xlim = range(plot_mat), ylim = range(plot_mat),
-         xlab = "Predicted missing value", ylab = "Observed value")
-
-    polygon(c(seq_val, rev(seq_val)), c(y_top, rev(y_bot)), col = rgb(1,0,0,0.2),
-            border = NA, density = 30, angle = -45)
-    points(plot_mat[,2], plot_mat[,1], pch = 16, col = rgb(0,0,0,0.2))
-
-    lines(rep(0,2), c(-1e10,1e10), col = "red", lwd = 1)
-    lines(c(-1e10,1e10), rep(0,2), col = "red", lwd = 1)
-    lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
-
-    lines(seq_val, y_bot, col = "red", lty = 2, lwd = 2)
-    lines(seq_val, y_top, col = "red", lty = 2, lwd = 2)
-
-    pca_res <- stats::prcomp(plot_mat, center = F, scale = F)
-    lines(c(0, 1e6), c(0, 1e6*pca_res$rotation[2,1]/pca_res$rotation[1,1]), col = "blue", lwd = 2, lty = 2)
-  }
-
-  graphics.off()
-}
-
-for(dat_num in 1:length(fit_all_list)){
-  dat_impute <- preprocessing_list[[dat_num]]$dat_impute
-  set.seed(10)
-  missing_idx <- construct_missing_values(n = nrow(dat_impute), p = ncol(dat_impute), num_val = 2)
-
-  family_vec <- c("gaussian", "poisson", "exponential", "neg_binom", "curved_gaussian")
-  main_vec <- c("Gaussian", "Poisson", "Exponential", "Negative binomial", "Curved Gaussian")
-  main_vec[4] <- paste0(main_vec[4], ": Size=", round(fit_all_list[[dat_num]]$neg_bin_param[length(fit_all_list[[dat_num]]$neg_bin_param)], 2))
-  main_vec[5] <- paste0(main_vec[5], ": Alpha=", round(fit_all_list[[dat_num]]$curved_gaussian_param[length(fit_all_list[[dat_num]]$curved_gaussian_param)],2))
-  idx_vec <- seq(2, 10, by = 2)
-
-  png(filename = paste0("../figure/experiment/Revision_writeup4_lingxue_training_", dat_num, "_k", k, ".png"),
-      height = 2000, width = 2500, res = 300,
-      units = "px")
-  par(mfrow = c(2:3))
-  for(i in 1:5){
-    nat_mat <- fit_all_list[[dat_num]][[idx_vec[i]]]$u_mat %*% t(fit_all_list[[dat_num]][[idx_vec[i]]]$v_mat)
-    scalar <- ifelse(family_vec[i] == "curved_gaussian", fit_all_list[[dat_num]]$curved_gaussian_param[length(fit_all_list[[dat_num]]$curved_gaussian_param)],
-                     fit_all_list[[dat_num]]$neg_bin_param[length(fit_all_list[[dat_num]]$neg_bin_param)])
-    pred_mat <- compute_mean(nat_mat, family = family_vec[i], scalar = scalar)
-
-    plot_mat <- cbind(dat_impute[missing_idx], pred_mat[missing_idx])
-
-    seq_val <- seq(0, 4000, length.out = 500)
-    if(i == 1){
-      sd_val <- stats::sd(plot_mat[,1] - plot_mat[,2])
-
-      y_bot <- sapply(seq_val, function(x){
-        stats::qnorm(0.1, mean = x, sd = sd_val)
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qnorm(0.9, mean = x, sd = sd_val)
-      })
-    } else if(i == 2){
-      y_bot <- sapply(seq_val, function(x){
-        stats::qpois(0.1, lambda = x)
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qpois(0.9, lambda = x)
-      })
-    } else if(i == 3){
-      y_bot <- sapply(seq_val, function(x){
-        stats::qexp(0.1, rate = 1/x)
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qexp(0.9, rate = 1/x)
-      })
-    } else if(i == 4){
-      y_bot <- sapply(seq_val, function(x){
-        stats::qnbinom(0.1, size = scalar, prob = scalar/(scalar+x))
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qnbinom(0.9, size = scalar, prob = scalar/(scalar+x))
-      })
-    } else {
-      y_bot <- sapply(seq_val, function(x){
-        stats::qnorm(0.1, mean = x, sd = x/scalar)
-      })
-      y_top <- sapply(seq_val, function(x){
-        stats::qnorm(0.9, mean = x, sd = x/scalar)
-      })
-    }
-
-    plot(NA, asp = T, main = paste0("Dataset ", dat_num, "\n", main_vec[i]), pch = 16,
-         xlim = range(plot_mat), ylim = range(plot_mat),
-         xlab = "Predicted missing value", ylab = "Observed value")
-
-    polygon(c(seq_val, rev(seq_val)), c(y_top, rev(y_bot)), col = rgb(1,0,0,0.2),
-            border = NA, density = 30, angle = -45)
-    points(plot_mat[,2], plot_mat[,1], pch = 16, col = rgb(0,0,0,0.2))
-
-    lines(rep(0,2), c(-1e10,1e10), col = "red", lwd = 1)
-    lines(c(-1e10,1e10), rep(0,2), col = "red", lwd = 1)
-    lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
-
-    lines(seq_val, y_bot, col = "red", lty = 2, lwd = 2)
-    lines(seq_val, y_top, col = "red", lty = 2, lwd = 2)
-
-    pca_res <- stats::prcomp(plot_mat, center = F, scale = F)
-    lines(c(0, 1e6), c(0, 1e6*pca_res$rotation[2,1]/pca_res$rotation[1,1]), col = "blue", lwd = 2, lty = 2)
-  }
-
-  graphics.off()
-}
-
-###########################3
-
-# updated analysis, temporarily
-rm(list=ls())
-load("../results/lingxue_analysis.RData")
-sapply(fit_all_list, length)
-sapply(fit_list, length)
-
-for(j in 1:7){
-  print(paste0("For dataset ", j))
-  for(i in 1:3){
-    print(fit_all_list[[j]][[i]]$neg_bin_param)
-  }
-
-  for(i in 1:3){
-    print(fit_all_list[[j]][[i]]$curved_gaussian_param)
+    idx <- which.min(abs(vec - 45))
+    tmp <- fit_all_list[[i]][[k]]$neg_binom_missing[[idx]]
+    tmp$neg_binom_param <- neg_binom_vec[idx]
+    fit_all_list[[i]][[k]][[3]] <- tmp
   }
 }
 
+for(i in 1:num_datasets){ # loop over datasets
+  for(k in 1:3){
+    vec <- sapply(1:7, function(j){
+      dat_impute <- preprocessing_list[[i]]$dat_impute
+      u_mat <- fit_all_list[[i]][[k]]$curved_gaussian_missing[[j]]$u_mat
+      v_mat <- fit_all_list[[i]][[k]]$curved_gaussian_missing[[j]]$v_mat
+      nat_mat <- u_mat  %*% t(v_mat)
+      missing_idx <- fit_all_list[[i]][[k]]$missing_idx
 
+      plot_prediction_against_observed(dat_impute, nat_mat, family = "curved_gaussian", missing_idx = missing_idx,
+                                       scalar = curved_gaussian_vec[j], plot = F)
+    })
 
-for(i in 1:7){
-  png(filename = paste0("../figure/experiment/Revision_writeup4_lingxue_embedding_", i, ".png"),
+    idx <- which.min(abs(vec - 45))
+    tmp <- fit_all_list[[i]][[k]]$curved_gaussian_missing[[idx]]
+    tmp$curved_gaussian_param <- curved_gaussian_vec[idx]
+    fit_all_list[[i]][[k]][[4]] <- tmp
+  }
+}
+
+###########################
+
+for(i in 1:num_datasets){
+  png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup4_lingxue_embedding_", i, ".png"),
       height = 3000, width = 4000, res = 300,
       units = "px")
 
   par(mfrow = c(3,4))
   for(j in 1:3){
+    main_vec <- c(paste0("Gaussian\n(constant variance, k = ", j+2, ")"),
+                  paste0("Poisson,\n(k = ", j+2, ")"),
+                  paste0("Negative binomial\n(k = ", j+2, ", est. size = ", fit_all_list[[i]][[j]][[3]]$neg_binom_param, ")"),
+                  paste0("Curved Gaussian\n(k = ", j+2, ", est. alpha = ", fit_all_list[[i]][[j]][[4]]$curved_gaussian_param, ")"))
+
     for(k in 1:4){
       plot(fit_all_list[[i]][[j]][[k]]$u_mat[,1], fit_all_list[[i]][[j]][[k]]$u_mat[,2],
            asp = T, col = as.numeric(preprocessing_list[[i]]$label_vec), pch = 16,
-           main = paste0("k = ", j, ", distribution = ", k))
+           main = main_vec[k])
     }
   }
 
   graphics.off()
 }
 
-
-
 ##########
 distribution_vec <- c("gaussian", "poisson", "neg_binom", "curved_gaussian")
 
 # testing
-for(i in 1:7){
+for(i in 1:num_datasets){
   png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup4_lingxue_test_", i, ".png"),
       height = 3000, width = 4000, res = 300,
       units = "px")
@@ -251,8 +84,15 @@ for(i in 1:7){
 
   par(mfrow = c(3,4))
   for(j in 1:3){
-    scalar_vec <- c(1, 1, fit_all_list[[i]][[j]]$neg_bin_param[length(fit_all_list[[i]][[j]]$neg_bin_param)],
-                    fit_all_list[[i]][[j]]$curved_gaussian_param[length(fit_all_list[[i]][[j]]$curved_gaussian_param)])
+    scalar_vec <- c(sd(dat[fit_all_list[[i]][[j]]$missing_idx] - (fit_all_list[[i]][[j]][[1]]$u_mat %*% t(fit_all_list[[i]][[j]][[1]]$v_mat))[fit_all_list[[i]][[j]]$missing_idx]),
+                    NA,
+                    fit_all_list[[i]][[j]][[3]]$neg_binom_param,
+                    fit_all_list[[i]][[j]][[4]]$curved_gaussian_param)
+    main_vec <- c(paste0("Gaussian\n(constant variance, k = ", j+2, ")"),
+                  paste0("Poisson,\n(k = ", j+2, ")"),
+                  paste0("Negative binomial\n(k = ", j+2, ", est. size = ", fit_all_list[[i]][[j]][[3]]$neg_binom_param, ")"),
+                  paste0("Curved Gaussian\n(k = ", j+2, ", est. alpha = ", fit_all_list[[i]][[j]][[4]]$curved_gaussian_param, ")"))
+
 
     for(k in 1:4){
       scalar <- scalar_vec[k]
@@ -261,7 +101,7 @@ for(i in 1:7){
       plot_prediction_against_observed(dat = dat, nat_mat = nat_mat,
                                        family = distribution_vec[k], scalar = scalar,
                                        missing_idx = fit_all_list[[i]][[j]]$missing_idx,
-                                       main = paste0("k = ", j, ", distribution = ", k))
+                                       main = main_vec[k])
     }
   }
   graphics.off()
@@ -269,73 +109,32 @@ for(i in 1:7){
 
 
 # training
-for(i in 1:7){
-  png(filename = paste0("../figure/experiment/Revision_writeup4_lingxue_train_", i, ".png"),
+for(i in 1:num_datasets){
+  png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup4_lingxue_train_", i, ".png"),
       height = 3000, width = 4000, res = 300,
       units = "px")
   par(mfrow = c(3,4))
+  dat <- preprocessing_list[[i]]$dat_impute
+
   for(j in 1:3){
-    scalar_vec <- c(NA, NA, fit_all_list[[i]][[j]]$neg_bin_param[length(fit_all_list[[i]][[j]]$neg_bin_param)],
-                    fit_all_list[[i]][[j]]$curved_gaussian_param[length(fit_all_list[[i]][[j]]$curved_gaussian_param)])
+    scalar_vec <- c(sd(dat[fit_all_list[[i]][[j]]$missing_idx] - (fit_all_list[[i]][[j]][[1]]$u_mat %*% t(fit_all_list[[i]][[j]][[1]]$v_mat))[fit_all_list[[i]][[j]]$missing_idx]),
+                    NA,
+                    fit_all_list[[i]][[j]][[3]]$neg_binom_param,
+                    fit_all_list[[i]][[j]][[4]]$curved_gaussian_param)
+    main_vec <- c(paste0("Gaussian\n(constant variance, k = ", j+2, ")"),
+                  paste0("Poisson,\n(k = ", j+2, ")"),
+                  paste0("Negative binomial\n(k = ", j+2, ", est. size = ", fit_all_list[[i]][[j]][[3]]$neg_binom_param, ")"),
+                  paste0("Curved Gaussian\n(k = ", j+2, ", est. alpha = ", fit_all_list[[i]][[j]][[4]]$curved_gaussian_param, ")"))
+
 
     for(k in 1:4){
       scalar <- scalar_vec[k]
       nat_mat <- fit_all_list[[i]][[j]][[k]]$u_mat %*% t(fit_all_list[[i]][[j]][[k]]$v_mat)
-      mean_mat <- compute_mean(nat_mat, family = distribution_vec[k], scalar = scalar)
 
-      plot_mat <- cbind(preprocessing_list[[i]]$dat_impute[-fit_all_list[[i]][[j]]$missing_idx],
-                        mean_mat[-fit_all_list[[i]][[j]]$missing_idx])
-
-      seq_val <- seq(0, 4000, length.out = 500)
-      if(k == 1){
-        sd_val <- stats::sd(plot_mat[,1] - plot_mat[,2])
-
-        y_bot <- sapply(seq_val, function(x){
-          stats::qnorm(0.1, mean = x, sd = sd_val)
-        })
-        y_top <- sapply(seq_val, function(x){
-          stats::qnorm(0.9, mean = x, sd = sd_val)
-        })
-      } else if(k == 2){
-        y_bot <- sapply(seq_val, function(x){
-          stats::qpois(0.1, lambda = x)
-        })
-        y_top <- sapply(seq_val, function(x){
-          stats::qpois(0.9, lambda = x)
-        })
-      } else if(k == 3){
-        y_bot <- sapply(seq_val, function(x){
-          stats::qnbinom(0.1, size = scalar, prob = scalar/(scalar+x))
-        })
-        y_top <- sapply(seq_val, function(x){
-          stats::qnbinom(0.9, size = scalar, prob = scalar/(scalar+x))
-        })
-      } else {
-        y_bot <- sapply(seq_val, function(x){
-          stats::qnorm(0.1, mean = x, sd = x/scalar)
-        })
-        y_top <- sapply(seq_val, function(x){
-          stats::qnorm(0.9, mean = x, sd = x/scalar)
-        })
-      }
-
-      plot(NA, asp = T, main = paste0("k = ", j, ", distribution = ", k), pch = 16,
-           xlim = range(plot_mat), ylim = range(plot_mat),
-           xlab = "Predicted missing value", ylab = "Observed value")
-
-      polygon(c(seq_val, rev(seq_val)), c(y_top, rev(y_bot)), col = rgb(1,0,0,0.2),
-              border = NA, density = 30, angle = -45)
-      points(plot_mat[,2], plot_mat[,1], pch = 16, col = rgb(0,0,0,0.2))
-
-      lines(rep(0,2), c(-1e10,1e10), col = "red", lwd = 1)
-      lines(c(-1e10,1e10), rep(0,2), col = "red", lwd = 1)
-      lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
-
-      lines(seq_val, y_bot, col = "red", lty = 2, lwd = 2)
-      lines(seq_val, y_top, col = "red", lty = 2, lwd = 2)
-
-      pca_res <- stats::prcomp(plot_mat, center = F, scale = F)
-      lines(c(0, 1e6), c(0, 1e6*pca_res$rotation[1,1]/pca_res$rotation[2,1]), col = "blue", lwd = 2, lty = 2)
+      plot_prediction_against_observed(dat = dat, nat_mat = nat_mat,
+                                       family = distribution_vec[k], scalar = scalar,
+                                       missing_idx = c(1:prod(dim(dat)))[-fit_all_list[[i]][[j]]$missing_idx],
+                                       main = main_vec[k])
     }
   }
   graphics.off()
