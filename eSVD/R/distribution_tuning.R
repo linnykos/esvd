@@ -21,7 +21,7 @@ tuning_scalar <- function(dat, family, iter_max = 5,
   family_initial <- ifelse(family == "neg_binom", "poisson", "exponential")
   dat_NA <- dat; dat_NA[missing_idx] <- NA
   missing_val <- dat[missing_idx]
-  fit <- .tuning_fit(dat_NA, family = family_initial, scalar = NA, ...)
+  fit <- .tuning_fit(dat, family = family_initial, scalar = NA, ...)
   if(verbose) print("Finished initial fit")
 
   # determine initial param
@@ -35,7 +35,7 @@ tuning_scalar <- function(dat, family, iter_max = 5,
 
   # iterate between fitting and parameter estimation
   for(i in 2:iter_max){
-    fit <- .tuning_fit(dat_NA, family = family, scalar = scalar_vec[i-1], ...)
+    fit <- .tuning_fit(dat, family = family, scalar = scalar_vec[i-1], ...)
     if(verbose) print(paste0("Finished fit on iteration ", i))
 
     scalar_vec[i] <- .tuning_param_search(dat, fit$u_mat, fit$v_mat, family = family,
@@ -137,15 +137,23 @@ plot_prediction_against_observed <- function(dat, nat_mat, family, missing_idx =
 
   fn <- function(x){
     mean_mat <- compute_mean(nat_mat, family, scalar = x)
-    var_mat <- .compute_variance(mean_mat, family, scalar = x)
-    abs(sum((dat[idx]-mean_mat[idx])^2/var_mat[idx]) - df_val)
+    if(family == "neg_binom"){
+      tmp_mat <- cbind(dat, mean_mat)
+    } else {
+      var_mat <- .compute_variance(mean_mat, family, x)
+      tmp_mat <- cbind(as.numeric((dat - mean_mat)^2), as.numeric(var_mat))
+    }
+
+    pca_res <- stats::prcomp(tmp_mat, center = F, scale = F)
+    ang <- as.numeric(acos(abs(c(0,1) %*% pca_res$rotation[,1])))
+    abs(45 - ang* 180/pi)
   }
 
   res <- stats::optimize(fn, interval = c(search_min, search_max))
   res$minimum
 }
 
-.compute_variance <- function(mean_mat, family, scalar, ...){
+.compute_variance <- function(mean_mat, family, scalar){
   if(family %in% c("neg_binom", "poisson")){
     mean_mat + mean_mat^2/scalar
   } else {
