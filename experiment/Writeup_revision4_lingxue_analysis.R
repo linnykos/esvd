@@ -173,7 +173,7 @@ fitting_func <- function(dat_impute, k, missing_idx){
 
 ######
 
-fit_all_list <- vector("list", length(preprocessing_list))
+fit_all_list <- vector("list", 2*6)
 
 ## now do all the fits
 for(num in 1:6){
@@ -199,7 +199,7 @@ for(num in 1:6){
 
 ## now do all the fits
 for(num in 1:6){
-  print(paste0("Working on dataset ", num))
+  print(paste0("Round 2: Working on dataset ", num))
   dat_impute <- preprocessing_list[[num]]$dat_impute
 
   set.seed(20)
@@ -215,7 +215,7 @@ for(num in 1:6){
     save.image("../results/lingxue_analysis.RData")
   }
 
-  fit_all_list[[num]] <- fit_list
+  fit_all_list[[num+6]] <- fit_list
   save.image("../results/lingxue_analysis.RData")
 }
 
