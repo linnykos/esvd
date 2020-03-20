@@ -80,8 +80,9 @@ doMC::registerDoMC(cores = ncores)
 # rm(list=c("dat"))
 # save.image("../results/lingxue_data_preprocessed.RData")
 load("../results/lingxue_data_preprocessed.RData")
-
 sapply(preprocessing_list, function(x){dim(x$dat_impute)})
+
+ncores <- 20
 neg_binom_vec <- c(50, 100, 500, 1000, 2500, 5000, 10000)
 curved_gaussian_vec <- c(0.1, 0.25, 0.5, 1, 1.5, 2, 4)
 
