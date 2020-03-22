@@ -12,7 +12,7 @@ dim(dat)
 
 # # remove genes with too many 0's
 zz <- apply(dat, 2, function(x){length(which(x!=0))})
-dat <- dat[,which(zz > 30)] # WARNING: CHANGE THIS TO PERCENTAGE
+dat <- dat[,which(zz > 30)]
 
 # try a series of SPCAs
 k <- 5
