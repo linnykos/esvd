@@ -3,7 +3,7 @@ load(paste0("../results/step2_naive_svd", suffix, ".RData"))
 
 paramMat <- as.matrix(expand.grid(c(0.5, 1, 2, 4), c(3,4,5)))
 colnames(paramMat) <- c("scalar", "k")
-esvd_missing_list <- vector("list", length(scalar_vec))
+esvd_missing_list <- vector("list", nrow(paramMat))
 
 for(i in 1:nrow(paramMat)){
   print(paste0("On parameter setting row ", i))
