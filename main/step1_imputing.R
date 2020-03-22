@@ -5,9 +5,9 @@ res_hvg <- descend::findHVG(res_descend, threshold = 50)
 length(res_hvg$HVG.genes)
 
 spca_summary <- cbind(v_seq, t(sapply(res_list, function(x){c(length(unique(sort(unlist(apply(x$v, 2, function(y){which(y != 0)}))))), x$prop.var.explained[5])})))
-idx <- min(which(spca_mat[,2] == max(spca_mat[,2])))
-target_var <- spca_mat[idx,3]
-idx <- min(intersect(which(spca_mat[,2] >= 500), which(spca_mat[,3] >= 0.9*target_var)))
+idx <- min(which(spca_summary[,2] == max(spca_summary[,2])))
+target_var <- spca_summary[idx,3]
+idx <- min(intersect(which(spca_summary[,2] >= 500), which(spca_summary[,3] >= 0.9*target_var)))
 spca_idx <- sort(unlist(apply(res_list[[idx]]$v, 2, function(x){which(x != 0)})))
 
 descend_idx <- which(colnames(dat) %in% res_hvg$HVG.genes)
