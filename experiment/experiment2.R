@@ -40,5 +40,6 @@ cluster_labels <- rep(1:4, each = vec["n_each"])
 
 set.seed(10)
 tmp <- pCMF::pCMF(obs_mat, K = 2, sparsity = F, verbose = F)
+res_pcmf <- tmp$factor$U
 
 save.image("../experiment/experiment.RData")

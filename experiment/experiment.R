@@ -37,24 +37,24 @@ obs_mat <- round(dat$dat * 1000/max(dat$dat))
 
 cluster_labels <- rep(1:4, each = vec["n_each"])
 
-set.seed(10)
-dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(obs_mat)))
-tmp <- zinbwave::zinbwave(dat_se, K = 2, maxiter.optimize = 100, normalizedValues = F,
-                          commondispersion = F)
-res_zinb <- SingleCellExperiment::reducedDims(tmp)$zinbwave
-plot(res_zinb[,1], res_zinb[,2], asp = T, pch = 16, col = cluster_labels)
-
-
-tmp <- zinbwave::zinbwave(dat_se, K = 2, maxiter.optimize = 100, normalizedValues = F,
-                          commondispersion = T)
-res_zinb <- SingleCellExperiment::reducedDims(tmp)$zinbwave
-plot(res_zinb[,1], res_zinb[,2], asp = T, pch = 16, col = cluster_labels)
-
-dist_mat_truth <- as.matrix(stats::dist(res$cell_mat))
-dist_mat_est <- as.matrix(stats::dist(res_zinb))
-mean(sapply(1:nrow(dist_mat_est), function(i){
-  cor(dist_mat_truth[i,], dist_mat_est[i,], method = "kendall")
-}))
+# set.seed(10)
+# dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(obs_mat)))
+# tmp <- zinbwave::zinbwave(dat_se, K = 2, maxiter.optimize = 100, normalizedValues = F,
+#                           commondispersion = F)
+# res_zinb <- SingleCellExperiment::reducedDims(tmp)$zinbwave
+# plot(res_zinb[,1], res_zinb[,2], asp = T, pch = 16, col = cluster_labels)
+#
+#
+# tmp <- zinbwave::zinbwave(dat_se, K = 2, maxiter.optimize = 100, normalizedValues = F,
+#                           commondispersion = T)
+# res_zinb <- SingleCellExperiment::reducedDims(tmp)$zinbwave
+# plot(res_zinb[,1], res_zinb[,2], asp = T, pch = 16, col = cluster_labels)
+#
+# dist_mat_truth <- as.matrix(stats::dist(res$cell_mat))
+# dist_mat_est <- as.matrix(stats::dist(res_zinb))
+# mean(sapply(1:nrow(dist_mat_est), function(i){
+#   cor(dist_mat_truth[i,], dist_mat_est[i,], method = "kendall")
+# }))
 
 ###############################
 
@@ -124,3 +124,6 @@ lines(c(-1e5,1e5), c(-1e5,1e5), col = "red", lwd = 2, lty = 2)
 
 set.seed(10)
 tmp <- pCMF::pCMF(obs_mat, K = 2, sparsity = F, verbose = F)
+res_pcmf <- tmp$factor$U
+
+plot(res_pcmf[,1], res_pcmf[,2], asp = T,  pch = 16, col = cluster_labels)

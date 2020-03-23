@@ -2,15 +2,18 @@ rm(list=ls())
 library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
+source("../simulation/factorization_methods.R")
 
 paramMat <- cbind(50, 120, 10,
                   2, 50, 1/250, 1000,
                   80, 120, 600,
-                  1/4, 1/4, 1/2)
+                  1/4, 1/4, 1/2,
+                  1:6)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "max_iter", "modifier", "max_val",
                         "size_1", "size_2", "size_3",
-                        "prop_1", "prop_2", "prop_3")
+                        "prop_1", "prop_2", "prop_3",
+                        "method")
 
 trials <- 100
 ncores <- 20
@@ -44,75 +47,35 @@ rule <- function(vec){
 }
 
 criterion <- function(dat, vec, y){
-  print(y)
-  cluster_labels <- rep(1:4, each = vec["n_each"])
+  if(vec["method"] == 1){ #svd
+    method_svd(dat$dat)
 
-  # SVD
-  tmp <- svd(dat$dat)
-  res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
+  } else if(vec["method"] == 2){ #esvd
+    paramMat <- as.matrix(expand.grid(c(50, 100, 500, 1000), c(2, 3)))
+    colnames(paramMat) <- c("scalar", "k")
 
-  # print("fin2")
+    method_esvd(dat$dat, paramMat = paramMat, ncores = ncores)
 
-  # tsne
-  tmp <- Rtsne::Rtsne(dat$dat, perplexity = 30)
-  res_tsne <- tmp$Y
+  } else if(vec["method"] == 3){ #zinbwave
+    method_zinbwave(dat$dat)
 
-  # print("fin3")
+  } else if(vec["method"] == 4){ #pcmf
+    method_pcmf(dat$dat)
 
-  # # Our method
-  set.seed(10)
-  init <- eSVD::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
-  res_esvd <- eSVD::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                                       family = "gaussian",  reparameterize = T,
-                                       max_iter = 100, max_val = vec["max_val"],
-                                       scalar = vec["scalar"],
-                                       return_path = F, cores = NA,
-                                       verbose = F)
+  } else if(vec["method"] == 5){ #umap
+    paramMat <- as.matrix(expand.grid(c(2, 3, 5, 15, 30, 50),
+                                      c(1e-5, 1e-3, 0.1, 0.3, 0.5, 0.9)))
+    colnames(paramMat) <- c("n_neighbors", "min_dist")
 
-  # print("fin4")
+    method_umap_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat)
 
-  # zinb-wave
-  set.seed(10)
-  dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat$dat)))
-  tmp <- zinbwave::zinbwave(dat_se, K = vec["k"], maxiter.optimize = 100, normalizedValues = F,
-                            commondispersion = F)
-  res_zinb <- tmp@reducedDims$zinbwave
-  curves_zinb <- eSVD::slingshot(res_zinb[,1:vec["k"]], cluster_labels,
-                                       starting_cluster = 1,
-                                       verbose = F)
+  } else { #tsne
+    paramMat <- matrix(round(seq(2, 50, length.out = 10)), ncol = 1, nrow = 1)
+    colnames(paramMat) <- c("perplexity")
 
-  # print("fin5")
-
-  # pcmf
-  set.seed(10)
-  tmp <- pCMF::pCMF(dat$dat, K = vec["k"], sparsity = F, verbose = F)
-  res_pcmf <- tmp$factor$U
-  curves_pcmf <- eSVD::slingshot(res_pcmf[,1:2], cluster_labels,
-                                       starting_cluster = 1,
-                                       verbose = F)
-
-  # print("fin6")
-
-  curves_truth <- eSVD::slingshot(dat$truth, cluster_labels,
-                                        starting_cluster = 1,
-                                        verbose = F)
-
-  # print("fin7")
-
-  list(res_svd = res_svd, curves_svd = curves_svd,
-       res_ica = res_ica, curves_ica = curves_ica,
-       res_tsne = res_tsne, curves_tsne = curves_tsne,
-       res_our = res_our, curves_our = curves_our,
-       res_zinb = res_zinb, curves_zinb = curves_zinb,
-       res_pcmf = res_pcmf, curves_pcmf = curves_pcmf,
-       curves_truth = curves_truth,
-       dat = dat)
+    method_tsne_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat)
+  }
 }
-
-# set.seed(1); zz <- criterion(rule(paramMat[1,]), paramMat[1,], 1)
-# plot(zz$res_our[,1], zz$res_our[,2], asp = T, pch = 16, col = c(1:4)[rep(1:4, each = paramMat[1,"n_each"])])
-# for(i in 1:2){ord <- zz$curves_our$curves[[i]]$ord; lines(zz$curves_our$curves[[i]]$s[ord,1], zz$curves_our$curves[[i]]$s[ord,2], lwd = 2)}
-# i <- 1; idx <- which(zz$curves_truth$curves[[i]]$lambda_long != 0); cor(zz$curves_truth$curves[[i]]$lambda_long[idx], zz$curves_our$curves[[i]]$lambda_long[idx])
 
 ############
 
