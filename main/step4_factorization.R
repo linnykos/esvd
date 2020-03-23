@@ -9,9 +9,10 @@ for(i in 1:nrow(paramMat)){
     u_mat %*% t(v_mat)
   })
 
-  eSVD::plot_prediction_against_observed(dat_impute, nat_mat_list, family = "curved_gaussian",
+  esvd_angle_vec[i] <- eSVD::plot_prediction_against_observed(dat_impute, nat_mat_list, family = "curved_gaussian",
                                          missing_idx_list, scalar = paramMat[i, "scalar"], plot = F)
 }
+
 idx <- which.min(abs(esvd_angle_vec - 45))
 k <- paramMat[idx, "k"]
 scalar <- paramMat[idx, "scalar"]
