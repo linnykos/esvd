@@ -25,6 +25,6 @@ esvd_embedding <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat 
                                                  return_path = F, cores = ncores,
                                                  verbose = T)
 
-rm(list = c("dat_impute_NA"))
+rm(list = c("nat_mat_list", "idx", "init"))
 save.image(paste0("../results/step4_factorization", suffix, ".RData"))
 print(paste0(Sys.time(), ": Finished factorizing"))
