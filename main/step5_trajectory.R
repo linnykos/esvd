@@ -35,7 +35,7 @@ save.image(paste0("../results/step5_clustering", suffix, ".RData"))
 
 #########
 
-svd_curves <- slingshot(res_svd[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+svd_curves <- slingshot(svd_embedding[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                         cluster_group_list = cluster_group_list,
                         verbose = T, upscale_vec = upscale_vec, reduction_percentage = 0.25)
 

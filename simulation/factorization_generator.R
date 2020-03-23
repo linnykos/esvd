@@ -46,25 +46,6 @@ generate_dropout <- function(obs_mat, total){
 
 # for all the following distributions, assume nat_mat contain strictly positive entries, then transform accordingly
 
-# draw a poisson from the inner product
-generator_pcmf_poisson <- function(nat_mat, dropout_prob = 0.5, ...){
-  n <- nrow(nat_mat); d <- ncol(nat_mat)
-
-  obs_mat <- matrix(0, ncol = d, nrow = n)
-  for(i in 1:n){
-    for(j in 1:d){
-      obs_mat[i,j] <- stats::rpois(1, nat_mat[i,j])
-    }
-  }
-
-  # 1 means not dropped
-  dropout_mat <- matrix(rbinom(n*d, size = 1, prob = 1-dropout_prob),
-                        ncol = d, nrow = n)
-  obs_mat[dropout_mat == 0] <- 0
-
-  obs_mat
-}
-
 generator_esvd_poisson <- function(nat_mat, ...){
   n <- nrow(nat_mat); d <- ncol(nat_mat)
 
@@ -99,7 +80,7 @@ generator_zinb_nb <- function(nat_mat, r_vec = rep(100, ncol(nat_mat)), ...){
   # 1 means not dropped
   obs_mat[dropout_mat == 0] <- 0
 
-  obs_mat
+  list(dat = obs_mat, dropout_mat = dropout_mat)
 }
 
 generator_esvd_nb <- function(nat_mat, scalar = 100,  ...){

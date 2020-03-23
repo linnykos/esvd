@@ -1,40 +1,44 @@
 rm(list=ls())
 library(simulation)
 library(eSVD)
-library(NMF)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 0.05, 150, 2, 2, -2000, 4)
-colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val",
-                        "generation_type")
-trials <- 200
+paramMat <- cbind(50, 120, 10,
+                  2, 50, 1/250, 1000,
+                  80, 120, 600,
+                  1/4, 1/4, 1/2)
+colnames(paramMat) <- c("n_each", "d_each", "sigma",
+                        "k", "max_iter", "modifier", "max_val",
+                        "size_1", "size_2", "size_3",
+                        "prop_1", "prop_2", "prop_3")
+
+trials <- 100
+ncores <- 20
 
 ################
 
 cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
-                     40,10, 60,80, 60,80, 100, 25)/10,
+                     40,10, 60,80, 60,80, 100, 25),
                    nrow = 4, ncol = 4, byrow = T)
 gene_pop <- matrix(c(20,90, 25,100,
-                     90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
+                     90,20, 100,25)/20, nrow = 2, ncol = 4, byrow = T)
 
 rule <- function(vec){
   n_each <- vec["n_each"]
   d_each <- vec["d_each"]
   sigma <- vec["sigma"]
-  total <- vec["total"]
+  modifier <- vec["modifier"]
 
-  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma)
+  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma, modifier)
   nat_mat <- res$nat_mat
 
-  if(vec["generation_type"] == 1){
-    obs_mat <- round(100*generator_gaussian(nat_mat))
-  } else if(vec["generation_type"] == 2){
-    obs_mat <- round(100*generator_curved_gaussian(nat_mat, alpha = 2))
-  } else if(vec["generation_type"] == 3 ){
-    obs_mat <- generator_zinb_nb(nat_mat)
-  } else {
-    obs_mat <- generator_pcmf_poisson(nat_mat)
-  }
+  r_vec <- sample(c(paramMat[1,"size_1"], paramMat[1,"size_2"], paramMat[1,"size_3"]),
+                  size = ncol(nat_mat),
+                  prob = c(paramMat[1,"prop_1"], paramMat[1,"prop_2"], paramMat[1,"prop_3"]),
+                  replace = T)
+
+  dat <- generator_zinb_nb(nat_mat, r_vec)
+  obs_mat <- round(dat$dat * 1000/max(dat$dat))
 
   list(dat = obs_mat, truth = res$cell_mat)
 }
@@ -46,51 +50,32 @@ criterion <- function(dat, vec, y){
   # SVD
   tmp <- svd(dat$dat)
   res_svd <- tmp$u[,1:vec["k"]] %*% diag(sqrt(tmp$d[1:vec["k"]]))
-  curves_svd <- eSVD::slingshot(res_svd[,1:vec["k"]], cluster_labels,
-                                      starting_cluster = 1,
-                                      verbose = F)
-
-  # print("fin1")
-
-  # ICA
-  tmp <- ica::icafast(dat$dat, nc = vec["k"])
-  res_ica <- tmp$S
-  curves_ica <- eSVD::slingshot(res_ica[,1:vec["k"]], cluster_labels,
-                                      starting_cluster = 1,
-                                      verbose = F)
 
   # print("fin2")
 
   # tsne
   tmp <- Rtsne::Rtsne(dat$dat, perplexity = 30)
   res_tsne <- tmp$Y
-  curves_tsne <- eSVD::slingshot(res_tsne[,1:vec["k"]], cluster_labels,
-                                       starting_cluster = 1,
-                                       verbose = F)
 
   # print("fin3")
 
   # # Our method
   set.seed(10)
   init <- eSVD::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
-  tmp <- eSVD::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  res_esvd <- eSVD::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
                                        family = "gaussian",  reparameterize = T,
                                        max_iter = 100, max_val = vec["max_val"],
                                        scalar = vec["scalar"],
                                        return_path = F, cores = NA,
                                        verbose = F)
 
-  res_our <- tmp$u_mat
-  curves_our <- eSVD::slingshot(res_our[,1:vec["k"]], cluster_labels,
-                                      starting_cluster = 1,
-                                      verbose = F)
-
   # print("fin4")
 
   # zinb-wave
   set.seed(10)
   dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat$dat)))
-  tmp <- zinbwave::zinbwave(dat_se, K = vec["k"], maxiter.optimize = 100)
+  tmp <- zinbwave::zinbwave(dat_se, K = vec["k"], maxiter.optimize = 100, normalizedValues = F,
+                            commondispersion = F)
   res_zinb <- tmp@reducedDims$zinbwave
   curves_zinb <- eSVD::slingshot(res_zinb[,1:vec["k"]], cluster_labels,
                                        starting_cluster = 1,

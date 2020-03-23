@@ -39,8 +39,9 @@ missing_idx_list <- lapply(1:cv_trials, function(j){
 #   save.image(paste0("../results/step2_naive_svd", suffix, "_tmp.RData"))
 # }
 #
-# tmp <- svd(dat_impute)
-# svd_embedding <- tmp$u[,1:k] %*% diag(sqrt(tmp$d[1:k]))
+
+tmp <- svd(dat_impute)
+svd_embedding <- tmp$u[,1:k] %*% diag(sqrt(tmp$d[1:k]))
 
 rm(list = c("init", "fit", "dat_impute_NA", "j", "tmp"))
 print(paste0(Sys.time(), ": Finished naive SVD"))

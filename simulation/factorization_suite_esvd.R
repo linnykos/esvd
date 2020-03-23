@@ -4,14 +4,14 @@ library(eSVD)
 source("../simulation/factorization_generator.R")
 
 paramMat <- cbind(50, 120, 10,
-                  rep(rep(1:3, each = 4), times = 4), 50, 2, 50, 10,
+                  rep(rep(1:3, each = 4), times = 4), 50, 2, 50,
                   rep(1:4, each = 12),
                   rep(c(1/27, 1/800, 1/250, 1/1000), each = 12),
                   rep(1:4, times = 12),
                   rep(c(1, 1, NA, NA), times = 12),
                   rep(c(3000, rep(100, 3)), times = 4))
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
-                        "k", "true_r",  "true_scalar", "max_iter", "fitting_iter",
+                        "k", "true_r",  "true_scalar", "max_iter",
                         "true_distr",
                         "modifier",
                         "fitting_distr",
@@ -32,7 +32,6 @@ rule <- function(vec){
   n_each <- vec["n_each"]
   d_each <- vec["d_each"]
   sigma <- vec["sigma"]
-  total <- vec["total"]
   modifier <- vec["modifier"]
 
   res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma, modifier)
@@ -48,6 +47,8 @@ rule <- function(vec){
   } else {
     obs_mat <- round(generator_curved_gaussian(nat_mat, scalar = vec["true_scalar"]))
   }
+
+  obs_mat <- obs_mat * 1000/max(obs_mat)
 
   list(dat = obs_mat, u_mat = res$cell_mat, v_mat = res$gene_mat)
 }
