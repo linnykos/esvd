@@ -1,3 +1,17 @@
+#' Plotting diagnostic to determine goodness of fit
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
+#' @param nat_mat_list list of natural parameter matrices, each of same dimension as \code{dat}
+#' @param family character such as \code{"gaussian"} or \code{"exponential"}
+#' @param missing_idx_list list of missing indices, same length as \code{nat_mat_list}
+#' @param seq_max plotting parameter, controlling x- and y-axes
+#' @param width plotting parameter, controlling quantile
+#' @param scalar additional parameter needed to compute distribution corresponding to \code{family}
+#' @param plot boolean
+#' @param ... additional plotting parameters
+#'
+#' @return either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or the principle angle otherwise
+#' @export
 plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_idx_list = list(1:prod(dim(dat))),
                                              seq_max = NA, width = 0.8, scalar = NA, plot = T, ...){
   stopifnot(length(nat_mat_list) == length(missing_idx_list))
@@ -34,9 +48,9 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   graphics::plot(NA, asp = T, xlim = range(tmp_mat), ylim = range(tmp_mat),
                  xlab = "Predicted value", ylab = "Observed value", ...)
 
-  graphics::polygon(c(seq_vec, rev(seq_vec)), c(interval_mat[2,], rev(interval_mat[1,])), col = rgb(1,0,0,0.2),
+  graphics::polygon(c(seq_vec, rev(seq_vec)), c(interval_mat[2,], rev(interval_mat[1,])), col = grDrevices::rgb(1,0,0,0.2),
                     border = NA, density = 30, angle = -45)
-  graphics::points(tmp_mat[,2], tmp_mat[,1], pch = 16, col = rgb(0,0,0,0.2))
+  graphics::points(tmp_mat[,2], tmp_mat[,1], pch = 16, col = grDrevices::rgb(0,0,0,0.2))
 
   graphics::lines(rep(0, 2), c(-2*seq_max, 2*seq_max), col = "red", lwd = 1)
   graphics::lines(c(-2*seq_max, 2*seq_max), rep(0, 2), col = "red", lwd = 1)
