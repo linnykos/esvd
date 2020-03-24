@@ -70,7 +70,7 @@ method_zinbwave <- function(dat, k = 2){
 
 method_pcmf <- function(dat, k = 2){
   set.seed(10)
-  tmp <- pCMF::pCMF(obs_mat, K = 2, sparsity = F, verbose = F)
+  tmp <- pCMF::pCMF(dat, K = 2, sparsity = F, verbose = F)
   fit <- tmp$factor$U
 
   list(fit = fit)
