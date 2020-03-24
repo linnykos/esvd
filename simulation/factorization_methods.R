@@ -79,6 +79,8 @@ method_pcmf <- function(dat, k = 2){
 }
 
 method_esvd <- function(dat, paramMat, k = 3, ncores = NA){
+  print("Stage 1")
+  print(dat[1:5,1:5])
   set.seed(10)
   missing_idx <- eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 2)
   dat_NA <- dat
@@ -95,6 +97,9 @@ method_esvd <- function(dat, paramMat, k = 3, ncores = NA){
                                    verbose = F)
   })
 
+  print("Stage 2")
+  print(dat[1:5,1:5])
+
   quality_vec <- sapply(1:nrow(paramMat), function(i){
     nat_mat <- fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat)
     mean_mat <- eSVD::compute_mean(nat_mat, family = "neg_binom", scalar = paramMat[i, "scalar"])
@@ -104,9 +109,15 @@ method_esvd <- function(dat, paramMat, k = 3, ncores = NA){
                                            plot = F)
   })
 
+  print("Stage 3")
+  print(dat[1:5,1:5])
+
   idx <- which.min(abs(quality_vec - 45))
 
   scalar <- paramMat[idx, "scalar"]
+
+  print("Stage 4")
+  print(dat[1:5,1:5])
 
   set.seed(10)
   init <- eSVD::initialization(dat, family = "neg_binom", k = k, max_val = 2000,
@@ -115,6 +126,9 @@ method_esvd <- function(dat, paramMat, k = 3, ncores = NA){
                                  family = "neg_binom", scalar = scalar,
                                  max_iter = 50, max_val = 2000,
                                  return_path = F, cores = ncores, verbose = F)
+
+  print("Stage 5")
+  print(dat[1:5,1:5])
 
   list(fit = fit, scalar = scalar, quality = quality_vec[idx])
 }

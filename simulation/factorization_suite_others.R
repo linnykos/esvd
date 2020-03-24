@@ -43,48 +43,74 @@ rule <- function(vec){
   dat <- generator_zinb_nb(nat_mat, r_vec)
   obs_mat <- round(dat$dat * 1000/max(dat$dat))
 
+  print("Leaving")
+  print(obs_mat[1:5, 1:5])
+
   list(dat = obs_mat, truth = res$cell_mat)
 }
 
 criterion <- function(dat, vec, y){
+  print("Touching")
+  print(dat$dat[1:5, 1:5])
+
   if(vec["method"] == 1){ #svd
-    method_svd(dat$dat)
+    tmp <- method_svd(dat$dat)
+    return(list(fit = tmp, truth = dat$truth))
 
   } else if(vec["method"] == 2){ #esvd
     paramMat_esvd <- matrix(c(50, 100, 500, 1000), nrow = 4, ncol = 1)
     colnames(paramMat_esvd) <- c("scalar")
 
-    method_esvd(dat$dat, paramMat = paramMat_esvd, ncores = ncores)
+    # return(list(truth = dat$truth))
 
-  } else if(vec["method"] == 3){ #zinbwave
-    method_zinbwave(dat$dat)
+    print("Before")
+    print(dat$dat[1:5, 1:5])
 
-  } else if(vec["method"] == 4){ #pcmf
-    method_pcmf(dat$dat)
+    tmp <- method_esvd(dat$dat, paramMat = paramMat_esvd, ncores = ncores)
 
-  } else if(vec["method"] == 5){ #umap
+    print("After")
+    print(dat$dat[1:5, 1:5])
+
+    return(list(fit = tmp, truth = dat$truth))
+
+  } else if(vec["method"] == 3) { #zinbwave
+    tmp <- method_zinbwave(dat$dat)
+    return(list(fit = tmp, truth = dat$truth))
+
+  } else if(vec["method"] == 4) { #pcmf
+    tmp <- method_pcmf(dat$dat)
+    return(list(fit = tmp, truth = dat$truth))
+
+  } else if(vec["method"] == 5) { #umap
     paramMat_umap <- as.matrix(expand.grid(c(2, 3, 5, 15, 30, 50),
                                       c(1e-5, 1e-3, 0.1, 0.3, 0.5, 0.9)))
     colnames(paramMat_umap) <- c("n_neighbors", "min_dist")
 
-    method_umap_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat_umap)
+    tmp <- method_umap_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat_umap)
+    return(list(fit = tmp, truth = dat$truth))
 
   } else { #tsne
     paramMat_tsne <- matrix(round(seq(2, 50, length.out = 10)), ncol = 1, nrow = 1)
     colnames(paramMat_tsne) <- c("perplexity")
 
-    method_tsne_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat_tsne)
+    tmp <- method_tsne_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat_tsne)
+    return(list(fit = tmp, truth = dat$truth))
   }
 }
 
-## i <- 6; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 2; y <- 1; zz1 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz1$fit$fit$u_mat); head(zz1$truth)
+## i <- 2; y <- 2; zz2 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz2$fit$fit$u_mat); head(zz2$truth)
+## i <- 1; y <- 1; set.seed(y); y <- rule(paramMat[i,]); y$dat[1:5,1:5]; head(y$truth)
+
+## i <- 2; y <- 1; zz3 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz3$truth)
+## i <- 2; y <- 2; zz4 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz4$truth)
 
 ############
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = NA, as_list = T,
-                                        filepath = "../results/factorization_results_others_tmp_gen4.RData",
+                                        filepath = "../results/factorization_results_others_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_others_gen4.RData")
+save.image("../results/factorization_results_others.RData")
