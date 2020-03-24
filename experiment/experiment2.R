@@ -51,19 +51,14 @@ vec <- paramMat[1,]
 dat <- rule(vec)
 
 dat <- dat$dat
-k <- 3
 
-# paramMat_esvd <- as.matrix(expand.grid(c(50, 100, 500, 1000), c(2, 3)))
-# colnames(paramMat_esvd) <- c("scalar", "k")
 paramMat_esvd <- matrix(c(50, 100, 500, 1000), nrow = 4, ncol = 1)
 colnames(paramMat_esvd) <- c("scalar")
 paramMat <- paramMat_esvd
 
+k <- 3
 set.seed(10)
 missing_idx <- eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 2)
-dat_NA <- dat
-dat_NA[missing_idx] <- NA
-
 dat_NA <- dat
 dat_NA[missing_idx] <- NA
 
@@ -88,61 +83,15 @@ quality_vec <- sapply(1:nrow(paramMat), function(i){
 })
 
 idx <- which.min(abs(quality_vec - 45))
-#
-# set.seed(10)
-# cv_trials <- 3
-# missing_idx_list <- lapply(1:cv_trials, function(j){
-#   set.seed(10*j)
-#   eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 4)
-# })
-#
-# fit_all_list <- vector("list", nrow(paramMat))
-#
-# for(i in 1:nrow(paramMat)){
-#   fit_all_list[[i]] <- lapply(1:length(missing_idx_list), function(j){
-#     dat_NA <- dat
-#     dat_NA[missing_idx_list[[j]]] <- NA
-#
-#     set.seed(10)
-#     init <- eSVD::initialization(dat_NA, family = "neg_binom", k = paramMat[i, "k"], max_val = 2000,
-#                                  scalar = paramMat[i, "scalar"])
-#     eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-#                             family = "neg_binom", scalar = paramMat[i, "scalar"],
-#                             max_iter = 50, max_val = 2000,
-#                             return_path = F, cores = ncores,
-#                             verbose = F)
-#   })
-# }
-#
-# quality_vec <- sapply(1:nrow(paramMat), function(i){
-#   nat_mat_list <- lapply(1:cv_trials, function(j){
-#     fit_all_list[[i]][[j]]$u_mat %*% t(fit_all_list[[i]][[j]]$v_mat)
-#   })
-#
-#   eSVD::plot_prediction_against_observed(dat, nat_mat_list = nat_mat_list,
-#                                          scalar = paramMat[i, "scalar"],
-#                                          family = "neg_binom", missing_idx_list = missing_idx_list,
-#                                          plot = F)
-#   # family = "neg_binom"
-#   # scalar = paramMat[i, "scalar"]
-#   #
-#   # pred_mat_list <- lapply(nat_mat_list, function(nat_mat){
-#   #   compute_mean(nat_mat, family = family, scalar = scalar)
-#   # })
-#   #
-#   # tmp_mat <- do.call(rbind, lapply(1:length(nat_mat_list), function(i){
-#   #   cbind(dat[missing_idx_list[[i]]], pred_mat_list[[i]][missing_idx_list[[i]]])
-#   # }))
-#   #
-#   # idx <- which(tmp_mat[,1] != 0)
-#   # tmp_mat <- tmp_mat[idx,]
-#   #
-#   # pca_res <- stats::prcomp(tmp_mat, center = F, scale = F)
-#   # rad <- 2/5*max(tmp_mat[,1])
-#   # ang <- as.numeric(acos(abs(c(0,1) %*% pca_res$rotation[,1])))
-#   #
-#   # ang * 180/pi
-# })
-#
-# quality_vec
-# which.min(abs(quality_vec - 45))
+
+scalar <- paramMat[idx, "scalar"]
+
+set.seed(10)
+init <- eSVD::initialization(dat, family = "neg_binom", k = k, max_val = 2000,
+                             scalar = scalar)
+fit <- eSVD::fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                               family = "neg_binom", scalar = scalar,
+                               max_iter = 50, max_val = 2000,
+                               return_path = F, cores = ncores, verbose = F)
+
+save.image("../experiment/experiment.RData")
