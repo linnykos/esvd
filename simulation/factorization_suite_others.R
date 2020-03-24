@@ -59,6 +59,8 @@ criterion <- function(dat, vec, y){
 
     tmp <- method_esvd(dat$dat, paramMat = paramMat_esvd, ncores = ncores)
 
+    print(head(tmp$fit$u_mat))
+
     return(list(fit = tmp, truth = dat$truth))
 
   } else if(vec["method"] == 3) { #zinbwave
