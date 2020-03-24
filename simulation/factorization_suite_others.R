@@ -15,7 +15,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "prop_1", "prop_2", "prop_3",
                         "method")
 
-trials <- 100
+trials <- 2
 ncores <- 20
 
 ################
@@ -45,6 +45,7 @@ rule <- function(vec){
 
   print("Leaving")
   print(obs_mat[1:5, 1:5])
+  print(head(res$cell_mat))
 
   list(dat = obs_mat, truth = res$cell_mat)
 }
@@ -98,12 +99,14 @@ criterion <- function(dat, vec, y){
   }
 }
 
-## i <- 2; y <- 1; zz1 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz1$fit$fit$u_mat); head(zz1$truth)
-## i <- 2; y <- 2; zz2 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz2$fit$fit$u_mat); head(zz2$truth)
+## i <- 2; y <- 1; set.seed(y); zz1 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz1$fit$fit$u_mat); head(zz1$truth)
+## i <- 2; y <- 2; set.seed(y); zz2 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz2$fit$fit$u_mat); head(zz2$truth)
 ## i <- 1; y <- 1; set.seed(y); y <- rule(paramMat[i,]); y$dat[1:5,1:5]; head(y$truth)
 
-## i <- 2; y <- 1; zz3 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz3$truth)
-## i <- 2; y <- 2; zz4 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz4$truth)
+## i <- 2; y <- 1; set.seed(y); zz3 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz3$truth)
+## i <- 2; y <- 2; set.seed(y); zz4 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz4$truth)
+
+## i <- 2; y <- 2; set.seed(y); tmp <- rule(paramMat[i,]);tmp$dat[1:5,1:5]
 
 ############
 
