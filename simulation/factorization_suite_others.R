@@ -51,10 +51,10 @@ criterion <- function(dat, vec, y){
     method_svd(dat$dat)
 
   } else if(vec["method"] == 2){ #esvd
-    paramMat <- as.matrix(expand.grid(c(50, 100, 500, 1000), c(2, 3)))
-    colnames(paramMat) <- c("scalar", "k")
+    paramMat_esvd <- matrix(c(50, 100, 500, 1000), nrow = 4, ncol = 1)
+    colnames(paramMat_esvd) <- c("scalar")
 
-    method_esvd(dat$dat, paramMat = paramMat, ncores = ncores)
+    method_esvd(dat$dat, paramMat = paramMat_esvd, ncores = ncores)
 
   } else if(vec["method"] == 3){ #zinbwave
     method_zinbwave(dat$dat)
@@ -63,17 +63,17 @@ criterion <- function(dat, vec, y){
     method_pcmf(dat$dat)
 
   } else if(vec["method"] == 5){ #umap
-    paramMat <- as.matrix(expand.grid(c(2, 3, 5, 15, 30, 50),
+    paramMat_umap <- as.matrix(expand.grid(c(2, 3, 5, 15, 30, 50),
                                       c(1e-5, 1e-3, 0.1, 0.3, 0.5, 0.9)))
-    colnames(paramMat) <- c("n_neighbors", "min_dist")
+    colnames(paramMat_umap) <- c("n_neighbors", "min_dist")
 
-    method_umap_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat)
+    method_umap_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat_umap)
 
   } else { #tsne
-    paramMat <- matrix(round(seq(2, 50, length.out = 10)), ncol = 1, nrow = 1)
-    colnames(paramMat) <- c("perplexity")
+    paramMat_tsne <- matrix(round(seq(2, 50, length.out = 10)), ncol = 1, nrow = 1)
+    colnames(paramMat_tsne) <- c("perplexity")
 
-    method_tsne_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat)
+    method_tsne_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat_tsne)
   }
 }
 

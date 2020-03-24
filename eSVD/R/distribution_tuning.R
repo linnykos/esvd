@@ -48,9 +48,9 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   graphics::plot(NA, asp = T, xlim = range(tmp_mat), ylim = range(tmp_mat),
                  xlab = "Predicted value", ylab = "Observed value", ...)
 
-  graphics::polygon(c(seq_vec, rev(seq_vec)), c(interval_mat[2,], rev(interval_mat[1,])), col = grDrevices::rgb(1,0,0,0.2),
+  graphics::polygon(c(seq_vec, rev(seq_vec)), c(interval_mat[2,], rev(interval_mat[1,])), col = grDevices::rgb(1,0,0,0.2),
                     border = NA, density = 30, angle = -45)
-  graphics::points(tmp_mat[,2], tmp_mat[,1], pch = 16, col = grDrevices::rgb(0,0,0,0.2))
+  graphics::points(tmp_mat[,2], tmp_mat[,1], pch = 16, col = grDevices::rgb(0,0,0,0.2))
 
   graphics::lines(rep(0, 2), c(-2*seq_max, 2*seq_max), col = "red", lwd = 1)
   graphics::lines(c(-2*seq_max, 2*seq_max), rep(0, 2), col = "red", lwd = 1)

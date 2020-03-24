@@ -131,3 +131,18 @@ plot(res_pcmf[,1], res_pcmf[,2], asp = T,  pch = 16, col = cluster_labels)
 ###########
 
 plot(zz$fit$u_mat[,1], zz$fit$u_mat[,2], pch = 16, col = cluster_labels, asp = T)
+
+
+##############
+
+scalar <- 2
+k <- 3
+init <- eSVD::initialization(dat, family = "curved_gaussian", k = k, max_val = 2000,
+                             scalar = scalar)
+fit <- eSVD::fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                               family = "curved_gaussian", scalar = scalar,
+                               max_iter = 50, max_val = 2000,
+                               return_path = F, cores = NA, verbose = T)
+
+plot(fit$u_mat[,1], fit$u_mat[,2], pch = 16, col = cluster_labels, asp = T)
+

@@ -76,7 +76,7 @@ method_pcmf <- function(dat, k = 2){
   list(fit = fit)
 }
 
-method_esvd <- function(dat, paramMat, k = 2, ncores = NA){
+method_esvd <- function(dat, paramMat, k = 3, ncores = NA){
   set.seed(10)
   missing_idx <- eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 2)
   dat_NA <- dat
@@ -84,7 +84,7 @@ method_esvd <- function(dat, paramMat, k = 2, ncores = NA){
 
   fit_list <- lapply(1:nrow(paramMat), function(i){
     set.seed(10)
-    init <- eSVD::initialization(dat_NA, family = "neg_binom", k = paramMat[i, "k"], max_val = 2000,
+    init <- eSVD::initialization(dat_NA, family = "neg_binom", k = k, max_val = 2000,
                                  scalar = paramMat[i, "scalar"])
     eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "neg_binom", scalar = paramMat[i, "scalar"],
@@ -104,7 +104,6 @@ method_esvd <- function(dat, paramMat, k = 2, ncores = NA){
 
   idx <- which.min(abs(quality_vec - 45))
 
-  k <- paramMat[idx, "k"]
   scalar <- paramMat[idx, "scalar"]
 
   set.seed(10)
@@ -115,5 +114,5 @@ method_esvd <- function(dat, paramMat, k = 2, ncores = NA){
                                  max_iter = 50, max_val = 2000,
                                  return_path = F, cores = ncores, verbose = F)
 
-  list(fit = fit, k = k, scalar = scalar, quality = quality_vec[idx])
+  list(fit = fit, scalar = scalar, quality = quality_vec[idx])
 }
