@@ -127,3 +127,7 @@ tmp <- pCMF::pCMF(obs_mat, K = 2, sparsity = F, verbose = F)
 res_pcmf <- tmp$factor$U
 
 plot(res_pcmf[,1], res_pcmf[,2], asp = T,  pch = 16, col = cluster_labels)
+
+###########
+
+plot(zz$fit$u_mat[,1], zz$fit$u_mat[,2], pch = 16, col = cluster_labels, asp = T)

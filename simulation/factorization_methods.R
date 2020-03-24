@@ -115,5 +115,5 @@ method_esvd <- function(dat, paramMat, k = 2, ncores = NA){
                                  max_iter = 50, max_val = 2000,
                                  return_path = F, cores = ncores, verbose = F)
 
-  list(fit = fit, k = k, scalar = scalar)
+  list(fit = fit, k = k, scalar = scalar, quality = quality_vec[idx])
 }
