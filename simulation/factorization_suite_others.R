@@ -14,8 +14,9 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "size_1", "size_2", "size_3",
                         "prop_1", "prop_2", "prop_3",
                         "method")
+paramMat <- paramMat[2,,drop = F]
 
-trials <- 2
+trials <- 100
 ncores <- 20
 
 ################
@@ -43,16 +44,10 @@ rule <- function(vec){
   dat <- generator_zinb_nb(nat_mat, r_vec)
   obs_mat <- round(dat$dat * 1000/max(dat$dat))
 
-  print("Leaving")
-  print(obs_mat[1:5, 1:5])
-  print(head(res$cell_mat))
-
   list(dat = obs_mat, truth = res$cell_mat)
 }
 
 criterion <- function(dat, vec, y){
-  print("Touching")
-  print(dat$dat[1:5, 1:5])
 
   if(vec["method"] == 1){ #svd
     tmp <- method_svd(dat$dat)
@@ -62,15 +57,7 @@ criterion <- function(dat, vec, y){
     paramMat_esvd <- matrix(c(50, 100, 500, 1000), nrow = 4, ncol = 1)
     colnames(paramMat_esvd) <- c("scalar")
 
-    # return(list(truth = dat$truth))
-
-    print("Before")
-    print(dat$dat[1:5, 1:5])
-
     tmp <- method_esvd(dat$dat, paramMat = paramMat_esvd, ncores = ncores)
-
-    print("After")
-    print(dat$dat[1:5, 1:5])
 
     return(list(fit = tmp, truth = dat$truth))
 
@@ -113,7 +100,7 @@ criterion <- function(dat, vec, y){
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = NA, as_list = T,
-                                        filepath = "../results/factorization_results_others_tmp.RData",
+                                        filepath = "../results/factorization_results_others_esvd_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_others.RData")
+save.image("../results/factorization_results_others_esvd.RData")
