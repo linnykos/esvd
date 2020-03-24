@@ -9,7 +9,8 @@ method_svd <- function(dat, k = 2){
 method_tsne_oracle <- function(dat, cell_truth, paramMat, k = 2){
   fit_list <- lapply(1:nrow(paramMat), function(i){
     set.seed(10)
-    Rtsne::Rtsne(dat, dims = k, perplexity = paramMat[i, "perplexity"])
+    tmp <- Rtsne::Rtsne(dat, dims = k, perplexity = paramMat[i, "perplexity"])
+    tmp$Y
   })
 
   dist_mat_truth <- as.matrix(stats::dist(cell_truth))
@@ -35,6 +36,7 @@ method_umap_oracle <- function(dat, cell_truth, paramMat, k = 2){
     custom.settings$n_components <- k
     custom.settings$n_neighbors <- paramMat[i, "n_neighbors"]
     custom.settings$min_dist <- paramMat[i, "min_dist"]
+    custom.settings$init <- "random"
 
     set.seed(10)
     tmp <- umap::umap(dat, config = custom.settings)
