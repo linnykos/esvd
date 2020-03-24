@@ -97,6 +97,7 @@ method_esvd <- function(dat, paramMat, k = 2, ncores = NA){
     nat_mat <- fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat)
     mean_mat <- eSVD::compute_mean(nat_mat, family = "neg_binom", scalar = paramMat[i, "scalar"])
     eSVD::plot_prediction_against_observed(dat, nat_mat_list = list(nat_mat),
+                                           scalar = paramMat[i, "scalar"],
                                            family = "neg_binom", missing_idx_list = list(missing_idx),
                                            plot = F)
   })

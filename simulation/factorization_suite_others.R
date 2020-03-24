@@ -77,6 +77,8 @@ criterion <- function(dat, vec, y){
   }
 }
 
+## i <- 2; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+
 ############
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
