@@ -79,9 +79,10 @@ method_pcmf <- function(dat, k = 2){
 }
 
 method_esvd <- function(dat, paramMat, k = 3, ncores = NA){
+  dat_NA <- dat # lazy evaluation requires us to grab the data first before setting the seed
+
   set.seed(10)
   missing_idx <- eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 2)
-  dat_NA <- dat
   dat_NA[missing_idx] <- NA
 
   fit_list <- lapply(1:nrow(paramMat), function(i){

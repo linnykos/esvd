@@ -50,40 +50,45 @@ rule <- function(vec){
 criterion <- function(dat, vec, y){
 
   if(vec["method"] == 1){ #svd
-    tmp <- method_svd(dat$dat)
+    dat_obs <- dat$dat
+    tmp <- method_svd(dat_obs)
     return(list(fit = tmp, truth = dat$truth))
 
   } else if(vec["method"] == 2){ #esvd
+    dat_obs <- dat$dat
     paramMat_esvd <- matrix(c(50, 100, 500, 1000), nrow = 4, ncol = 1)
     colnames(paramMat_esvd) <- c("scalar")
-
-    tmp <- method_esvd(dat$dat, paramMat = paramMat_esvd, ncores = ncores)
+    tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, ncores = ncores)
 
     print(head(tmp$fit$u_mat))
 
     return(list(fit = tmp, truth = dat$truth))
 
   } else if(vec["method"] == 3) { #zinbwave
-    tmp <- method_zinbwave(dat$dat)
+    dat_obs <- dat$dat
+    tmp <- method_zinbwave(dat_obs)
     return(list(fit = tmp, truth = dat$truth))
 
   } else if(vec["method"] == 4) { #pcmf
-    tmp <- method_pcmf(dat$dat)
+    dat_obs <- dat$dat
+    tmp <- method_pcmf(dat_obs)
     return(list(fit = tmp, truth = dat$truth))
 
   } else if(vec["method"] == 5) { #umap
+    dat_obs <- dat$dat
     paramMat_umap <- as.matrix(expand.grid(c(2, 3, 5, 15, 30, 50),
                                       c(1e-5, 1e-3, 0.1, 0.3, 0.5, 0.9)))
     colnames(paramMat_umap) <- c("n_neighbors", "min_dist")
 
-    tmp <- method_umap_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat_umap)
+    tmp <- method_umap_oracle(dat_obs, cell_truth = dat$truth, paramMat = paramMat_umap)
     return(list(fit = tmp, truth = dat$truth))
 
   } else { #tsne
+    dat_obs <- dat$dat
     paramMat_tsne <- matrix(round(seq(2, 50, length.out = 10)), ncol = 1, nrow = 1)
     colnames(paramMat_tsne) <- c("perplexity")
 
-    tmp <- method_tsne_oracle(dat$dat, cell_truth = dat$truth, paramMat = paramMat_tsne)
+    tmp <- method_tsne_oracle(dat_obs, cell_truth = dat$truth, paramMat = paramMat_tsne)
     return(list(fit = tmp, truth = dat$truth))
   }
 }
