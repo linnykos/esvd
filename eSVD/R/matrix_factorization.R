@@ -24,9 +24,12 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   stopifnot(length(which(dat < 0)) == 0)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
             ncol(u_mat) == ncol(v_mat))
-  k <- ncol(u_mat)
   if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
   if(!is.na(max_val)) stopifnot(max_val >= 0)
+
+  tmp <- .check_rank(u_mat, v_mat)
+  u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
+  k <- ncol(u_mat)
 
   idx <- which(!is.na(dat))
   min_val <- min(dat[which(dat > 0)])
@@ -295,4 +298,21 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
 
   res$solution
+}
+
+.check_rank <- function(u_mat, v_mat){
+  stopifnot(ncol(u_mat) == ncol(v_mat))
+  k <- ncol(u_mat)
+  nat_mat <- u_mat %*% t(v_mat)
+
+  k2 <- as.numeric(Matrix::rankMatrix(nat_mat))
+
+  if(k != k2){
+    stopifnot(k2 < k)
+    warning("Initial matrices given are rank defficient -- dropping ranks")
+    u_mat <- u_mat[,1:k2]
+    v_mat <- v_mat[,1:k2]
+  }
+
+  return(list(u_mat = u_mat, v_mat = v_mat))
 }

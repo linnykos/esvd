@@ -1,85 +1,156 @@
 rm(list=ls())
+rm(list=ls())
+library(simulation)
+library(eSVD)
+source("../simulation/factorization_generator.R")
 
-load("../results/step2_naive_svd.RData")
+paramMat <- cbind(50, 120, 10,
+                  rep(rep(1:3, each = 4), times = 4), 50, 2, 50,
+                  rep(1:4, each = 12),
+                  rep(c(1/27, 1/800, 1/250, 1/1000), each = 12),
+                  rep(1:4, times = 12),
+                  rep(c(1, 1, NA, NA), times = 12),
+                  rep(c(3000, rep(100, 3)), times = 4))
+colnames(paramMat) <- c("n_each", "d_each", "sigma",
+                        "k", "true_r",  "true_alpha", "max_iter",
+                        "true_distr",
+                        "modifier",
+                        "fitting_distr",
+                        "fitting_param",
+                        "max_val")
+trials <- 100
+ncores <- NA
+r_vec <- c(5, 50, 1000)
+alpha_vec <- c(1, 2, 4)
 
-starting_lambda <- min(sapply(1:length(missing_idx_list), function(i){
-  dat_NA <- dat_impute
-  dat_NA[missing_idx_list[[i]]] <- NA
+################
 
-  softImpute::lambda0(dat_NA)
-}))
+cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
+                     40,10, 60,80, 60,80, 100, 25),
+                   nrow = 4, ncol = 4, byrow = T)
+gene_pop <- matrix(c(20,90, 25,100,
+                     90,20, 100,25)/20, nrow = 2, ncol = 4, byrow = T)
 
-lambda_vec <- seq(1, starting_lambda, length.out = 100)
+rule <- function(vec){
+  n_each <- vec["n_each"]
+  d_each <- vec["d_each"]
+  sigma <- vec["sigma"]
+  modifier <- vec["modifier"]
 
-quality_vec <- sapply(lambda_vec, function(lambda){
-  print(lambda)
+  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma, modifier)
+  # plot(res$cell_mat[,1], res$cell_mat[,2], asp = T, col = rep(1:4, each = n_each), pch = 16)
+  nat_mat <- res$nat_mat
 
-  k <- 5
-  tmp_mat <- do.call(rbind, lapply(1:length(missing_idx_list), function(i){
-    dat_NA <- dat_impute
-    dat_NA[missing_idx_list[[i]]] <- NA
+  if(vec["true_distr"] == 1){
+    obs_mat <- round(generator_gaussian(nat_mat))
+  } else if(vec["true_distr"] == 2){
+    obs_mat <- generator_esvd_poisson(nat_mat)
+  } else if(vec["true_distr"] == 3 ){
+    obs_mat <- generator_esvd_nb(nat_mat, scalar = vec["true_r"])
+  } else {
+    obs_mat <- round(generator_curved_gaussian(nat_mat, scalar = vec["true_alpha"]))
+  }
 
-    softImpute_embedding <- softImpute::softImpute(dat_NA, rank.max = k, lambda = lambda)
-    softImpute_pred <- softImpute_embedding$u %*% diag(softImpute_embedding$d) %*% t(softImpute_embedding$v)
-    softImpute_pred <- softImpute_pred[missing_idx_list[[i]]]
-    obs_val <- dat_impute[missing_idx_list[[i]]]
+  obs_mat <- obs_mat * 1000/max(obs_mat)
 
-    cbind(obs_val, softImpute_pred)
-  }))
+  list(dat = obs_mat, u_mat = res$cell_mat, v_mat = res$gene_mat)
+}
 
-  pca_res <- stats::prcomp(tmp_mat, center = F, scale = F)
-  rad <- 2/5*max(tmp_mat[,1])
-  ang <- as.numeric(acos(abs(c(0,1) %*% pca_res$rotation[,1])))
-  ang * 180/pi
-})
+criterion <- function(dat, vec, y){
+  dat_obs <- dat$dat
 
-lambda <- lambda_vec[which.min(abs(quality_vec - 45))]
+  set.seed(10*y)
+  missing_idx <- eSVD::construct_missing_values(n = nrow(dat_obs), p = ncol(dat_obs), num_val = 2)
+  dat_NA <- dat_obs
+  dat_NA[missing_idx] <- NA
 
-softImpute_missing_list <- lapply(1:length(missing_idx_list), function(i){
-  dat_NA <- dat_impute
-  dat_NA[missing_idx_list[[i]]] <- NA
+  missing_val <- dat_obs[missing_idx]
 
-  softImpute::softImpute(dat_NA, rank.max = k, lambda = lambda)
-})
+  set.seed(10)
+  # fixed variance gaussian
+  if(vec["fitting_distr"] == 1){
+    init <- eSVD::initialization(dat_NA, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
+    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                                   family = "gaussian",
+                                   max_iter = vec["max_iter"], max_val = vec["max_val"],
+                                   return_path = F, cores = ncores,
+                                   verbose = F)
 
-save(softImpute_missing_list, file = "../results/experiment.RData")
+    # poisson
+  } else if(vec["fitting_distr"] == 2){
+    init <- eSVD::initialization(dat_NA, family = "poisson", k = vec["k"], max_val = vec["max_val"])
+    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                                   family = "poisson",
+                                   max_iter = vec["max_iter"], max_val = vec["max_val"],
+                                   return_path = F, cores = ncores,
+                                   verbose = F)
 
-###############
+    # negative binomial
+  } else if(vec["fitting_distr"] == 3){
+    fit <- lapply(r_vec, function(r_val){
+      init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
+                                   scalar = r_val)
+      eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                              family = "neg_binom", scalar = r_val,
+                              max_iter = vec["max_iter"], max_val = vec["max_val"],
+                              return_path = F, cores = ncores,
+                              verbose = F)
+    })
 
-load("../results/step5_clustering.RData")
-load("../results/experiment.RData")
+    # curved gaussian
+  } else {
+    fit <- lapply(alpha_vec, function(alpha_val){
+      init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
+                                   scalar = alpha_val)
+      eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                              family = "curved_gaussian", scalar = alpha_val,
+                              max_iter = vec["max_iter"], max_val = vec["max_val"],
+                              return_path = F, cores = ncores,
+                              verbose = F)
+    })
+  }
 
+  list(fit = fit, true_u_mat = dat$u_mat, true_v_mat = dat$v_mat,
+       dat = dat_obs, missing_idx = missing_idx)
+}
 
-png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup5_main_svd_training_testing.png"),
-    height = 1750, width = 3250, res = 300,
-    units = "px")
-par(mfrow = c(1,2))
+#################
 
-nat_mat_list <- lapply(1:length(softImpute_missing_list), function(i){
-  softImpute_missing_list[[i]]$u %*% diag(softImpute_missing_list[[i]]$d) %*% t(softImpute_missing_list[[i]]$v)
-})
+# i <- 48; y <- 10; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+i <- 48; y <- 10; vec <- paramMat[i,]
+set.seed(y)
+dat <- rule(vec)
+dat_obs <- dat$dat
 
-tmp_mat <- do.call(rbind, lapply(1:length(nat_mat_list), function(i){
-  cbind(dat_impute[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]])
-}))
-scalar <- sd(tmp_mat[,1] - tmp_mat[,2])
+set.seed(10*y)
+missing_idx <- eSVD::construct_missing_values(n = nrow(dat_obs), p = ncol(dat_obs), num_val = 2)
+dat_NA <- dat_obs
+dat_NA[missing_idx] <- NA
 
-training_idx_list <- lapply(1:length(missing_idx_list), function(i){
-  c(1:prod(dim(dat_impute)))[-missing_idx_list[[i]]]
-})
+missing_val <- dat_obs[missing_idx]
 
-plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
-                                 missing_idx_list = training_idx_list,
-                                 family = "gaussian", scalar = scalar,
-                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Training set)",
-                                 max_points = 1e6)
+set.seed(10)
+# fit <- lapply(alpha_vec, function(alpha_val){
+#   print(alpha_val)
+#   init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
+#                                scalar = alpha_val)
+#   eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+#                           family = "curved_gaussian", scalar = alpha_val,
+#                           max_iter = vec["max_iter"], max_val = vec["max_val"],
+#                           return_path = F, cores = ncores,
+#                           verbose = F)
+# })
 
+save(dat_NA, file = "tests/assets/initialization2.RData")
 
-plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
-                                 missing_idx_list = missing_idx_list,
-                                 family = "gaussian", scalar = scalar,
-                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
-
-graphics.off()
+scalar <- alpha_vec[1]
+set.seed(10)
+init <- eSVD::initialization(dat_NA, family = "curved_gaussian", k = vec["k"], max_val = vec["max_val"],
+                             scalar = scalar)
+eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                        family = "curved_gaussian", scalar = scalar,
+                        max_iter = vec["max_iter"], max_val = vec["max_val"],
+                        return_path = F, cores = ncores,
+                        verbose = T)
 
 

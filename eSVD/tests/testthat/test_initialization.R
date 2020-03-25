@@ -229,6 +229,20 @@ test_that("initialization is meaningful for a tricky instance", {
   expect_true(length(unique(pred_mat)) >= prod(dim(pred_mat))/2)
 })
 
+test_that("initialization doesn't go rank defficient in a tricky instance", {
+  load("../assets/initialization2.RData")
+
+  set.seed(10)
+  res <- initialization(dat_NA, family = "curved_gaussian", k = 3, max_val = 100,
+                        scalar = 1)
+
+  nat_mat <- res$u_mat %*% t(res$v_mat)
+  rank_val <- Matrix::rankMatrix(nat_mat)
+
+  expect_true(rank_val == ncol(res$u_mat))
+})
+
+
 #########################
 
 ## .project_rank_feasibility is correct
@@ -344,7 +358,7 @@ test_that(".project_rank_feasibility handles non-convergence settings gracefully
   expect_true(all(res$matrix <= max_val))
 })
 
-###########################3
+###########################
 
 ## .absolute_threshold is correct
 
@@ -362,3 +376,33 @@ test_that(".absolute_threshold correctly sets things below the threshold", {
 
   expect_true(all(res >= -2.5))
 })
+
+################################
+
+## .fix_rank_defficiency_initialization is correct
+
+test_that(".fix_rank_defficiency_initialization works", {
+  set.seed(10)
+  u_mat <- abs(matrix(stats::rnorm(12), nrow = 4, ncol = 3))
+  v_mat <- abs(matrix(stats::rnorm(15), nrow = 5, ncol = 3))
+
+  res <- .fix_rank_defficiency_initialization(u_mat, v_mat, direction = ">=")
+
+  expect_true(length(res) == 2)
+  expect_true(all(sort(names(res)) == sort(c("u_mat", "v_mat"))))
+  expect_true(sum(abs(u_mat - res$u_mat)) <= 1e-6)
+  expect_true(sum(abs(v_mat - res$v_mat)) <= 1e-6)
+})
+
+test_that(".fix_rank_defficiency_initialization can actually fix the rank", {
+  set.seed(10)
+  u_mat <- abs(matrix(stats::rnorm(12), nrow = 4, ncol = 3))
+  v_mat <- abs(matrix(stats::rnorm(15), nrow = 5, ncol = 3))
+  v_mat[,3] <- 0
+
+  res <- .fix_rank_defficiency_initialization(u_mat, v_mat, direction = ">=")
+
+  expect_true(sum(abs(res$u_mat[,3] - u_mat[,3])) >= 1e-6)
+  expect_true(sum(abs(res$v_mat[,3] - 0)) >= 1e-6)
+})
+

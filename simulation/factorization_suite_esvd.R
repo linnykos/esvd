@@ -17,8 +17,8 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
-trials <- 10
-ncores <- 25
+trials <- 100
+ncores <- 15
 r_vec <- c(5, 50, 1000)
 alpha_vec <- c(1, 2, 4)
 
@@ -114,7 +114,7 @@ criterion <- function(dat, vec, y){
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
-## i <- 31; y <- 1; zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 48; y <- 10; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 ## neg_binom: i = 31; curved_gaussian: i = 48
 ############
 

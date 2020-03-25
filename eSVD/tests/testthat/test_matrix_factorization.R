@@ -245,6 +245,33 @@ test_that("fit_factorization works", {
   expect_true(ncol(res$v_mat) == 2)
 })
 
+test_that("fit_factorization can handle rank-defficient initializations", {
+  set.seed(10)
+  dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
+  init <- initialization(dat, max_val = 100, family = "exponential", k = 3)
+  init$u_mat[,3] <- 0
+
+  res <- suppressWarnings(fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                           max_val = 100, family = "exponential"))
+
+  expect_true(is.list(res))
+  expect_true(nrow(res$u_mat) == nrow(dat))
+  expect_true(nrow(res$v_mat) == ncol(dat))
+  expect_true(ncol(res$u_mat) == 2)
+  expect_true(ncol(res$v_mat) == 2)
+})
+
+test_that("fit_factorization can issue warnings for rank-defficient initializations", {
+  set.seed(10)
+  dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
+  init <- initialization(dat, max_val = 100, family = "exponential", k = 3)
+  init$u_mat[,3] <- 0
+
+  expect_warning(fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                                            max_val = 100, family = "exponential"))
+})
+
+
 test_that("fit_factorization works for curved Gaussian with scalar setting", {
   set.seed(10)
   dat <- abs(matrix(rexp(20), nrow = 5, ncol = 4))
@@ -409,6 +436,48 @@ test_that("fit_factorization can roughly recover the all 1's matrix", {
   set.seed(10)
 
   expect_true(all(bool_vec))
+})
+
+######################
+
+## .check_rank is correct
+
+test_that(".check_rank works in a non-problematic instance", {
+  set.seed(10)
+  u_mat <- abs(matrix(stats::rnorm(12), nrow = 4, ncol = 3))
+  v_mat <- abs(matrix(stats::rnorm(15), nrow = 5, ncol = 3))
+
+  res <- .check_rank(u_mat, v_mat)
+
+  expect_true(length(res) == 2)
+  expect_true(all(sort(names(res)) == sort(c("u_mat", "v_mat"))))
+  expect_true(sum(abs(u_mat - res$u_mat)) <= 1e-6)
+  expect_true(sum(abs(v_mat - res$v_mat)) <= 1e-6)
+})
+
+test_that(".check_rank can handle problematic instances ", {
+  set.seed(10)
+  u_mat <- abs(matrix(stats::rnorm(12), nrow = 4, ncol = 3))
+  v_mat <- abs(matrix(stats::rnorm(15), nrow = 5, ncol = 3))
+  v_mat[,3] <- 0
+
+  res <- suppressWarnings(.check_rank(u_mat, v_mat))
+
+  expect_true(length(res) == 2)
+  expect_true(all(sort(names(res)) == sort(c("u_mat", "v_mat"))))
+  expect_true(ncol(res$u_mat) == 2)
+  expect_true(ncol(res$v_mat) == 2)
+  expect_true(nrow(res$u_mat) == nrow(u_mat))
+  expect_true(nrow(res$v_mat) == nrow(v_mat))
+})
+
+test_that(".check_rank can issue warnings", {
+  set.seed(10)
+  u_mat <- abs(matrix(stats::rnorm(12), nrow = 4, ncol = 3))
+  v_mat <- abs(matrix(stats::rnorm(15), nrow = 5, ncol = 3))
+  v_mat[,3] <- 0
+
+  expect_warning(.check_rank(u_mat, v_mat))
 })
 
 

@@ -41,6 +41,12 @@ initialization <- function(dat, k = 2, family,
     }
   }
 
+  tmp <- .fix_rank_defficiency_initialization(u_mat, v_mat, direction)
+  u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
+
+  tmp <- .reparameterize(u_mat, v_mat)
+  u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
+
   list(u_mat = u_mat, v_mat = v_mat)
 }
 
@@ -241,4 +247,23 @@ initialization <- function(dat, k = 2, family,
   }
 
   mat
+}
+
+.fix_rank_defficiency_initialization <- function(u_mat, v_mat, direction){
+  k <- ncol(u_mat)
+  nat_mat <- u_mat %*% t(v_mat)
+  k2 <- as.numeric(Matrix::rankMatrix(nat_mat))
+
+  if(k != k2){
+    stopifnot(k2 < k)
+    sign_val <- ifelse(direction == ">=", 1, -1)
+
+    sd_val <- mean(c(apply(u_mat[,1:k2], 2, sd),apply(v_mat[,1:k2], 2, sd)))
+    for(i in (k2+1):k){
+      u_mat[,i] <- abs(stats::rnorm(nrow(u_mat), sd = sd_val))
+      v_mat[,i] <- sign_val*abs(stats::rnorm(nrow(v_mat), sd = sd_val))
+    }
+  }
+
+  list(u_mat = u_mat, v_mat = v_mat)
 }

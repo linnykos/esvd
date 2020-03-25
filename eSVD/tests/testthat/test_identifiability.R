@@ -7,6 +7,31 @@ test_that(".identification works", {
   expect_true(all(dim(res) == 5))
 })
 
+test_that(".identification is correct for a deterministic setting", {
+  cov_x <- matrix(c(2,1,1,2),2,2)
+  cov_y <- matrix(c(5,-1,-1,5),2,2)
+  res <- .identification(cov_x, cov_y)
+
+  mat1 <- res %*% cov_x %*% t(res)
+  mat2 <- solve(t(res)) %*% cov_y %*% solve(res)
+
+  res <- .identification(diag(5), 2*diag(5))
+
+  expect_true(sum(abs(mat1 - mat2)) <= 1e-6)
+})
+
+test_that(".identification issues warning for rank defficient setting", {
+  set.seed(10)
+  u_mat <- matrix(rnorm(12), ncol = 3, nrow = 4)
+  v_mat <- matrix(rnorm(15), ncol = 3, nrow = 5)
+
+  cov_x <- stats::cov(u_mat)
+  cov_y <- stats::cov(v_mat)
+
+  cov_y[,3] <- 0; cov_y[3,] <- 0
+  expect_warning(.identification(cov_x, cov_y))
+})
+
 test_that(".identification is correct", {
   set.seed(20)
   cov_x <- cov(MASS::mvrnorm(n = 10, rep(0, 5), diag(5)))
@@ -65,6 +90,7 @@ test_that(".reparameterize preserves the inner products", {
   trials <- 100
 
   bool_vec <- sapply(1:trials, function(x){
+    print(x)
     set.seed(10*x)
     u_mat <- MASS::mvrnorm(5, rep(0, 5), diag(5))
     v_mat <- MASS::mvrnorm(5, rep(1, 5), 2*diag(5))

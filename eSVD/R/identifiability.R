@@ -1,4 +1,4 @@
-.identification <- function(cov_x, cov_y, check = F){
+.identification <- function(cov_x, cov_y, check = F, tol = 1e-6){
   stopifnot(all(dim(cov_x) == dim(cov_y)), nrow(cov_x) == ncol(cov_x))
   if(nrow(cov_x) == 1){
     return(matrix((as.numeric(cov_y)/as.numeric(cov_x))^(1/4), 1, 1))
@@ -9,8 +9,14 @@
 
   Vx <- eigen_x$vectors
   Vy <- eigen_y$vectors
-  Dx <- diag(eigen_x$values);
+
+  if(any(eigen_x$values <= tol) | any(eigen_y$values <= tol)) warning("Detecting rank defficiency in reparameterization step")
+
+  Dx <- diag(eigen_x$values)
   Dy <- diag(eigen_y$values)
+
+  Dx[Dx <= tol] <- 0
+  Dy[Dy <= tol] <- 0
 
   tmp <- sqrt(Dy) %*% t(Vy) %*% Vx %*% sqrt(Dx)
   svd_tmp <- svd(tmp)
@@ -45,10 +51,6 @@
 
   t(eig_res$vectors) %*% T_mat
 }
-
-# cov_x = matrix(c(2,1,1,2),2,2); cov_y = matrix(c(5,-1,-1,5),2,2)
-# T_mat = .identification(cov_x, cov_y)
-# T_mat %*% cov_x %*% t(T_mat); solve(t(T_mat)) %*% cov_y %*% solve(T_mat)
 
 .reparameterize <- function(u_mat, v_mat){
   stopifnot(ncol(u_mat) == ncol(v_mat))
