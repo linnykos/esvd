@@ -60,8 +60,6 @@ criterion <- function(dat, vec, y){
     colnames(paramMat_esvd) <- c("scalar")
     tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, ncores = ncores)
 
-    print(head(tmp$fit$u_mat))
-
     return(list(fit = tmp, truth = dat$truth))
 
   } else if(vec["method"] == 3) { #zinbwave
@@ -107,7 +105,7 @@ criterion <- function(dat, vec, y){
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = NA, as_list = T,
-                                        filepath = "../results/factorization_results_others_esvd_tmp.RData",
+                                        filepath = "../results/factorization_results_misspecified_esvd_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_others_esvd.RData")
+save.image("../results/factorization_results_misspecified_esvd.RData")
