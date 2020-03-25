@@ -13,7 +13,8 @@
 #' @return either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or the principle angle otherwise
 #' @export
 plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_idx_list = list(1:prod(dim(dat))),
-                                             seq_max = NA, width = 0.8, scalar = NA, plot = T, ...){
+                                             seq_max = NA, width = 0.8, scalar = NA, plot = T,
+                                             max_points = 500000, ...){
   stopifnot(length(nat_mat_list) == length(missing_idx_list))
 
   pred_mat_list <- lapply(nat_mat_list, function(nat_mat){
@@ -28,8 +29,12 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   rad <- 2/5*max(tmp_mat[,1])
   ang <- as.numeric(acos(abs(c(0,1) %*% pca_res$rotation[,1])))
 
+  if(nrow(tmp_mat) > max_points){
+    tmp_mat <- tmp_mat[sample(1:nrow(tmp_mat), max_points),]
+  }
+
   if(plot){
-    if(is.na(seq_max)) seq_max <- max(tmp_mat)
+    if(is.na(seq_max)) seq_max <- 2*max(tmp_mat)
     .plot_pca_diagnostic(tmp_mat, family = family, width = width, scalar = scalar, seq_max = seq_max,
                          pca_res = pca_res, rad = rad, ang = ang, ...)
   } else {

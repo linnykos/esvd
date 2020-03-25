@@ -14,10 +14,10 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "size_1", "size_2", "size_3",
                         "prop_1", "prop_2", "prop_3",
                         "method")
-paramMat <- paramMat[c(1,3,4),,drop = F]
+paramMat <- paramMat[-2,,drop = F]
 
 trials <- 100
-ncores <- 20
+ncores <- 15
 
 ################
 
