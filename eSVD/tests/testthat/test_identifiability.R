@@ -90,10 +90,9 @@ test_that(".reparameterize preserves the inner products", {
   trials <- 100
 
   bool_vec <- sapply(1:trials, function(x){
-    print(x)
     set.seed(10*x)
-    u_mat <- MASS::mvrnorm(5, rep(0, 5), diag(5))
-    v_mat <- MASS::mvrnorm(5, rep(1, 5), 2*diag(5))
+    u_mat <- MASS::mvrnorm(10, rep(0, 5), diag(5))
+    v_mat <- MASS::mvrnorm(10, rep(1, 5), 2*diag(5))
 
     res <- .reparameterize(u_mat, v_mat)
 

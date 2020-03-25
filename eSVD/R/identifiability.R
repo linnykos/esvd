@@ -15,9 +15,6 @@
   Dx <- diag(eigen_x$values)
   Dy <- diag(eigen_y$values)
 
-  Dx[Dx <= tol] <- 0
-  Dy[Dy <= tol] <- 0
-
   tmp <- sqrt(Dy) %*% t(Vy) %*% Vx %*% sqrt(Dx)
   svd_tmp <- svd(tmp)
   R <- svd_tmp$u %*% t(svd_tmp$v)
