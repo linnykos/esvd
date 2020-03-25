@@ -1,11 +1,11 @@
 set.seed(10)
 load(paste0("../results/step2_naive_svd", suffix, ".RData"))
 
-paramMat <- as.matrix(expand.grid(c(0.5, 1, 2, 4), c(3,4,5)))
-colnames(paramMat) <- c("scalar", "k")
-esvd_missing_list <- vector("list", nrow(paramMat))
+paramMat_esvd <- as.matrix(expand.grid(c(0.5, 1, 2, 4), c(3,4,5)))
+colnames(paramMat_esvd) <- c("scalar", "k")
+esvd_missing_list <- vector("list", nrow(paramMat_esvd))
 
-for(i in 1:nrow(paramMat)){
+for(i in 1:nrow(paramMat_esvd)){
   print(paste0("On parameter setting row ", i))
   tmp_list <- vector("list", length(cv_trials))
 
@@ -19,11 +19,11 @@ for(i in 1:nrow(paramMat)){
     # fit
     set.seed(10)
     init <- eSVD::initialization(dat_impute_NA, family = "curved_gaussian",
-                                 k = paramMat[i,"k"], max_val = max_val, scalar = paramMat[i,"scalar"])
+                                 k = paramMat_esvd[i,"k"], max_val = max_val, scalar = paramMat_esvd[i,"scalar"])
     tmp_list[[j]] <- eSVD::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "curved_gaussian",
                                    max_iter = 50, max_val = max_val,
-                                   scalar = paramMat[i,"scalar"],
+                                   scalar = paramMat_esvd[i,"scalar"],
                                    return_path = F, cores = ncores,
                                    verbose = T)
     save.image(paste0("../results/step3_scalar_heuristic", suffix, "_tmp.RData"))
