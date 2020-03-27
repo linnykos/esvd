@@ -11,7 +11,7 @@ color_func <- function(alpha = 0.2){
     rgb(0/255, 158/255, 115/255, alpha), #bluish green
     rgb(0/255, 114/255, 178/255,alpha), #blue
     rgb(230/255, 159/255, 0/255,alpha), #orange
-    rgb(210/255, 198/255, 36/255, alpha)) #darker yellow
+    rgb(100/255, 100/255, 100/255, alpha)) #gray
 }
 
 cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
@@ -23,16 +23,17 @@ cluster_group_list <- lapply(order_vec, function(x){
 })
 
 
-col_vec <- color_func(1)[c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))]
-col_name <- c("orange", rep("bluish green", 2), rep("yellow", 6), rep("skyblue", 2), rep("orange", 2))
+num_order_vec <- c(5, rep(3,2), c(6,1,1,1,6,4), rep(2,2),  rep(5,2))
+col_vec <- color_func(1)[num_order_vec]
+col_vec3 <- color_func(0.3)[num_order_vec]
+col_name <- c("orange", rep("bluish green", 2), c("bluish green", "yellow", "yellow", "yellow", "bluish green", "blue"), rep("skyblue", 2), rep("orange", 2))
 order_vec <- c(3, 5.1, 5.2, seq(6.1, 6.6, by = 0.1), 4.1, 4.2, 2, 1)
 col_info <- data.frame(name = levels(cell_type_vec),
                        idx = sort(unique(cluster_labels)),
                        order = order_vec,
                        col_name = col_name,
                        col_code = col_vec)
-num_order_vec <- c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))
-col_vec3 <- color_func(0.3)[num_order_vec]
+col_info
 
 mean_vec <- t(sapply(1:13, function(i){
   idx <- which(cluster_labels == i)
@@ -69,7 +70,7 @@ for(k in 1:ncol(combn_mat)){
 # training vs testing
 
 png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup5_main_esvd_training_testing.png"),
-    height = 1500, width = 2750, res = 300,
+    height = 1200, width = 2000, res = 300,
     units = "px")
 par(mfrow = c(1,2))
 idx <- which.min(abs(esvd_angle_vec - 45))
