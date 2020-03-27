@@ -69,7 +69,7 @@ for(k in 1:ncol(combn_mat)){
 # training vs testing
 
 png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup5_main_esvd_training_testing.png"),
-    height = 1750, width = 3250, res = 300,
+    height = 1500, width = 2750, res = 300,
     units = "px")
 par(mfrow = c(1,2))
 idx <- which.min(abs(esvd_angle_vec - 45))
@@ -95,5 +95,40 @@ plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                  family = "curved_gaussian",
                                  scalar = paramMat[idx, "scalar"],
                                  main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+
+graphics.off()
+
+#### now for svd
+
+load("../results/step2_naive_svd.RData")
+
+png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup5_main_svd_training_testing.png"),
+    height = 1200, width = 2000, res = 300,
+    units = "px")
+par(mfrow = c(1,2))
+nat_mat_list <- lapply(1:length(svd_missing), function(i){
+  svd_missing[[i]]$u %*% diag(svd_missing[[i]]$d) %*% t(svd_missing[[i]]$v)
+})
+
+tmp_mat <- do.call(rbind, lapply(1:length(nat_mat_list), function(i){
+  cbind(dat_impute[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]])
+}))
+sd_val <- sd(tmp_mat[,1] - tmp_mat[,2])
+
+training_idx_list <- lapply(1:length(missing_idx_list), function(i){
+  c(1:prod(dim(dat_impute)))[-missing_idx_list[[i]]]
+})
+
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = training_idx_list,
+                                 family = "gaussian", scalar = sd_val,
+                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 max_points = 1e6)
+
+
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = missing_idx_list,
+                                 family = "gaussian", scalar = sd_val,
+                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
 
 graphics.off()

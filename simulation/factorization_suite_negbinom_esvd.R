@@ -5,19 +5,14 @@ source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
 paramMat <- cbind(50, 120, 10,
-                  2, 50, 1/250, 1000,
-                  80, 120, 600,
-                  1/4, 1/4, 1/2,
-                  1:6)
+                  2, 50, 1/250, 1000, 100, 1:6)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "max_iter", "modifier", "max_val",
-                        "size_1", "size_2", "size_3",
-                        "prop_1", "prop_2", "prop_3",
-                        "method")
-paramMat <- paramMat[-2,,drop = F]
+                        "size","method")
+paramMat <- paramMat[2,,drop = F]
 
 trials <- 100
-ncores <- 15
+ncores <- 20
 
 ################
 
@@ -36,12 +31,7 @@ rule <- function(vec){
   res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma, modifier)
   nat_mat <- res$nat_mat
 
-  r_vec <- sample(c(paramMat[1,"size_1"], paramMat[1,"size_2"], paramMat[1,"size_3"]),
-                  size = ncol(nat_mat),
-                  prob = c(paramMat[1,"prop_1"], paramMat[1,"prop_2"], paramMat[1,"prop_3"]),
-                  replace = T)
-
-  dat <- generator_zinb_nb(nat_mat, r_vec)
+  dat <- generator_esvd_nb(nat_mat, vec["size"])
   obs_mat <- round(dat$dat * 1000/max(dat$dat))
 
   list(dat = obs_mat, truth = res$cell_mat)
@@ -75,7 +65,7 @@ criterion <- function(dat, vec, y){
   } else if(vec["method"] == 5) { #umap
     dat_obs <- dat$dat
     paramMat_umap <- as.matrix(expand.grid(c(2, 3, 5, 15, 30, 50),
-                                      c(1e-5, 1e-3, 0.1, 0.3, 0.5, 0.9)))
+                                           c(1e-5, 1e-3, 0.1, 0.3, 0.5, 0.9)))
     colnames(paramMat_umap) <- c("n_neighbors", "min_dist")
 
     tmp <- method_umap_oracle(dat_obs, cell_truth = dat$truth, paramMat = paramMat_umap)
@@ -104,8 +94,8 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = ncores, as_list = T,
-                                        filepath = "../results/factorization_results_misspecified_rest_tmp.RData",
+                                        cores = NA, as_list = T,
+                                        filepath = "../results/factorization_results_negbinom_esvd_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_misspecified_rest.RData")
+save.image("../results/factorization_results_negbinom_esvd.RData")

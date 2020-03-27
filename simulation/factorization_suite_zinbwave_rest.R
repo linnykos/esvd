@@ -14,10 +14,10 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "size_1", "size_2", "size_3",
                         "prop_1", "prop_2", "prop_3",
                         "method")
-paramMat <- paramMat[2,,drop = F]
+paramMat <- paramMat[-2,,drop = F]
 
 trials <- 100
-ncores <- 20
+ncores <- 15
 
 ################
 
@@ -104,8 +104,8 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = NA, as_list = T,
-                                        filepath = "../results/factorization_results_misspecified_esvd_tmp.RData",
+                                        cores = ncores, as_list = T,
+                                        filepath = "../results/factorization_results_zinbwave_rest_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_misspecified_esvd.RData")
+save.image("../results/factorization_results_zinbwave_rest.RData")
