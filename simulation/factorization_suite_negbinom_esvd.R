@@ -32,7 +32,7 @@ rule <- function(vec){
   nat_mat <- res$nat_mat
 
   dat <- generator_esvd_nb(nat_mat, vec["size"])
-  obs_mat <- round(dat$dat * 1000/max(dat$dat))
+  obs_mat <- round(dat * 1000/max(dat))
 
   list(dat = obs_mat, truth = res$cell_mat)
 }
