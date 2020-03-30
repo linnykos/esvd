@@ -18,7 +18,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_param",
                         "max_val")
 trials <- 100
-ncores <- 20
+ncores <- 15
 r_vec <- c(5, 50, 1000)
 alpha_vec <- c(1, 2, 4)
 
