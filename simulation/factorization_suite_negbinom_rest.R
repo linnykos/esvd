@@ -95,7 +95,7 @@ criterion <- function(dat, vec, y){
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = ncores, as_list = T,
-                                        filepath = "../results/factorization_results_negbinom_esvd_tmp.RData",
+                                        filepath = "../results/factorization_results_negbinom_rest_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_negbinom_esvd.RData")
+save.image("../results/factorization_results_negbinom_rest.RData")
