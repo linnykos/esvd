@@ -56,7 +56,7 @@ svd_missing <- lapply(1:cv_trials , function(i){
 
 # fit the actual embedding as well
 tmp <- svd(dat_impute)
-svd_embedding <- tmp$u[,1:paramMat_svd[idx, "k"]] %*% diag(sqrt(tmp$d[1:paramMat_svd[idx, "k"]]))
+svd_embedding <- (n/d)^(1/4)*tmp$u[,1:paramMat_svd[idx, "k"]] %*% diag(sqrt(tmp$d[1:paramMat_svd[idx, "k"]]))
 
 rm(list = c("init", "fit", "dat_impute_NA", "j", "tmp", "starting_lambda", "idx"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
@@ -64,14 +64,14 @@ save.image(paste0("../results/step2_naive_svd", suffix, ".RData"))
 
 ######################
 
-nat_mat_list <- lapply(1:length(svd_missing), function(i){
-  svd_missing[[i]]$u %*% diag(svd_missing[[i]]$d) %*% t(svd_missing[[i]]$v)
-})
-
-tmp_mat <- do.call(rbind, lapply(1:length(nat_mat_list), function(i){
-  cbind(dat_impute[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]])
-}))
-
-pca_res <- stats::prcomp(tmp_mat, center = F, scale = F)
-ang <- as.numeric(acos(abs(c(0,1) %*% pca_res$rotation[,1])))
-ang * 180/pi
+# nat_mat_list <- lapply(1:length(svd_missing), function(i){
+#   svd_missing[[i]]$u %*% diag(svd_missing[[i]]$d) %*% t(svd_missing[[i]]$v)
+# })
+#
+# tmp_mat <- do.call(rbind, lapply(1:length(nat_mat_list), function(i){
+#   cbind(dat_impute[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]])
+# }))
+#
+# pca_res <- stats::prcomp(tmp_mat, center = F, scale = F)
+# ang <- as.numeric(acos(abs(c(0,1) %*% pca_res$rotation[,1])))
+# ang * 180/pi
