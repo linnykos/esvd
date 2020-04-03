@@ -34,7 +34,7 @@ for(i in nusiance_idx){
 
     quality_vec <- sapply(1:length(x$fit), function(j){
       nat_mat <- x$fit[[j]]$u_mat %*% t(x$fit[[j]]$v_mat)
-      plot_prediction_against_observed(dat = x$dat, nat_mat_list = list(nat_mat),
+      eSVD::plot_prediction_against_observed(dat = x$dat, nat_mat_list = list(nat_mat),
                                        family = family_val, missing_idx_list = list(x$missing_idx),
                                        scalar = scalar_vec[j], plot = F)
     })
