@@ -20,18 +20,18 @@ esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, start
                                     cluster_group_list = cluster_group_list,
                                     verbose = T, upscale_vec = upscale_vec, reduction_percentage = 0.25)
 
-save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 # set.seed(10)
 # our_bootstrap_list <- eSVD::bootstrap_curves(res_our$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
 #                                                    cluster_group_list = cluster_group_list, trials = 100,
 #                                                    upscale_vec = upscale_vec, cores = ncores)
 #
-# save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+# save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 #
 # our_sd_val <- eSVD::compute_curve_sd(our_curves, our_bootstrap_list)
 #
-# save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+# save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 #########
 
@@ -45,11 +45,11 @@ svd_curves <- slingshot(svd_embedding[,1:p], cluster_labels, starting_cluster = 
 #                                                    cluster_group_list = cluster_group_list, trials = 100,
 #                                                    upscale_vec = upscale_vec, cores = ncores)
 #
-# save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+# save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 #
 # naive_sd_val <- eSVD::compute_curve_sd(naive_curves, naive_bootstrap_list)
 
 rm(list = c("tmp"))
-print(paste0(Sys.time(), ": Finished clustering"))
-save.image(paste0("../results/step5_clustering", suffix, ".RData"))
+print(paste0(Sys.time(), ": Finished trajectoy"))
+save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 

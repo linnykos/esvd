@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/factorization_esvd.RData")
+load("../results/factorization_exponential_families.RData")
 
 correct_idx <- c(5, 18, 31, 44)
 paramMat[correct_idx,]
@@ -7,10 +7,50 @@ paramMat[correct_idx,]
 sapply(res,length)
 idx1 <- which(is.na(paramMat[,"fitting_param"]))
 idx2 <- which(sapply(res, length) > 0)
-idx <- intersect(idx1, idx2)
+nusiance_idx <- intersect(idx1, idx2)
 for(i in idx){print(table(sapply(res[[i]], length)))}
 
-j <- 3
+# some basic cleanup
+for(i in 1:length(res)){
+  len_vec <- sapply(res[[i]], length)
+  res[[i]] <- res[[i]][which(len_vec > 1)]
+}
+
+# select which nuisance parameter is best, among all the neg binom and curved gaussians
+selected_idx <- vector("list", length(res))
+
+for(i in nusiance_idx){
+  print(i)
+
+  # determine among this parameter setting, how each of 100 trials behave
+  tmp_vec <- sapply(res[[i]], function(x){
+
+    # if i is odd, then it's a negative binomial. if i is even, then it's a curved gaussian
+    if(i %% 2 == 1) {
+      scalar_vec <- r_vec; family_val <- "neg_binom"
+    } else {
+      scalar_vec <- alpha_vec; family_val <- "curved_gaussian"
+    }
+
+    quality_vec <- sapply(1:length(x$fit), function(j){
+      nat_mat <- x$fit[[j]]$u_mat %*% t(x$fit[[j]]$v_mat)
+      plot_prediction_against_observed(dat = x$dat, nat_mat_list = list(nat_mat),
+                                       family = family_val, missing_idx_list = list(x$missing_idx),
+                                       scalar = scalar_vec[j], plot = F)
+    })
+
+
+    which.min(abs(quality_vec - 45))
+  })
+
+  # tmp_vec <- factor(as.numeric(tmp_vec), levels = c(1,2,3))
+  # selected_idx[[i]] <- table(tmp_vec)
+  selected_idx[[i]] <- tmp_vec
+}
+
+#########################
+
+j <- 1
 main_vec <- c("Gaussian\n(constant variance)", "Poisson",
               paste0("Negative binomial\n(true size = 50)"),
               paste0("Curved Gaussian\n(true alpha = 2)"))
@@ -49,7 +89,6 @@ for(k in 1:4){
                                    family = family_vec[k], scalar = scalar_val,
                                    main = main_vec[k], missing_idx_list = list(res[[i]][[j]]$missing_idx))
 }
-
 graphics.off()
 
 ####
@@ -94,7 +133,7 @@ graphics.off()
 
 ######################
 
-j <- 3
+j <- 1
 png(filename = "../../esvd_results/figure/experiment/Revision_writeup6_exponential_family_fit.png",
     height = 2250, width = 2250, res = 300,
     units = "px")
@@ -117,3 +156,35 @@ for(k in 1:4){
          bty = "n", fill = 1:4)
 }
 graphics.off()
+
+###############################
+
+correct_idx <- c(5:8)
+family_vec <- rep(c("gaussian", "poisson", "neg_binom", "curved_gaussian"), times = 3)
+
+for(k in 1:4){
+  j <- 1
+
+  main_vec <- unlist(lapply(1:3, function(kk){
+    c(paste0("Gaussian (k = ", kk, ")"),
+      paste0("Poisson (k = ", kk, ")"),
+      paste0("Neg. bin.\n(k = ", kk , ", est. size = ", round(res[[(k-1)*12+(kk-1)*4+3]][[j]]$fitting_param, 1), ")"),
+      paste0("Curved Gaussian\n(k = ", kk , ", est. alpha = ", round(res[[(k-1)*12+(kk-1)*4+4]][[j]]$fitting_param, 1), ")"))
+  }))
+  main_vec[correct_idx[k]] <- paste0(main_vec[correct_idx[k]], "\n(True model)")
+
+  png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup4_simulation_testing_", k, ".png"),
+      height = 2000, width = 2750, res = 300,
+      units = "px")
+
+  par(mfrow = c(3,4), mar = c(4,4,4,0.5))
+  for(i in 1:12){
+    plot_prediction_against_observed(dat = res[[(k-1)*12+i]][[j]]$dat,
+                                     nat_mat = res[[(k-1)*12+i]][[j]]$fit_u_mat %*% t(res[[(k-1)*12+i]][[j]]$fit_v_mat),
+                                     family = family_vec[i], scalar = res[[(k-1)*12+i]][[j]]$fitting_param,
+                                     missing_idx = res[[(k-1)*12+i]][[j]]$missing_idx,
+                                     main = main_vec[i])
+  }
+
+  graphics.off()
+}

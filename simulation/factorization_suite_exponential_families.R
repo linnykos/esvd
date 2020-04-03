@@ -3,7 +3,7 @@ library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 10,
+paramMat <- cbind(50, 120, 5,
                   rep(rep(1:3, each = 4), times = 4), 50, 2, 50,
                   rep(1:4, each = 12),
                   rep(c(1/27, 1/800, 1/250, 1/1000), each = 12),
@@ -17,10 +17,12 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
+paramMat <- paramMat[c(31,44),]
+
 trials <- 100
 ncores <- 15
-r_vec <- c(5, 50, 1000)
-alpha_vec <- c(1, 2, 4)
+r_vec <- c(5, 50, 100)
+alpha_vec <- c(0.5, 2, 10)
 
 ################
 
@@ -114,8 +116,9 @@ criterion <- function(dat, vec, y){
 }
 
 ## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
-## i <- 48; y <- 10; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
-## neg_binom: i = 31; curved_gaussian: i = 48
+## i <- 31; y <- 10; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## scalar_vec <- r_vec; family_val <- "neg_binom"; quality_vec <- sapply(1:length(zz$fit), function(j){ nat_mat <- zz$fit[[j]]$u_mat %*% t(zz$fit[[j]]$v_mat); plot_prediction_against_observed(dat = zz$dat, nat_mat_list = list(nat_mat), family = family_val, missing_idx_list = list(zz$missing_idx), scalar = scalar_vec[j], plot = F)}); quality_vec
+## neg_binom: i = 31; curved_gaussian: i = 44
 ############
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
