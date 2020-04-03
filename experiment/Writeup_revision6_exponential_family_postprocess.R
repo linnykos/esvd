@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/factorization_exponential_families.RData")
+load("../results/factorization_exponential_families_tmp.RData")
 
 correct_idx <- c(5, 18, 31, 44)
 paramMat[correct_idx,]
@@ -43,9 +43,9 @@ for(i in nusiance_idx){
     which.min(abs(quality_vec - 45))
   })
 
-  # tmp_vec <- factor(as.numeric(tmp_vec), levels = c(1,2,3))
-  # selected_idx[[i]] <- table(tmp_vec)
-  selected_idx[[i]] <- tmp_vec
+  tmp_vec <- factor(as.numeric(tmp_vec), levels = c(1,2,3))
+  selected_idx[[i]] <- table(tmp_vec)
+  # selected_idx[[i]] <- tmp_vec
 }
 
 #########################
