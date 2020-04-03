@@ -19,7 +19,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "max_val")
 paramMat <- paramMat[c(31,44),]
 
-trials <- 100
+trials <- 20
 ncores <- 15
 r_vec <- c(5, 50, 100)
 alpha_vec <- c(0.5, 2, 10)
