@@ -3,7 +3,7 @@ library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 5,
+paramMat <- cbind(50, 120, 4,
                   rep(rep(1:3, each = 4), times = 4), 50, 2, 50,
                   rep(1:4, each = 12),
                   rep(c(1/27, 1/800, 1/250, 1/1000), each = 12),
@@ -20,7 +20,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
 correct_idx <- c(5, 18, 31, 44)
 rearrange_idx <- c(correct_idx, c(1:nrow(paramMat))[-correct_idx])
 paramMat <- paramMat[rearrange_idx,]
-paramMat <- paramMat[c(3,4),]
+paramMat <- paramMat[c(4), , drop = F]
 
 trials <- 50
 ncores <- 15
