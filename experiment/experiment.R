@@ -1,48 +1,73 @@
 rm(list=ls())
-load("../results/step5_clustering.RData")
+load("../results/factorization_exponential_families.RData")
 
-color_func <- function(alpha = 0.2){
-  c(rgb(240/255, 228/255, 66/255, alpha), #yellow
-    rgb(86/255, 180/255, 233/255, alpha), #skyblue
-    rgb(0/255, 158/255, 115/255, alpha), #bluish green
-    rgb(0/255, 114/255, 178/255,alpha), #blue
-    rgb(230/255, 159/255, 0/255,alpha), #orange
-    rgb(210/255, 198/255, 36/255, alpha)) #darker yellow
+i <- 1
+table(sapply(res[[i]], length))
+len_vec <- sapply(res[[i]], length)
+res[[i]] <- res[[i]][which(len_vec > 1)]
+
+###################
+
+jj <- 3
+x <- res[[i]][[jj]]
+scalar_vec <- alpha_vec; family_val <- "curved_gaussian"
+for(j in 1:length(x$fit)){
+  nat_mat <- x$fit[[j]]$u_mat %*% t(x$fit[[j]]$v_mat)
+  plot_prediction_against_observed(dat = x$dat, nat_mat_list = list(nat_mat),
+                                         family = family_val, missing_idx_list = list(x$missing_idx),
+                                         scalar = scalar_vec[j], plot = T)
+
 }
 
-cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
-cell_type_vec <- as.factor(cell_type_vec)
-cluster_labels <- as.numeric(cell_type_vec)
-order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
-cluster_group_list <- lapply(order_vec, function(x){
-  grep(paste0("^", x), levels(cell_type_vec))
+# dat = x$dat
+# nat_mat_list = list(nat_mat)
+# width = 0.8
+# family = family_val
+# missing_idx_list = list(x$missing_idx)
+# scalar = scalar_vec[j]
+# plot = T
+# max_points = 500000
+#
+# pred_mat_list <- lapply(nat_mat_list, function(nat_mat){
+#   compute_mean(nat_mat, family = family, scalar = scalar)
+# })
+#
+# tmp_list <- lapply(1:length(nat_mat_list), function(i){
+#   cbind(dat[missing_idx_list[[i]]], pred_mat_list[[i]][missing_idx_list[[i]]])
+# })
+#
+# angle_vec <- sapply(tmp_list, .compute_principal_angle)
+# angle_val <- mean(angle_vec)
+#
+# tmp_mat <- do.call(rbind, tmp_list)
+# if(nrow(tmp_mat) > max_points){
+#   tmp_mat <- tmp_mat[sample(1:nrow(tmp_mat), max_points),]
+# }
+#
+# res <- .within_prediction_region(tmp_mat, family = family, width = width, scalar = scalar, angle_val = angle_val)
+# .plot_pca_diagnostic(tmp_mat, seq_vec = res$seq_vec, interval_mat = res$interval_mat,
+#                      principal_line = res$principal_line, angle_val = angle_val)
+
+
+###################
+
+tmp_vec <- sapply(res[[i]], function(x){
+  scalar_vec <- alpha_vec; family_val <- "curved_gaussian"
+
+  quality_list <- lapply(1:length(x$fit), function(j){
+    nat_mat <- x$fit[[j]]$u_mat %*% t(x$fit[[j]]$v_mat)
+    eSVD::plot_prediction_against_observed(dat = x$dat, nat_mat_list = list(nat_mat),
+                                           family = family_val, missing_idx_list = list(x$missing_idx),
+                                           scalar = scalar_vec[j], plot = F)
+  })
+
+  quality_mat <- do.call(rbind, lapply(quality_list, unlist))
+  if(any(quality_mat[,"bool"] == 1)){
+    qualified_idx <- c(1:length(x$fit))[which(quality_mat[,"bool"] == 1)]
+    qualified_idx[which.min(abs(quality_mat[qualified_idx, "angle_val"] - 45))]
+  } else {
+    which.min(abs(quality_mat[qualified_idx, "angle_val"] - 45))
+  }
 })
 
-
-col_vec <- color_func(1)[c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))]
-col_name <- c("orange", rep("bluish green", 2), rep("yellow", 6), rep("skyblue", 2), rep("orange", 2))
-order_vec <- c(3, 5.1, 5.2, seq(6.1, 6.6, by = 0.1), 4.1, 4.2, 2, 1)
-col_info <- data.frame(name = levels(cell_type_vec),
-                       idx = sort(unique(cluster_labels)),
-                       order = order_vec,
-                       col_name = col_name,
-                       col_code = col_vec)
-num_order_vec <- c(5, rep(3,2), rep(1,6), rep(2,2),  rep(5,2))
-col_vec3 <- color_func(0.3)[num_order_vec]
-
-set.seed(10)
-config <- umap::umap.defaults
-config$n_neighbors <- 30
-config$verbose <- T
-res <- umap::umap(dat_impute, config = config)
-
-plot(res$layout[,1], res$layout[,2], col = col_vec3[cluster_labels], pch = 16, asp = T)
-
-set.seed(10)
-config <- umap::umap.defaults
-config$n_neighbors <- 30
-config$verbose <- T
-res2 <- umap::umap(esvd_embedding$u_mat, config = config)
-
-plot(res2$layout[,1], res2$layout[,2], col = col_vec3[cluster_labels], pch = 16, asp = T)
-
+table(factor(as.numeric(tmp_vec), levels = c(1,2,3)))

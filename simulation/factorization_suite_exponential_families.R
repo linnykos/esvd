@@ -3,7 +3,7 @@ library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 3,
+paramMat <- cbind(50, 120, 5,
                   rep(rep(1:3, each = 4), times = 4), 50, 2, 50,
                   rep(1:4, each = 12),
                   rep(c(1/27, 1/800, 1/250, 1/1000), each = 12),
@@ -25,7 +25,7 @@ paramMat <- paramMat[c(4), , drop = F]
 trials <- 50
 ncores <- 15
 r_vec <- c(5, 50, 100)
-alpha_vec <- c(0.5, 2, 50)
+alpha_vec <- c(0.5, 2, 4)
 
 ################
 
