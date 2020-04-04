@@ -25,7 +25,7 @@ paramMat <- paramMat[c(4), , drop = F]
 trials <- 50
 ncores <- 15
 r_vec <- c(5, 50, 100)
-alpha_vec <- c(0.5, 2, 10)
+alpha_vec <- c(0.5, 2, 50)
 
 ################
 

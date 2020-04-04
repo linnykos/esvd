@@ -5,7 +5,6 @@ max_val <- 5000
 n <- nrow(dat_impute); d <- ncol(dat_impute)
 cv_trials <- 3
 svd_missing_list <- vector("list", length(cv_trials))
-k <- 5
 
 # generate list of missing indices
 missing_idx_list <- lapply(1:cv_trials, function(j){

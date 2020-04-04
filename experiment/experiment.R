@@ -8,7 +8,7 @@ res[[i]] <- res[[i]][which(len_vec > 1)]
 
 ###################
 
-jj <- 1
+jj <- 2
 x <- res[[i]][[jj]]
 scalar_vec <- alpha_vec; family_val <- "curved_gaussian"
 for(j in 1:length(x$fit)){
