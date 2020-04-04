@@ -3,7 +3,7 @@ library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 4,
+paramMat <- cbind(50, 120, 3,
                   rep(rep(1:3, each = 4), times = 4), 50, 2, 50,
                   rep(1:4, each = 12),
                   rep(c(1/27, 1/800, 1/250, 1/1000), each = 12),

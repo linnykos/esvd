@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/factorization_exponential_families_tmp.RData")
+load("../results/factorization_exponential_families.RData")
 
 correct_idx <- c(5, 18, 31, 44)
 paramMat[correct_idx,]
@@ -26,11 +26,11 @@ for(i in nusiance_idx){
   tmp_vec <- sapply(res[[i]], function(x){
 
     # if i is odd, then it's a negative binomial. if i is even, then it's a curved gaussian
-    if(i %% 2 == 1) {
-      scalar_vec <- r_vec; family_val <- "neg_binom"
-    } else {
+    #if(i %% 2 == 1) {
+    #  scalar_vec <- r_vec; family_val <- "neg_binom"
+    #} else {
       scalar_vec <- alpha_vec; family_val <- "curved_gaussian"
-    }
+   # }
 
     quality_vec <- sapply(1:length(x$fit), function(j){
       nat_mat <- x$fit[[j]]$u_mat %*% t(x$fit[[j]]$v_mat)
@@ -39,6 +39,7 @@ for(i in nusiance_idx){
                                        scalar = scalar_vec[j], plot = F)
     })
 
+    print(quality_vec)
 
     which.min(abs(quality_vec - 45))
   })
