@@ -117,7 +117,10 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
     res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
     pcurve_list <- res$pcurve_list; D <- res$D
-    return(pcurve_list)
+
+    names(pcurve_list) <- paste('Curve', 1:length(pcurve_list), sep='')
+
+    return(list(pcurve_list = pcurve_list, idx = idx_all))
   }
 
   print("Test 3")
