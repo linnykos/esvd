@@ -58,7 +58,6 @@ for(ll in 1:nrow(cluster_center)){
   points(cluster_center[ll,i], cluster_center[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[[ll]])
 }
 
-
 graphics.off()
 
 

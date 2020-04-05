@@ -27,7 +27,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                       use_initialization = F,
                       reduction_percentage = 0.1,
                       shrink = 1, thresh = 0.001, max_iter = 15,
-                      upscale_vec = NA, verbose = F){
+                      upscale_factor = NA, verbose = F){
 
 
   if(verbose) print("Starting to infer lineages")
@@ -40,8 +40,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   dat2 <- dat/reduction_factor
 
   if(verbose) print("Starting to infer curves")
-  res <- .get_curves(dat2, cluster_labels, lineages, shrink = shrink,
-                        thresh = thresh, max_iter = max_iter, upscale_vec = upscale_vec,
+  res <- .get_curves(dat2, cluster_labels, cluster_group_list, lineages, shrink = shrink,
+                        thresh = thresh, max_iter = max_iter, upscale_factor = upscale_factor,
                         verbose = verbose)
   curves <- res$pcurve_list
 
@@ -67,12 +67,16 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @param verbose boolean
 #'
 #' @return a list of \code{principal_curve} objects
-.get_curves <- function(dat, cluster_labels, lineages, shrink = 1,
+.get_curves <- function(dat, cluster_labels, cluster_group_list, lineages, shrink = 1,
                         thresh = 0.001, max_iter = 15,
-                        upscale_vec = NA, verbose = F){
+                        upscale_factor = NA, verbose = F){
   stopifnot(shrink >= 0 & shrink <= 1)
 
-  if(!any(is.na(upscale_vec))){
+  if(!any(is.na(upscale_factor))){
+    # intersect lineages with cluster_group_list to determine group sizes
+    cluster_intersection <- .intersect_lineages_cluster_group_list(lineages, cluster_group_list)
+    upscale_vec <- .compute_upscale_factor(cluster_labels, cluster_intersection, upscale_factor)
+
     idx_all <- unlist(lapply(1:max(cluster_labels, na.rm = T), function(x){
       idx <- which(cluster_labels == x)
       sample(idx, round(upscale_vec[x]*length(idx)), replace = T)
@@ -205,6 +209,52 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 }
 
 ##################
+
+.intersect_lineages_cluster_group_list <- function(lineages, cluster_group_list){
+  len <- length(cluster_group_list)
+  lineage_len <- length(lineages)
+
+  tmp <- lapply(cluster_group_list, function(cluster_group){
+    if(length(cluster_group) == 1) return(list(cluster_group))
+
+    # for each element in x, determine which lineages it is in
+    lineage_char <- sapply(cluster_group, function(clust){
+      idx <- which(sapply(lineages, function(lineage){clust %in% lineage}))
+      paste0(idx, collapse = "-")
+    })
+    lineage_char <- factor(lineage_char)
+
+    lis <- lapply(levels(lineage_char), function(lvl){
+      cluster_group[which(lineage_char == lvl)]
+    })
+
+    lis
+  })
+
+  # reformat list so it's just one big list, not nested lists
+  .flatten_list(tmp)
+}
+
+# code from https://stackoverflow.com/questions/8139677/how-to-flatten-a-list-to-a-list-without-coercion/8139959#8139959
+.flatten_list <- function(x) {
+  len <- sum(rapply(x, function(x) 1L))
+  y <- vector('list', len)
+  i <- 0L
+  rapply(x, function(x) { i <<- i+1L; y[[i]] <<- x })
+  y
+}
+
+.compute_upscale_factor <- function(cluster_labels, cluster_intersection, upscale_factor = 0.5){
+  size_vec <- sapply(cluster_intersection, function(x){length(which(cluster_labels %in% x))})
+  upscale_vec <- rep(NA, length(unique(cluster_labels)))
+
+  for(i in 1:length(cluster_intersection)){
+    upscale_vec[cluster_intersection[[i]]] <- (max(size_vec)/size_vec[i])^(upscale_factor)
+  }
+
+  upscale_vec
+}
+
 
 #' Initialize the weight matrix
 #'
