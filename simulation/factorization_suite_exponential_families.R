@@ -20,7 +20,6 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
 correct_idx <- c(5, 18, 31, 44)
 rearrange_idx <- c(correct_idx, c(1:nrow(paramMat))[-correct_idx])
 paramMat <- paramMat[rearrange_idx,]
-paramMat <- paramMat[c(4), , drop = F]
 
 trials <- 50
 ncores <- 15

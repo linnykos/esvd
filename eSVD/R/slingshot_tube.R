@@ -15,13 +15,14 @@
 #' @export
 bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
                              cluster_group_list, trials = 100, cores = NA,
-                             ...){
+                             verbose = F, ...){
   stopifnot(!any(is.na(cluster_group_list)))
 
   if(!is.na(cores)) doMC::registerDoMC(cores = cores)
 
   func <- function(x){
     set.seed(10*x)
+    if(verbose & x %% floor(trials/10) == 0) print('*')
     dat2 <- dat
     for(i in 1:length(unique(cluster_labels))){
       idx <- which(cluster_labels == i)
@@ -49,13 +50,13 @@ bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
 #'
 #' @return a numeric
 #' @export
-compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA){
+compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA, verbose = F){
   num_curves <- length(target_curve_list$lineages)
 
   if(!is.na(cores)) doMC::registerDoMC(cores = cores)
 
   func <- function(i){
-    print(paste0("Starting curve ", i))
+    if(verbose) print(paste0("Starting curve ", i))
     curve_mat <- target_curve_list$curves[[i]]$s[target_curve_list$curves[[i]]$ord,]
     curve_mat_collection <- .capture_curves(paste0(target_curve_list$lineages[[i]], collapse = "-"), bootstrap_curve_list)
 
