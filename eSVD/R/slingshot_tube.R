@@ -60,7 +60,7 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
     curve_mat <- target_curve_list$curves[[i]]$s[target_curve_list$curves[[i]]$ord,]
     curve_mat_collection <- .capture_curves(paste0(target_curve_list$lineages[[i]], collapse = "-"), bootstrap_curve_list)
 
-    .compute_l2_curve(curve_mat, curve_mat_collection)
+    .compute_l2_curve(curve_mat, curve_mat_collection, cores = cores)
   }
 
   mat_list <- lapply(1:num_curves, func)
@@ -93,7 +93,7 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
 .compute_l2_curve <- function(mat, mat_collection, verbose = F, cores = NA){
   n <- nrow(mat); k <- length(mat_collection)
 
-  func <- function(y){
+  func <- function(y, vec){
     dist_vec <- apply(mat_collection[[y]], 1, function(z){
       .l2norm(z - vec)
     })
@@ -105,11 +105,12 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
     if(verbose & x %% floor(n/10) == 0) cat('*')
 
     vec <- mat[x,]
+
     if(is.na(cores)){
-      sapply(1:k, func)
+      sapply(1:k, func, vec = vec)
     } else {
-      x <- 0 #bookkeeping purposes
-      unlist(foreach::"%dopar%"(foreach::foreach(x = 1:k), func(x)))
+      y <- 0 #bookkeeping purposes
+      unlist(foreach::"%dopar%"(foreach::foreach(y = 1:k), func(y, vec)))
     }
   })
 }
