@@ -39,11 +39,16 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
   dat2 <- dat/reduction_factor
 
+  print(lineages)
+
   if(verbose) print("Starting to infer curves")
   res <- .get_curves(dat2, cluster_labels, lineages, shrink = shrink,
                         thresh = thresh, max_iter = max_iter, upscale_vec = upscale_vec,
                         verbose = verbose)
   curves <- res$pcurve_list
+
+  print("Test 1")
+  print(length(curves))
 
   # adjust up
   for(k in 1:length(curves)){
@@ -102,6 +107,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
   pcurve_list <- res$pcurve_list; D <- res$D
 
+  print("Test 2")
+
   if(length(lineages) == 1) {
     s_list <- lapply(1:num_lineage, function(lin){
       sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
@@ -112,6 +119,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
     pcurve_list <- res$pcurve_list; D <- res$D
     return(pcurve_list)
   }
+
+  print("Test 3")
 
   ### determine curve hierarchy
   avg_order <- .initialize_curve_hierarchy(lineages, cluster_vec)

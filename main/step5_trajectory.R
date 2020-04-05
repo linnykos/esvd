@@ -20,7 +20,7 @@ esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, start
                                     cluster_group_list = cluster_group_list,
                                     verbose = T, upscale_vec = upscale_vec, reduction_percentage = 0.25)
 
-print(paste0(Sys.time(), ": Finished eSVD trajector"))
+print(paste0(Sys.time(), ": Finished eSVD trajectory"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 set.seed(10)
