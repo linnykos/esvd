@@ -21,7 +21,7 @@ correct_idx <- c(5, 18, 31, 44)
 rearrange_idx <- c(correct_idx, c(1:nrow(paramMat))[-correct_idx])
 paramMat <- paramMat[rearrange_idx,]
 
-trials <- 50
+trials <- 25
 ncores <- 15
 r_vec <- c(5, 50, 100)
 alpha_vec <- c(0.5, 2, 50)
