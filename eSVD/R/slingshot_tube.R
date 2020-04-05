@@ -55,15 +55,15 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
 
   if(!is.na(cores)) doMC::registerDoMC(cores = cores)
 
-  func <- function(i){
+  mat_list <- lapply(1:num_curves, function(i){
     if(verbose) print(paste0("Starting curve ", i))
     curve_mat <- target_curve_list$curves[[i]]$s[target_curve_list$curves[[i]]$ord,]
     curve_mat_collection <- .capture_curves(paste0(target_curve_list$lineages[[i]], collapse = "-"), bootstrap_curve_list)
 
-    .compute_l2_curve(curve_mat, curve_mat_collection, cores = cores)
-  }
+    .compute_l2_curve(curve_mat, curve_mat_collection, cores = cores, verbose = verbose)
+  })
 
-  mat_list <- lapply(1:num_curves, func)
+  print(paste0(Sys.time(), ": Finished mat_list"))
 
   sd_vec <- sapply(mat_list, function(x){
     stats::quantile(apply(x, 2, function(x){
