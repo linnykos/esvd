@@ -63,16 +63,11 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
     .compute_l2_curve(curve_mat, curve_mat_collection)
   }
 
-  if(is.na(cores)){
-    mat_list <- lapply(1:num_curves, func)
-  } else {
-    i <- 0 #bookkeeping purposes
-    mat_list <- foreach::"%dopar%"(foreach::foreach(i = 1:num_curves), func(i))
-  }
+  mat_list <- lapply(1:num_curves, func)
 
   sd_vec <- sapply(mat_list, function(x){
     stats::quantile(apply(x, 2, function(x){
-      stats::quantile(x,probs = 0.95)
+      stats::quantile(x, probs = 0.95)
     }), probs = 0.95)
   })
 
@@ -95,18 +90,26 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA
 }
 
 # for every point in our_mat, find its l2 distance to its closest neighbor in all curves in our_mat_collection
-.compute_l2_curve <- function(mat, mat_collection, verbose = F){
+.compute_l2_curve <- function(mat, mat_collection, verbose = F, cores = NA){
   n <- nrow(mat); k <- length(mat_collection)
+
+  func <- function(y){
+    dist_vec <- apply(mat_collection[[y]], 1, function(z){
+      .l2norm(z - vec)
+    })
+
+    min(dist_vec)
+  }
+
   sapply(1:n, function(x){
     if(verbose & x %% floor(n/10) == 0) cat('*')
 
     vec <- mat[x,]
-    sapply(1:k, function(y){
-      dist_vec <- apply(mat_collection[[k]], 1, function(z){
-        .l2norm(z-vec)
-      })
-
-      min(dist_vec)
-    })
+    if(is.na(cores)){
+      sapply(1:k, func)
+    } else {
+      x <- 0 #bookkeeping purposes
+      unlist(foreach::"%dopar%"(foreach::foreach(x = 1:k), func(x)))
+    }
   })
 }
