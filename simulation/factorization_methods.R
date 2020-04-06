@@ -96,17 +96,20 @@ method_esvd <- function(dat, paramMat, k = 3, ncores = NA){
                                    verbose = F)
   })
 
-
-  quality_vec <- sapply(1:nrow(paramMat), function(i){
+  quality_list <- lapply(1:nrow(paramMat), function(j){
     nat_mat <- fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat)
-    mean_mat <- eSVD::compute_mean(nat_mat, family = "neg_binom", scalar = paramMat[i, "scalar"])
-    eSVD::plot_prediction_against_observed(dat, nat_mat_list = list(nat_mat),
-                                           scalar = paramMat[i, "scalar"],
+    eSVD::plot_prediction_against_observed(dat = dat, nat_mat_list = list(nat_mat),
                                            family = "neg_binom", missing_idx_list = list(missing_idx),
-                                           plot = F)
+                                           scalar = paramMat[i, "scalar"], plot = F)
   })
 
-  idx <- which.min(abs(quality_vec - 45))
+  quality_mat <- do.call(rbind, lapply(quality_list, unlist))
+  if(any(quality_mat[,"bool"] == 1)){
+    qualified_idx <- c(1:nrow(paramMat))[which(quality_mat[,"bool"] == 1)]
+    idx <- qualified_idx[which.min(abs(quality_mat[qualified_idx, "angle_val"] - 45))]
+  } else {
+    idx <- which.min(abs(quality_mat[qualified_idx, "angle_val"] - 45))
+  }
 
   scalar <- paramMat[idx, "scalar"]
 

@@ -4,15 +4,15 @@ library(eSVD)
 source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
-paramMat <- cbind(50, 120, 10,
+paramMat <- cbind(50, 120, 5,
                   2, 50, 1/250, 1000,
-                  100, 1:6)
+                  50, 1:6)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "max_iter", "modifier", "max_val",
                         "size","method")
 paramMat <- paramMat[2,,drop = F]
 
-trials <- 100
+trials <- 50
 ncores <- 20
 
 ################
@@ -47,7 +47,7 @@ criterion <- function(dat, vec, y){
 
   } else if(vec["method"] == 2){ #esvd
     dat_obs <- dat$dat
-    paramMat_esvd <- matrix(c(50, 100, 500, 1000), nrow = 4, ncol = 1)
+    paramMat_esvd <- matrix(c(5, 50, 100), nrow = 3, ncol = 1)
     colnames(paramMat_esvd) <- c("scalar")
     tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, ncores = ncores)
 
