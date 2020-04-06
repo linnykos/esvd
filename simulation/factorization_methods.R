@@ -96,7 +96,7 @@ method_esvd <- function(dat, paramMat, k = 3, ncores = NA){
                                    verbose = F)
   })
 
-  quality_list <- lapply(1:nrow(paramMat), function(j){
+  quality_list <- lapply(1:nrow(paramMat), function(i){
     nat_mat <- fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat)
     eSVD::plot_prediction_against_observed(dat = dat, nat_mat_list = list(nat_mat),
                                            family = "neg_binom", missing_idx_list = list(missing_idx),
