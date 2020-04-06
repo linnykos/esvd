@@ -35,6 +35,7 @@ save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 #########
 
+set.seed(10)
 svd_curves <- slingshot(svd_embedding[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                         cluster_group_list = cluster_group_list,
                         verbose = T, upscale_factor = upscale_factor, reduction_percentage = 0.25)
