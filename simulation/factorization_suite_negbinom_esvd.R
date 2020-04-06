@@ -12,7 +12,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "size","method")
 paramMat <- paramMat[2,,drop = F]
 
-trials <- 50
+trials <- 1
 ncores <- 20
 
 ################
