@@ -32,7 +32,7 @@ col_info_esvd$factor_idx <- as.numeric(as.factor(col_info_esvd$col_name))
 col_info_esvd[,c(5,6)] <- col_info_esvd[,c(6,5)]
 colnames(col_info_esvd)[c(5,6)] <- colnames(col_info_esvd)[c(6,5)]
 col_vec_short <- color_func(0.9)[c(1,4)]
-cluster_center_esvd <- .compute_cluster_center(esvd_embedding$u_mat[,1:3], .construct_cluster_matrix(cluster_labels))
+cluster_center_esvd <- eSVD:::.compute_cluster_center(esvd_embedding$u_mat[,1:3], eSVD:::.construct_cluster_matrix(cluster_labels))
 
 
 num_order_vec_svd <- c(5, rep(3,2), c(1,1,1,1,1,1), rep(2,2),  rep(5,2))
@@ -48,7 +48,7 @@ col_info_svd <- data.frame(name = levels(cell_type_vec),
 col_info_svd$factor_idx <- as.numeric(as.factor(col_info_svd$col_name))
 col_info_svd[,c(5,6)] <- col_info_svd[,c(6,5)]
 colnames(col_info_svd)[c(5,6)] <- colnames(col_info_svd)[c(6,5)]
-cluster_center_svd <- .compute_cluster_center(svd_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
+cluster_center_svd <- eSVD:::.compute_cluster_center(svd_embedding[,1:3], eSVD:::.construct_cluster_matrix(cluster_labels))
 
 bound_matrix_esvd <- list(list(xlim = c(0, 3), ylim = c(-2, 2), zlim = c(-1.5, 1)),
                     list(xlim = c(0, 3), ylim = c(-2, 2), zlim = c(-1.5, 1)),
