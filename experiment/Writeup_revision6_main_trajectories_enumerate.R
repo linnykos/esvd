@@ -88,9 +88,9 @@ for(kk in 1:nrow(angle_matrix)){
                          xlab = "Latent dimension 1", ylab = "Latent dimension 2",
                          zlab = "Latent dimension 3",
                          theta = angle_matrix[kk,1], phi = angle_matrix[kk,2],
-                         xlim = bound_matrix_esvd[[kk]]$xlim,
-                         ylim = bound_matrix_esvd[[kk]]$ylim,
-                         zlim = bound_matrix_esvd[[kk]]$zlim)
+                         xlim = bound_matrix_esvd[[1]]$xlim,
+                         ylim = bound_matrix_esvd[[1]]$ylim,
+                         zlim = bound_matrix_esvd[[1]]$zlim)
 
   curves <- esvd_curves$curves
   col_vec_short <- color_func(0.9)[c(1,4)]
@@ -124,9 +124,9 @@ for(kk in 1:nrow(angle_matrix)){
                          xlab = "Latent dimension 1", ylab = "Latent dimension 2",
                          zlab = "Latent dimension 3",
                          theta = angle_matrix[kk,1], phi = angle_matrix[kk,2],
-                         xlim = bound_matrix_esvd[[kk]]$xlim,
-                         ylim = bound_matrix_esvd[[kk]]$ylim,
-                         zlim = bound_matrix_esvd[[kk]]$zlim)
+                         xlim = bound_matrix_esvd[[1]]$xlim,
+                         ylim = bound_matrix_esvd[[1]]$ylim,
+                         zlim = bound_matrix_esvd[[1]]$zlim)
 
   curves <- esvd_curves$curves
   col_vec_short <- color_func(0.9)[c(1,4)]
@@ -170,9 +170,9 @@ for(kk in 1:nrow(angle_matrix)){
                          xlab = "Latent dimension 1", ylab = "Latent dimension 2",
                          zlab = "Latent dimension 3",
                          theta = angle_matrix[kk,1], phi = angle_matrix[kk,2],
-                         xlim = bound_matrix_svd[[kk]]$xlim,
-                         ylim = bound_matrix_svd[[kk]]$ylim,
-                         zlim = bound_matrix_svd[[kk]]$zlim)
+                         xlim = bound_matrix_svd[[1]]$xlim,
+                         ylim = bound_matrix_svd[[1]]$ylim,
+                         zlim = bound_matrix_svd[[1]]$zlim)
 
   curves <- svd_curves$curves
 
@@ -201,9 +201,9 @@ for(kk in 1:nrow(angle_matrix)){
                          xlab = "Latent dimension 1", ylab = "Latent dimension 2",
                          zlab = "Latent dimension 3",
                          theta = angle_matrix[kk,1], phi = angle_matrix[kk,2],
-                         xlim = bound_matrix_svd[[kk]]$xlim,
-                         ylim = bound_matrix_svd[[kk]]$ylim,
-                         zlim = bound_matrix_svd[[kk]]$zlim)
+                         xlim = bound_matrix_svd[[1]]$xlim,
+                         ylim = bound_matrix_svd[[1]]$ylim,
+                         zlim = bound_matrix_svd[[1]]$zlim)
 
   curves <- svd_curves$curves
 
