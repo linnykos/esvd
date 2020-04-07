@@ -1,11 +1,16 @@
 rm(list=ls())
 library(simulation)
 library(eSVD)
-library(NMF)
 source("../simulation/factorization_generator.R")
+source("../simulation/factorization_methods.R")
 
-paramMat <- cbind(c(10,50,100), c(24,120,240), 0.1, 150, 2, 2, -2000)
-colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
+paramMat <- cbind(c(10, 50, 100), 120, 5,
+                  2, 50, 1/250, 1000,
+                  50)
+colnames(paramMat) <- c("n_each", "d_each", "sigma",
+                        "k", "max_iter", "modifier", "max_val",
+                        "size")
+
 trials <- 1
 
 ################
@@ -20,48 +25,39 @@ rule <- function(vec){
   n_each <- vec["n_each"]
   d_each <- vec["d_each"]
   sigma <- vec["sigma"]
-  total <- vec["total"]
+  modifier <- vec["modifier"]
 
-  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma)
+  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma, modifier)
   nat_mat <- res$nat_mat
 
-  obs_mat <- round(100*generator_curved_gaussian(nat_mat, alpha = 2))
+  dat <- generator_esvd_nb(nat_mat, vec["size"])
+  obs_mat <- round(dat * 1000/max(dat))
 
   list(dat = obs_mat, truth = res$cell_mat)
 }
 
 criterion <- function(dat, vec, y){
   print(y)
-  cluster_labels <- rep(1:4, each = vec["n_each"])
 
-  # # Our method
   set.seed(10)
-  init <- eSVD::initialization(dat$dat, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
-  tmp <- eSVD::fit_factorization(dat$dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                                       family = "gaussian",  reparameterize = T,
-                                       max_iter = 100, max_val = vec["max_val"],
-                                       scalar = vec["scalar"],
-                                       return_path = F, cores = NA,
-                                       verbose = F)
+  init <- eSVD::initialization(dat, family = "neg_binom", k = 2, max_val = 2000,
+                               scalar = vec["size"])
+  fit <- eSVD::fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                                 family = "neg_binom", scalar = vec["size"],
+                                 max_iter = 50, max_val = 2000,
+                                 return_path = F, cores = ncores, verbose = F)
 
-  res_our <- tmp$u_mat
-  curves_our <- eSVD::slingshot(res_our[,1:vec["k"]], cluster_labels,
-                                      starting_cluster = 1,
-                                      verbose = F)
-
-  list(res_our = res_our, curves_our = curves_our,
-       dat = dat)
+  list(fit = fit)
 }
 
-## set.seed(1); zz <- criterion(rule(paramMat[3,]), paramMat[3,], 1)
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = NA, as_list = T,
                                         filepath = "../results/illustration_example_tmp.RData",
                                         verbose = T)
+save.image("../results/illustration_example.RData")
 
 ###################################
-
 
 .compute_true_density <- function(cell_mat, grid_size,
                                   sigma = 0.05){

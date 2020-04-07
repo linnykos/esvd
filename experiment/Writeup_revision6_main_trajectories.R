@@ -63,7 +63,7 @@ for(k in 1:ncol(combn_mat)){
   }
 
   for(ll in 1:nrow(cluster_center_esvd)){
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2, col = "black")
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
     points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
   }
 
@@ -132,7 +132,7 @@ for(k in 1:ncol(combn_mat)){
   }
 
   for(ll in 1:nrow(cluster_center_esvd)){
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2, col = "black")
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
     points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
   }
 
