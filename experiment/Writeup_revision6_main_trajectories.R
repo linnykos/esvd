@@ -43,8 +43,8 @@ col_vec_short <- color_func(0.9)[c(1,4)]
 plotting_order <- c(3,4,5,2,6,1)
 
 cluster_center_esvd <- .compute_cluster_center(esvd_embedding$u_mat[,1:3], .construct_cluster_matrix(cluster_labels))
-
 combn_mat <- combn(3,2)
+
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
@@ -79,6 +79,40 @@ for(k in 1:ncol(combn_mat)){
 
   graphics.off()
 }
+
+png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup6_main_esvd_2dplots.png"),
+    height = 830, width = 2300, res = 300,
+    units = "px")
+par(mfrow = c(1,3), mar = c(4,4,4,1))
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+  plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = ifelse(k==2, "eSVD embedding and trajectories\n(Curved Gaussian)", ""))
+
+  for(ll in plotting_order) {
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+    idx <- which(cluster_labels %in% target_indices)
+    points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
+           col = col_vec2_esvd[target_indices[1]])
+  }
+
+  for(ll in 1:nrow(cluster_center_esvd)){
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2, col = "black")
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
+  }
+
+
+  curves <- esvd_curves$curves
+  for(ll in 1:length(curves)) {
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = col_vec_short[ll], lwd = 5)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
+          lty = 3, lwd = 2)
+  }
+}
+graphics.off()
 
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
@@ -124,8 +158,8 @@ col_info_svd
 plotting_order <- c(2,3,1,4)
 
 cluster_center_svd <- .compute_cluster_center(svd_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
-
 combn_mat <- combn(3,2)
+
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
@@ -159,6 +193,42 @@ for(k in 1:ncol(combn_mat)){
 
   graphics.off()
 }
+
+png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup6_main_svd_2dplots.png"),
+    height = 830, width = 2300, res = 300,
+    units = "px")
+par(mfrow = c(1,3), mar = c(4,4,4,1))
+
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = ifelse(k == 2, "SVD embedding and trajectories\n(Constant-variance Gaussian)", ""))
+
+  for(ll in plotting_order) {
+    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
+    idx <- which(cluster_labels %in% target_indices)
+    points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
+           col = col_vec2_svd[target_indices[1]])
+  }
+
+
+  for(ll in 1:nrow(cluster_center_svd)){
+    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
+    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  }
+
+
+  curves <- svd_curves$curves
+  for(ll in 1:length(curves)) {
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 5)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 3)
+  }
+}
+graphics.off()
+
 
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
@@ -195,7 +265,8 @@ spacing <- 3
 bound_matrix <- list(list(xlim = 0.5+c(0,spacing), ylim = -2+c(0,spacing), zlim = -1.5+c(0,spacing)),
                     list(xlim = 0.5+c(0,spacing), ylim = -2+c(0,spacing), zlim = -2+c(0,spacing)),
                     list(xlim = 0.5+c(0,spacing), ylim = -1+c(0,spacing), zlim = -1.5+c(0,spacing)))
-col_vec3_esvd <- color_func(0.09)[num_order_vec_esvd]
+tmp <- color_func(0.07); tmp[6] <- rgb(100/255, 100/255, 100/255, 0.05)
+col_vec3_esvd <- tmp[num_order_vec_esvd]
 
 for(kk in 1:nrow(angle_matrix)){
   print(kk)
@@ -218,18 +289,18 @@ for(kk in 1:nrow(angle_matrix)){
                          zlim = bound_matrix[[kk]]$zlim)
 
   curves <- esvd_curves$curves
-  col_vec_short <- color_func(0.9)[c(1,4)]
+  col_vec_short <- color_func(1)[c(1,4)]
 
   for(i in 1:length(curves)){
     ord <- curves[[i]]$ord
     plot3D::lines3D(x = curves[[i]]$s[ord, 1],
                     y = curves[[i]]$s[ord, 2],
                     z = curves[[i]]$s[ord, 3],
-                    add = T, colkey = F, col = "black", lwd = 6)
+                    add = T, colkey = F, col = "black", lwd = 12)
     plot3D::lines3D(x = curves[[i]]$s[ord, 1],
                     y = curves[[i]]$s[ord, 2],
                     z = curves[[i]]$s[ord, 3],
-                    add = T, colkey = F, col = col_vec_short[i], lwd = 6)
+                    add = T, colkey = F, col = col_vec_short[i], lwd = 12)
   }
   graphics.off()
 }

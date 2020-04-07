@@ -4,7 +4,7 @@ library(eSVD)
 source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
-paramMat <- cbind(50, 120, 10,
+paramMat <- cbind(50, 120, 5,
                   2, 50, 1/250, 1000,
                   80, 120, 600,
                   1/4, 1/4, 1/2,
@@ -58,7 +58,7 @@ criterion <- function(dat, vec, y){
     dat_obs <- dat$dat
     paramMat_esvd <- matrix(c(50, 100, 500, 1000), nrow = 4, ncol = 1)
     colnames(paramMat_esvd) <- c("scalar")
-    tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, ncores = ncores)
+    tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, ncores = ncores, k = 3)
 
     return(list(fit = tmp, truth = dat$truth))
 
