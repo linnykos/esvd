@@ -12,14 +12,15 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "size")
 
 trials <- 1
+ncores <- NA
 
 ################
 
 cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
-                     40,10, 60,80, 60,80, 100, 25)/10,
+                     40,10, 60,80, 60,80, 100, 25),
                    nrow = 4, ncol = 4, byrow = T)
 gene_pop <- matrix(c(20,90, 25,100,
-                     90,20, 100,25)/100, nrow = 2, ncol = 4, byrow = T)
+                     90,20, 100,25)/20, nrow = 2, ncol = 4, byrow = T)
 
 rule <- function(vec){
   n_each <- vec["n_each"]
@@ -37,12 +38,12 @@ rule <- function(vec){
 }
 
 criterion <- function(dat, vec, y){
-  print(y)
+  dat_obs <- dat$dat
 
   set.seed(10)
-  init <- eSVD::initialization(dat, family = "neg_binom", k = 2, max_val = 2000,
+  init <- eSVD::initialization(dat_obs, family = "neg_binom", k = vec["k"], max_val = 2000,
                                scalar = vec["size"])
-  fit <- eSVD::fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+  fit <- eSVD::fit_factorization(dat_obs, u_mat = init$u_mat, v_mat = init$v_mat,
                                  family = "neg_binom", scalar = vec["size"],
                                  max_iter = 50, max_val = 2000,
                                  return_path = F, cores = ncores, verbose = F)
@@ -57,7 +58,11 @@ res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         verbose = T)
 save.image("../results/illustration_example.RData")
 
+##  i <- 2; y <- 1; set.seed(y); zz1 <- criterion(rule(paramMat[i,]), paramMat[i,], y); plot(zz1$fit$u_mat[,1], zz1$fit$u_mat[,2], asp = T)
+
 ###################################
+rm(list=ls())
+load("../results/illustration_example.RData")
 
 .compute_true_density <- function(cell_mat, grid_size,
                                   sigma = 0.05){
