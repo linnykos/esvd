@@ -4,7 +4,7 @@ library(eSVD)
 source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
-paramMat <- cbind(50, 120, 10,
+paramMat <- cbind(50, 120, 5,
                   2, 50, 1/250, 1000,
                   80, 120, 600,
                   1/4, 1/4, 1/2,
@@ -16,8 +16,8 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "method")
 paramMat <- paramMat[-2,,drop = F]
 
-trials <- 100
-ncores <- 15
+trials <- 50
+ncores <- 20
 
 ################
 
@@ -58,7 +58,7 @@ criterion <- function(dat, vec, y){
     dat_obs <- dat$dat
     paramMat_esvd <- matrix(c(50, 100, 500, 1000), nrow = 4, ncol = 1)
     colnames(paramMat_esvd) <- c("scalar")
-    tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, ncores = ncores)
+    tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, ncores = ncores, k = 3)
 
     return(list(fit = tmp, truth = dat$truth))
 
@@ -75,7 +75,7 @@ criterion <- function(dat, vec, y){
   } else if(vec["method"] == 5) { #umap
     dat_obs <- dat$dat
     paramMat_umap <- as.matrix(expand.grid(c(2, 3, 5, 15, 30, 50),
-                                      c(1e-5, 1e-3, 0.1, 0.3, 0.5, 0.9)))
+                                           c(1e-5, 1e-3, 0.1, 0.3, 0.5, 0.9)))
     colnames(paramMat_umap) <- c("n_neighbors", "min_dist")
 
     tmp <- method_umap_oracle(dat_obs, cell_truth = dat$truth, paramMat = paramMat_umap)

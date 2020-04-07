@@ -18,6 +18,8 @@ res[[6]] <- res[[5]]
 res[3:5] <- res[2:4]
 res[2] <- res_tmp[1]
 
+res[c(1,2)] <- res[c(2,1)]
+
 ################
 
 cluster_labels <- rep(1:4, each = 50)
@@ -75,13 +77,13 @@ den_list <- lapply(1:nrow(res_mat), function(i){
 scaling_factor <- quantile(sapply(den_list, function(x){max(x$y)}), probs = 0.3)
 
 col_vec <- color_func(1)[c(5,2,3,1,4,6)]
-text_vec <- c("SVD", "eSVD", "ZINB-WaVE", "pCMF", "UMAP", "t-SNE")
+text_vec <- c("eSVD", "SVD", "ZINB-WaVE", "pCMF", "(Oracle)\nUMAP", "(Oracle)\nt-SNE")
 max_height <- 3
 
 png(paste0("../../esvd_results/figure/experiment/factorization_negbinom_density.png"),
     height = 1800, width = 1000, res = 300, units = "px")
 par(mar = c(4,0.5,4,0.5))
-plot(NA, xlim = c(-0.3, 1), ylim = c(0, 6.5), ylab = "",
+plot(NA, xlim = c(-0.3, 1), ylim = c(0, 6.2), ylab = "",
      yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau",
      main = paste0("Relative embedding correlation"))
 axis(side = 1, at = seq(0,1,length.out = 6))
@@ -100,4 +102,30 @@ for(i in 1:nrow(res_mat)){
   points(med, y = nrow(res_mat) - i, col = col_vec[i], pch = 16, cex = 1.5)
 }
 text(x = rep(-0.15,6), y = seq(5.35, 0.35, by=-1), labels = text_vec)
+graphics.off()
+
+##########################
+
+
+col_func2 <- function(alpha){
+  c( rgb(86/255, 180/255, 233/255, alpha), #skyblue
+     rgb(240/255, 228/255, 66/255, alpha), #yellow
+     rgb(0/255, 158/255, 115/255, alpha), #bluish green
+     rgb(230/255, 159/255, 0/255,alpha)) #orange
+}
+col_vec <- col_func2(1)
+
+png(paste0("../../esvd_results/figure/experiment/factorization_negbinom_embedding.png"),
+    height = 1500, width = 1500, res = 300, units = "px")
+text_vec <- c("eSVD", "SVD", "ZINB-WaVE", "pCMF", "(Oracle) UMAP", "(Oracle) t-SNE")
+par(mfrow = c(2,3), mar = c(1, 1, 1.5, 1))
+for(i in 1:6){
+  idx <- which.min(abs(res_mat[i,] - median(res_mat[i,])))
+
+  plot(res[[i]][[idx]]$fit$fit[,1], res[[i]][[idx]]$fit$fit[,2],
+       asp = T, pch = 16, col = col_vec[rep(1:4, each = paramMat[1,"n_each"])],
+       xlab = "Latent dim. 1", ylab = "Latent dim. 2",
+       main = paste0(text_vec[i], ": (", round( median(res_mat[i,]), 2), ")"),
+       xaxt = "n", yaxt = "n")
+}
 graphics.off()

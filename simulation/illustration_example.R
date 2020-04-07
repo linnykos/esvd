@@ -4,7 +4,7 @@ library(eSVD)
 source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
-paramMat <- cbind(c(10, 50, 100), 120, 5,
+paramMat <- cbind(c(10, 50, 200), 120, 5,
                   2, 50, 1/250, 1000,
                   50)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
@@ -12,7 +12,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "size")
 
 trials <- 1
-ncores <- NA
+ncores <- 10
 
 ################
 
@@ -48,7 +48,7 @@ criterion <- function(dat, vec, y){
                                  max_iter = 50, max_val = 2000,
                                  return_path = F, cores = ncores, verbose = F)
 
-  list(fit = fit)
+  list(fit = fit, truth = dat$truth)
 }
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
@@ -63,13 +63,18 @@ save.image("../results/illustration_example.RData")
 ###################################
 rm(list=ls())
 load("../results/illustration_example.RData")
+for(j in 1:3){
+  print(apply(res[[j]][[1]]$fit$u_mat, 2, range))
+  print(apply(res[[j]][[1]]$truth, 2, range))
+}
 
-.compute_true_density <- function(cell_mat, grid_size,
-                                  sigma = 0.05){
-  spacing <- 0.25
-  xrange <- c(floor(min(cell_mat[,1]-.5)/spacing)*spacing, ceiling(max(cell_mat[,1]+.5)/spacing)*spacing)
-  yrange <- c(floor(min(cell_mat[,2]-.5)/spacing)*spacing, ceiling(max(cell_mat[,2]+.5)/spacing)*spacing)
+res[[1]][[1]]$fit$u_mat <- res[[1]][[1]]$fit$u_mat %*% diag(c(-1,1))
+res[[2]][[1]]$fit$u_mat <- res[[2]][[1]]$fit$u_mat %*% diag(c(1,-1))
+res[[3]][[1]]$fit$u_mat <- res[[3]][[1]]$fit$u_mat %*% diag(c(-1,1))
 
+
+.compute_true_density <- function(cell_mat, grid_size, xrange, yrange,
+                                  sigma = 5){
   xseq <- seq(xrange[1], xrange[2], length.out = grid_size)
   yseq <- seq(yrange[1], yrange[2], length.out = grid_size)
   mat <- matrix(NA, nrow = length(yseq), ncol = length(xseq))
@@ -104,31 +109,45 @@ col_vec <- col_func2(1)
 # compute the grid of the density
 set.seed(10)
 n_pop <- 500
-pop_res <- generate_natural_mat(cell_pop, gene_pop, n_pop, 500, 0)
-den_res <- .compute_true_density(pop_res$cell_mat, 151, 0.1)
+vec <- paramMat[1,]
+pop_res <- generate_natural_mat(cell_pop, gene_pop, n_pop, vec["d_each"], 0.01, vec["modifier"])
+den_res <- .compute_true_density(pop_res$cell_mat, 101, vec["sigma"]/4, xrange=  c(-1.3, 0.2), yrange = c(0.05-(2.75*1.5/2)/2, 0.05+(2.75*1.5/2)/2))
 mat <- den_res$density_mat
 rownames(mat) <- as.numeric(rownames(mat))
 colnames(mat) <- as.numeric(colnames(mat))
 
-# compute the points associated with each cluster
-## identify all the high-probability regions
-idx <- which(mat > quantile(mat, probs = 0.95), arr.ind = T)
-## translate into coordinates
-idx[,1] <- as.numeric(rownames(mat))[idx[,1]]
-idx[,2] <- as.numeric(colnames(mat))[idx[,2]]
-idx <- idx[,c(2,1)]
-## assign each point to clusters
-cluster_identifier <- as.numeric(apply(idx, 1, function(x){
-  i <- which.min(abs(apply(pop_res$cell_mat, 1, function(y){.l2norm(x-y)})))
-  floor((i-1)/n_pop)+1
-}))
+# plot(pop_res$cell_mat[,1], pop_res$cell_mat[,2], asp = T, col = rep(1:4, each = n_pop), pch = 16)
 
 # compute the population lineage
-pop_lineage <- eSVD::slingshot(pop_res$cell_mat,
-                                     rep(1:4, each = n_pop),
-                                     starting_cluster = 1, verbose = F, reduction_percentage = 0.1)
+lineages <- list(Lineage1 = c(1,2,3), Lineage2 = c(1,2,4))
+cluster_labels = rep(1:4, each = n_pop)
+starting_cluster = 1
+cluster_group_list = NA
+use_initialization = F
+reduction_percentage = 0.1
+shrink = 1
+thresh = 0.001
+max_iter = 15
+upscale_factor = NA
+verbose = F
 
-png("../figure/simulation/example_trajectories.png", height = 960, width = 2500, res = 300, units = "px")
+dat <- pop_res$cell_mat
+reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
+dat2 <- dat/reduction_factor
+
+curve_res <- .get_curves(dat2, cluster_labels, cluster_group_list, lineages, shrink = shrink,
+                   thresh = thresh, max_iter = max_iter, upscale_factor = upscale_factor,
+                   verbose = verbose)
+curves <- curve_res$pcurve_list
+
+# adjust up
+for(k in 1:length(curves)){
+  curves[[k]]$s <- curves[[k]]$s*reduction_factor
+}
+
+pop_lineage <- list(lineages = lineages, curves = curves, idx = res$idx)
+
+png("../../esvd_results/figure/experiment/example_trajectories.png", height = 960, width = 2500, res = 300, units = "px")
 par(mfrow = c(1,4), mar = c(4,4,4,0.1))
 
 image(as.numeric(colnames(mat)),
@@ -142,8 +161,8 @@ contour(as.numeric(colnames(mat)),
         add = T, drawlabels = F, col = rgb(0,0,0,0.5), lwd = 1,
         levels = quantile(mat, probs = c(0.25,0.5,0.75)))
 
-axis(1, at = seq(-3,0,by=1), labels = T, las=2)
-axis(2, at = seq(-3,2,by=1), labels = T, las=2)
+axis(1)
+axis(2)
 
 for(j in 1:length(pop_lineage$curves)){
   ord <- pop_lineage$curves[[j]]$ord
@@ -153,13 +172,13 @@ for(j in 1:length(pop_lineage$curves)){
 
 # plot the centers of each cluster
 pop_means <- t(sapply(1:4, function(i){
-  colMeans(idx[which(cluster_identifier == i),])
+  colMeans(pop_res$cell_mat[which(cluster_labels == i),])
 }))
 points(pop_means[,1], pop_means[,2], pch = 21, cex = 2, bg = col_vec)
 
 # HOT FIX
 for(i in 1:length(res)){
-  tmp <- res[[i]][[1]]$res_our; tmp[,1] <- -tmp[,1]
+  tmp <- res[[i]][[1]]$fit$u_mat
   n <- paramMat[i,"n_each"]
   samp_cluster_identifier <- rep(1:4, each = n)
 
@@ -167,21 +186,17 @@ for(i in 1:length(res)){
   samp_means <- t(sapply(1:4, function(i){
     colMeans(tmp[which(samp_cluster_identifier == i),])
   }))
-  rescale_factor <- median(pop_means/samp_means)
-  tmp <- tmp*rescale_factor
 
   # sig <- ifelse(mean(tmp[1:n_seq[i],2]) > mean(tmp[(3*n_seq[i]+1):(4*n_seq[i]),2]), -1, 1)
   # tmp[,2] <- sig*tmp[,2]
   plot(tmp[,1], tmp[,2],
        pch = 16, col = col_vec[rep(1:4, each = n)],
        asp = T,
-       xlim = range(as.numeric(colnames(mat))),
-       ylim = range(as.numeric(rownames(mat))),
        xlab = "Latent dimension 1", ylab = "Latent dimension 2", axes = F, cex.lab = 1.25,
        main = paste0("Estimated embedding\n(n = ", 4*n, ")"))
 
-  axis(1, at = seq(-3,0,by=1), labels = T, las=2)
-  axis(2, at = seq(-3,2,by=1), labels = T, las=2)
+  axis(1)
+  axis(2)
 
   # for(j in 1:length(res[[i]][[1]]$curves_our$curves)){
   #   ord <- res[[i]][[1]]$curves_our$curves[[j]]$ord
