@@ -15,7 +15,7 @@ slingshot_3dplot <- function(dat, cluster_labels, bg_col_vec,
   if(!all(is.na(cluster_center))){
     plot3D::points3D(cluster_center[,1], cluster_center[,2], cluster_center[,3],
                      colvar = center_labels,
-                     breaks = breaks, add = T, col = rep("white", 13),
+                     breaks = breaks, add = T, col = rep("black", 13),
                      cex = 1.5*center_cex, colkey = F, ...)
     plot3D::points3D(cluster_center[,1], cluster_center[,2], cluster_center[,3],
                      colvar = center_labels,

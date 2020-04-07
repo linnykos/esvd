@@ -49,7 +49,7 @@ for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
   png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup6_main_esvd_2dplots_", k, ".png"),
-      height = 1750, width = 1750, res = 300,
+      height = 1500, width = 1500, res = 300,
       units = "px")
   plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
@@ -80,6 +80,31 @@ for(k in 1:ncol(combn_mat)){
   graphics.off()
 }
 
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup6_main_esvd_2dplots_", k, "_nocurve.png"),
+      height = 1500, width = 1500, res = 300,
+      units = "px")
+  plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = "eSVD embedding and trajectories\n(Curved Gaussian)")
+
+  for(ll in plotting_order) {
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+    idx <- which(cluster_labels %in% target_indices)
+    points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
+           col = col_info_esvd$col_code[target_indices[1]])
+  }
+
+  for(ll in 1:nrow(cluster_center_esvd)){
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2, col = "black")
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
+  }
+
+  graphics.off()
+}
+
 #############################
 
 num_order_vec_svd <- c(5, rep(3,2), c(1,1,1,1,1,1), rep(2,2),  rep(5,2))
@@ -105,7 +130,7 @@ for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
   png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup6_main_svd_2dplots_", k, ".png"),
-      height = 1750, width = 1750, res = 300,
+      height = 1500, width = 1500, res = 300,
       units = "px")
   plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
@@ -135,14 +160,41 @@ for(k in 1:ncol(combn_mat)){
   graphics.off()
 }
 
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  png(filename = paste0("../../esvd_results/figure/experiment/Revision_writeup6_main_svd_2dplots_", k, "_nocurve.png"),
+      height = 1500, width = 1500, res = 300,
+      units = "px")
+  plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = "SVD embedding and trajectories\n(Constant-variance Gaussian)")
+
+  for(ll in plotting_order) {
+    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
+    idx <- which(cluster_labels %in% target_indices)
+    points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
+           col = col_info_svd$col_code[target_indices[1]])
+  }
+
+
+  for(ll in 1:nrow(cluster_center_svd)){
+    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
+    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  }
+
+  graphics.off()
+}
+
 #####################################################################
 
 
 #angle_matrix
-angle_matrix = matrix(c(45,225, 270,135, 225,360), byrow = T, ncol = 2)
-bound_matrix = list(list(xlim = c(0, 3), ylim = c(-2, 2), zlim = c(-1.5, 1)),
-                    list(xlim = c(0, 3), ylim = c(-2, 2), zlim = c(-1.5, 1)),
-                    list(xlim = c(0, 3), ylim = c(-2, 2), zlim = c(-1.5, 1)))
+angle_matrix <- matrix(c(0,45, 180,0, 270,45), byrow = T, ncol = 2)
+spacing <- 3
+bound_matrix <- list(list(xlim = 0.5+c(0,spacing), ylim = -2+c(0,spacing), zlim = -1.5+c(0,spacing)),
+                    list(xlim = 0.5+c(0,spacing), ylim = -2+c(0,spacing), zlim = -2+c(0,spacing)),
+                    list(xlim = 0.5+c(0,spacing), ylim = -1+c(0,spacing), zlim = -1.5+c(0,spacing)))
 col_vec3_esvd <- color_func(0.09)[num_order_vec_esvd]
 
 for(kk in 1:nrow(angle_matrix)){
@@ -240,10 +292,11 @@ for(kk in 1:nrow(angle_matrix)){
 ###############################
 
 #angle_matrix
-angle_matrix = matrix(c(45,225, 270,135, 225,360), byrow = T, ncol = 2)
-bound_matrix = list(list(xlim = c(-8, 0), ylim = c(-6, 4), zlim = c(-1, 20)),
-                    list(xlim = c(-8, 0), ylim = c(-6, 4), zlim = c(-1, 20)),
-                    list(xlim = c(-8, 0), ylim = c(-6, 4), zlim = c(-1, 20)))
+angle_matrix <- matrix(c(45,0, 135,0,  225,0), byrow = T, ncol = 2)
+spacing <- 8
+bound_matrix <- list(list(xlim = -8+c(0,spacing), ylim = -6+c(0,spacing), zlim = 0+c(0,spacing)),
+                    list(xlim = -7+c(0,spacing), ylim = -5+c(0,spacing), zlim = -1+c(0,spacing)),
+                    list(xlim = -8+c(0,spacing), ylim = -3+c(0,spacing), zlim = 0+c(0,spacing)))
 col_vec3_svd <- color_func(0.09)[num_order_vec_svd]
 
 for(kk in 1:nrow(angle_matrix)){
@@ -284,7 +337,7 @@ svd_tube_list <- lapply(1:length(svd_curves$curves), function(x){
   s_mat <- svd_curves$curves[[x]]$s[svd_curves$curves[[x]]$ord,]
   eSVD::construct_3d_tube(s_mat, radius = svd_sd_val$sd_val/2)
 })
-col_vec_short <- color_func(0.9)[c(4)]
+col_vec_short <- color_func(0.5)[c(4)]
 
 for(kk in 1:nrow(angle_matrix)){
   print(kk)
@@ -323,8 +376,8 @@ for(kk in 1:nrow(angle_matrix)){
                  svd_tube_list[[i]]$y_mat,
                  svd_tube_list[[i]]$z_mat, add = T,
                  colvar = col_mat,
-                 col = colorRampPalette(c("white", col_vec_short[1]))(100),
-                 breaks = seq(min(col_mat), max(col_mat), length.out = 101),
+                 col = (colorRampPalette(c(col_vec_short[1], "white"))(110))[1:100],
+                 breaks = c(seq(min(col_mat), 8, length.out = 100), max(col_mat)),
                  colkey = F)
   graphics.off()
 }

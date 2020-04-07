@@ -4,8 +4,9 @@ library(eSVD)
 source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
-paramMat <- cbind(50, 120, 10,
-                  2, 50, 1/250, 1000, 100, 1:6)
+paramMat <- cbind(50, 120, 5,
+                  2, 50, 1/250, 1000,
+                  50, 1:6)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "max_iter", "modifier", "max_val",
                         "size","method")
