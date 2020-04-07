@@ -91,7 +91,7 @@ criterion <- function(dat, vec, y){
   }
 }
 
-## i <- 2; y <- 1; set.seed(y); zz1 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz1$fit$fit$u_mat); head(zz1$truth)
+## i <- 1; y <- 1; set.seed(y); zz1 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz1$fit$fit$u_mat); head(zz1$truth)
 ## i <- 2; y <- 2; set.seed(y); zz2 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz2$fit$fit$u_mat); head(zz2$truth)
 ## i <- 1; y <- 1; set.seed(y); y <- rule(paramMat[i,]); y$dat[1:5,1:5]; head(y$truth)
 

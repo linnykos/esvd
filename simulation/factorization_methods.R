@@ -108,7 +108,7 @@ method_esvd <- function(dat, paramMat, k = 3, ncores = NA){
     qualified_idx <- c(1:nrow(paramMat))[which(quality_mat[,"bool"] == 1)]
     idx <- qualified_idx[which.min(abs(quality_mat[qualified_idx, "angle_val"] - 45))]
   } else {
-    idx <- which.min(abs(quality_mat[qualified_idx, "angle_val"] - 45))
+    idx <- which.min(abs(quality_mat[, "angle_val"] - 45))
   }
 
   scalar <- paramMat[idx, "scalar"]
