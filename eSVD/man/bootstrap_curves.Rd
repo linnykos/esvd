@@ -31,6 +31,8 @@ from}
 
 \item{cores}{numeric}
 
+\item{verbose}{boolean}
+
 \item{...}{additional parameters for \code{slingshot}}
 }
 \value{

@@ -17,6 +17,8 @@ compute_curve_sd(
 \item{bootstrap_curve_list}{a list}
 
 \item{cores}{numeric}
+
+\item{verbose}{boolean}
 }
 \value{
 a numeric

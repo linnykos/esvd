@@ -31,6 +31,8 @@ plot_prediction_against_observed(
 
 \item{plot}{boolean}
 
+\item{max_points}{maximum number of points to be shown in the scatterplot, purely for visualization purposes only}
+
 \item{...}{additional plotting parameters}
 
 \item{seq_max}{plotting parameter, controlling x- and y-axes}

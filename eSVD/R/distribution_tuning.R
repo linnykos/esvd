@@ -4,10 +4,10 @@
 #' @param nat_mat_list list of natural parameter matrices, each of same dimension as \code{dat}
 #' @param family character such as \code{"gaussian"} or \code{"exponential"}
 #' @param missing_idx_list list of missing indices, same length as \code{nat_mat_list}
-#' @param seq_max plotting parameter, controlling x- and y-axes
 #' @param width plotting parameter, controlling quantile
 #' @param scalar additional parameter needed to compute distribution corresponding to \code{family}
 #' @param plot boolean
+#' @param max_points maximum number of points to be shown in the scatterplot, purely for visualization purposes only
 #' @param ... additional plotting parameters
 #'
 #' @return either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or the principle angle otherwise

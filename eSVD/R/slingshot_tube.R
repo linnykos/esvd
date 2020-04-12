@@ -9,6 +9,7 @@
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
 #' @param trials numeric
 #' @param cores numeric
+#' @param verbose boolean
 #' @param ... additional parameters for \code{slingshot}
 #'
 #' @return a list
@@ -47,6 +48,7 @@ bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
 #' @param target_curve_list a list
 #' @param bootstrap_curve_list a list
 #' @param cores numeric
+#' @param verbose boolean
 #'
 #' @return a numeric
 #' @export

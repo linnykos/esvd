@@ -33,7 +33,10 @@ from}
 \item{use_initialization}{use principal curves on each cluster to prune the
 list of possible neighboring clusters}
 
-\item{reduction_percentage}{numeric}
+\item{reduction_percentage}{numeric to multiplicatively expand or shrink the dataset,
+where 1 keeps the dataset unchanged.
+For larger values, the dataset is expanded so the estimated trajectories are wigglier,
+and for smalelr values, the dataset is shrunk so the estimated trajectories are smoother.}
 
 \item{shrink}{shrinkage factor}
 
@@ -41,9 +44,12 @@ list of possible neighboring clusters}
 
 \item{max_iter}{maximum number of iterations}
 
-\item{verbose}{boolean}
+\item{upscale_factor}{positive numeric (between 0 and 1) that controls how much to upweight the clusters,
+with 1 being (almost) equal cluster sizes and 0 being no upweighting. This does not affect the
+estimation of the lineages via \code{.get_lineages}, only the estimation of the curves
+given the lineages via \code{.get_curves}.}
 
-\item{upscale_vec}{vector of positive numbers, one for each cluster}
+\item{verbose}{boolean}
 }
 \value{
 a list containing the lineages under \code{lineages},

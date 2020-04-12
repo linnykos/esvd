@@ -34,9 +34,10 @@ By default, assigns each cluster to its own list in the order provided in \code{
 
 \item{max_iter}{maximum number of iterations}
 
-\item{verbose}{boolean}
+\item{upscale_factor}{positive numeric (between 0 and 1) that controls how much to upweight the clusters,
+with 1 being (almost) equal cluster sizes and 0 being no upweighting}
 
-\item{upscale_vec}{vector of positive numbers, one for each cluster}
+\item{verbose}{boolean}
 }
 \value{
 a list of \code{principal_curve} objects
