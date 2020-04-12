@@ -14,7 +14,7 @@ slingshot(
   shrink = 1,
   thresh = 0.001,
   max_iter = 15,
-  upscale_vec = NA,
+  upscale_factor = NA,
   verbose = F
 )
 }
@@ -41,9 +41,9 @@ list of possible neighboring clusters}
 
 \item{max_iter}{maximum number of iterations}
 
-\item{upscale_vec}{vector of positive numbers, one for each cluster}
-
 \item{verbose}{boolean}
+
+\item{upscale_vec}{vector of positive numbers, one for each cluster}
 }
 \value{
 a list containing the lineages under \code{lineages},

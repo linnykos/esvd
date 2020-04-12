@@ -40,9 +40,10 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   dat2 <- dat/reduction_factor
 
   if(verbose) print("Starting to infer curves")
-  res <- .get_curves(dat2, cluster_labels, cluster_group_list, lineages, shrink = shrink,
-                        thresh = thresh, max_iter = max_iter, upscale_factor = upscale_factor,
-                        verbose = verbose)
+  res <- .get_curves(dat2, cluster_labels, lineages,
+                     cluster_group_list = cluster_group_list,
+                     shrink = shrink, thresh = thresh, max_iter = max_iter,
+                     upscale_factor = upscale_factor, verbose = verbose)
   curves <- res$pcurve_list
 
   # adjust up
@@ -60,6 +61,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' the cluster labels are consecutive positive integers from 1 to
 #' \code{max(cluster_labels)}
 #' @param lineages output of \code{.get_lineage()}
+#' @param cluster_group_list  list denoting the hierarchy and order of the clusters.
+#' By default, assigns each cluster to its own list in the order provided in \code{cluster_labels}
 #' @param shrink shrinkage factor
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
@@ -67,7 +70,9 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @param verbose boolean
 #'
 #' @return a list of \code{principal_curve} objects
-.get_curves <- function(dat, cluster_labels, cluster_group_list, lineages, shrink = 1,
+.get_curves <- function(dat, cluster_labels, lineages,
+                        cluster_group_list = lapply(cluster_labels, function(x){x}),
+                        shrink = 1,
                         thresh = 0.001, max_iter = 15,
                         upscale_factor = NA, verbose = F){
   stopifnot(shrink >= 0 & shrink <= 1)

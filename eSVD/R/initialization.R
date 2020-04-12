@@ -258,7 +258,7 @@ initialization <- function(dat, k = 2, family,
     stopifnot(k2 < k)
     sign_val <- ifelse(direction == ">=", 1, -1)
 
-    sd_val <- mean(c(apply(u_mat[,1:k2, drop = F], 2, sd),apply(v_mat[,1:k2, drop = F], 2, sd)))
+    sd_val <- mean(c(apply(u_mat[,1:k2, drop = F], 2, sd),apply(v_mat[,1:k2, drop = F], 2, stats::sd)))
     for(i in (k2+1):k){
       u_mat[,i] <- abs(stats::rnorm(nrow(u_mat), sd = sd_val))
       v_mat[,i] <- sign_val*abs(stats::rnorm(nrow(v_mat), sd = sd_val))

@@ -1,4 +1,4 @@
-context("Testing SBM")
+context("Test SBM")
 
 ## .sbm_projection is correct
 

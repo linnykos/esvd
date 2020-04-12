@@ -8,10 +8,11 @@
   dat,
   cluster_labels,
   lineages,
+  cluster_group_list = lapply(cluster_labels, function(x) {     x }),
   shrink = 1,
   thresh = 0.001,
   max_iter = 15,
-  upscale_vec = NA,
+  upscale_factor = NA,
   verbose = F
 )
 }
@@ -24,15 +25,18 @@ the cluster labels are consecutive positive integers from 1 to
 
 \item{lineages}{output of \code{.get_lineage()}}
 
+\item{cluster_group_list}{list denoting the hierarchy and order of the clusters.
+By default, assigns each cluster to its own list in the order provided in \code{cluster_labels}}
+
 \item{shrink}{shrinkage factor}
 
 \item{thresh}{parameter to determine convergence}
 
 \item{max_iter}{maximum number of iterations}
 
-\item{upscale_vec}{vector of positive numbers, one for each cluster}
-
 \item{verbose}{boolean}
+
+\item{upscale_vec}{vector of positive numbers, one for each cluster}
 }
 \value{
 a list of \code{principal_curve} objects

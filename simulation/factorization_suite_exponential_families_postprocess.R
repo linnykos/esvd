@@ -8,7 +8,7 @@ for(i in 1:length(res)){
 zz <- sapply(res, function(x){
   length(x)
 })
-which(zz == 11)
+zz
 
 # # first, make all 4 relative embedding correlation
 # for(kk in 1:4){

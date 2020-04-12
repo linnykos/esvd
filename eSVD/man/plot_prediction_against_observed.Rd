@@ -9,10 +9,10 @@ plot_prediction_against_observed(
   nat_mat_list,
   family,
   missing_idx_list = list(1:prod(dim(dat))),
-  seq_max = NA,
   width = 0.8,
   scalar = NA,
   plot = T,
+  max_points = 5e+05,
   ...
 )
 }
@@ -25,8 +25,6 @@ plot_prediction_against_observed(
 
 \item{missing_idx_list}{list of missing indices, same length as \code{nat_mat_list}}
 
-\item{seq_max}{plotting parameter, controlling x- and y-axes}
-
 \item{width}{plotting parameter, controlling quantile}
 
 \item{scalar}{additional parameter needed to compute distribution corresponding to \code{family}}
@@ -34,6 +32,8 @@ plot_prediction_against_observed(
 \item{plot}{boolean}
 
 \item{...}{additional plotting parameters}
+
+\item{seq_max}{plotting parameter, controlling x- and y-axes}
 }
 \value{
 either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or the principle angle otherwise

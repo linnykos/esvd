@@ -283,6 +283,19 @@ test_that(".get_curves works for a harder example", {
   #for(i in 1:length(res)){lines(res$pcurve_list[[i]], col = i, lwd = 2)}
 })
 
+test_that(".get_curves can handle cluster_group_list", {
+  set.seed(20)
+  cluster_labels <- rep(1:5, each = 20)
+  dat <- MASS::mvrnorm(100, rep(0, 2), diag(2))
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
+
+  res <- .get_curves(dat, cluster_labels, lineages,
+                     cluster_group_list = list(c(1,5), c(2,4), 3))
+
+  expect_true(length(res) == length(lineages))
+  expect_true(all(sapply(res$pcurve_list, class) == "principal_curve"))
+})
+
 test_that(".get_curves finds reasonable curves", {
   set.seed(10)
   cell_pop <- matrix(c(4,10, 25,100,

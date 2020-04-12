@@ -11,6 +11,7 @@ bootstrap_curves(
   cluster_group_list,
   trials = 100,
   cores = NA,
+  verbose = F,
   ...
 )
 }
