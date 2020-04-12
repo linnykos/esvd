@@ -66,51 +66,5 @@ dat_NA[missing_idx] <- NA
 
 missing_val <- dat_obs[missing_idx]
 
-# set.seed(2)
-# init <- eSVD::initialization(dat_NA, family = "poisson", k = vec["k"], max_val = vec["max_val"])
-
-###############################
-
-dat = dat_NA
-k = vec["k"]
-family = "poisson"
-max_val = vec["max_val"]
-max_iter = 10
-tol = 1e-3
-verbose = F
-
-direction <- .dictate_direction(family)
-if(!is.na(max_val)){
-  if(!is.na(direction) && direction == "<=") max_val <- -max_val
-}
-
-# initialize
-dat <- .matrix_completion(dat, k = k)
-if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
-
-# projected gradient descent
-pred_mat <- .projected_gradient_descent(dat, k = k, max_val = max_val,
-                                        direction = direction,
-                                        max_iter = max_iter,
-                                        tol = tol)
-res <- .svd_projection(pred_mat, k = k, factors = T)
-u_mat <- res$u_mat; v_mat <- res$v_mat
-
-if(!is.na(direction)){
-  if(direction == "<=") {
-    stopifnot(all(pred_mat[which(!is.na(dat))] < 0))
-  } else {
-    stopifnot(all(pred_mat[which(!is.na(dat))] > 0))
-  }
-}
-
-tmp <- .fix_rank_defficiency_initialization(u_mat, v_mat, direction)
-
-##########################
-
-k <- ncol(u_mat)
-nat_mat <- u_mat %*% t(v_mat)
-k2 <- as.numeric(Matrix::rankMatrix(nat_mat))
-
-
-
+set.seed(2)
+init <- eSVD::initialization(dat_NA, family = "poisson", k = vec["k"], max_val = vec["max_val"])

@@ -22,25 +22,25 @@ res[c(1,2)] <- res[c(2,1)]
 
 ################
 
-cluster_labels <- rep(1:4, each = 50)
-j <- 3
-i <- 1
-par(mfrow = c(1,2))
-plot(res[[j]][[i]]$fit$fit[,1], res[[j]][[i]]$fit$fit[,2], asp = T,
-     col = cluster_labels, pch = 16, main = "Estimated")
-plot(res[[j]][[i]]$truth[,1], res[[j]][[i]]$truth[,2], asp = T,
-     col = cluster_labels, pch = 16, main = "Truth")
-
-j <- 2
-quality_vec <- sapply(1:length(res[[j]]), function(i){
-  dist_mat_truth <- as.matrix(stats::dist(res[[j]][[i]]$truth))
-  dist_mat_est <- as.matrix(stats::dist(res[[j]][[i]]$fit$fit[,1:2]))
-
-  mean(sapply(1:nrow(dist_mat_est), function(i){
-    cor(dist_mat_truth[i,], dist_mat_est[i,], method = "kendall")
-  }))
-})
-quantile(quality_vec)
+# cluster_labels <- rep(1:4, each = 50)
+# j <- 3
+# i <- 1
+# par(mfrow = c(1,2))
+# plot(res[[j]][[i]]$fit$fit[,1], res[[j]][[i]]$fit$fit[,2], asp = T,
+#      col = cluster_labels, pch = 16, main = "Estimated")
+# plot(res[[j]][[i]]$truth[,1], res[[j]][[i]]$truth[,2], asp = T,
+#      col = cluster_labels, pch = 16, main = "Truth")
+#
+# j <- 2
+# quality_vec <- sapply(1:length(res[[j]]), function(i){
+#   dist_mat_truth <- as.matrix(stats::dist(res[[j]][[i]]$truth))
+#   dist_mat_est <- as.matrix(stats::dist(res[[j]][[i]]$fit$fit[,1:2]))
+#
+#   mean(sapply(1:nrow(dist_mat_est), function(i){
+#     cor(dist_mat_truth[i,], dist_mat_est[i,], method = "kendall")
+#   }))
+# })
+# quantile(quality_vec)
 
 ####################
 

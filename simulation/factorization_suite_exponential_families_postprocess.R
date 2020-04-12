@@ -1,6 +1,5 @@
 rm(list=ls())
-
-load("../results/factorization_esvd.RData")
+load("../results/factorization_exponential_families.RData")
 
 # clean results
 for(i in 1:length(res)){
@@ -10,6 +9,39 @@ sapply(res, function(x){
   length(x)
 })
 
+# # first, make all 4 relative embedding correlation
+# for(kk in 1:4){
+#   res_tmp <- res[which(paramMat[,"true_distr"] == kk)]
+#   paramMat_tmp <- paramMat[which(paramMat[,"true_distr"] == kk),]
+#
+#   # select the relevant rows of res_tmp that will be used for the res_mat
+#   idx1 <- c(which(paramMat_tmp[,"k"] == 2)) # the ones with correct dimension
+#   idx2 <- intersect(which(paramMat_tmp[,"k"] %in% c(1,3)), which(paramMat_tmp[,"fitting_distr"] == kk)) # the correct family but wrong dimension
+#   idx_all <- c(idx1, idx2)
+#
+#   res_tmp2 <- res_tmp[idx_all]
+#   paramMat_tmp2 <- paramMat_tmp[idx_all,]
+#
+#   trials <- min(sapply(res_tmp2, length))
+#   res_mat <- matrix(NA, length(res_tmp2), trials)
+#   for(i in 1:trials){
+#
+#     for(j in 1:length(res_tmp2)){
+#       dist_mat_truth <- as.matrix(stats::dist(res_tmp2[[j]][[i]]$true_u_mat))
+#       dist_mat_est <- as.matrix(stats::dist(res_tmp2[[j]][[i]]$fit$u_mat))
+#
+#       res_mat[j,i] <- mean(sapply(1:nrow(dist_mat_est), function(x){
+#         cor(dist_mat_truth[x,], dist_mat_est[x,], method = "kendall")
+#       }))
+#     }
+#   }
+# }
+#
+
+
+
+
+#########################################################
 
 # plot the embeddings
 k <- 1

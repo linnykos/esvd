@@ -22,7 +22,7 @@ rearrange_idx <- c(correct_idx, c(1:nrow(paramMat))[-correct_idx])
 paramMat <- paramMat[rearrange_idx,]
 
 trials <- 25
-ncores <- 15
+ncores <- NA
 r_vec <- c(5, 50, 100)
 alpha_vec <- c(0.5, 2, 50)
 
@@ -117,8 +117,8 @@ criterion <- function(dat, vec, y){
        dat = dat_obs, missing_idx = missing_idx)
 }
 
-## i <- 9; y <- 20; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
-## i <- 31; y <- 10; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
+## i <- 2; y <- 1; dat <- rule(paramMat[i,]); quantile(dat$dat); plot(dat$truth[,1], dat$truth[,2], asp = T, col = rep(1:4, each = paramMat[i,"n_each"]), pch = 16)
+## i <- 2; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y); zz
 ## scalar_vec <- r_vec; family_val <- "neg_binom"; quality_vec <- sapply(1:length(zz$fit), function(j){ nat_mat <- zz$fit[[j]]$u_mat %*% t(zz$fit[[j]]$v_mat); plot_prediction_against_observed(dat = zz$dat, nat_mat_list = list(nat_mat), family = family_val, missing_idx_list = list(zz$missing_idx), scalar = scalar_vec[j], plot = F)}); quality_vec
 ## neg_binom: i = 31; curved_gaussian: i = 44
 ############
