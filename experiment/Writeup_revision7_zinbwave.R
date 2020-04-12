@@ -22,4 +22,4 @@ dat_impute <- dat
 dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat_impute)))
 tmp <- zinbwave::zinbwave(dat_se, K = 5, maxiter.optimize = 100, normalizedValues = T,
                           commondispersion = F)
-save("../experiment/Writeup_revision7_zinbwave.RData")
+save.image("../experiment/Writeup_revision7_zinbwave.RData")
