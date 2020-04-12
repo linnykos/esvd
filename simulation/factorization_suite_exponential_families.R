@@ -126,7 +126,7 @@ criterion <- function(dat, vec, y){
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = NA, as_list = T,
-                                        filepath = "../results/factorization_exponential_families_tmp.RData",
+                                        filepath = "../results/factorization_results_exponential_families_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_exponential_families.RData")
+save.image("../results/factorization_results_exponential_families.RData")
