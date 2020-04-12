@@ -17,12 +17,13 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
-correct_idx <- c(5, 18, 31, 44)
-rearrange_idx <- c(correct_idx, c(1:nrow(paramMat))[-correct_idx])
-paramMat <- paramMat[rearrange_idx,]
+# correct_idx <- c(5, 18, 31, 44)
+# rearrange_idx <- c(correct_idx, c(1:nrow(paramMat))[-correct_idx])
+# paramMat <- paramMat[rearrange_idx,]
+paramMat <- paramMat[44,,drop = F]
 
 trials <- 25
-ncores <- NA
+ncores <- 15
 r_vec <- c(5, 50, 100)
 alpha_vec <- c(0.5, 2, 50)
 

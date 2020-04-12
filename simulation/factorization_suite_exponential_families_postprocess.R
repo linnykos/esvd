@@ -5,9 +5,10 @@ load("../results/factorization_exponential_families.RData")
 for(i in 1:length(res)){
   res[[i]] <- res[[i]][which(sapply(res[[i]], function(x){!all(is.na(x))}))]
 }
-sapply(res, function(x){
+zz <- sapply(res, function(x){
   length(x)
 })
+which(zz == 11)
 
 # # first, make all 4 relative embedding correlation
 # for(kk in 1:4){
