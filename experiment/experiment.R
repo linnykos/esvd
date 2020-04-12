@@ -30,7 +30,7 @@ rearrange_idx <- c(correct_idx, c(1:nrow(paramMat))[-correct_idx])
 paramMat <- paramMat[rearrange_idx,]
 
 trials <- 25
-ncores <- NA
+ncores <- 20
 r_vec <- c(5, 50, 100)
 alpha_vec <- c(0.5, 2, 50)
 
@@ -124,6 +124,6 @@ criterion <- function(dat, vec, y){
        dat = dat_obs, missing_idx = missing_idx)
 }
 
-i <- 44; y <- 1; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y)
+i <- 44; y <- 3; set.seed(y); zz <- criterion(rule(paramMat[i,]), paramMat[i,], y)
 
 
