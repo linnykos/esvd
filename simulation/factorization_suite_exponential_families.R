@@ -17,12 +17,8 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
-correct_idx <- c(5, 18, 31, 44)
-rearrange_idx <- c(correct_idx, c(1:nrow(paramMat))[-correct_idx])
-paramMat <- paramMat[rearrange_idx,]
-
 trials <- 100
-ncores <- 20
+ncores <- 15
 r_vec <- c(5, 50, 100)
 alpha_vec <- c(0.5, 2, 50)
 
@@ -124,9 +120,33 @@ criterion <- function(dat, vec, y){
 ############
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
-                                        paramMat = paramMat, trials = trials,
+                                        paramMat = paramMat[25:36,], trials = trials,
                                         cores = NA, as_list = T,
                                         filepath = "../results/factorization_results_exponential_families_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_exponential_families.RData")
+save.image("../results/factorization_results_exponential_families_3.RData")
+
+res <- simulation::simulation_generator(rule = rule, criterion = criterion,
+                                        paramMat = paramMat[37:48,], trials = trials,
+                                        cores = NA, as_list = T,
+                                        filepath = "../results/factorization_results_exponential_families_tmp.RData",
+                                        verbose = T)
+
+save.image("../results/factorization_results_exponential_families_4.RData")
+
+res <- simulation::simulation_generator(rule = rule, criterion = criterion,
+                                        paramMat = paramMat[13:24,], trials = trials,
+                                        cores = NA, as_list = T,
+                                        filepath = "../results/factorization_results_exponential_families_tmp.RData",
+                                        verbose = T)
+
+save.image("../results/factorization_results_exponential_families_2.RData")
+
+res <- simulation::simulation_generator(rule = rule, criterion = criterion,
+                                        paramMat = paramMat[1:12,], trials = trials,
+                                        cores = NA, as_list = T,
+                                        filepath = "../results/factorization_results_exponential_families_tmp.RData",
+                                        verbose = T)
+
+save.image("../results/factorization_results_exponential_families_1.RData")
