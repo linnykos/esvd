@@ -15,6 +15,7 @@ zz <- apply(dat, 2, function(x){length(which(x!=0))})
 dat <- dat[,which(zz > 30)]
 
 ###### TRY: standard preprocessing
+dat_count <- dat
 dat <- t(apply(dat, 1, function(x){10^4 * x/sum(x)}))
 dat <- log2(dat + 1)
 ##########
@@ -36,8 +37,8 @@ res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 print(paste0(Sys.time(), ": Finished SPC"))
 
 # run DESCEND
-res_descend <- descend::runDescend(t(dat), n.cores = ncores)
+res_descend <- descend::runDescend(t(dat_count), n.cores = ncores)
 
-rm(list = c("idx", "zz", "k", "lvls"))
+rm(list = c("idx", "zz", "k", "lvls", "dat_count"))
 print(paste0(Sys.time(), ": Finished screening"))
 save.image(paste0("../results/step0_screening", suffix, ".RData"))
