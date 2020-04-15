@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/factorization_exponential_families_tmp.RData")
+load("../results/factorization_results_exponential_families_4.RData")
 
 # clean results
 for(i in 1:length(res)){

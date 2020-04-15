@@ -14,6 +14,11 @@ dim(dat)
 zz <- apply(dat, 2, function(x){length(which(x!=0))})
 dat <- dat[,which(zz > 30)]
 
+###### TRY: standard preprocessing
+dat <- t(apply(dat, 1, function(x){10^4 * x/sum(x)}))
+dat <- log2(dat + 1)
+##########
+
 # try a series of SPCAs
 k <- 5
 lvls <- 10
