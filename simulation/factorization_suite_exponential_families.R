@@ -74,6 +74,7 @@ criterion <- function(dat, vec, y){
                                    max_iter = vec["max_iter"], max_val = vec["max_val"],
                                    return_path = F, cores = ncores,
                                    verbose = F)
+    fit <- list(fit)
 
     # poisson
   } else if(vec["fitting_distr"] == 2){
@@ -83,6 +84,7 @@ criterion <- function(dat, vec, y){
                                    max_iter = vec["max_iter"], max_val = vec["max_val"],
                                    return_path = F, cores = ncores,
                                    verbose = F)
+    fit <- list(fit)
 
     # negative binomial
   } else if(vec["fitting_distr"] == 3){

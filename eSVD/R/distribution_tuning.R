@@ -4,7 +4,7 @@
 #' @param nat_mat_list list of natural parameter matrices, each of same dimension as \code{dat}
 #' @param family character such as \code{"gaussian"} or \code{"exponential"}
 #' @param missing_idx_list list of missing indices, same length as \code{nat_mat_list}
-#' @param width plotting parameter, controlling quantile
+#' @param width parameter, controlling quantile of prediction region
 #' @param scalar additional parameter needed to compute distribution corresponding to \code{family}
 #' @param plot boolean
 #' @param max_points maximum number of points to be shown in the scatterplot, purely for visualization purposes only
@@ -41,6 +41,32 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   } else {
     list(angle_val = angle_val, bool = res$bool)
   }
+}
+
+tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_list = list(1:prod(dim(dat))),
+                          width = 0.8, scalar_vec = rep(NA, length(nat_mat_list_list))){
+  stopifnot(length(nat_mat_list_list) == length(scalar_vec))
+  stopifnot(length(unique(sapply(nat_mat_list_list, length))) == 1)
+  stopifnot(length(nat_mat_list_list[[1]]) == length(missing_idx_list))
+
+  res_list <- lapply(1:length(nat_mat_list_list), function(i){
+    plot_prediction_against_observed(dat, nat_mat_list_list[[i]], family = family,
+                                     missing_idx_list = missing_idx_list,
+                                     width = width, scalar = scalar_vec[i], plot = F)
+  })
+
+  bool_vec <- sapply(res_list, function(x){x$bool})
+
+  if(any(bool_vec)){
+    quality_vec <- sapply(res_list[which(bool_vec)], function(x){x$angle_val})
+    scalar_vec2 <- scalar_vec[which(bool_vec)]
+  } else {
+    quality_vec <- sapply(res_list, function(x){x$angle_val})
+    scalar_vec2 <- scalar_vec
+  }
+
+  idx <- which.min(abs(quality_vec - 45))
+  list(scalar = scalar_vec2[idx], quality = quality_vec[idx])
 }
 
 #########
