@@ -9,8 +9,7 @@
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
-#' @param use_initialization use principal curves on each cluster to prune the
-#' list of possible neighboring clusters
+#' @param squared boolean on whether or not to square the distance matrix
 #' @param reduction_percentage numeric to multiplicatively expand or shrink the dataset,
 #' where 1 keeps the dataset unchanged.
 #' For larger values, the dataset is expanded so the estimated trajectories are wigglier,
@@ -30,7 +29,7 @@
 #' @export
 slingshot <- function(dat, cluster_labels, starting_cluster,
                       cluster_group_list = NA,
-                      use_initialization = F,
+                      squared = F,
                       reduction_percentage = 0.1,
                       shrink = 1, thresh = 0.001, max_iter = 15,
                       upscale_factor = NA, verbose = F){
@@ -39,7 +38,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   if(verbose) print("Starting to infer lineages")
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
                             cluster_group_list = cluster_group_list,
-                            use_initialization = use_initialization)
+                            squared = squared)
 
   # adjust down
   reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage

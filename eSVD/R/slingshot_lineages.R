@@ -11,13 +11,12 @@
 #' @param starting_cluster the "origin" cluster that all the lineages will start
 #' from
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
-#' @param use_initialization use principal curves on each cluster to prune the
-#' list of possible neighboring clusters
+#' @param squared boolean on whether or not to square the distance matrix
 #'
 #' @return A list of cluster indices, with \code{starting_cluster} starting as
 #' its first element
 .get_lineages <- function(dat, cluster_labels, starting_cluster,
-                          cluster_group_list = NA, use_initialization = F){
+                          cluster_group_list = NA, squared = F){
   stopifnot(!is.list(cluster_group_list) || starting_cluster %in% cluster_group_list[[1]])
   stopifnot(all(cluster_labels > 0), all(cluster_labels %% 1 == 0), length(unique(cluster_labels)) == max(cluster_labels))
   if(all(!is.na(cluster_group_list))){
@@ -27,7 +26,7 @@
 
   ### construct the distance matrix
   dist_mat <- .compute_cluster_distances(dat, cluster_labels)
-  dist_mat <- dist_mat^2
+  if(squared) dist_mat <- dist_mat^2
   if(use_initialization){
     bool_mat <- .initial_edges(dat, cluster_labels)
     if(all(rowSums(bool_mat) >= 1)){
