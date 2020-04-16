@@ -27,12 +27,6 @@
   ### construct the distance matrix
   dist_mat <- .compute_cluster_distances(dat, cluster_labels)
   if(squared) dist_mat <- dist_mat^2
-  if(use_initialization){
-    bool_mat <- .initial_edges(dat, cluster_labels)
-    if(all(rowSums(bool_mat) >= 1)){
-      dist_mat[!bool_mat] <- Inf
-    }
-  }
 
   if(all(is.na(cluster_group_list))){
     ### construct the spt (shortest path tree)
