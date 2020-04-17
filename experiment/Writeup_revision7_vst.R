@@ -1,0 +1,5 @@
+rm(list=ls())
+load("../results/step5_trajectory_log2.RData")
+gene_mean <- apply(dat_impute, 2, mean)
+gene_var <- apply(dat_impute, 2, sd)
+plot(gene_mean, gene_var)

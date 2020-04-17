@@ -8,7 +8,7 @@ load(paste0("../results/step6_figures", suffix, ".RData"))
 # make the plot displaying how evenly expressed cells are
 
 mean_vec <- log(apply(dat_impute, 2, mean))
-sd_vec <- log(apply(dat_impute, 2, sd))
+sd_vec <- apply(dat_impute, 2, sd)
 
 p_vec <- sapply(1:ncol(dat_impute), function(i){
   tmp_df <- data.frame(val = dat_impute[,i], type = cluster_labels)
@@ -27,9 +27,9 @@ idx_vec <- sapply(p_vec, function(x){
 
 # prepare things for vioplot plot
 
-zz <- prcomp(dat_impute, center = T, scale. = F)
+zz <- prcomp(dat_impute, center = T, scale. = T)
 vec <- zz$rotation[,1]
-vec[vec <= 0] <- 0
+#vec[vec <= 0] <- 0
 vec <- (vec - min(vec))/(max(vec) - min(vec))
 vec <- vec/sum(vec)
 xx <- dat_impute %*% vec
@@ -65,7 +65,7 @@ vioplot::vioplot(tmp_df$val[tmp_df$type == 1],
                  tmp_df$val[tmp_df$type == 4],
                  tmp_df$val[tmp_df$type == 5],
                  tmp_df$val[tmp_df$type == 6],
-                 col = sapply(1:6, function(x){unique(col_info_svd$col_code[which(col_info$level == x)])}),
+                 col = sapply(1:6, function(x){unique(col_info_svd$col_code[which(round(col_info_svd$order) == x)])}),
                  pchMed = 21,
                  colMed = "black", colMed2 = "white",
                  xlab = "", names = rep("", 6))

@@ -13,6 +13,7 @@ spca_idx <- sort(unlist(apply(res_list[[idx]]$v, 2, function(x){which(x != 0)}))
 descend_idx <- which(colnames(dat) %in% res_hvg$HVG.genes)
 gene_idx <- sort(unique(c(spca_idx, descend_idx)))
 dat <- dat[,gene_idx]
+dat_count <- dat_count[,gene_idx]
 
 dat_impute <- dat
 

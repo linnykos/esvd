@@ -2,17 +2,15 @@ library(descend)
 load("../../raw_data/marques.RData")
 
 dat <- marques$counts
+dat_count <- dat
 
 cell_types <- unique(marques$cell.info$cell.type)
-
-set.seed(10)
-cell_idx <- 1:nrow(dat)
-dat <- dat[cell_idx,]
 dim(dat)
 
 # # remove genes with too many 0's
 zz <- apply(dat, 2, function(x){length(which(x!=0))})
 dat <- dat[,which(zz > 30)]
+dat_count <- dat_count[,which(zz > 30)]
 
 ###### TRY: standard preprocessing
 dat_count <- dat

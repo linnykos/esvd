@@ -1,9 +1,11 @@
 set.seed(10)
 load(paste0("../results/step2_naive_svd", suffix, ".RData"))
 
-paramMat_esvd <- as.matrix(expand.grid(c(0.5, 1, 2, 4), c(3,4,5)))
+# paramMat_esvd <- as.matrix(expand.grid(c(0.5, 1, 2, 4), c(3,4,5)))
+paramMat_esvd <- as.matrix(expand.grid(c(100, 500, 1000, 5000), c(3,4,5)))
 colnames(paramMat_esvd) <- c("scalar", "k")
 esvd_missing_list <- vector("list", nrow(paramMat_esvd))
+fitting_distr <- "neg_binom"
 
 for(i in 1:nrow(paramMat_esvd)){
   print(paste0("On parameter setting row ", i))
@@ -18,10 +20,10 @@ for(i in 1:nrow(paramMat_esvd)){
 
     # fit
     set.seed(10)
-    init <- eSVD::initialization(dat_impute_NA, family = "curved_gaussian",
+    init <- eSVD::initialization(dat_impute_NA, family = fitting_distr,
                                  k = paramMat_esvd[i,"k"], max_val = max_val, scalar = paramMat_esvd[i,"scalar"])
     tmp_list[[j]] <- eSVD::fit_factorization(dat_impute_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                   family = "curved_gaussian",
+                                   family = fitting_distr,
                                    max_iter = 50, max_val = max_val,
                                    scalar = paramMat_esvd[i,"scalar"],
                                    return_path = F, cores = ncores,
