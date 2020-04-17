@@ -37,6 +37,6 @@ print(paste0(Sys.time(), ": Finished SPC"))
 # run DESCEND
 res_descend <- descend::runDescend(t(dat_count), n.cores = ncores)
 
-rm(list = c("idx", "zz", "k", "lvls", "dat_count"))
+rm(list = c("idx", "zz", "k", "lvls"))
 print(paste0(Sys.time(), ": Finished screening"))
 save.image(paste0("../results/step0_screening", suffix, ".RData"))
