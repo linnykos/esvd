@@ -21,19 +21,19 @@ esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, start
 print(paste0(Sys.time(), ": Finished eSVD trajectory"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
-set.seed(10)
-esvd_bootstrap_list <- eSVD::bootstrap_curves(esvd_embedding$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                                              cluster_group_list = cluster_group_list, trials = 100,
-                                              upscale_factor = upscale_factor, reduction_percentage = reduction_percentage, cores = ncores,
-                                              verbose = T, squared = F)
-
-print(paste0(Sys.time(), ": Finished eSVD bootstrap"))
-save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
-
-esvd_sd_val <- eSVD::compute_curve_sd(esvd_curves, esvd_bootstrap_list, cores = ncores, verbose = T)
-
-print(paste0(Sys.time(), ": Finished eSVD standard val"))
-save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
+# set.seed(10)
+# esvd_bootstrap_list <- eSVD::bootstrap_curves(esvd_embedding$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+#                                               cluster_group_list = cluster_group_list, trials = 100,
+#                                               upscale_factor = upscale_factor, reduction_percentage = reduction_percentage, cores = ncores,
+#                                               verbose = T, squared = F)
+#
+# print(paste0(Sys.time(), ": Finished eSVD bootstrap"))
+# save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
+#
+# esvd_sd_val <- eSVD::compute_curve_sd(esvd_curves, esvd_bootstrap_list, cores = ncores, verbose = T)
+#
+# print(paste0(Sys.time(), ": Finished eSVD standard val"))
+# save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 #########
 
@@ -45,20 +45,20 @@ svd_curves <- slingshot(svd_embedding[,1:p], cluster_labels, starting_cluster = 
 print(paste0(Sys.time(), ": Finished SVD trajectory"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
-set.seed(10)
-svd_bootstrap_list <- eSVD::bootstrap_curves(svd_embedding[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                                             cluster_group_list = cluster_group_list, trials = 100,
-                                             upscale_factor = upscale_factor, reduction_percentage = reduction_percentage, cores = ncores,
-                                             verbose = T, squared = F)
-
-
-print(paste0(Sys.time(), ": Finished SVD bootstrap"))
-save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
-
-svd_sd_val <- eSVD::compute_curve_sd(svd_curves, svd_bootstrap_list, cores = ncores, verbose = T)
-
-print(paste0(Sys.time(), ": Finished SVD standard val"))
-save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
+# set.seed(10)
+# svd_bootstrap_list <- eSVD::bootstrap_curves(svd_embedding[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+#                                              cluster_group_list = cluster_group_list, trials = 100,
+#                                              upscale_factor = upscale_factor, reduction_percentage = reduction_percentage, cores = ncores,
+#                                              verbose = T, squared = F)
+#
+#
+# print(paste0(Sys.time(), ": Finished SVD bootstrap"))
+# save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
+#
+# svd_sd_val <- eSVD::compute_curve_sd(svd_curves, svd_bootstrap_list, cores = ncores, verbose = T)
+#
+# print(paste0(Sys.time(), ": Finished SVD standard val"))
+# save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 rm(list = c("tmp"))
 print(paste0(Sys.time(), ": Finished trajectoy"))
