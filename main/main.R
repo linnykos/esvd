@@ -2,7 +2,7 @@ rm(list=ls())
 set.seed(10)
 library(eSVD)
 
-suffix <- "_nb_log2"
+suffix <- "_nb_hvg_log2"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)
 
