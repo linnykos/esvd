@@ -12,31 +12,18 @@ zz <- apply(dat, 2, function(x){length(which(x!=0))})
 dat <- dat[,which(zz > 30)]
 dat_count <- dat_count[,which(zz > 30)]
 
-###### TRY: standard preprocessing
 dat_count <- dat
 dat <- t(apply(dat, 1, function(x){10^4 * x/sum(x)}))
-dat <- log2(dat + 1)
-##########
 
-# try a series of SPCAs
-k <- 5
-lvls <- 10
-v_seq <- exp(seq(log(1), log(log(ncol(dat))), length.out = lvls))
-res_list <- vector("list", lvls)
+obj <- Seurat::CreateSeuratObject(counts = t(dat), project = "marques",
+                                  meta.data = NULL, min.cells = 0, min.features = 0)
 
-spca_func <- function(i){
-  res <- PMA::SPC(dat, sumabsv = v_seq[i], K = k, trace = F)
-  print(paste0("Finished SPC for level ", i))
-  res
-}
+obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 2000)
+hvg <- Seurat::VariableFeatures(object = obj)
 
-res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
+dat <- dat[,hvg]
+dat_count <- dat_count[,hvg]
 
-print(paste0(Sys.time(), ": Finished SPC"))
-
-# run DESCEND
-res_descend <- descend::runDescend(t(dat_count), n.cores = ncores)
-
-rm(list = c("idx", "zz", "k", "lvls"))
+rm(list = c("idx", "zz", "k", "lvls", "obj"))
 print(paste0(Sys.time(), ": Finished screening"))
 save.image(paste0("../results/step0_screening", suffix, ".RData"))
