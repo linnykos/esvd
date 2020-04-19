@@ -12,7 +12,7 @@ missing_idx_list <- lapply(1:cv_trials, function(j){
   eSVD::construct_missing_values(n = n, p = d, num_val = 4)
 })
 
-log_dat <- log2(dat+1)
+log_dat <- log2(dat_impute+1)
 
 # fit many softImputes
 starting_lambda <- min(sapply(1:cv_trials, function(i){
