@@ -83,7 +83,11 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   }
 
   idx <- which.min(abs(quality_vec - 45))
-  list(scalar = scalar_vec2[idx], quality = quality_vec[idx], idx = idx)
+  all_results <- cbind(sapply(res_list, function(x){x$angle_val}),
+                       sapply(res_list, function(x){x$bool}),
+                       scalar_vec)
+  colnames(all_results)
+  list(scalar = scalar_vec2[idx], quality = quality_vec[idx], idx = idx, all_results = all_results)
 }
 
 #########
