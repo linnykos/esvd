@@ -128,7 +128,7 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   rad <- 2/5*max(tmp_mat[,"predicted_val"])
   seq_max <- 2*max(tmp_mat)
 
-  graphics::plot(NA, asp = T, xlim = range(tmp_mat), ylim = range(tmp_mat),
+  graphics::plot(NA, asp = T, xlim = range(c(0,tmp_mat[,"predicted_val"])), ylim = range(c(0,tmp_mat[,"observed_val"])),
                  xlab = "Predicted value", ylab = "Observed value", ...)
 
   graphics::polygon(c(seq_vec, rev(seq_vec)), c(interval_mat["upper",], rev(interval_mat["lower",])), col = grDevices::rgb(1,0,0,0.2),

@@ -35,15 +35,30 @@ test_that("plot_prediction_against_observed works", {
 
 test_that("tuning_select_scalar works", {
   set.seed(10)
-  dat <- matrix(rnbinom(200, size = 10, prob = 0.5), nrow = 20, ncol = 10)
+  n <- 20
+  p <- 10
+  size <- 500
+  k <- 2
+  u_mat <- abs(matrix(rnorm(n), nrow = n, ncol = k))
+  v_mat <- -abs(matrix(rnorm(p), nrow = p, ncol = k))
+  pred_mat <- u_mat %*% t(v_mat)
+  dat <- pred_mat
+  class(dat) <- c("neg_binom", class(dat)[length(class(dat))])
+
+  for(i in 1:n){
+    for(j in 1:p){
+      dat[i,j] <- stats::rnbinom(1, size = size, prob = 1-exp(pred_mat[i,j]))
+    }
+  }
+
   missing_idx <- construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 1)
   dat_NA <- dat
   dat_NA[missing_idx] <- NA
 
-  scalar_vec <- c(2, 10, 100)
+  scalar_vec <- c(10, 500, 10000)
 
   fit_list <- lapply(scalar_vec, function(scalar){
-    init <- initialization(dat_NA, family = "neg_binom", max_val = 100, scalar = scalar, k = 1)
+    init <- initialization(dat_NA, family = "neg_binom", max_val = 100, scalar = scalar, k = k)
     fit <- fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                              max_iter = 10, max_val = 100, k = 1,
                              family = "neg_binom", scalar = scalar)
@@ -53,10 +68,21 @@ test_that("tuning_select_scalar works", {
     list(fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat))
   })
 
-  res <- tuning_select_scalar(dat, nat_mat_list = nat_mat_list_list,
-                              family = "neg_binom", missing_idx_list = list(missing_idx),
-                              scalar_vec = scalar_vec)
+  res <- tuning_select_scalar(dat, nat_mat_list_list = nat_mat_list_list, family = "neg_binom",
+                                     missing_idx_list = list(missing_idx),
+                                     width = 0.8, scalar_vec = scalar_vec)
 
+
+  expect_true(is.list(res))
+  expect_true(all(sort(names(res)) == sort(c("scalar", "quality", "idx", "all_results"))))
+  expect_true(is.numeric(res$scalar))
+  expect_true(res$scalar %in% scalar_vec)
+  expect_true(is.numeric(res$quality))
+  expect_true(length(res$quality) == 1)
+  expect_true(res$quality >= 0)
+  expect_true(res$quality <= 180)
+  expect_true(res$idx %in% 1:length(scalar_vec))
+  expect_true(nrow(res$all_results) == length(scalar_vec))
 
 })
 
