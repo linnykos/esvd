@@ -1,6 +1,20 @@
 set.seed(10)
 load(paste0("../results/step3_scalar_heuristic", suffix, ".RData"))
 
+nat_mat_list_list <- lapply(1:nrow(paramMat_esvd), function(i){
+  lapply(1:cv_trials, function(j){
+    u_mat <- esvd_missing_list[[i]][[j]]$u_mat
+    v_mat <- esvd_missing_list[[i]][[j]]$v_mat
+    u_mat %*% t(v_mat)
+  })
+})
+
+esvd_angle_res <- eSVD:::tuning_select_scalar(dat = dat_impute, nat_mat_list_list = nat_mat_list_list,
+                                family = fitting_distr,  missing_idx_list = missing_idx_list,
+                                scalar_vec = paramMat_esvd[,"scalar"])
+
+
+
 esvd_angle_vec <- lapply(1:nrow(paramMat_esvd), function(i){
   nat_mat_list <- lapply(1:cv_trials, function(j){
     u_mat <- esvd_missing_list[[i]][[j]]$u_mat

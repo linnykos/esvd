@@ -2,7 +2,7 @@
 #'
 #' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
 #' @param nat_mat_list list of natural parameter matrices, each of same dimension as \code{dat}
-#' @param family character such as \code{"gaussian"} or \code{"exponential"}
+#' @param family character such as \code{"gaussian"}, \code{"exponential"}, \code{"neg_binom"} or \code{"curved_gaussian"}
 #' @param missing_idx_list list of missing indices, same length as \code{nat_mat_list}
 #' @param width parameter, controlling quantile of prediction region
 #' @param scalar additional parameter needed to compute distribution corresponding to \code{family}
@@ -43,6 +43,23 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   }
 }
 
+#' Select tuning parameter for a bunch of matrix completed fits
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
+#' @param nat_mat_list_list list of lists of natural parameter matrices, each of same dimension as \code{dat}.
+#' The length of the list \code{nat_mat_list_list} is equal to \code{\length{scalar_vec}},
+#' the number of different scalars to select from, and is
+#' comprised of individual lists. The length of each of such lists within each element of
+#' \code{nat_mat_list_list} is equal to the length of \code{length(missing_idx_list)}, the
+#' number of different trials for each parameter setting
+#' @param family character such as \code{"gaussian"}, \code{"exponential"}, \code{"neg_binom"} or \code{"curved_gaussian"}
+#' @param missing_idx_list list of missing indices, same length as \code{nat_mat_list_list[[1]]}
+#' @param width parameter, controlling quantile of prediction region
+#' @param scalar_vec vector of additional parameters needed to compute distribution corresponding to \code{family},
+#' of length equal to \code{length(nat_mat_list_list)}
+#'
+#' @return a list
+#' @export
 tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_list = list(1:prod(dim(dat))),
                           width = 0.8, scalar_vec = rep(NA, length(nat_mat_list_list))){
   stopifnot(length(nat_mat_list_list) == length(scalar_vec))
@@ -66,7 +83,7 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   }
 
   idx <- which.min(abs(quality_vec - 45))
-  list(scalar = scalar_vec2[idx], quality = quality_vec[idx])
+  list(scalar = scalar_vec2[idx], quality = quality_vec[idx], idx = idx)
 }
 
 #########
