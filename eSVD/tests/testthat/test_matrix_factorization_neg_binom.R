@@ -342,7 +342,8 @@ test_that("fit_factorization is appropriate for neg_binom", {
     init <- initialization(dat, family = "neg_binom", max_val = 100, scalar = 10)
 
     fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
-                             max_itesize = 5, max_val = 100,
+                             max_iter = 10,
+                             max_val = 100,
                              family = "neg_binom", scalar = 10)
 
     res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat, scalar = 10)

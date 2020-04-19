@@ -2,7 +2,7 @@ set.seed(10)
 load(paste0("../results/step2_naive_svd", suffix, ".RData"))
 
 # paramMat_esvd <- as.matrix(expand.grid(c(0.5, 1, 2, 4), c(3,4,5)))
-paramMat_esvd <- as.matrix(expand.grid(c(100, 500, 1000, 5000, 10000), c(3,4,5)))
+paramMat_esvd <- as.matrix(expand.grid(c(1000, 5000, 10000, 50000), c(3,4,5,10)))
 colnames(paramMat_esvd) <- c("scalar", "k")
 esvd_missing_list <- vector("list", nrow(paramMat_esvd))
 fitting_distr <- "neg_binom"
