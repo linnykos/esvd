@@ -19,7 +19,7 @@ dat <- t(apply(dat, 1, function(x){10^4 * x/sum(x)}))
 obj <- Seurat::CreateSeuratObject(counts = t(dat), project = "marques",
                                   meta.data = NULL, min.cells = 0, min.features = 0)
 
-obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 2000)
+obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 1000)
 hvg <- Seurat::VariableFeatures(object = obj)
 
 idx <- which(colnames(dat) %in% hvg)

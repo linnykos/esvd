@@ -1,4 +1,4 @@
-load(paste0("../results/step5_trajectory", suffix, ".RData"))
+load(paste0("../results/step6_figures_condensed", suffix, ".RData"))
 
 color_func <- function(alpha = 0.2){
   c(rgb(240/255, 228/255, 66/255, alpha), #yellow

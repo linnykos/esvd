@@ -49,27 +49,6 @@ for(k in 1:ncol(combn_mat)){
   graphics.off()
 }
 
-
-for(k in 1:ncol(combn_mat)){
-  i <- combn_mat[1,k]; j <- combn_mat[2,k]
-
-  png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots_", k, "_bw.png"),
-      height = 1500, width = 1500, res = 300,
-      units = "px")
-  plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
-       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "eSVD embedding and trajectories\n(Curved Gaussian)")
-
-  for(ll in plotting_order_esvd) {
-    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
-    idx <- which(cluster_labels %in% target_indices)
-    points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
-           col = rgb(0,0,0,0.5))
-  }
-
-  graphics.off()
-}
-
 png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots.png"),
     height = 830, width = 2300, res = 300,
     units = "px")
@@ -160,26 +139,6 @@ for(k in 1:ncol(combn_mat)){
     ord <- curves[[ll]]$ord
     lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
     lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
-  }
-
-  graphics.off()
-}
-
-for(k in 1:ncol(combn_mat)){
-  i <- combn_mat[1,k]; j <- combn_mat[2,k]
-
-  png(filename = paste0("../../esvd_results/figure/main/svd_2dplots_", k, "_bw.png"),
-      height = 1500, width = 1500, res = 300,
-      units = "px")
-  plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
-       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "SVD embedding and trajectories\n(Constant-variance Gaussian)")
-
-  for(ll in plotting_order_svd) {
-    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
-    idx <- which(cluster_labels %in% target_indices)
-    points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
-           col = rgb(0,0,0,0.5))
   }
 
   graphics.off()
