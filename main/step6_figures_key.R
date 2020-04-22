@@ -9,7 +9,7 @@ color_func <- function(alpha = 0.2){
     rgb(100/255, 100/255, 100/255, alpha)) #gray
 }
 
-cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
+cell_type_vec <- as.character(marques$cell.info$cell.type)
 cell_type_vec <- as.factor(cell_type_vec)
 cluster_labels <- as.numeric(cell_type_vec)
 order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
