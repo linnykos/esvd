@@ -38,9 +38,9 @@ svd_angle_res <- sapply(1:nrow(paramMat_svd), function(j){
     softImpute_embedding <- softImpute::softImpute(log_dat_NA, rank.max = paramMat_svd[j, "k"], lambda = paramMat_svd[j, "lambda"])
     softImpute_pred <- softImpute_embedding$u %*% diag(softImpute_embedding$d) %*% t(softImpute_embedding$v)
 
-    tmp_mat <- cbind(log_dat, softImpute_pred)
+    tmp_mat <- cbind(as.numeric(log_dat), as.numeric(softImpute_pred))
 
-    training_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[i]],])
+    training_val <- eSVD:::.compute_principal_angle(tmp_mat[training_idx_list[[i]],])
     testing_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[i]],])
 
     c(training = training_val, testing = testing_val)
