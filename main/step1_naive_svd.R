@@ -11,6 +11,7 @@ missing_idx_list <- lapply(1:cv_trials, function(j){
   set.seed(10*j)
   eSVD::construct_missing_values(n = n, p = d, num_val = 4)
 })
+
 training_idx_list <- lapply(1:cv_trials, function(j){
   c(1:prod(dim(dat)))[-missing_idx_list[[j]]]
 })
@@ -40,8 +41,8 @@ svd_angle_res <- sapply(1:nrow(paramMat_svd), function(j){
     cbind(log_dat, softImpute_pred)
   }))
 
-  training_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[j]],])
-  testing_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[j]],])
+  training_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[i]],])
+  testing_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[i]],])
 
   c(training = training_val, testing = testing_val)
 })
