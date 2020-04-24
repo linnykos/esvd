@@ -72,7 +72,6 @@ test_that("tuning_select_scalar works", {
                                      missing_idx_list = list(missing_idx),
                                      width = 0.8, scalar_vec = scalar_vec)
 
-
   expect_true(is.list(res))
   expect_true(all(sort(names(res)) == sort(c("scalar", "quality", "idx", "all_results"))))
   expect_true(is.numeric(res$scalar))

@@ -34,8 +34,9 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   # determine if the principal angle falls within the prediction region
   tmp_mat <- do.call(rbind, tmp_list)
   colnames(tmp_mat) <- c("observed_val", "predicted_val")
-  res <- .within_prediction_region(max(tmp_mat[,"predicted_val"]), family = family, width = width,
-                                   scalar = scalar, angle_val = angle_val, tol = tol)
+  res <- .within_prediction_region(max(tmp_mat), family = family, width = width,
+                                   scalar = scalar, angle_val = angle_val, tol = tol,
+                                   effective_max = max(tmp_mat[,"predicted_val"]))
 
   if(nrow(tmp_mat) > max_points){
     tmp_mat <- tmp_mat[sample(1:nrow(tmp_mat), max_points),]
@@ -72,26 +73,47 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   stopifnot(length(unique(sapply(nat_mat_list_list, length))) == 1)
   stopifnot(length(nat_mat_list_list[[1]]) == length(missing_idx_list))
 
-  res_list <- lapply(1:length(nat_mat_list_list), function(i){
+  training_idx_list <- lapply(1:length(missing_idx_list), function(j){
+    c(1:prod(dim(dat)))[-missing_idx_list[[j]]]
+  })
+
+  # angles for testing
+  res_test_list <- lapply(1:length(nat_mat_list_list), function(i){
     plot_prediction_against_observed(dat, nat_mat_list_list[[i]], family = family,
                                      missing_idx_list = missing_idx_list,
                                      width = width, scalar = scalar_vec[i], plot = F)
   })
 
-  bool_vec <- sapply(res_list, function(x){x$bool})
+  # angles for training
+  res_train_list <- lapply(1:length(nat_mat_list_list), function(i){
+    plot_prediction_against_observed(dat, nat_mat_list_list[[i]], family = family,
+                                     missing_idx_list = training_idx_list,
+                                     width = width, scalar = scalar_vec[i], plot = F)
+  })
 
-  if(any(bool_vec)){
-    quality_vec <- sapply(res_list[which(bool_vec)], function(x){x$angle_val})
-    scalar_vec2 <- scalar_vec[which(bool_vec)]
+  # compile all the results
+  all_results <- cbind(sapply(res_train_list, function(x){x$angle_val}),
+                       sapply(res_train_list, function(x){x$bool}),
+                       sapply(res_test_list, function(x){x$angle_val}),
+                       sapply(res_test_list, function(x){x$bool}),
+                       scalar_vec)
+  colnames(all_results) <- c("training_angle", "training_bool",
+                             "testing_angle", "testing_bool",
+                             "scalar")
+
+  # determine the best parameter
+  bool_vec <- all_results[,"testing_bool"]
+
+  if(any(bool_vec == 1)){
+    quality_vec <- all_results[which(bool_vec == 1), "testing_angle"]
+    scalar_vec2 <- scalar_vec[which(bool_vec == 1)]
   } else {
-    quality_vec <- sapply(res_list, function(x){x$angle_val})
+    quality_vec <- all_results[, "testing_angle"]
     scalar_vec2 <- scalar_vec
   }
 
   idx <- which.min(abs(quality_vec - 45))
-  all_results <- cbind(sapply(res_list, function(x){x$angle_val}),
-                       sapply(res_list, function(x){x$bool}),
-                       scalar_vec)
+
   colnames(all_results)
   list(scalar = scalar_vec2[idx], quality = quality_vec[idx], idx = idx, all_results = all_results)
 }
@@ -106,8 +128,10 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   angle_val * 180/pi
 }
 
-.within_prediction_region <- function(max_val, family, width, scalar, angle_val, tol = 0.95){
+.within_prediction_region <- function(max_val, family, width, scalar, angle_val, tol = 0.95,
+                                      effective_max = max_val){
   seq_vec <- seq(0, max_val, length.out = 500)
+  stopifnot(any(seq_vec <= effective_max))
 
   interval_mat <- sapply(seq_vec, function(x){
     .compute_prediction_interval_from_mean(x, family = family, width = width, scalar = scalar)
@@ -115,9 +139,10 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   rownames(interval_mat) <- c("lower", "upper")
 
   principal_line <- seq_vec * tan(angle_val*pi/180)
+  idx <- which(seq_vec <= effective_max)
 
-  bool_vec <- apply(cbind(interval_mat["lower",] <= principal_line,
-                          interval_mat["upper",] >= principal_line), 1, all)
+  bool_vec <- apply(cbind(interval_mat["lower",idx] <= principal_line[idx],
+                          interval_mat["upper",idx] >= principal_line[idx]), 1, all)
   bool <- sum(bool_vec)/length(bool_vec) >= tol
 
   list(seq_vec = seq_vec, interval_mat = interval_mat, principal_line = principal_line, bool = bool)
