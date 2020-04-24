@@ -30,11 +30,12 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   # compute the principal angle and
   angle_vec <- sapply(tmp_list, .compute_principal_angle)
   angle_val <- mean(angle_vec)
+  angle_sd <- sd(angle_vec)
 
   # determine if the principal angle falls within the prediction region
   tmp_mat <- do.call(rbind, tmp_list)
   colnames(tmp_mat) <- c("observed_val", "predicted_val")
-  res <- .within_prediction_region(max(tmp_mat), family = family, width = width,
+  res <- .within_prediction_region(1.5*max(tmp_mat), family = family, width = width,
                                    scalar = scalar, angle_val = angle_val, tol = tol,
                                    effective_max = max(tmp_mat[,"predicted_val"]))
 
@@ -46,7 +47,7 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
     .plot_pca_diagnostic(tmp_mat, seq_vec = res$seq_vec, interval_mat = res$interval_mat,
                          principal_line = res$principal_line, angle_val = angle_val, ...)
   } else {
-    list(angle_val = angle_val, bool = res$bool)
+    list(angle_val = angle_val, angle_sd = angle_sd, bool = res$bool)
   }
 }
 
@@ -107,15 +108,17 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   if(any(bool_vec == 1)){
     quality_vec <- all_results[which(bool_vec == 1), "testing_angle"]
     scalar_vec2 <- scalar_vec[which(bool_vec == 1)]
+    idx_vec <- c(1:length(scalar_vec))[which(bool_vec == 1)]
   } else {
     quality_vec <- all_results[, "testing_angle"]
     scalar_vec2 <- scalar_vec
+    idx_vec <- c(1:length(scalar_vec))
   }
 
   idx <- which.min(abs(quality_vec - 45))
 
   colnames(all_results)
-  list(scalar = scalar_vec2[idx], quality = quality_vec[idx], idx = idx, all_results = all_results)
+  list(scalar = scalar_vec2[idx], quality = quality_vec[idx], idx = idx_vec[idx], all_results = all_results)
 }
 
 #########
@@ -150,10 +153,11 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
 
 .plot_pca_diagnostic <- function(tmp_mat, seq_vec, interval_mat, principal_line, angle_val, ...){
   stopifnot(ncol(interval_mat) == length(principal_line))
-  rad <- 2/5*max(tmp_mat[,"predicted_val"])
+  rad <- 2/5*max(tmp_mat)
   seq_max <- 2*max(tmp_mat)
+  lim_vec <- range(c(0,tmp_mat))
 
-  graphics::plot(NA, asp = T, xlim = range(c(0,tmp_mat[,"predicted_val"])), ylim = range(c(0,tmp_mat[,"observed_val"])),
+  graphics::plot(NA, asp = T, xlim = lim_vec, ylim = lim_vec,
                  xlab = "Predicted value", ylab = "Observed value", ...)
 
   graphics::polygon(c(seq_vec, rev(seq_vec)), c(interval_mat["upper",], rev(interval_mat["lower",])), col = grDevices::rgb(1,0,0,0.2),

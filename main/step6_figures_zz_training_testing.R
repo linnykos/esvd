@@ -4,7 +4,7 @@ nat_mat_list <- lapply(1:length(svd_missing), function(i){
 })
 
 tmp_mat <- do.call(rbind, lapply(1:length(nat_mat_list), function(i){
-  cbind(log2(dat_impute+1)[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]])
+  cbind(log2(dat/rescaling_factor + 1)[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]])
 }))
 sd_val <- sd(tmp_mat[,1] - tmp_mat[,2])
 

@@ -1,9 +1,10 @@
 set.seed(10)
 load(paste0("../results/step1_naive_svd", suffix, ".RData"))
 
-
+# this step (rescaling values so the maximum value is 1000) is purely to prevent underflow downstream
+rescaling_factor <- 1000/max(dat_impute)
 dat_impute <- dat
-dat_impute <- dat_impute * 1000/max(dat_impute)
+dat_impute <- dat_impute * rescaling_factor
 dim(dat_impute)
 
 ###########

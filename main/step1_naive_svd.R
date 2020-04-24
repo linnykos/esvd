@@ -60,6 +60,7 @@ svd_missing <- lapply(1:cv_trials , function(i){
 
 # fit the actual embedding as well
 tmp <- svd(log_dat)
+svd_scree <- tmp$d
 svd_embedding <- (n/d)^(1/4)*tmp$u[,1:paramMat_svd[idx, "k"]] %*% diag(sqrt(tmp$d[1:paramMat_svd[idx, "k"]]))
 
 rm(list = c("init", "fit", "dat_NA", "j", "tmp", "starting_lambda", "idx",

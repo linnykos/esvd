@@ -1,7 +1,10 @@
 rm(list=ls())
 load("../results/step5_trajectory_nb_hvg_log2.RData")
 
-#########3
+esvd_angle_res
+cbind(esvd_angle_res$all_results, paramMat_esvd)
+
+#########
 
 color_func <- function(alpha = 0.2){
   c(rgb(240/255, 228/255, 66/255, alpha), #yellow
@@ -47,6 +50,9 @@ combn_mat <- combn(3,2)
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
+  png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision8_nb_2dplots_", k, ".png"),
+      height = 1500, width = 1500, res = 300,
+      units = "px")
   plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "eSVD embedding and trajectories\n(Curved Gaussian)")
@@ -62,26 +68,69 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
     points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
+  graphics.off()
 }
 
+##################################
 
-for(k in 1:ncol(combn_mat)){
-  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+# plot each cell type individually (so 13 different plots)
+for(zz in unlist(cluster_group_list)){
+  png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision8_nb_2dplots_subtype", zz, ".png"),
+      height = 1000, width = 2500, res = 300,
+      units = "px")
+  par(mfrow = c(1,3))
 
-  plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
-       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "SVD embedding and trajectories\n(Constant-variance Gaussian)")
+  for(k in 1:3){
+    i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
-  for(ll in plotting_order_svd) {
-    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
-    idx <- which(cluster_labels %in% target_indices)
-    points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
-           col = col_info_svd$col_code[target_indices[1]])
+    plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+         asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+         main = paste0("For cell type ", col_info_svd[zz, "name"]))
+
+    for(ll in plotting_order_svd) {
+      idx <- which(cluster_labels == zz)
+      points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
+             col = col_info_svd$col_code[zz])
+    }
+
+    for(ll in 1:nrow(cluster_center_esvd)){
+      points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
+      points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+    }
+
+    points(cluster_center_esvd[zz,i], cluster_center_esvd[zz,j], pch = 16, cex = 2.25*2, col = "black")
+    points(cluster_center_esvd[zz,i], cluster_center_esvd[zz,j], pch = 16, cex = 1.5*2, col = col_vec_svd[zz])
   }
-
-
-  for(ll in 1:nrow(cluster_center_svd)){
-    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
-    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
-  }
+  graphics.off()
 }
+
+########################################
+
+png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision8_nb_training_testing.png"),
+    height = 1500, width = 2500, res = 300,
+    units = "px")
+par(mfrow = c(1,2))
+
+nat_mat_list <- lapply(1:length(esvd_missing_list[[esvd_angle_res$idx]]), function(i){
+  esvd_missing_list[[esvd_angle_res$idx]][[i]]$u_mat %*% t(esvd_missing_list[[esvd_angle_res$idx]][[i]]$v_mat)
+})
+
+training_idx_list <- lapply(1:length(missing_idx_list), function(i){
+  c(1:prod(dim(dat_impute)))[-missing_idx_list[[i]]]
+})
+
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = training_idx_list,
+                                 family = "neg_binom",
+                                 scalar = paramMat_esvd[esvd_angle_res$idx, "scalar"],
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 max_points = 1e6)
+
+
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = missing_idx_list,
+                                 family = "neg_binom",
+                                 scalar = paramMat_esvd[esvd_angle_res$idx, "scalar"],
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+
+graphics.off()

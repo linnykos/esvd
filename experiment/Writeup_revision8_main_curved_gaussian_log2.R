@@ -1,5 +1,8 @@
 rm(list=ls())
 load("../results/step3_scalar_heuristic_cg_hvg_tmp.RData")
+
+##############################
+
 training_idx_list <- lapply(1:cv_trials, function(i){
   c(1:prod(dim(dat_impute)))[-missing_idx_list[[i]]]
 })
