@@ -55,7 +55,7 @@ for(k in 1:ncol(combn_mat)){
       units = "px")
   plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "eSVD embedding and trajectories\n(Curved Gaussian)")
+       main = "eSVD embedding and trajectories\n(Negative binomial)")
 
   for(ll in plotting_order_svd) {
     target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
@@ -76,7 +76,7 @@ for(k in 1:ncol(combn_mat)){
 # plot each cell type individually (so 13 different plots)
 for(zz in unlist(cluster_group_list)){
   png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision8_nb_2dplots_subtype", zz, ".png"),
-      height = 1000, width = 2500, res = 300,
+      height = 800, width = 2500, res = 300,
       units = "px")
   par(mfrow = c(1,3))
 

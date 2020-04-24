@@ -30,7 +30,7 @@ paramMat_svd <- as.matrix(expand.grid(seq(1, starting_lambda, length.out = 50), 
 colnames(paramMat_svd) <- c("lambda", "k")
 
 svd_angle_res <- sapply(1:nrow(paramMat_svd), function(j){
-  tmp_mat <- do.call(rbind, lapply(1:cv_trials, function(i){
+  tmp_mat <- sapply(1:cv_trials, function(i){
     log_dat_NA <- log_dat
     log_dat_NA[missing_idx_list[[i]]] <- NA
 
@@ -39,12 +39,14 @@ svd_angle_res <- sapply(1:nrow(paramMat_svd), function(j){
     softImpute_pred <- softImpute_embedding$u %*% diag(softImpute_embedding$d) %*% t(softImpute_embedding$v)
 
     cbind(log_dat, softImpute_pred)
-  }))
 
-  training_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[i]],])
-  testing_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[i]],])
+    training_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[i]],])
+    testing_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[i]],])
 
-  c(training = training_val, testing = testing_val)
+    c(training = training_val, testing = testing_val)
+  })
+
+  rowMeans(tmp_mat)
 })
 svd_angle_res <- cbind(t(svd_angle_res), paramMat_svd)
 

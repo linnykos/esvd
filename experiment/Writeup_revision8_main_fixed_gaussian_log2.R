@@ -1,6 +1,26 @@
 rm(list=ls())
-load("../results/step3_scalar_heuristic_cg_hvg_tmp.RData")
+load("../results/step3_scalar_heuristic_cg_hvg.RData")
 
+# first fit the trajectories
+cell_type_vec <- as.character(marques$cell.info$cell.type)
+cell_type_vec <- as.factor(cell_type_vec)
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
+
+upscale_factor <- 0.5
+reduction_percentage <- 0.3
+p <- 3
+
+set.seed(10)
+svd_curves <- slingshot(svd_embedding[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                        cluster_group_list = cluster_group_list,
+                        verbose = T, upscale_factor = upscale_factor, reduction_percentage = reduction_percentage, squared = F)
+
+
+###############
 
 color_func <- function(alpha = 0.2){
   c(rgb(240/255, 228/255, 66/255, alpha), #yellow
@@ -11,15 +31,6 @@ color_func <- function(alpha = 0.2){
     rgb(100/255, 100/255, 100/255, alpha)) #gray
 }
 
-cell_type_vec <- as.character(marques$cell.info$cell.type)
-cell_type_vec <- as.factor(cell_type_vec)
-cluster_labels <- as.numeric(cell_type_vec)
-order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
-cluster_group_list <- lapply(order_vec, function(x){
-  grep(paste0("^", x), levels(cell_type_vec))
-})
-
-###
 
 num_order_vec_svd <- c(5, rep(3,2), c(1,1,1,1,1,1), rep(2,2),  rep(5,2))
 col_vec_svd <- color_func(1)[num_order_vec_svd]
@@ -62,6 +73,14 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
     points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
+
+  curves <- svd_curves$curves
+  for(ll in 1:length(curves)) {
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 5)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 3)
+  }
+
   graphics.off()
 }
 
