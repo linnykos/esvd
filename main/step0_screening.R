@@ -11,7 +11,7 @@ dim(dat)
 
 # # remove genes with too many 0's
 zz <- apply(dat, 2, function(x){length(which(x!=0))})
-idx <- which(zz > nrow(dat_impute)/100)
+idx <- which(zz > nrow(dat)/100)
 dat <- dat[,idx]
 dat_count <- dat_count[,idx]
 
