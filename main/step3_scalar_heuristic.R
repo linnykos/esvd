@@ -1,5 +1,5 @@
 set.seed(10)
-load(paste0("../results/step2_naive_svd", suffix, ".RData"))
+load(paste0("../results/step2_rescaling", suffix, ".RData"))
 
 paramMat_esvd <- as.matrix(expand.grid(c(0.5, 1, 2, 4), c(10, 20, 50, 100)))
 # paramMat_esvd <- as.matrix(expand.grid(c(500, 1000, 5000, 10000, 50000), c(5,10,20,30)))
