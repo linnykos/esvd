@@ -9,7 +9,7 @@
   cluster_labels,
   starting_cluster,
   cluster_group_list = NA,
-  use_initialization = F
+  squared = F
 )
 }
 \arguments{
@@ -24,8 +24,7 @@ from}
 
 \item{cluster_group_list}{list denoting the hierarchy and order of the clusters}
 
-\item{use_initialization}{use principal curves on each cluster to prune the
-list of possible neighboring clusters}
+\item{squared}{boolean on whether or not to square the distance matrix}
 }
 \value{
 A list of cluster indices, with \code{starting_cluster} starting as

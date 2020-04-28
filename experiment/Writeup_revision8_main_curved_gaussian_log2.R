@@ -5,7 +5,7 @@ load("../results/step3_scalar_heuristic_cg_hvg_tmp.RData")
 
 #################
 
-idx_tuned <- 11
+idx_tuned <- 7
 png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision8_curved_gaussian_training_testing.png"),
     height = 1500, width = 2500, res = 300,
     units = "px")
@@ -82,9 +82,9 @@ combn_mat <- combn(3,2)
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
-  png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision8_curved_gaussian_2dplots_", k, ".png"),
-      height = 1500, width = 1500, res = 300,
-      units = "px")
+  # png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision8_curved_gaussian_2dplots_", k, ".png"),
+  #     height = 1500, width = 1500, res = 300,
+  #     units = "px")
   plot(x = esvd_missing_list[[idx_tuned]][[1]]$u_mat[,i],
        y = esvd_missing_list[[idx_tuned]][[1]]$u_mat[,j],
        xlim = range(esvd_missing_list[[idx_tuned]][[1]]$u_mat[,i]), ylim = range(esvd_missing_list[[idx_tuned]][[1]]$u_mat[,j]),
@@ -96,20 +96,20 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
     points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
-  graphics.off()
+  # graphics.off()
 }
 
 zz <- esvd_missing_list[[idx_tuned]][[1]]$u_mat
-tmp <- stats::prcomp(zz, center = T, scale. = T)
+tmp <- stats::prcomp(zz, center = T, scale. = F)
 tmp_dat <- tmp$x[,1:3]
 cluster_center_esvd <- .compute_cluster_center(tmp_dat, .construct_cluster_matrix(cluster_labels))
 
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
-  png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision8_curved_gaussian_2dplots_", k, "_janky.png"),
-      height = 1500, width = 1500, res = 300,
-      units = "px")
+  # png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision8_curved_gaussian_2dplots_", k, "_janky.png"),
+  #     height = 1500, width = 1500, res = 300,
+  #     units = "px")
   plot(x = tmp_dat[,i],
        y = tmp_dat[,j],
        xlim = range(tmp_dat[,i]), ylim = range(tmp_dat[,j]),
@@ -121,7 +121,7 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
     points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
-  graphics.off()
+  # graphics.off()
 }
 
 ###############################3

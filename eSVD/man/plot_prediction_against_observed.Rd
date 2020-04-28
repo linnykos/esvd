@@ -13,6 +13,7 @@ plot_prediction_against_observed(
   scalar = NA,
   plot = T,
   max_points = 5e+05,
+  tol = 0.95,
   ...
 )
 }
@@ -21,11 +22,11 @@ plot_prediction_against_observed(
 
 \item{nat_mat_list}{list of natural parameter matrices, each of same dimension as \code{dat}}
 
-\item{family}{character such as \code{"gaussian"} or \code{"exponential"}}
+\item{family}{character such as \code{"gaussian"}, \code{"exponential"}, \code{"neg_binom"} or \code{"curved_gaussian"}}
 
 \item{missing_idx_list}{list of missing indices, same length as \code{nat_mat_list}}
 
-\item{width}{plotting parameter, controlling quantile}
+\item{width}{parameter, controlling quantile of prediction region}
 
 \item{scalar}{additional parameter needed to compute distribution corresponding to \code{family}}
 
@@ -33,9 +34,10 @@ plot_prediction_against_observed(
 
 \item{max_points}{maximum number of points to be shown in the scatterplot, purely for visualization purposes only}
 
-\item{...}{additional plotting parameters}
+\item{tol}{parameter between \code{0} and \code{1} for how strict (\code{1} being the strictest) to measure
+if the principal angle falls within the prediction region}
 
-\item{seq_max}{plotting parameter, controlling x- and y-axes}
+\item{...}{additional plotting parameters}
 }
 \value{
 either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or the principle angle otherwise
