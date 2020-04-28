@@ -55,7 +55,7 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
 #'
 #' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
 #' @param nat_mat_list_list list of lists of natural parameter matrices, each of same dimension as \code{dat}.
-#' The length of the list \code{nat_mat_list_list} is equal to \code{\length{scalar_vec}},
+#' The length of the list \code{nat_mat_list_list} is equal to \code{length{scalar_vec}},
 #' the number of different scalars to select from, and is
 #' comprised of individual lists. The length of each of such lists within each element of
 #' \code{nat_mat_list_list} is equal to the length of \code{length(missing_idx_list)}, the

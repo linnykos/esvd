@@ -28,7 +28,7 @@ save.image(paste0("../results/step0_screening", suffix, ".RData"))
 
 # run DESCEND
 res_descend <- descend::runDescend(t(dat_count), n.cores = ncores)
-descend_hvg <- descend::findHVG(res_descend, threshold = 50)$HVG.genes
+descend_hvg <- descend::findHVG(res_descend, threshold = 20)$HVG.genes
 
 idx <- which(colnames(dat) %in% c(vst_hvg, descend_hvg))
 dat <- dat[,idx]
