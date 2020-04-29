@@ -2,7 +2,7 @@ rm(list=ls())
 set.seed(10)
 library(eSVD)
 
-suffix <- "_cg_vst-descend"
+suffix <- "_cg_vst-spca"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)
 

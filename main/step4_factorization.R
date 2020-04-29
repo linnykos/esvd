@@ -9,7 +9,7 @@ nat_mat_list_list <- lapply(1:nrow(paramMat_esvd), function(i){
   })
 })
 
-esvd_angle_res <- eSVD:::tuning_select_scalar(dat = dat_impute, nat_mat_list_list = nat_mat_list_list,
+esvd_angle_res <- eSVD::tuning_select_scalar(dat = dat_impute, nat_mat_list_list = nat_mat_list_list,
                                 family = fitting_distr,  missing_idx_list = missing_idx_list,
                                 scalar_vec = paramMat_esvd[,"scalar"])
 scalar <- paramMat_esvd[esvd_angle_res$idx, "scalar"]
@@ -29,14 +29,14 @@ save.image(paste0("../results/step4_factorization", suffix, ".RData"))
 print(paste0(Sys.time(), ": Finished factorizing"))
 
 ##########################
-
-i <- 7
-nat_mat_list <- lapply(1:cv_trials, function(j){
-  u_mat <- esvd_missing_list[[i]][[j]]$u_mat
-  v_mat <- esvd_missing_list[[i]][[j]]$v_mat
-  u_mat %*% t(v_mat)
-})
-plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
-                                 family = fitting_distr, missing_idx_list = missing_idx_list,
-                                 scalar = paramMat_esvd[i, "scalar"])
+#
+# i <- 7
+# nat_mat_list <- lapply(1:cv_trials, function(j){
+#   u_mat <- esvd_missing_list[[i]][[j]]$u_mat
+#   v_mat <- esvd_missing_list[[i]][[j]]$v_mat
+#   u_mat %*% t(v_mat)
+# })
+# plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
+#                                  family = fitting_distr, missing_idx_list = missing_idx_list,
+#                                  scalar = paramMat_esvd[i, "scalar"])
 

@@ -30,7 +30,7 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   # compute the principal angle and
   angle_vec <- sapply(tmp_list, .compute_principal_angle)
   angle_val <- mean(angle_vec)
-  angle_sd <- sd(angle_vec)
+  angle_sd <- stats::sd(angle_vec)
 
   # determine if the principal angle falls within the prediction region
   tmp_mat <- do.call(rbind, tmp_list)

@@ -1,8 +1,9 @@
 rm(list=ls())
-load("../results/step3_scalar_heuristic_cg_hvg_tmp.RData")
+# load("../results/step3_scalar_heuristic_cg_hvg_tmp.RData")
+load("../results/step4_factorization_cg_vst-descend.RData")
 
-zz1 <- esvd_missing_list[[7]][[1]]$u_mat
-zz2 <- esvd_missing_list[[7]][[2]]$u_mat
+zz1 <- esvd_missing_list[[1]][[1]]$u_mat
+zz2 <- esvd_missing_list[[1]][[2]]$u_mat
 zz3 <- zz1 - zz2
 apply(zz3, 2, quantile)
 
@@ -14,6 +15,33 @@ apply(cluster_center1, 2, quantile)
 apply(cluster_center2, 2, quantile)
 # oh ... we need to align them hm...
 apply(cluster_center1 - cluster_center2, 2, quantile)
+
+###########################
+
+idx_choice <- 1
+nat_mat_list <- lapply(1:length(esvd_missing_list[[idx_choice]]), function(i){
+  esvd_missing_list[[idx_choice]][[i]]$u_mat %*% t(esvd_missing_list[[idx_choice]][[i]]$v_mat)
+})
+
+training_idx_list <- lapply(1:length(missing_idx_list), function(i){
+  c(1:prod(dim(dat_impute)))[-missing_idx_list[[i]]]
+})
+
+par(mfrow = c(1,2))
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = training_idx_list,
+                                 family = fitting_distr,
+                                 scalar = paramMat_esvd[idx_choice, "scalar"],
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 max_points = 1e6)
+
+
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = missing_idx_list,
+                                 family = fitting_distr,
+                                 scalar = paramMat_esvd[idx_choice, "scalar"],
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+
 
 ###################3
 color_func <- function(alpha = 0.2){
