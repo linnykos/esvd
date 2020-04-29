@@ -39,11 +39,11 @@ spca_func <- function(i){
 spca_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 print(paste0(Sys.time(), ": Finished sPCA"))
 
-spca_summary <- cbind(v_seq, t(sapply(res_list, function(x){c(length(unique(sort(unlist(apply(x$v, 2, function(y){which(y != 0)}))))), x$prop.var.explained[5])})))
+spca_summary <- cbind(v_seq, t(sapply(spca_list, function(x){c(length(unique(sort(unlist(apply(x$v, 2, function(y){which(y != 0)}))))), x$prop.var.explained[5])})))
 idx <- min(which(spca_summary[,2] == max(spca_summary[,2])))
 target_var <- spca_summary[idx,3]
 idx <- min(intersect(which(spca_summary[,2] >= 500), which(spca_summary[,3] >= 0.9*target_var)))
-spca_idx <- sort(unlist(apply(res_list[[idx]]$v, 2, function(x){which(x != 0)})))
+spca_idx <- sort(unlist(apply(spca_list[[idx]]$v, 2, function(x){which(x != 0)})))
 spca_hvg <- colnames(dat)[spca_idx]
 print(paste0(Sys.time(), ": Finished selecting sPCA genes"))
 
