@@ -7,10 +7,10 @@
   stopifnot(ncol(u_mat) == ncol(v_mat), nrow(u_mat) == nrow(dat), nrow(v_mat) == ncol(dat))
 
   n <- nrow(dat); p <- ncol(dat)
-  pred_mat <- u_mat %*% t(v_mat)
+  nat_mat <- u_mat %*% t(v_mat)
   idx <- which(!is.na(dat))
 
-  1/(n*p) * sum((pred_mat[idx] - dat[idx])^2)
+  1/(n*p) * sum((nat_mat[idx] - dat[idx])^2)
 }
 
 .evaluate_objective_single.gaussian <- function(dat_vec, current_vec, other_mat, n, p, ...){
@@ -35,21 +35,21 @@
   if(is.matrix(tmp)) 1/(n*p) * rowSums(tmp) else 1/(n*p) * sum(tmp)
 }
 
-.evaluate_objective_mat.gaussian <- function(dat, pred_mat, ...){
-  stopifnot(all(dim(dat) == dim(pred_mat)))
+.evaluate_objective_mat.gaussian <- function(dat, nat_mat, ...){
+  stopifnot(all(dim(dat) == dim(nat_mat)))
 
   n <- nrow(dat); p <- ncol(dat)
   idx <- which(!is.na(dat))
 
-  1/(n*p) * sum((pred_mat[idx] - dat[idx])^2)
+  1/(n*p) * sum((nat_mat[idx] - dat[idx])^2)
 }
 
-.gradient_mat.gaussian <- function(dat, pred_mat, scalar = 2, ...){
-  stopifnot(all(dim(dat) == dim(pred_mat)))
+.gradient_mat.gaussian <- function(dat, nat_mat, scalar = 2, ...){
+  stopifnot(all(dim(dat) == dim(nat_mat)))
 
   n <- nrow(dat); p <- ncol(dat)
 
-  1/(n*p) * 2 * (pred_mat - dat)
+  1/(n*p) * 2 * (nat_mat - dat)
 }
 
 

@@ -46,24 +46,24 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   while((is.na(tol) | abs(current_obj - next_obj) > tol) & length(obj_vec) < max_iter){
     current_obj <- next_obj
 
-    pred_mat <- u_mat%*%t(v_mat)
-    if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(pred_mat <= 0))
-    } else { stopifnot(all(pred_mat >= 0)) }
+    nat_mat <- u_mat%*%t(v_mat)
+    if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(nat_mat <= 0))
+    } else { stopifnot(all(nat_mat >= 0)) }
     }
 
     # reparameterize
-    tmp <- .reparameterize(u_mat, v_mat)
+    tmp <- .reparameterize(u_mat, v_mat, equal_covariance = F)
     u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, parallelized = !is.na(cores), ...)
 
-    pred_mat <- u_mat%*%t(v_mat)
-    if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(pred_mat <= 0))
-      } else { stopifnot(all(pred_mat >= 0)) }
+    nat_mat <- u_mat%*%t(v_mat)
+    if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(nat_mat <= 0))
+      } else { stopifnot(all(nat_mat >= 0)) }
     }
 
     # reparameterize
-    tmp <- .reparameterize(u_mat, v_mat)
+    tmp <- .reparameterize(u_mat, v_mat, equal_covariance = F)
     u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
     v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, parallelized = !is.na(cores), ...)
@@ -77,12 +77,12 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     obj_vec <- c(obj_vec, next_obj)
   }
 
-  tmp <- .reparameterize(u_mat, v_mat)
+  tmp <- .reparameterize(u_mat, v_mat, equal_covariance = T)
   u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
-  pred_mat <- u_mat%*%t(v_mat)
-  if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(pred_mat <= 0))
-  } else { stopifnot(all(pred_mat >= 0)) }
+  nat_mat <- u_mat%*%t(v_mat)
+  if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(nat_mat <= 0))
+  } else { stopifnot(all(nat_mat >= 0)) }
   }
 
   list(u_mat = u_mat, v_mat = v_mat, obj_vec = obj_vec, res_list = res_list)

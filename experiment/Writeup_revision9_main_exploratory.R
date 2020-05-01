@@ -1,20 +1,11 @@
 rm(list=ls())
 # load("../results/step3_scalar_heuristic_cg_hvg_tmp.RData")
-load("../results/step3_scalar_heuristic_cg_vst-spca.RData")
+load("../results/step4_factorization_cg_vst-spca.RData")
 
-zz1 <- esvd_missing_list[[1]][[1]]$u_mat
-zz2 <- esvd_missing_list[[1]][[2]]$u_mat
-zz3 <- zz1 - zz2
-apply(zz3, 2, quantile)
+zz1 <- esvd_embedding$u_mat
 
 cluster_labels <- as.numeric(cell_type_vec)
 cluster_center1 <- .compute_cluster_center(zz1, .construct_cluster_matrix(cluster_labels))
-cluster_center2 <- .compute_cluster_center(zz2, .construct_cluster_matrix(cluster_labels))
-
-apply(cluster_center1, 2, quantile)
-apply(cluster_center2, 2, quantile)
-# oh ... we need to align them hm...
-apply(cluster_center1 - cluster_center2, 2, quantile)
 
 ###########################
 
@@ -185,7 +176,7 @@ cluster_group_list <- lapply(order_vec, function(x){
 upscale_factor <- 1
 reduction_percentage <- 0.2
 
-p <- 3
+p <- 5
 set.seed(10)
 esvd_curves <- eSVD::slingshot(zz1[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                cluster_group_list = cluster_group_list,
@@ -215,11 +206,11 @@ for(k in 1:ncol(combn_mat)){
   }
 }
 
-p <- 9
+p <- 5
 dat <- zz1[,1:p]
 starting_cluster = cluster_group_list[[1]][1]
 verbose = T
-squared = F
+squared = T
 stopifnot(!is.list(cluster_group_list) || starting_cluster %in% cluster_group_list[[1]])
 stopifnot(all(cluster_labels > 0), all(cluster_labels %% 1 == 0), length(unique(cluster_labels)) == max(cluster_labels))
 if(all(!is.na(cluster_group_list))){

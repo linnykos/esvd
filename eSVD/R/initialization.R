@@ -25,19 +25,19 @@ initialization <- function(dat, k = 2, family,
   if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
 
   # projected gradient descent
-  pred_mat <- .projected_gradient_descent(dat, k = k, max_val = max_val,
+  nat_mat <- .projected_gradient_descent(dat, k = k, max_val = max_val,
                                           direction = direction,
                                           max_iter = max_iter,
                                           tol = tol, ...)
 
-  res <- .svd_projection(pred_mat, k = k, factors = T)
+  res <- .svd_projection(nat_mat, k = k, factors = T)
   u_mat <- res$u_mat; v_mat <- res$v_mat
 
   if(!is.na(direction)){
     if(direction == "<=") {
-      stopifnot(all(pred_mat[which(!is.na(dat))] < 0))
+      stopifnot(all(nat_mat[which(!is.na(dat))] < 0))
     } else {
-      stopifnot(all(pred_mat[which(!is.na(dat))] > 0))
+      stopifnot(all(nat_mat[which(!is.na(dat))] > 0))
     }
   }
 
@@ -71,10 +71,10 @@ initialization <- function(dat, k = 2, family,
 
 .determine_initial_matrix <- function(dat, family, k, max_val = NA, tol = 1e-3, ...){
   dat[which(dat <= tol)] <- tol/2
-  pred_mat <- .mean_transformation(dat, family, ...)
+  nat_mat <- .mean_transformation(dat, family, ...)
   direction <- .dictate_direction(family)
 
-  .project_rank_feasibility(pred_mat, k = k, direction = direction,
+  .project_rank_feasibility(nat_mat, k = k, direction = direction,
                                     max_val = max_val)$matrix
 }
 
@@ -82,25 +82,24 @@ initialization <- function(dat, k = 2, family,
                                         max_val = NA, direction = "<=",
                                         max_iter = 50, tol = 1e-3,
                                         ...){
-  n <- nrow(dat); d <- ncol(dat)
-  pred_mat <- .determine_initial_matrix(dat, class(dat)[1], k = k, max_val = max_val, ...)
+  nat_mat <- .determine_initial_matrix(dat, class(dat)[1], k = k, max_val = max_val, ...)
   iter <- 1
-  new_obj <- .evaluate_objective_mat(dat, pred_mat, ...)
+  new_obj <- .evaluate_objective_mat(dat, nat_mat, ...)
   old_obj <- Inf
 
   while(abs(new_obj - old_obj) > tol & iter < max_iter){
     old_obj <- new_obj
-    gradient_mat <- .gradient_mat(dat, pred_mat, ...)
-    new_mat <- .adaptive_gradient_step(dat, pred_mat, gradient_mat, k = k,
+    gradient_mat <- .gradient_mat(dat, nat_mat, ...)
+    new_mat <- .adaptive_gradient_step(dat, nat_mat, gradient_mat, k = k,
                                        max_val = max_val, direction = direction,
                                        ...)
 
     new_obj <- .evaluate_objective_mat(dat, new_mat, ...)
-    pred_mat <- new_mat
+    nat_mat <- new_mat
     iter <- iter + 1
   }
 
-  pred_mat
+  nat_mat
 }
 
 .svd_projection <- function(mat, k, factors = F,
@@ -150,7 +149,7 @@ initialization <- function(dat, k = 2, family,
 #' efficient.
 #'
 #' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
-#' @param pred_mat \code{n} by \code{d} matrix
+#' @param nat_mat \code{n} by \code{d} matrix
 #' @param gradient_mat \code{n} by \code{d} matrix
 #' @param k numeric
 #' @param max_val numeric or \code{NA}
@@ -161,16 +160,16 @@ initialization <- function(dat, k = 2, family,
 #' @param ... other parameters
 #'
 #' @return \code{n} by \code{d} matrix
-.adaptive_gradient_step <- function(dat, pred_mat, gradient_mat, k,
+.adaptive_gradient_step <- function(dat, nat_mat, gradient_mat, k,
                                     max_val = NA, direction = "<=",
                                     stepsize_init = 100, stepdown_factor = 2,
                                     max_iter = 20, ...){
   stepsize <- stepsize_init
-  init_obj <- .evaluate_objective_mat(dat, pred_mat, ...)
+  init_obj <- .evaluate_objective_mat(dat, nat_mat, ...)
   iter <- 1
 
   while(iter > max_iter){
-    res <- pred_mat - stepsize*gradient_mat
+    res <- nat_mat - stepsize*gradient_mat
     new_mat <- .project_rank_feasibility(res, direction = direction,
                                max_val = max_val)$matrix
 
@@ -185,7 +184,7 @@ initialization <- function(dat, k = 2, family,
   }
 
   # was not able to project
-  pred_mat
+  nat_mat
 }
 
 # alternating projection heuristic to find intersection of two sets

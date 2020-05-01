@@ -70,6 +70,7 @@ rm(list = c("init", "fit", "dat_NA", "j", "tmp", "starting_lambda", "idx",
             "log_dat", "log_dat_NA"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
 save.image(paste0("../results/step1_naive_svd", suffix, ".RData"))
+print(warnings())
 
 ######################
 

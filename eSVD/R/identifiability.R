@@ -49,10 +49,34 @@
   t(eig_res$vectors) %*% T_mat
 }
 
-.reparameterize <- function(u_mat, v_mat){
+
+#' Function to reparameterize two matrices
+#'
+#' Designed to output matrices of the same dimension as \code{u_mat}
+#' and \code{v_mat}, but linearly transformed so \code{u_mat %*% t(v_mat)}
+#' is preserved but either \code{u_mat %*% t(u_mat)} is diagonal and equal to
+#' \code{v_mat %*% t(v_mat)} (if \code{equal_covariance} is \code{FALSE})
+#' or  \code{u_mat %*% t(u_mat)/nrow(u_mat)} is diagonal and equal to
+#' \code{v_mat %*% t(v_mat)/nrow(v_mat)} (if \code{equal_covariance} is \code{TRUE})
+#'
+#' @param u_mat
+#' @param v_mat
+#' @param equal_covariance
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.reparameterize <- function(u_mat, v_mat, equal_covariance = F){
   stopifnot(ncol(u_mat) == ncol(v_mat))
+  n <- nrow(u_mat); p <- nrow(v_mat)
 
   res <- .identification(t(u_mat) %*% u_mat, t(v_mat) %*% v_mat)
 
-  list(u_mat = u_mat %*% t(res), v_mat = v_mat %*% solve(res))
+  if(equal_covariance){
+    list(u_mat = (n/p)^(1/4)*u_mat %*% t(res), v_mat = (p/n)^(1/4)*v_mat %*% solve(res))
+  } else {
+    list(u_mat = u_mat %*% t(res), v_mat = v_mat %*% solve(res))
+  }
+
 }

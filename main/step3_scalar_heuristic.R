@@ -39,13 +39,13 @@ for(i in 1:nrow(paramMat_esvd)){
 rm(list = c("j", "i", "init", "tmp_list", "dat_impute_NA"))
 print(paste0(Sys.time(), ": Finished scalar heuristic"))
 save.image(paste0("../results/step3_scalar_heuristic", suffix, ".RData"))
-
+print(warnings())
 
 # idx <- which.min(quality_vec)
-# pred_mat <- 1/(res_list[[idx]]$u_mat %*% t(res_list[[idx]]$v_mat))
-# tmp <- cbind(pred_mat[missing_idx], dat_impute[missing_idx])
+# nat_mat <- 1/(res_list[[idx]]$u_mat %*% t(res_list[[idx]]$v_mat))
+# tmp <- cbind(nat_mat[missing_idx], dat_impute[missing_idx])
 # pca_res <- princomp(tmp)
-# plot(pred_mat[missing_idx], dat_impute[missing_idx], asp = T, pch = 16,
+# plot(nat_mat[missing_idx], dat_impute[missing_idx], asp = T, pch = 16,
 #      col = rgb(0,0,0,0.2), main = "Our embedding",
 #      xlab = "Predicted value", ylab = "Observed and masked value")
 # lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)

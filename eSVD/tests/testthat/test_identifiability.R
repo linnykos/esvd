@@ -105,7 +105,7 @@ test_that(".reparameterize preserves the inner products", {
   expect_true(all(bool_vec))
 })
 
-test_that(".reparameterize yields the same covariance matrix", {
+test_that(".reparameterize yields the same second moment matrix", {
   trials <- 100
 
   bool_vec <- sapply(1:trials, function(x){
@@ -124,13 +124,35 @@ test_that(".reparameterize yields the same covariance matrix", {
   expect_true(all(bool_vec))
 })
 
+
+test_that(".reparameterize yields the same covariance matrix", {
+  trials <- 100
+
+  bool_vec <- sapply(1:trials, function(x){
+    set.seed(12*x)
+    n <- 10
+    p <- 20
+    u_mat <- MASS::mvrnorm(n, rep(0, 5), diag(5))
+    v_mat <- MASS::mvrnorm(p, rep(1, 5), 2*diag(5))
+
+    res <- .reparameterize(u_mat, v_mat, equal_covariance = T)
+
+    cov_u <- t(res$u_mat) %*% res$u_mat/n
+    cov_v <- t(res$v_mat) %*% res$v_mat/p
+
+    sum(abs(cov_u - cov_v)) < 1e-6
+  })
+
+  expect_true(all(bool_vec))
+})
+
 test_that(".reparameterize yields diagonal covariances", {
   trials <- 100
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(13*x)
-    u_mat <- MASS::mvrnorm(5, rep(0, 5), diag(5))
-    v_mat <- MASS::mvrnorm(5, rep(1, 5), 2*diag(5))
+    u_mat <- MASS::mvrnorm(10, rep(0, 5), diag(5))
+    v_mat <- MASS::mvrnorm(20, rep(1, 5), 2*diag(5))
 
     res <- .reparameterize(u_mat, v_mat)
 

@@ -19,12 +19,12 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
                                              max_points = 500000, tol = 0.95, ...){
   stopifnot(length(nat_mat_list) == length(missing_idx_list))
 
-  pred_mat_list <- lapply(nat_mat_list, function(nat_mat){
+  nat_mat_list <- lapply(nat_mat_list, function(nat_mat){
     compute_mean(nat_mat, family = family, scalar = scalar)
   })
 
   tmp_list <- lapply(1:length(nat_mat_list), function(i){
-    cbind(dat[missing_idx_list[[i]]], pred_mat_list[[i]][missing_idx_list[[i]]])
+    cbind(dat[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]])
   })
 
   # compute the principal angle and

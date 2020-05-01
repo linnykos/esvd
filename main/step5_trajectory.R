@@ -61,4 +61,5 @@ save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 rm(list = c("tmp"))
 print(paste0(Sys.time(), ": Finished trajectoy"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
+print(warnings())
 

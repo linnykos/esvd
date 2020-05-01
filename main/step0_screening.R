@@ -56,3 +56,4 @@ dat_count <- dat_count[,idx]
 rm(list = c("idx", "zz", "obj", "marques", "k", "lvls", "spca_func", "idx", "target_var"))
 print(paste0(Sys.time(), ": Finished screening"))
 save.image(paste0("../results/step0_screening", suffix, ".RData"))
+print(warnings())

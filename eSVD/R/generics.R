@@ -39,8 +39,8 @@
 
 ###########
 
-.evaluate_objective_mat <- function(dat, pred_mat, ...){
-  stopifnot(all(dim(dat) == dim(pred_mat)))
+.evaluate_objective_mat <- function(dat, nat_mat, ...){
+  stopifnot(all(dim(dat) == dim(nat_mat)))
 
   UseMethod(".evaluate_objective_mat")
 }
@@ -56,12 +56,12 @@
 #' function.
 #'
 #' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
-#' @param pred_mat \code{n} by \code{d} matrix where each entry represents the natural parameter of the corresponding entry in \code{dat}
+#' @param nat_mat \code{n} by \code{d} matrix where each entry represents the natural parameter of the corresponding entry in \code{dat}
 #' @param ... other parameters
 #'
 #' @return \code{n} by \code{d} matrix
-.gradient_mat <- function(dat, pred_mat, ...){
-  stopifnot(all(dim(dat) == dim(pred_mat)))
+.gradient_mat <- function(dat, nat_mat, ...){
+  stopifnot(all(dim(dat) == dim(nat_mat)))
 
   UseMethod(".gradient_mat")
 }
