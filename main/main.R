@@ -2,6 +2,8 @@ rm(list=ls())
 set.seed(10)
 library(eSVD)
 
+sessionInfo()
+
 suffix <- "_cg_spca-descend_original"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)

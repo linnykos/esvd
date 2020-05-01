@@ -7,13 +7,12 @@ cluster_group_list <- lapply(order_vec, function(x){
 })
 
 upscale_factor <- 1
-reduction_percentage <- 0.2
 
 p <- 3
 set.seed(10)
 esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                cluster_group_list = cluster_group_list,
-                               verbose = T, upscale_factor = upscale_factor, reduction_percentage = reduction_percentage,
+                               verbose = T, upscale_factor = upscale_factor,
                                squared = F)
 
 print(paste0(Sys.time(), ": Finished eSVD trajectory"))

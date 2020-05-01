@@ -49,7 +49,7 @@ for(k in 1:ncol(combn_mat)){
       units = "px")
   plot(x = svd_embedding[,i], y = svd_embedding[,j],
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "eSVD embedding and trajectories\n(Curved Gaussian)",
+       main = "SVD embedding\n(Constant-variance Gaussian)",
        pch = 16, col = col_info_svd$col_code[cluster_labels])
 
   for(ll in 1:nrow(cluster_center1)){
@@ -86,7 +86,7 @@ for(k in 1:ncol(combn_mat)){
       units = "px")
   plot(x = svd_embedding[,i], y = svd_embedding[,j],
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "eSVD embedding and trajectories\n(Constant-variance Gaussian)",
+       main = "SVD embedding and trajectories\n(Constant-variance Gaussian)",
        pch = 16, col = col_info_svd$col_code[cluster_labels])
 
   for(ll in 1:nrow(cluster_center1)){
@@ -129,7 +129,7 @@ plot_prediction_against_observed(dat_org, nat_mat_list = nat_mat_list,
                                  missing_idx_list = training_idx_list,
                                  family = "gaussian",
                                  scalar = sd_val,
-                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Training set)",
                                  max_points = 1e6)
 
 
@@ -137,22 +137,38 @@ plot_prediction_against_observed(dat_org, nat_mat_list = nat_mat_list,
                                  missing_idx_list = missing_idx_list,
                                  family = "gaussian",
                                  scalar = sd_val,
-                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
 graphics.off()
 
 #############################
 
 # UMAP
 set.seed(10)
-config <- umap::umap.defaults
-config$n_neighbors <- 30
-config$verbose <- T
-res_umap <- umap::umap(svd_embedding, config = config)
+res_umap <- uwot::umap(svd_embedding, n_neighbors = 30, pca = NULL, verbose = T)
 png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_svd_umap.png"),
     height = 1500, width = 1500, res = 300,
     units = "px")
-plot(res_umap$layout[,1], res_umap$layout[,2], col = col_info_svd$col_code[cluster_labels], pch = 16, asp = T,
-     main = "UMAP on full dataset", xlab = "UMAP dimension 1", ylab = "UMAP dimension 2")
+plot(res_umap[,1], res_umap[,2], col = col_info_svd$col_code[cluster_labels], pch = 16, asp = T,
+     main = "UMAP on SVD embedding", xlab = "UMAP dimension 1", ylab = "UMAP dimension 2")
+graphics.off()
+
+set.seed(10)
+res_umap <- uwot::umap(dat_impute, n_neighbors = 30, pca = NULL, verbose = T)
+png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_full_umap.png"),
+    height = 1500, width = 1500, res = 300,
+    units = "px")
+plot(res_umap[,1], res_umap[,2], col = col_info_svd$col_code[cluster_labels], pch = 16, asp = T,
+     main = "UMAP on full data", xlab = "UMAP dimension 1", ylab = "UMAP dimension 2")
+graphics.off()
+
+set.seed(10)
+dat_org <- log2(dat_impute/rescaling_factor+1)
+res_umap <- uwot::umap(dat_org, n_neighbors = 30, pca = NULL, verbose = T)
+png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_full_log_umap.png"),
+    height = 1500, width = 1500, res = 300,
+    units = "px")
+plot(res_umap[,1], res_umap[,2], col = col_info_svd$col_code[cluster_labels], pch = 16, asp = T,
+     main = "UMAP on full data (log transformed)", xlab = "UMAP dimension 1", ylab = "UMAP dimension 2")
 graphics.off()
 
 #################################

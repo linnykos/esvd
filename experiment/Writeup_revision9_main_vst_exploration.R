@@ -18,6 +18,9 @@ training_idx_list <- lapply(1:length(missing_idx_list), function(i){
   c(1:prod(dim(dat_impute)))[-missing_idx_list[[i]]]
 })
 
+png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_esvd_training_testing.png"),
+    height = 1500, width = 2500, res = 300,
+    units = "px")
 par(mfrow = c(1,2))
 plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                  missing_idx_list = training_idx_list,
@@ -32,18 +35,7 @@ plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                  family = fitting_distr,
                                  scalar = paramMat_esvd[idx_choice, "scalar"],
                                  main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
-
-
-########################
-
-# UMAP
-set.seed(10)
-config <- umap::umap.defaults
-config$n_neighbors <- 10
-config$verbose <- T
-res_umap <- umap::umap(dat_impute, config = config)
-plot(res_umap$layout[,1], res_umap$layout[,2], col = col_info_svd$col_code[cluster_labels], pch = 16, asp = T,
-     main = "UMAP on full dataset", xlab = "UMAP dimension 1", ylab = "UMAP dimension 2")
+graphics.off()
 
 
 ###################3
@@ -75,6 +67,19 @@ plotting_order_svd <- c(2,3,1,4)
 
 combn_mat <- combn(3,2)
 
+########################
+
+# UMAP
+set.seed(10)
+res_umap <- uwot::umap(esvd_embedding$u_mat, n_neighbors = 30, pca = NULL, verbose = T)
+png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_esvd_umap.png"),
+    height = 1500, width = 1500, res = 300,
+    units = "px")
+plot(res_umap[,1], res_umap[,2], col = col_info_svd$col_code[cluster_labels], pch = 16, asp = T,
+     main = "UMAP on eSVD embedding", xlab = "UMAP dimension 1", ylab = "UMAP dimension 2")
+graphics.off()
+
+
 #########################
 
 # plotting the first 3 dimensions
@@ -83,6 +88,9 @@ par(mfrow = c(1,3))
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
+  png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_esvd_2dplots_", k, ".png"),
+      height = 1500, width = 1500, res = 300,
+      units = "px")
   plot(x = zz1[,i], y = zz1[,j],
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "eSVD embedding and trajectories\n(Curved Gaussian)",
@@ -92,7 +100,57 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 2.25, col = "black")
     points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
+  graphics.off()
 }
+
+#############
+
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
+
+upscale_factor <- 1
+
+p <- 5
+set.seed(10)
+esvd_curves <- eSVD::slingshot(zz1[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                               cluster_group_list = cluster_group_list,
+                               verbose = T, upscale_factor = upscale_factor,
+                               squared = T)
+
+par(mfrow = c(1,3))
+
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_esvd_2dplots_", k, "_trajectory.png"),
+      height = 1500, width = 1500, res = 300,
+      units = "px")
+  plot(x = zz1[,i], y = zz1[,j],
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = "eSVD embedding and trajectories\n(Curved Gaussian)",
+       pch = 16, col = col_info_svd$col_code[cluster_labels])
+
+  for(ll in 1:nrow(cluster_center1)){
+    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 2.25, col = "black")
+    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  }
+
+  curves <- esvd_curves$curves
+  for(ll in 1:length(curves)) {
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
+  }
+  graphics.off()
+}
+
+########################################
+########################################
+########################################
+
 
 zz_pca <- stats::prcomp(esvd_embedding$u_mat, scale. = F, center = T)
 cluster_center_pca <- .compute_cluster_center(zz_pca$x, .construct_cluster_matrix(cluster_labels))
@@ -111,7 +169,6 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center_pca[ll,i], cluster_center_pca[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
 }
-
 
 
 ## # plot each of the 6 mature oligos
@@ -139,44 +196,6 @@ for(k in 1:ncol(combn_mat)){
 }
 
 ###############
-
-cluster_labels <- as.numeric(cell_type_vec)
-order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
-cluster_group_list <- lapply(order_vec, function(x){
-  grep(paste0("^", x), levels(cell_type_vec))
-})
-
-upscale_factor <- 1
-
-p <- 5
-set.seed(10)
-esvd_curves <- eSVD::slingshot(zz1[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                               cluster_group_list = cluster_group_list,
-                               verbose = T, upscale_factor = upscale_factor, reduction_percentage = reduction_percentage,
-                               squared = T)
-
-par(mfrow = c(1,3))
-
-for(k in 1:ncol(combn_mat)){
-  i <- combn_mat[1,k]; j <- combn_mat[2,k]
-
-  plot(x = zz1[,i], y = zz1[,j],
-       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "eSVD embedding and trajectories\n(Curved Gaussian)",
-       pch = 16, col = col_info_svd$col_code[cluster_labels])
-
-  for(ll in 1:nrow(cluster_center1)){
-    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 2.25, col = "black")
-    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
-  }
-
-  curves <- esvd_curves$curves
-  for(ll in 1:length(curves)) {
-    ord <- curves[[ll]]$ord
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
-  }
-}
 
 
 
