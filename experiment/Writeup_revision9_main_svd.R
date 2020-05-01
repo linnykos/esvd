@@ -1,6 +1,12 @@
 rm(list=ls())
-# load("../results/step3_scalar_heuristic_cg_hvg_tmp.RData")
-load("../results/step3_scalar_heuristic_cg_vst-spca.RData")
+load("../results/step4_factorization_cg_vst-spca.RData")
+dim(svd_embedding)
+
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
 
 color_func <- function(alpha = 0.2){
   c(rgb(240/255, 228/255, 66/255, alpha), #yellow
@@ -33,12 +39,14 @@ combn_mat <- combn(3,2)
 #########################
 
 # plotting the first 3 dimensions
-par(mfrow = c(1,3))
 cluster_center1 <- .compute_cluster_center(svd_embedding, .construct_cluster_matrix(cluster_labels))
 
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
+  png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_svd_2dplots_", k, ".png"),
+      height = 1500, width = 1500, res = 300,
+      units = "px")
   plot(x = svd_embedding[,i], y = svd_embedding[,j],
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "eSVD embedding and trajectories\n(Curved Gaussian)",
@@ -48,7 +56,109 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 2.25, col = "black")
     points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
+  graphics.off()
 }
+
+# with trajectories
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
+
+upscale_factor <- 1
+zz_pca <- stats::prcomp(svd_embedding)
+plot(zz_pca$sdev)
+
+p <- 5
+set.seed(10)
+esvd_curves <- eSVD::slingshot(svd_embedding[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                               cluster_group_list = cluster_group_list,
+                               verbose = T, upscale_factor = upscale_factor, squared = T)
+cluster_center1 <- .compute_cluster_center(svd_embedding, .construct_cluster_matrix(cluster_labels))
+
+
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_svd_2dplots_", k, "_trajectory.png"),
+      height = 1500, width = 1500, res = 300,
+      units = "px")
+  plot(x = svd_embedding[,i], y = svd_embedding[,j],
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = "eSVD embedding and trajectories\n(Constant-variance Gaussian)",
+       pch = 16, col = col_info_svd$col_code[cluster_labels])
+
+  for(ll in 1:nrow(cluster_center1)){
+    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 2.25, col = "black")
+    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  }
+
+  curves <- esvd_curves$curves
+  for(ll in 1:length(curves)) {
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
+  }
+  graphics.off()
+}
+
+#################################
+
+# training testing
+
+dat_org <- log2(dat_impute/rescaling_factor+1)
+svd_missing_list <- svd_missing
+nat_mat_list <- lapply(1:cv_trials, function(i){
+  svd_missing_list[[i]]$u %*% diag(svd_missing_list[[i]]$d) %*% t(svd_missing_list[[i]]$v)
+})
+tmp_mat <- do.call(rbind, lapply(1:cv_trials, function(i){
+  cbind(as.numeric(dat_org), as.numeric(nat_mat_list[[i]]))[missing_idx_list[[i]],]
+}))
+sd_val <- sd(tmp_mat[,1] - tmp_mat[,2])
+
+training_idx_list <- lapply(1:length(missing_idx_list), function(i){
+  c(1:prod(dim(dat_impute)))[-missing_idx_list[[i]]]
+})
+
+png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_svd_training_testing.png"),
+    height = 1500, width = 2500, res = 300,
+    units = "px")
+par(mfrow = c(1,2))
+plot_prediction_against_observed(dat_org, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = training_idx_list,
+                                 family = "gaussian",
+                                 scalar = sd_val,
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 max_points = 1e6)
+
+
+plot_prediction_against_observed(dat_org, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = missing_idx_list,
+                                 family = "gaussian",
+                                 scalar = sd_val,
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+graphics.off()
+
+#############################
+
+# UMAP
+set.seed(10)
+config <- umap::umap.defaults
+config$n_neighbors <- 30
+config$verbose <- T
+res_umap <- umap::umap(svd_embedding, config = config)
+png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision9_svd_umap.png"),
+    height = 1500, width = 1500, res = 300,
+    units = "px")
+plot(res_umap$layout[,1], res_umap$layout[,2], col = col_info_svd$col_code[cluster_labels], pch = 16, asp = T,
+     main = "UMAP on full dataset", xlab = "UMAP dimension 1", ylab = "UMAP dimension 2")
+graphics.off()
+
+#################################
+#################################
+#################################
+
 
 #####################
 
@@ -80,22 +190,22 @@ par(mfrow = c(1,3))
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
-  plot(x = svd_embedding[,i], y = svd_embedding[,j],
+  plot(x = zz_pca$x[,i], y = zz_pca$x[,j],
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "eSVD embedding and trajectories\n(Curved Gaussian)",
        pch = 16, col = col_info_svd$col_code[cluster_labels])
 
-  for(ll in 1:nrow(cluster_center1)){
-    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 2.25, col = "black")
-    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  for(ll in 1:nrow(cluster_center_pca)){
+    points(cluster_center_pca[ll,i], cluster_center_pca[ll,j], pch = 16, cex = 2.25, col = "black")
+    points(cluster_center_pca[ll,i], cluster_center_pca[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
 
-  curves <- svd_curves$curves
-  for(ll in 1:length(curves)) {
-  ord <- curves[[ll]]$ord
-  lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
-  lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
-  }
+  # curves <- svd_curves$curves
+  # for(ll in 1:length(curves)) {
+  # ord <- curves[[ll]]$ord
+  # lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+  # lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
+  # }
 }
 
 ##########################

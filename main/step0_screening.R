@@ -14,16 +14,16 @@ idx <- which(zz > nrow(dat)/100)
 dat <- dat[,idx]
 dat_count <- dat_count[,idx]
 
-obj <- Seurat::CreateSeuratObject(counts = t(dat), project = "marques",
-                                  meta.data = NULL, min.cells = 0, min.features = 0)
-obj <- Seurat::NormalizeData(obj, normalization.method = "RC", scale.factor = 10^4)
-obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 1000)
-# Seurat::VariableFeaturePlot(obj)
-dat <- t(as.matrix(obj@assays$RNA@data))
-vst_hvg <- Seurat::VariableFeatures(object = obj)
-
-print(paste0(Sys.time(), ": Finished vst screening"))
-save.image(paste0("../results/step0_screening", suffix, ".RData"))
+# obj <- Seurat::CreateSeuratObject(counts = t(dat), project = "marques",
+#                                   meta.data = NULL, min.cells = 0, min.features = 0)
+# obj <- Seurat::NormalizeData(obj, normalization.method = "RC", scale.factor = 10^4)
+# obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 1000)
+# # Seurat::VariableFeaturePlot(obj)
+# dat <- t(as.matrix(obj@assays$RNA@data))
+# vst_hvg <- Seurat::VariableFeatures(object = obj)
+#
+# print(paste0(Sys.time(), ": Finished vst screening"))
+# save.image(paste0("../results/step0_screening", suffix, ".RData"))
 
 # try a series of SPCAs
 k <- 5
@@ -56,6 +56,9 @@ print(paste0(Sys.time(), ": Finished selecting DESCEND genes"))
 idx <- which(colnames(dat) %in% c(descend_hvg, spca_hvg))
 dat <- dat[,idx]
 dat_count <- dat_count[,idx]
+
+reweight_factor <- rowSums(dat)
+dat <- t(sapply(1:nrow(dat), function(i){10^4 * dat[i,]/reweight_factor[i]}))
 
 rm(list = c("idx", "zz", "obj", "marques", "k", "lvls", "spca_func", "idx", "target_var"))
 print(paste0(Sys.time(), ": Finished screening"))

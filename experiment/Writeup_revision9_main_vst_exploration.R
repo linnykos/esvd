@@ -33,6 +33,19 @@ plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                  scalar = paramMat_esvd[idx_choice, "scalar"],
                                  main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
 
+
+########################
+
+# UMAP
+set.seed(10)
+config <- umap::umap.defaults
+config$n_neighbors <- 10
+config$verbose <- T
+res_umap <- umap::umap(dat_impute, config = config)
+plot(res_umap$layout[,1], res_umap$layout[,2], col = col_info_svd$col_code[cluster_labels], pch = 16, asp = T,
+     main = "UMAP on full dataset", xlab = "UMAP dimension 1", ylab = "UMAP dimension 2")
+
+
 ###################3
 color_func <- function(alpha = 0.2){
   c(rgb(240/255, 228/255, 66/255, alpha), #yellow
@@ -80,6 +93,26 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
 }
+
+zz_pca <- stats::prcomp(esvd_embedding$u_mat, scale. = F, center = T)
+cluster_center_pca <- .compute_cluster_center(zz_pca$x, .construct_cluster_matrix(cluster_labels))
+par(mfrow = c(1,3))
+
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  plot(x = zz_pca$x[,i], y = zz_pca$x[,j],
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = "eSVD embedding and trajectories\n(Curved Gaussian)",
+       pch = 16, col = col_info_svd$col_code[cluster_labels])
+
+  for(ll in 1:nrow(cluster_center_pca)){
+    points(cluster_center_pca[ll,i], cluster_center_pca[ll,j], pch = 16, cex = 2.25, col = "black")
+    points(cluster_center_pca[ll,i], cluster_center_pca[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  }
+}
+
+
 
 ## # plot each of the 6 mature oligos
 for(k in 1:ncol(combn_mat)){

@@ -4,7 +4,6 @@ load(paste0("../results/step0_screening", suffix, ".RData"))
 max_val <- 5000
 n <- nrow(dat); d <- ncol(dat)
 cv_trials <- 2
-svd_missing_list <- vector("list", length(cv_trials))
 
 # generate list of missing indices
 missing_idx_list <- lapply(1:cv_trials, function(j){
@@ -52,7 +51,7 @@ svd_angle_res <- cbind(t(svd_angle_res), paramMat_svd)
 
 # select the best model
 idx <- which.min(abs(svd_angle_res[,2] - 45))
-svd_missing <- lapply(1:cv_trials , function(i){
+svd_missing_list <- lapply(1:cv_trials , function(i){
   log_dat_NA <- log_dat
   log_dat_NA[missing_idx_list[[i]]] <- NA
 
