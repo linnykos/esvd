@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/step4_factorization_cg_vst.RData")
+load("../results/step4_factorization_cg_vst-spca.RData")
 paramMat_esvd
 
 zz1 <- esvd_embedding$u_mat
@@ -105,7 +105,49 @@ for(k in 1:ncol(combn_mat)){
   }
 }
 
-#######
+###############
+
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
+
+upscale_factor <- 1
+
+p <- 5
+set.seed(10)
+esvd_curves <- eSVD::slingshot(zz1[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                               cluster_group_list = cluster_group_list,
+                               verbose = T, upscale_factor = upscale_factor, reduction_percentage = reduction_percentage,
+                               squared = T)
+
+par(mfrow = c(1,3))
+
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  plot(x = zz1[,i], y = zz1[,j],
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = "eSVD embedding and trajectories\n(Curved Gaussian)",
+       pch = 16, col = col_info_svd$col_code[cluster_labels])
+
+  for(ll in 1:nrow(cluster_center1)){
+    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 2.25, col = "black")
+    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  }
+
+  curves <- esvd_curves$curves
+  for(ll in 1:length(curves)) {
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
+  }
+}
+
+
+
+###############
 
 zz_pca <- stats::prcomp(zz1, scale. = F, center = T)
 plot(zz_pca$sdev)
@@ -116,7 +158,7 @@ cluster_group_list <- lapply(order_vec, function(x){
 })
 for(i in 3:15){
   p <- i
-  dat <- scale(zz1[,1:p], center = F, scale = T)
+  dat <- zz1[,1:p]
   starting_cluster = cluster_group_list[[1]][1]
   verbose = T
   squared = T

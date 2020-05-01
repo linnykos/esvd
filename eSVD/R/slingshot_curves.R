@@ -30,7 +30,7 @@
 slingshot <- function(dat, cluster_labels, starting_cluster,
                       cluster_group_list = NA,
                       squared = F,
-                      reduction_percentage = 0.1,
+                      reduction_percentage = 0.2,
                       shrink = 1, thresh = 0.001, max_iter = 15,
                       upscale_factor = NA, verbose = F){
 
@@ -42,6 +42,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   # adjust down
   reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
+  print(reduction_factor)
   dat2 <- dat/reduction_factor
 
   if(verbose) print("Starting to infer curves")
@@ -407,14 +408,13 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' Smooth approximation based on lambdas
 #'
 #' Does a kernel smoothing of \code{dat} based on the ordering given
-#' by \code{lambda}. The smoothing is done via a Gaussian kernel
-#' with bandwidth \code{b}.
+#' by \code{lambda}.
 #'
-#' @param lambda vector given by one component of the \code{pricipal_curve} object
+#' @param lambda vector given by one component of the \code{principal_curve} object
 #' @param dat a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
 #' original dataset
 #'
-#' @return a smoothed \code{n} by \code{d} matrix
+#' @return a smoothed \code{n} by \code{d} matrix that is ordered by \code{lambda}
 .smoother_func <- function(lambda, dat){
   stopifnot(length(lambda) == nrow(dat))
   ord <- order(lambda, decreasing = F)

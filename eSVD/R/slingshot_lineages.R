@@ -45,7 +45,7 @@
 
 #############
 
-.covariance_distance <- function(mean_vec1, cov_mat1, mean_vec2, cov_mat2, tol = 0.1){
+.covariance_distance <- function(mean_vec1, cov_mat1, mean_vec2, cov_mat2, n1, n2, tol = 0.1){
   mat <- cov_mat1 + cov_mat2
 
   eigen_res <- eigen(mat)
@@ -70,7 +70,9 @@
       cov_mat1 <- stats::cov(dat[idx1,])
       cov_mat2 <- stats::cov(dat[idx2,])
 
-      dist_mat[i,j] <- .covariance_distance(mean_vec1, cov_mat1, mean_vec2, cov_mat2)
+      n1 <- length(idx1); n2 <- length(idx2)
+
+      dist_mat[i,j] <- .covariance_distance(mean_vec1, cov_mat1, mean_vec2, cov_mat2, n1, n2)
       dist_mat[j,i] <- dist_mat[i,j]
     }
   }
