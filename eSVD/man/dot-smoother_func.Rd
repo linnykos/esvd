@@ -7,16 +7,15 @@
 .smoother_func(lambda, dat)
 }
 \arguments{
-\item{lambda}{vector given by one component of the \code{pricipal_curve} object}
+\item{lambda}{vector given by one component of the \code{principal_curve} object}
 
 \item{dat}{a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
 original dataset}
 }
 \value{
-a smoothed \code{n} by \code{d} matrix
+a smoothed \code{n} by \code{d} matrix that is ordered by \code{lambda}
 }
 \description{
 Does a kernel smoothing of \code{dat} based on the ordering given
-by \code{lambda}. The smoothing is done via a Gaussian kernel
-with bandwidth \code{b}.
+by \code{lambda}.
 }

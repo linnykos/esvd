@@ -42,7 +42,6 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   # adjust down
   reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
-  print(reduction_factor)
   dat2 <- dat/reduction_factor
 
   if(verbose) print("Starting to infer curves")

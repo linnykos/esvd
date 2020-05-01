@@ -6,7 +6,7 @@
 \usage{
 .adaptive_gradient_step(
   dat,
-  pred_mat,
+  nat_mat,
   gradient_mat,
   k,
   max_val = NA,
@@ -20,7 +20,7 @@
 \arguments{
 \item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}
 
-\item{pred_mat}{\code{n} by \code{d} matrix}
+\item{nat_mat}{\code{n} by \code{d} matrix}
 
 \item{gradient_mat}{\code{n} by \code{d} matrix}
 

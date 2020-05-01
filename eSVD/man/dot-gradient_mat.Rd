@@ -4,12 +4,12 @@
 \alias{.gradient_mat}
 \title{Gradient of the objective function}
 \usage{
-.gradient_mat(dat, pred_mat, ...)
+.gradient_mat(dat, nat_mat, ...)
 }
 \arguments{
 \item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}
 
-\item{pred_mat}{\code{n} by \code{d} matrix where each entry represents the natural parameter of the corresponding entry in \code{dat}}
+\item{nat_mat}{\code{n} by \code{d} matrix where each entry represents the natural parameter of the corresponding entry in \code{dat}}
 
 \item{...}{other parameters}
 }

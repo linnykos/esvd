@@ -59,14 +59,11 @@
 #' or  \code{u_mat %*% t(u_mat)/nrow(u_mat)} is diagonal and equal to
 #' \code{v_mat %*% t(v_mat)/nrow(v_mat)} (if \code{equal_covariance} is \code{TRUE})
 #'
-#' @param u_mat
-#' @param v_mat
-#' @param equal_covariance
+#' @param u_mat matrix of dimension \code{n} by \code{k}
+#' @param v_mat matrix of dimension \code{p} by \code{k}
+#' @param equal_covariance boolean
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return list of two matrices
 .reparameterize <- function(u_mat, v_mat, equal_covariance = F){
   stopifnot(ncol(u_mat) == ncol(v_mat))
   n <- nrow(u_mat); p <- nrow(v_mat)
