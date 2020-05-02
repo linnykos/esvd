@@ -16,7 +16,8 @@
 #' @export
 plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_idx_list = list(1:prod(dim(dat))),
                                              width = 0.8, scalar = NA, plot = T,
-                                             max_points = 500000, tol = 0.95, ...){
+                                             max_points = 500000, tol = 0.95, xlim = NA,
+                                             ylim = NA,...){
   stopifnot(length(nat_mat_list) == length(missing_idx_list))
 
   nat_mat_list <- lapply(nat_mat_list, function(nat_mat){
@@ -45,7 +46,8 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
 
   if(plot){
     .plot_pca_diagnostic(tmp_mat, seq_vec = res$seq_vec, interval_mat = res$interval_mat,
-                         principal_line = res$principal_line, angle_val = angle_val, ...)
+                         principal_line = res$principal_line, angle_val = angle_val,
+                         xlim = xlim, ylim = ylim, ...)
   } else {
     list(angle_val = angle_val, angle_sd = angle_sd, bool = res$bool)
   }
@@ -151,13 +153,17 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   list(seq_vec = seq_vec, interval_mat = interval_mat, principal_line = principal_line, bool = bool)
 }
 
-.plot_pca_diagnostic <- function(tmp_mat, seq_vec, interval_mat, principal_line, angle_val, ...){
+.plot_pca_diagnostic <- function(tmp_mat, seq_vec, interval_mat, principal_line, angle_val,
+                                 xlim = NA, ylim = NA, ...){
   stopifnot(ncol(interval_mat) == length(principal_line))
   rad <- 2/5*max(tmp_mat)
   seq_max <- 2*max(tmp_mat)
   lim_vec <- range(c(0,tmp_mat))
+  if(all(is.na(xlim))) xlim <- lim_vec
+  if(all(is.na(ylim))) ylim <- lim_vec
 
-  graphics::plot(NA, asp = T, xlim = lim_vec, ylim = lim_vec,
+
+  graphics::plot(NA, asp = T, xlim = xlim, ylim = ylim,
                  xlab = "Predicted value", ylab = "Observed value", ...)
 
   graphics::polygon(c(seq_vec, rev(seq_vec)), c(interval_mat["upper",], rev(interval_mat["lower",])), col = grDevices::rgb(1,0,0,0.2),

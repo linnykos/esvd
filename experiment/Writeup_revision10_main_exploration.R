@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/step4_factorization_cg_spca-descend_original.RData")
+load("../results/step4_factorization_cg_spca-vst_before_rescaling.RData")
 
 cluster_labels <- as.numeric(cell_type_vec)
 order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
@@ -75,3 +75,50 @@ plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                  family = fitting_distr,
                                  scalar = paramMat_esvd[idx_choice, "scalar"],
                                  main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+
+par(mfrow = c(1,2))
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = training_idx_list,
+                                 family = fitting_distr,
+                                 scalar = paramMat_esvd[idx_choice, "scalar"],
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 max_points = 1e6, xlim = c(0, 100), ylim = c(0, 100))
+
+
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = missing_idx_list,
+                                 family = fitting_distr,
+                                 scalar = paramMat_esvd[idx_choice, "scalar"],
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)",
+                                 xlim = c(0, 100), ylim = c(0, 100))
+
+# training testing
+
+dat_org <- log2(dat_impute/rescaling_factor+1)
+nat_mat_list <- lapply(1:cv_trials, function(i){
+  svd_missing_list[[i]]$u %*% diag(svd_missing_list[[i]]$d) %*% t(svd_missing_list[[i]]$v)
+})
+tmp_mat <- do.call(rbind, lapply(1:cv_trials, function(i){
+  cbind(as.numeric(dat_org), as.numeric(nat_mat_list[[i]]))[missing_idx_list[[i]],]
+}))
+sd_val <- sd(tmp_mat[,1] - tmp_mat[,2])
+
+training_idx_list <- lapply(1:length(missing_idx_list), function(i){
+  c(1:prod(dim(dat_impute)))[-missing_idx_list[[i]]]
+})
+
+par(mfrow = c(1,2))
+plot_prediction_against_observed(dat_org, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = training_idx_list,
+                                 family = "gaussian",
+                                 scalar = sd_val,
+                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 max_points = 1e6)
+
+
+plot_prediction_against_observed(dat_org, nat_mat_list = nat_mat_list,
+                                 missing_idx_list = missing_idx_list,
+                                 family = "gaussian",
+                                 scalar = sd_val,
+                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+
