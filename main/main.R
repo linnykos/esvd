@@ -4,7 +4,7 @@ library(eSVD)
 
 sessionInfo()
 
-suffix <- "_cg_spca-descend_original"
+suffix <- "_cg_spca-vst_before_rescaling"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)
 

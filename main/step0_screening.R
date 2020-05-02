@@ -48,12 +48,17 @@ spca_idx <- sort(unique(unlist(apply(spca_list[[idx]]$v, 2, function(x){which(x 
 spca_hvg <- colnames(dat)[spca_idx]
 print(paste0(Sys.time(), ": Finished selecting sPCA genes"))
 
-# run DESCEND
-res_descend <- descend::runDescend(t(dat_count), n.cores = ncores)
-descend_hvg <- descend::findHVG(res_descend, threshold = 50)$HVG.genes
-print(paste0(Sys.time(), ": Finished selecting DESCEND genes"))
+# # run DESCEND
+# res_descend <- descend::runDescend(t(dat_count), n.cores = ncores)
+# descend_hvg <- descend::findHVG(res_descend, threshold = 50)$HVG.genes
+# print(paste0(Sys.time(), ": Finished selecting DESCEND genes"))
 
-idx <- which(colnames(dat) %in% c(descend_hvg, spca_hvg))
+obj <- Seurat::CreateSeuratObject(counts = t(dat), project = "marques",
+                                  meta.data = NULL, min.cells = 0, min.features = 0)
+obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 500)
+vst_hvg <- Seurat::VariableFeatures(object = obj)
+
+idx <- which(colnames(dat) %in% c(vst_hvg, spca_hvg))
 dat <- dat[,idx]
 dat_count <- dat_count[,idx]
 

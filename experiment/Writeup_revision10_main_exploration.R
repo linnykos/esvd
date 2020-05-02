@@ -1,6 +1,5 @@
 rm(list=ls())
 load("../results/step4_factorization_cg_spca-descend_original.RData")
-cluster_center1 <- .compute_cluster_center(esvd_embedding$u_mat, .construct_cluster_matrix(cluster_labels))
 
 cluster_labels <- as.numeric(cell_type_vec)
 order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
@@ -33,6 +32,8 @@ col_info_svd[,c(5,6)] <- col_info_svd[,c(6,5)]
 colnames(col_info_svd)[c(5,6)] <- colnames(col_info_svd)[c(6,5)]
 col_info_svd
 plotting_order_svd <- c(2,3,1,4)
+cluster_center1 <- .compute_cluster_center(esvd_embedding$u_mat, .construct_cluster_matrix(cluster_labels))
+
 
 combn_mat <- combn(3,2)
 
