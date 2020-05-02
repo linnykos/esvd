@@ -51,6 +51,30 @@ for(k in 1:ncol(combn_mat)){
   }
 }
 
+## # plot each of the 6 mature oligos
+for(k in 1:ncol(combn_mat)){
+  par(mfrow = c(2,3))
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  for(ii in 1:6){
+    ll <- which(col_info_svd$factor_idx == 4)[ii]
+    point_idx <- which(cluster_labels == ll)
+
+    plot(x = NA, y = NA, xlim = range(zz1[,i]), ylim = range(zz1[,j]),
+         asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+         main = "eSVD embedding and trajectories\n(Curved Gaussian)")
+
+    lines(x = rep(0, 2), y = c(-1e5,1e5), col = "red", lwd = 2, lty = 2)
+    lines(x = c(-1e5,1e5), y = rep(0, 2), col = "red", lwd = 2, lty = 2)
+    points(x = zz1[point_idx,i], y = zz1[point_idx,j], pch = 16, col = col_info_svd$col_code[ll])
+
+    for(ll in 1:nrow(cluster_center1)){
+      points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 2.25, col = "black")
+      points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+    }
+  }
+}
+
 ################3
 idx_choice <- 1
 nat_mat_list <- lapply(1:length(esvd_missing_list[[idx_choice]]), function(i){
@@ -92,6 +116,47 @@ plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                  main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)",
                                  xlim = c(0, 100), ylim = c(0, 100))
 
+###########################3
+
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
+
+upscale_factor <- 1
+
+p <- 3
+set.seed(10)
+esvd_curves <- eSVD::slingshot(zz1[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                               cluster_group_list = cluster_group_list,
+                               verbose = T, upscale_factor = upscale_factor,
+                               squared = F, reduction_percentage = 0.5)
+
+par(mfrow = c(1,3))
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  plot(x = zz1[,i], y = zz1[,j],
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = "eSVD embedding and trajectories\n(Curved Gaussian)",
+       pch = 16, col = col_info_svd$col_code[cluster_labels])
+
+  for(ll in 1:nrow(cluster_center1)){
+    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 2.25, col = "black")
+    points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  }
+
+  curves <- esvd_curves$curves
+  for(ll in 1:length(curves)) {
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
+  }
+}
+
+par(mfrow = c(1,3))
+
 # training testing
 
 dat_org <- log2(dat_impute/rescaling_factor+1)
@@ -122,3 +187,41 @@ plot_prediction_against_observed(dat_org, nat_mat_list = nat_mat_list,
                                  scalar = sd_val,
                                  main = "SVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
 
+##########################################
+
+zz1 <- esvd_embedding$u_mat
+zz_pca <- stats::prcomp(zz1, scale. = F, center = T)
+plot(zz_pca$sdev)
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
+p <- 3
+dat <- zz1[,1:p]
+starting_cluster = cluster_group_list[[1]][1]
+verbose = T
+squared = F
+stopifnot(!is.list(cluster_group_list) || starting_cluster %in% cluster_group_list[[1]])
+stopifnot(all(cluster_labels > 0), all(cluster_labels %% 1 == 0), length(unique(cluster_labels)) == max(cluster_labels))
+if(all(!is.na(cluster_group_list))){
+  tmp <- unlist(cluster_group_list)
+  stopifnot(length(tmp) == length(unique(tmp)), length(tmp) == length(unique(cluster_labels)))
+}
+
+### construct the distance matrix
+dist_mat <- .compute_cluster_distances(dat, cluster_labels)
+if(squared) dist_mat <- dist_mat^2
+
+if(all(is.na(cluster_group_list))){
+  ### construct the spt (shortest path tree)
+  g <- .construct_graph(dist_mat)
+
+  ### identify lineages (paths through trees)
+  lineages <- .construct_lineages(g, starting_cluster = starting_cluster)
+
+} else {
+  lineages <- .construct_lineage_from_hierarchy(dist_mat, cluster_group_list,
+                                                starting_cluster)
+}
+lineages

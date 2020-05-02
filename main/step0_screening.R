@@ -43,7 +43,7 @@ spca_summary <- cbind(v_seq, t(sapply(spca_list, function(x){
     x$prop.var.explained[5])})))
 idx <- min(which(spca_summary[,2] == max(spca_summary[,2])))
 target_var <- spca_summary[idx,3]
-idx <- min(intersect(which(spca_summary[,2] >= 500), which(spca_summary[,3] >= 0.9*target_var)))
+idx <- min(intersect(which(spca_summary[,2] >= 300), which(spca_summary[,3] >= 0.9*target_var)))
 spca_idx <- sort(unique(unlist(apply(spca_list[[idx]]$v, 2, function(x){which(x != 0)}))))
 spca_hvg <- colnames(dat)[spca_idx]
 print(paste0(Sys.time(), ": Finished selecting sPCA genes"))
@@ -55,7 +55,7 @@ print(paste0(Sys.time(), ": Finished selecting sPCA genes"))
 
 obj <- Seurat::CreateSeuratObject(counts = t(dat), project = "marques",
                                   meta.data = NULL, min.cells = 0, min.features = 0)
-obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 500)
+obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 300)
 vst_hvg <- Seurat::VariableFeatures(object = obj)
 
 idx <- which(colnames(dat) %in% c(vst_hvg, spca_hvg))
