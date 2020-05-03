@@ -1,5 +1,7 @@
 rm(list=ls())
-load("../results/step4_factorization_cg_spca-vst_before_rescaling.RData")
+load("../results/step4_factorization_cg_spca-vst_before_rescaling_300.RData")
+
+zz1 <- esvd_embedding$u_mat
 
 cluster_labels <- as.numeric(cell_type_vec)
 order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
@@ -32,7 +34,7 @@ col_info_svd[,c(5,6)] <- col_info_svd[,c(6,5)]
 colnames(col_info_svd)[c(5,6)] <- colnames(col_info_svd)[c(6,5)]
 col_info_svd
 plotting_order_svd <- c(2,3,1,4)
-cluster_center1 <- .compute_cluster_center(esvd_embedding$u_mat, .construct_cluster_matrix(cluster_labels))
+cluster_center1 <- .compute_cluster_center(svd_embedding, .construct_cluster_matrix(cluster_labels))
 
 
 combn_mat <- combn(3,2)
@@ -40,7 +42,7 @@ combn_mat <- combn(3,2)
 par(mfrow = c(1,3))
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
-  plot(x = esvd_embedding$u_mat[,i], y =  esvd_embedding$u_mat[,j],
+  plot(x = svd_embedding[,i], y =  svd_embedding[,j],
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "SVD embedding and trajectories\n(Constant-variance Gaussian)",
        pch = 16, col = col_info_svd$col_code[cluster_labels])
@@ -131,7 +133,8 @@ set.seed(10)
 esvd_curves <- eSVD::slingshot(zz1[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                cluster_group_list = cluster_group_list,
                                verbose = T, upscale_factor = upscale_factor,
-                               squared = F, reduction_percentage = 0.5)
+                               reduction_percentage = 0.25,
+                               squared = T)
 
 par(mfrow = c(1,3))
 for(k in 1:ncol(combn_mat)){
@@ -147,12 +150,12 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
 
-  curves <- esvd_curves$curves
-  for(ll in 1:length(curves)) {
-    ord <- curves[[ll]]$ord
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
-  }
+  # curves <- esvd_curves$curves
+  # for(ll in 1:length(curves)) {
+  #   ord <- curves[[ll]]$ord
+  #   lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+  #   lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
+  # }
 }
 
 par(mfrow = c(1,3))
@@ -201,7 +204,7 @@ p <- 3
 dat <- zz1[,1:p]
 starting_cluster = cluster_group_list[[1]][1]
 verbose = T
-squared = F
+squared = T
 stopifnot(!is.list(cluster_group_list) || starting_cluster %in% cluster_group_list[[1]])
 stopifnot(all(cluster_labels > 0), all(cluster_labels %% 1 == 0), length(unique(cluster_labels)) == max(cluster_labels))
 if(all(!is.na(cluster_group_list))){

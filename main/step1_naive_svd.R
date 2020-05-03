@@ -3,7 +3,7 @@ load(paste0("../results/step0_screening", suffix, ".RData"))
 
 max_val <- 5000
 n <- nrow(dat); d <- ncol(dat)
-cv_trials <- 2
+cv_trials <- 3
 
 # generate list of missing indices
 missing_idx_list <- lapply(1:cv_trials, function(j){
