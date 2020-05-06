@@ -5,7 +5,7 @@ k_vec <- c(3,5,10)
 cv_trials <- 3
 missing_idx_list_list <- lapply(1:length(preprocessing_list), function(i){
   n <- nrow(preprocessing_list[[i]]$dat_impute)
-  p <- nrow(preprocessing_list[[i]]$dat_impute)
+  p <- ncol(preprocessing_list[[i]]$dat_impute)
 
   missing_idx_list <- lapply(1:cv_trials, function(j){
     set.seed(10*j)
