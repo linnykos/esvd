@@ -76,8 +76,5 @@ for(i in 1:length(labels_file_vec)){
   save.image(paste0("../results/step0_baron_preprocessing", suffix, ".RData"))
 }
 
-rm(list=c("dat", "labels", "label_vec", "tab", "idx", "tmp", "k", "lvls", "v_seq", "res_list", "spca_mat",
-          "target_var", "spca_idx", "res_descend", "res_hvg", "descend_idx", "gene_idx", "dat_impute", "reweight_factor"))
-
 print(paste0(Sys.time(), ": Finished preprocessing"))
 save.image(paste0("../results/step0_baron_screening", suffix, ".RData"))

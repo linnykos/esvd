@@ -1,7 +1,6 @@
 set.seed(10)
 load(paste0("../results/step2_rescaling", suffix, ".RData"))
 
-# paramMat_esvd <- as.matrix(expand.grid(c(2), c(5)))
 paramMat_esvd <- as.matrix(expand.grid(c(0.5, 1, 2, 4), c(3, 5, 10, 20)))
 # paramMat_esvd <- as.matrix(expand.grid(c(500, 1000, 5000, 10000, 50000), c(5,10,20,30))) # for neg_binom
 colnames(paramMat_esvd) <- c("scalar", "k")
@@ -29,7 +28,7 @@ for(i in 1:nrow(paramMat_esvd)){
                                    scalar = paramMat_esvd[i,"scalar"],
                                    return_path = F, cores = ncores,
                                    verbose = T)
-    save.image(paste0("../results/step3_scalar_heuristic", suffix, "_tmp.RData"))
+    save.image(paste0("../results/step3_scalar_tuning", suffix, "_tmp.RData"))
   }
 
   esvd_missing_list[[i]] <- tmp_list
@@ -38,7 +37,7 @@ for(i in 1:nrow(paramMat_esvd)){
 
 rm(list = c("j", "i", "init", "tmp_list", "dat_impute_NA"))
 print(paste0(Sys.time(), ": Finished scalar heuristic"))
-save.image(paste0("../results/step3_scalar_heuristic", suffix, ".RData"))
+save.image(paste0("../results/step3_scalar_tuning", suffix, ".RData"))
 print(warnings())
 
 # idx <- which.min(quality_vec)

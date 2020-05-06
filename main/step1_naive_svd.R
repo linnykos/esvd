@@ -2,13 +2,13 @@ set.seed(10)
 load(paste0("../results/step0_screening", suffix, ".RData"))
 
 max_val <- 5000
-n <- nrow(dat); d <- ncol(dat)
+n <- nrow(dat); p <- ncol(dat)
 cv_trials <- 3
 
 # generate list of missing indices
 missing_idx_list <- lapply(1:cv_trials, function(j){
   set.seed(10*j)
-  eSVD::construct_missing_values(n = n, p = d, num_val = 4)
+  eSVD::construct_missing_values(n = n, p = p, num_val = 4)
 })
 
 training_idx_list <- lapply(1:cv_trials, function(j){
