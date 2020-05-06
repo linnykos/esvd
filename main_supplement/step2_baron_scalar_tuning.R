@@ -23,9 +23,11 @@ fitting_func <- function(dat_impute, vec, missing_idx_list){
     dat_NA[missing_idx_list[[j]]] <- NA
 
     set.seed(10)
-    init <- eSVD::initialization(dat_NA, family = fitting_distr, k = vec["k"], max_val = vec["max_val"])
+    init <- eSVD::initialization(dat_NA, family = fitting_distr, k = vec["k"], max_val = vec["max_val"],
+                                 scalar = vec["scalar_val"])
     tmp_list[[j]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                              family = fitting_distr, max_iter = vec["max_iter"],
+                                             scalar = vec["scalar_val"],
                                              max_val = vec["max_val"], return_path = F, cores = ncores, verbose = F)
   }
 
