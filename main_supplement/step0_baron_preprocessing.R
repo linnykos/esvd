@@ -72,11 +72,11 @@ for(i in 1:length(labels_file_vec)){
                                   vst_hvg = vst_hvg, spca_hvg = spca_hvg,
                                   spca_mat = spca_mat)
 
-  save.image(paste0("../results/baron_step0_preprocessing", suffix, ".RData"))
+  save.image(paste0("../results/step0_baron_preprocessing", suffix, ".RData"))
 }
 
 rm(list=c("dat", "labels", "label_vec", "tab", "idx", "tmp", "k", "lvls", "v_seq", "res_list", "spca_mat",
           "target_var", "spca_idx", "res_descend", "res_hvg", "descend_idx", "gene_idx", "dat_impute", "reweight_factor"))
 
 print(paste0(Sys.time(), ": Finished preprocessing"))
-save.image(paste0("../results/baron_step0_screening", suffix, ".RData"))
+save.image(paste0("../results/step0_baron_screening", suffix, ".RData"))
