@@ -1,6 +1,9 @@
 rm(list=ls())
-load("../results/step4_factorization_cg_spca-vst_before_rescaling_300.RData")
+load("../results/step4_factorization_cg_spca-vst_before_rescaling_300_all.RData")
 
+esvd_angle_res
+k
+scalar
 zz1 <- esvd_embedding$u_mat
 
 cluster_labels <- as.numeric(cell_type_vec)
@@ -34,7 +37,7 @@ col_info_svd[,c(5,6)] <- col_info_svd[,c(6,5)]
 colnames(col_info_svd)[c(5,6)] <- colnames(col_info_svd)[c(6,5)]
 col_info_svd
 plotting_order_svd <- c(2,3,1,4)
-cluster_center1 <- .compute_cluster_center(svd_embedding, .construct_cluster_matrix(cluster_labels))
+cluster_center1 <- .compute_cluster_center(esvd_embedding$u_mat, .construct_cluster_matrix(cluster_labels))
 
 
 combn_mat <- combn(3,2)
@@ -42,7 +45,7 @@ combn_mat <- combn(3,2)
 par(mfrow = c(1,3))
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
-  plot(x = svd_embedding[,i], y =  svd_embedding[,j],
+  plot(x = esvd_embedding$u_mat[,i], y = esvd_embedding$u_mat[,j],
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "SVD embedding and trajectories\n(Constant-variance Gaussian)",
        pch = 16, col = col_info_svd$col_code[cluster_labels])
@@ -135,6 +138,7 @@ esvd_curves <- eSVD::slingshot(zz1[,1:p], cluster_labels, starting_cluster = clu
                                verbose = T, upscale_factor = upscale_factor,
                                reduction_percentage = 0.25,
                                squared = T)
+esvd_curves$lineages
 
 par(mfrow = c(1,3))
 for(k in 1:ncol(combn_mat)){

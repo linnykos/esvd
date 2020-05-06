@@ -35,6 +35,9 @@ for(i in 1:length(labels_file_vec)){
   dat <- dat[,which(tmp >= floor(nrow(dat)/100))]
   dat <- as.matrix(dat)
 
+  # normalize
+  dat <- t(sapply(1:nrow(dat), function(i){10^4 * dat[i,]/sum(dat[i,])}))
+
   # try a series of SPCAs
   k <- 5
   lvls <- 20
@@ -52,24 +55,24 @@ for(i in 1:length(labels_file_vec)){
   spca_mat <- cbind(v_seq, t(sapply(res_list, function(x){c(length(unique(sort(unlist(apply(x$v, 2, function(y){which(y != 0)}))))), x$prop.var.explained[5])})))
   idx <- min(which(spca_mat[,2] == ncol(dat)))
   target_var <- spca_mat[idx,3]
-  idx <- min(intersect(which(spca_mat[,2] >= 15), which(spca_mat[,3] >= 0.8*target_var)))
+  idx <- min(intersect(which(spca_mat[,2] >= 30), which(spca_mat[,3] >= 0.9*target_var)))
   spca_idx <- sort(unlist(apply(res_list[[idx]]$v, 2, function(x){which(x != 0)})))
+  spca_hvg <- colnames(dat)[spca_idx]
 
-  res_descend <- descend::runDescend(t(dat), n.cores = ncores)
-  res_hvg <- descend::findHVG(res_descend, threshold = 50)
-  descend_idx <- which(colnames(dat) %in% res_hvg$HVG.genes)
+  # highly variable genes
+  obj <- Seurat::CreateSeuratObject(counts = t(dat), project = "marques",
+                                    meta.data = NULL, min.cells = 0, min.features = 0)
+  obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 100)
+  vst_hvg <- Seurat::VariableFeatures(object = obj)
 
-  gene_idx <- sort(unique(c(spca_idx, descend_idx)))
-  dat_impute <- dat[,gene_idx]
+  idx <- which(colnames(dat) %in% c(vst_hvg, spca_hvg))
+  dat <- dat[,idx]
 
-  reweight_factor <- rowSums(dat_impute)
-  dat_impute <- t(sapply(1:nrow(dat_impute), function(x){dat_impute[x,]/reweight_factor[x]}))
-  dat_impute <- dat_impute * 1000/max(dat_impute)
+  preprocessing_list[[i]] <- list(dat_impute = dat, label_vec = label_vec,
+                                  vst_hvg = vst_hvg, spca_hvg = spca_hvg,
+                                  spca_mat = spca_mat)
 
-  preprocessing_list[[i]] <- list(dat_impute = dat_impute, label_vec = label_vec,
-                                  gene_idx = gene_idx, spca_mat = spca_mat)
-
-  save.image(paste0("../results/baron_step0_screening", suffix, ".RData"))
+  save.image(paste0("../results/baron_step0_preprocessing", suffix, ".RData"))
 }
 
 rm(list=c("dat", "labels", "label_vec", "tab", "idx", "tmp", "k", "lvls", "v_seq", "res_list", "spca_mat",
