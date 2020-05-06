@@ -37,6 +37,7 @@ for(i in 1:length(labels_file_vec)){
 
   # normalize
   dat <- t(sapply(1:nrow(dat), function(i){10^4 * dat[i,]/sum(dat[i,])}))
+  rownames(dat) <- 1:nrow(dat)
 
   # try a series of SPCAs
   k <- 5

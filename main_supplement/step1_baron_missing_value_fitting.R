@@ -1,12 +1,12 @@
 set.seed(10)
 load(paste0("../results/baron_step0_screening", suffix, ".RData"))
 
-neg_binom_vec <- c(50, 100, 500, 1000, 5000, 1e4, 1e6)
-curved_gaussian_vec <- c(0.1, 0.5, 1, 1.5, 2, 4, 100)
+neg_binom_vec <- c(100, 500, 1000, 5000, 1e4, 1e6)
+curved_gaussian_vec <- c(0.5, 1, 1.5, 2, 4, 100)
 
 max_iter <- 50
 max_val <- 3000
-paramMat <- as.matrix(expand.grid(1:4, 3:5, 50, 3000, 10))
+paramMat <- as.matrix(expand.grid(1:2, 3:5, 50, 3000, 10))
 colnames(paramMat) <- c("fitting_distr", "k")
 
 ######################################
