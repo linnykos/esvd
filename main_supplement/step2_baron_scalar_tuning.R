@@ -38,7 +38,8 @@ for(i in 1:length(preprocessing_list)){
 
   for(ii in 1:nrow(paramMat)){
     print(paste0("Starting parameter row ", ii))
-    tmp[[ii]] <- fitting_func(dat_impute = preprocessing_list[[i]]$dat_impute, vec = paramMat[ii,])
+    tmp[[ii]] <- fitting_func(dat_impute = preprocessing_list[[i]]$dat_impute, vec = paramMat[ii,],
+                              missing_idx_list = missing_idx_list_list[[i]])
   }
 
   esvd_missing_list_list[[i]] <- tmp
@@ -47,4 +48,5 @@ for(i in 1:length(preprocessing_list)){
 
 print(paste0(Sys.time(), ": Finished scalar tuning for eSVD"))
 save.image(paste0("../results/step2_baron_scalar_tuning", suffix, ".RData"))
+print(warnings())
 

@@ -78,3 +78,4 @@ for(i in 1:length(labels_file_vec)){
 
 print(paste0(Sys.time(), ": Finished preprocessing"))
 save.image(paste0("../results/step0_baron_screening", suffix, ".RData"))
+print(warnings())
