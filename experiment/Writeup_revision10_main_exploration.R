@@ -81,7 +81,7 @@ for(k in 1:ncol(combn_mat)){
 }
 
 ################3
-idx_choice <- 1
+idx_choice <- which.min(abs(esvd_angle_res$all_results[,"testing_angle"] - 45))
 nat_mat_list <- lapply(1:length(esvd_missing_list[[idx_choice]]), function(i){
   esvd_missing_list[[idx_choice]][[i]]$u_mat %*% t(esvd_missing_list[[idx_choice]][[i]]$v_mat)
 })
@@ -154,12 +154,12 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
 
-  # curves <- esvd_curves$curves
-  # for(ll in 1:length(curves)) {
-  #   ord <- curves[[ll]]$ord
-  #   lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
-  #   lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
-  # }
+  curves <- esvd_curves$curves
+  for(ll in 1:length(curves)) {
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
+  }
 }
 
 par(mfrow = c(1,3))

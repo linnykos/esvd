@@ -90,7 +90,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
     idx_all <- unlist(lapply(1:max(cluster_labels, na.rm = T), function(x){
       idx <- which(cluster_labels == x)
-      sample(idx, round(upscale_vec[x]*length(idx)), replace = T)
+      c(idx, sample(idx, max(c(round((upscale_vec[x]-1)*length(idx)), 1)), replace = T))
     }))
     dat <- dat[idx_all,]
     cluster_labels <- cluster_labels[idx_all]
