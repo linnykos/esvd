@@ -5,7 +5,7 @@ library(Seurat)
 
 sessionInfo()
 
-suffix <- ""
+suffix <- "_spca_descend"
 ncores <- 10
 doMC::registerDoMC(cores = ncores)
 
