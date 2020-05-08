@@ -27,13 +27,15 @@ for(i in 1:length(labels_file_vec)){
   idx <- which(tab/sum(tab) <= 0.05)
 
   dat <- dat[which(!label_vec %in% names(tab[idx])),]
+  dat_count <- dat
   label_vec <- label_vec[which(!label_vec %in% names(tab[idx]))]
   label_vec <- as.factor(as.character(label_vec))
 
   # next remove genes
-  tmp <- apply(dat, 2, function(x){sum(x != 0)})
-  dat <- dat[,which(tmp >= floor(nrow(dat)/100))]
-  dat <- as.matrix(dat)
+  zz <- apply(dat, 2, function(x){length(which(x!=0))})
+  idx <- which(zz > nrow(dat)/100)
+  dat <- dat[,idx]
+  dat_count <- dat_count[,idx]
 
   # normalize
   dat <- t(sapply(1:nrow(dat), function(i){10^4 * dat[i,]/sum(dat[i,])}))
@@ -53,6 +55,7 @@ for(i in 1:length(labels_file_vec)){
 
   res_list <- foreach::"%dopar%"(foreach::foreach(i = 1:lvls), spca_func(i))
 
+  # run sPCA
   spca_mat <- cbind(v_seq, t(sapply(res_list, function(x){c(length(unique(sort(unlist(apply(x$v, 2, function(y){which(y != 0)}))))), x$prop.var.explained[5])})))
   idx <- min(which(spca_mat[,2] == ncol(dat)))
   target_var <- spca_mat[idx,3]
@@ -60,13 +63,11 @@ for(i in 1:length(labels_file_vec)){
   spca_idx <- sort(unlist(apply(res_list[[idx]]$v, 2, function(x){which(x != 0)})))
   spca_hvg <- colnames(dat)[spca_idx]
 
-  # highly variable genes
-  obj <- Seurat::CreateSeuratObject(counts = t(dat), project = "marques",
-                                    meta.data = NULL, min.cells = 0, min.features = 0)
-  obj <- Seurat::FindVariableFeatures(obj, selection.method = "vst", nfeatures = 100)
-  vst_hvg <- Seurat::VariableFeatures(object = obj)
+  # run DESCEND
+  res_descend <- descend::runDescend(t(dat_count), n.cores = ncores)
+  descend_hvg <- descend::findHVG(res_descend, threshold = 50)$HVG.genes
 
-  idx <- which(colnames(dat) %in% c(vst_hvg, spca_hvg))
+  idx <- which(colnames(dat) %in% c(descend_hvg, spca_hvg))
   dat <- dat[,idx]
 
   preprocessing_list[[i]] <- list(dat_impute = dat, label_vec = label_vec,

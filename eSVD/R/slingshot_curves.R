@@ -34,7 +34,6 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                       shrink = 1, thresh = 0.001, max_iter = 15,
                       upscale_factor = NA, verbose = F){
 
-
   if(verbose) print("Starting to infer lineages")
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
                             cluster_group_list = cluster_group_list,

@@ -9,7 +9,7 @@ suffix <- "_original"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)
 
-source("../main/step0_screening.R")
+# source("../main/step0_screening.R")
 source("../main/step1_naive_svd.R")
 source("../main/step2_rescaling.R")
 source("../main/step3_scalar_tuning.R")
