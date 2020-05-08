@@ -5,7 +5,7 @@ library(Seurat)
 
 sessionInfo()
 
-suffix <- "_cg_spca-vst_before_rescaling_300_all"
+suffix <- "_original"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)
 

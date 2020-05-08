@@ -30,7 +30,7 @@
 slingshot <- function(dat, cluster_labels, starting_cluster,
                       cluster_group_list = NA,
                       squared = F,
-                      reduction_percentage = 0.2,
+                      reduction_percentage = 0.25,
                       shrink = 1, thresh = 0.001, max_iter = 15,
                       upscale_factor = NA, verbose = F){
 

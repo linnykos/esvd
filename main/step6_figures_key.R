@@ -1,4 +1,4 @@
-load(paste0("../results/step6_figures_condensed", suffix, ".RData"))
+load(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 color_func <- function(alpha = 0.2){
   c(rgb(240/255, 228/255, 66/255, alpha), #yellow
@@ -8,14 +8,6 @@ color_func <- function(alpha = 0.2){
     rgb(230/255, 159/255, 0/255,alpha), #orange
     rgb(100/255, 100/255, 100/255, alpha)) #gray
 }
-
-cell_type_vec <- as.character(marques$cell.info$cell.type)
-cell_type_vec <- as.factor(cell_type_vec)
-cluster_labels <- as.numeric(cell_type_vec)
-order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
-cluster_group_list <- lapply(order_vec, function(x){
-  grep(paste0("^", x), levels(cell_type_vec))
-})
 
 #####################
 
