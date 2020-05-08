@@ -113,6 +113,13 @@ circular_list <- lapply(1:ncol(pred_mat), function(j){
 midpoint_vec <- sapply(1:length(circular_list), function(i){
   (circular_list[[i]]$i + circular_list[[i]]$j)/2
 })
+start_vec <- sapply(1:length(circular_list), function(i){circular_list[[i]]$i})
+end_vec <- sapply(1:length(circular_list), function(i){circular_list[[i]]$j})
 plot(sort(midpoint_vec))
 obj_vec <- sapply(1:length(circular_list), function(i){circular_list[[i]]$obj_val})
-plot(midpoint_vec, obj_vec, ylim = c(0,5))
+plot(midpoint_vec, log(pmax(obj_vec,0)+1))
+plot(NA, ylim = range(log(pmax(obj_vec,0)+1)), xlim = c(0, length(idx_cell)))
+for(i in 1:length(start_vec)){
+  lines(x = c(start_vec[i], end_vec[i]), y = rep(log(max(obj_vec[i],0)+1), 2), lwd = 2)
+}
+
