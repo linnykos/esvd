@@ -71,7 +71,7 @@ for(i in 1:length(labels_file_vec)){
   dat <- dat[,idx]
 
   preprocessing_list[[i]] <- list(dat_impute = dat, label_vec = label_vec,
-                                  vst_hvg = vst_hvg, spca_hvg = spca_hvg,
+                                  descend_hvg = descend_hvg, spca_hvg = spca_hvg,
                                   spca_mat = spca_mat)
 
   save.image(paste0("../results/step0_baron_preprocessing", suffix, ".RData"))
