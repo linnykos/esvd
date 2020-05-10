@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/step4_factorization_cg_spca-vst_before_rescaling_300_all.RData")
+load("../results/step4_factorization_original.RData")
 
 esvd_angle_res
 k

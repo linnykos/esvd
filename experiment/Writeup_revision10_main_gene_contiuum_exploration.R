@@ -133,24 +133,30 @@ color_func <- function(alpha = 0.2){
     rgb(100/255, 100/255, 100/255, alpha)) #gray
 }
 num_order_vec_svd <- c(5, rep(3,2), c(1,1,1,1,1,1), rep(2,2),  rep(5,2))
+col_vec_svd <- color_func(1)[num_order_vec_svd]
 col_vec2_svd <- color_func(0.5)[num_order_vec_svd]
 order_vec_svd <- c(3, 5.1, 5.2, seq(6.1, 6.6, by = 0.1), 4.1, 4.2, 2, 1)
 row_idx <- floor(order_vec_svd)[cluster_labels]
 
-plot(NA, xlim = c(0, max(lambda_vec)), ylim = c(1,6))
+plot(NA, xlim = c(0, max(lambda_vec)), ylim = c(0,7))
 for(i in 1:6){
-  tmp <- lambda_vec[which(idx_cell[row_idx] == i)]
-  points(tmp, rep(i, length(tmp)), pch = 1, col = col_vec2_svd[which(floor(order_vec_svd) == i)][1])
+  tmp <- lambda_vec[which(row_idx[idx_cell] == i)]
+  den_res <- density(tmp)
+  y_vec <- (c(0, den_res$y, 0 , 0))
+  y_vec <- y_vec/1.5
+  polygon(x = c(den_res$x[1], den_res$x, den_res$x[length(den_res$x)], den_res$x[1]),
+          y = y_vec + i,
+          col = col_vec_svd[which(floor(order_vec_svd) == i)][1])
+  # points(tmp, rep(i, length(tmp)), pch = 1, col = col_vec2_svd[which(floor(order_vec_svd) == i)][1])
 }
 
-
 ####
-kk <- 1063
-vec <- pred_mat[idx_cell[order(order_vec)], kk]
-res <- circular_segmentation(vec, resolution = 50)
-col_vec <- rep("blue", length(vec))
-col_vec[res$i : res$j] <- "red"
-plot(vec, col = col_vec, pch = 16)
+# kk <- 1063
+# vec <- pred_mat[idx_cell[order(order_vec)], kk]
+# res <- circular_segmentation(vec, resolution = 50)
+# col_vec <- rep("blue", length(vec))
+# col_vec[res$i : res$j] <- "red"
+# plot(vec, col = col_vec, pch = 16)
 
 circular_list <- lapply(1:ncol(pred_mat), function(j){
   print(j)
@@ -167,7 +173,7 @@ start_vec <- sapply(1:length(circular_list), function(i){circular_list[[i]]$i})
 end_vec <- sapply(1:length(circular_list), function(i){circular_list[[i]]$j})
 plot(sort(midpoint_vec))
 obj_vec <- sapply(1:length(circular_list), function(i){circular_list[[i]]$obj_val})
-plot(midpoint_vec, log(pmax(obj_vec,0)+1))
+# plot(midpoint_vec, log(pmax(obj_vec,0)+1))
 plot(NA, ylim = range(log(pmax(obj_vec,0)+1)), xlim = c(0, length(idx_cell)))
 for(i in 1:length(start_vec)){
   lines(x = c(start_vec[i], end_vec[i]), y = rep(log(max(obj_vec[i],0)+1), 2), lwd = 2)
@@ -177,5 +183,5 @@ for(i in 1:length(start_vec)){
 gene_idx <- which(log(pmax(obj_vec,0)+1) >= 1)
 # order these genes
 gene_idx <- gene_idx[order(midpoint_vec[gene_idx], decreasing = F)]
-
-
+length(gene_idx)
+image(pred_mat[idx_cell[order(order_vec)], gene_idx])

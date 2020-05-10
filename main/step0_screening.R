@@ -48,8 +48,7 @@ dat <- dat[,idx]
 dat_count <- dat_count[,idx]
 
 # normalize each cell by its library ize
-reweight_factor <- rowSums(dat)
-dat <- t(sapply(1:nrow(dat), function(i){10^4 * dat[i,]/reweight_factor[i]}))
+dat <- t(sapply(1:nrow(dat), function(i){10^4 * dat[i,]/sum(dat[i,])}))
 
 rm(list = c("idx", "zz", "obj", "marques", "k", "lvls", "spca_func", "idx", "target_var"))
 print(paste0(Sys.time(), ": Finished screening"))
