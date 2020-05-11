@@ -9,8 +9,13 @@ suffix <- "_original"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)
 
+session_info <- sessionInfo()
+source_code_info <- ""
+date_of_run <- Sys.time()
+
 set.seed(10)
-load(paste0("../results/step3_scalar_tuning", suffix, ".RData"))
+# load(paste0("../results/step3_scalar_tuning", suffix, ".RData"))
+load("../results/step5_trajectory.RData")
 
 nat_mat_list_list <- lapply(1:nrow(paramMat_esvd), function(i){
   lapply(1:cv_trials, function(j){
@@ -36,4 +41,5 @@ esvd_embedding <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat 
                                           verbose = T, tol = 1e-4)
 
 rm(list = c("nat_mat_list_list", "idx"))
+source_code_info <- c(source_code_info, readLines("../experiment/Writeup_revision10_main_comparison_new_old.R"))
 save.image("../results/tmp.RData")
