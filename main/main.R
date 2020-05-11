@@ -2,12 +2,12 @@ rm(list=ls())
 set.seed(10)
 library(eSVD)
 
-sessionInfo()
-
-date_of_run <- Sys.time()
 suffix <- "_original"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)
+session_info <- sessionInfo()
+source_code_info <- ""
+date_of_run <- Sys.time()
 
 # source("../main/step0_screening.R")
 # source("../main/step1_naive_svd.R")

@@ -37,32 +37,6 @@ for(i in 1:nrow(paramMat_esvd)){
 
 rm(list = c("j", "i", "init", "tmp_list", "dat_impute_NA"))
 print(paste0(Sys.time(), ": Finished scalar heuristic"))
+source_code_info <- c(source_code_info, readLines("../main/step3_scalar_tuning.R"))
 save.image(paste0("../results/step3_scalar_tuning", suffix, ".RData"))
 print(warnings())
-
-# idx <- which.min(quality_vec)
-# nat_mat <- 1/(res_list[[idx]]$u_mat %*% t(res_list[[idx]]$v_mat))
-# tmp <- cbind(nat_mat[missing_idx], dat_impute[missing_idx])
-# pca_res <- princomp(tmp)
-# plot(nat_mat[missing_idx], dat_impute[missing_idx], asp = T, pch = 16,
-#      col = rgb(0,0,0,0.2), main = "Our embedding",
-#      xlab = "Predicted value", ylab = "Observed and masked value")
-# lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
-# lines(c(-1e10,1e10)*pca_res$loadings[1,1], c(-1e10,1e10)*pca_res$loadings[1,2],
-#       col = "blue", lwd = 2, lty = 2)
-#
-#
-# ##############
-#
-# tmp <- cbind(pred_naive[missing_idx], dat_impute[missing_idx])
-# pca_res <- princomp(tmp)
-# plot(pred_naive[missing_idx], dat_impute[missing_idx], asp = T, pch = 16,
-#      col = rgb(0,0,0,0.2), main = "Naive embedding",
-#      xlab = "Predicted value", ylab = "Observed and masked value")
-# lines(c(-1e10,1e10), c(-1e10,1e10), col = "red", lwd = 2)
-# lines(c(-1e10,1e10)*pca_res$loadings[1,1], c(-1e10,1e10)*pca_res$loadings[1,2],
-#       col = "blue", lwd = 2, lty = 2)
-
-
-
-

@@ -62,7 +62,8 @@ save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 # save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 rm(list = c("tmp"))
-print(paste0(Sys.time(), ": Finished trajectoy"))
+print(paste0(Sys.time(), ": Finished trajectory"))
+source_code_info <- c(source_code_info, readLines("../main/step5_trajectory.R"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 print(warnings())
 

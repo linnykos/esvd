@@ -52,5 +52,6 @@ dat <- t(sapply(1:nrow(dat), function(i){10^4 * dat[i,]/sum(dat[i,])}))
 
 rm(list = c("idx", "zz", "obj", "marques", "k", "lvls", "spca_func", "idx", "target_var"))
 print(paste0(Sys.time(), ": Finished screening"))
+source_code_info <- c(source_code_info, readLines("../main/step0_screening.R"))
 save.image(paste0("../results/step0_screening", suffix, ".RData"))
 print(warnings())

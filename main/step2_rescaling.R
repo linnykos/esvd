@@ -10,12 +10,6 @@ dim(dat_impute)
 
 rm(list = c("dat"))
 print(paste0(Sys.time(), ": Finished rescaling"))
+source_code_info <- c(source_code_info, readLines("../main/step2_rescaling.R"))
 save.image(paste0("../results/step2_rescaling", suffix, ".RData"))
 print(warnings())
-
-###########
-
-# png("../figure/main/data_impute.png", height = 2400, width = 1000, res = 300, units = "px")
-# par(mar = rep(0.5, 4))
-# eSVD:::.plot_singlecell(dat_impute)
-# graphics.off()

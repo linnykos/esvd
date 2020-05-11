@@ -68,19 +68,6 @@ svd_embedding <- (n/p)^(1/4)*tmp$u[,1:paramMat_svd[idx, "k"]] %*% diag(sqrt(tmp$
 rm(list = c("init", "fit", "dat_NA", "j", "tmp", "starting_lambda", "idx",
             "log_dat", "log_dat_NA"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
+source_code_info <- c(source_code_info, readLines("../main/step1_naive_svd.R"))
 save.image(paste0("../results/step1_naive_svd", suffix, ".RData"))
 print(warnings())
-
-######################
-
-# nat_mat_list <- lapply(1:length(svd_missing), function(i){
-#   svd_missing[[i]]$u %*% diag(svd_missing[[i]]$d) %*% t(svd_missing[[i]]$v)
-# })
-#
-# tmp_mat <- do.call(rbind, lapply(1:length(nat_mat_list), function(i){
-#   cbind(dat[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]])
-# }))
-#
-# pca_res <- stats::prcomp(tmp_mat, center = F, scale = F)
-# ang <- as.numeric(acos(abs(c(0,1) %*% pca_res$rotation[,1])))
-# ang * 180/pi
