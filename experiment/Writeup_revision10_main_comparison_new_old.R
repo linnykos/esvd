@@ -25,6 +25,7 @@ nat_mat_list_list <- lapply(1:nrow(paramMat_esvd), function(i){
   })
 })
 
+fitting_distr <- "curved_gaussian"
 esvd_angle_res <- eSVD::tuning_select_scalar(dat = dat_impute, nat_mat_list_list = nat_mat_list_list,
                                              family = fitting_distr,  missing_idx_list = missing_idx_list,
                                              scalar_vec = paramMat_esvd[,"scalar"])
