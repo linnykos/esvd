@@ -112,6 +112,7 @@ svd_embedding_list <- lapply(1:length(preprocessing_list), function(i){
 })
 
 print(paste0(Sys.time(), ": Finished naive SVD"))
+source_code_info <- c(source_code_info, readLines("../main_supplement/step1_baron_gaussian_fitting.R"))
 save.image(paste0("../results/step1_baron_gaussian_fitting", suffix, ".RData"))
 # print(warnings())
 warnings()

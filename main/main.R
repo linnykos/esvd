@@ -5,6 +5,7 @@ library(eSVD)
 suffix <- "_original"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)
+
 session_info <- sessionInfo()
 source_code_info <- ""
 date_of_run <- Sys.time()
