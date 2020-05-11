@@ -52,11 +52,8 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     }
 
     # reparameterize
-    # tmp <- .reparameterize(u_mat, v_mat, equal_covariance = F)
-    # u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
-    tmp <- svd(v_mat)
-    v_mat <- sqrt(p) * tmp$u
-    u_mat <- u_mat %*% tmp$v %*% diag(tmp$d) / sqrt(p)
+    tmp <- .reparameterize(u_mat, v_mat, equal_covariance = F)
+    u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
     u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, parallelized = !is.na(cores), ...)
 
@@ -66,11 +63,8 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     }
 
     # reparameterize
-    # tmp <- .reparameterize(u_mat, v_mat, equal_covariance = F)
-    # u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
-    tmp <- svd(u_mat)
-    u_mat <- sqrt(n) * tmp$u
-    v_mat <- v_mat %*% tmp$v %*% diag(tmp$d) / sqrt(n)
+    tmp <- .reparameterize(u_mat, v_mat, equal_covariance = F)
+    u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
     v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, parallelized = !is.na(cores), ...)
 
