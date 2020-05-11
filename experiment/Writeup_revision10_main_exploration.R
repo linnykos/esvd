@@ -1,7 +1,5 @@
 rm(list=ls())
-load("../../esvd/results/tmp.RData")
-# load("../../esvd/results/Writeup_revision10_main_comparison_new_old.RData")
-# load("../../esvd/results/step4_factorization_original.RData")
+load("../../esvd/results/step5_trajectory_original.RData")
 
 esvd_angle_res
 k
