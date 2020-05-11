@@ -1,10 +1,10 @@
 rm(list=ls())
 set.seed(10)
 library(eSVD)
-library(Seurat)
 
 sessionInfo()
 
+date_of_run <- Sys.time()
 suffix <- "_original"
 ncores <- 20
 doMC::registerDoMC(cores = ncores)

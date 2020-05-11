@@ -68,8 +68,9 @@ for(i in 1:len_uniq){
 plot(sd_vec[which(sd_vec > 1)], lambda_vec[which(sd_vec > 1)])
 
 ###############################################################
-idx_all <- esvd_curves$idx[esvd_curves$curves[[1]]$idx] # which ghost points are in the first lineage
-lambda_all <- esvd_curves$curves[[1]]$lambda
+curve_idx <- 2
+idx_all <- esvd_curves$idx[esvd_curves$curves[[curve_idx]]$idx] # which ghost points are in the first lineage
+lambda_all <- esvd_curves$curves[[curve_idx]]$lambda
 stopifnot(length(idx_all) == length(lambda_all))
 idx_cell <- sort(unique(idx_all)) # which cells do these correspond to
 order_vec <- rep(NA, length(idx_cell))

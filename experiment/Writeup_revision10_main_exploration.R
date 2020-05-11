@@ -1,11 +1,16 @@
 rm(list=ls())
-load("../results/step4_factorization_original.RData")
+load("../../esvd/results/tmp.RData")
+# load("../../esvd/results/Writeup_revision10_main_comparison_new_old.RData")
+# load("../../esvd/results/step4_factorization_original.RData")
 
 esvd_angle_res
 k
 scalar
-zz1 <- esvd_embedding$u_mat
+zz1 <- esvd_embedding$u_mat / (nrow(dat_impute)/ncol(dat_impute))^(1/4)
+head(zz1)
 
+cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
+cell_type_vec <- as.factor(cell_type_vec)
 cluster_labels <- as.numeric(cell_type_vec)
 order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
 cluster_group_list <- lapply(order_vec, function(x){
@@ -37,7 +42,7 @@ col_info_svd[,c(5,6)] <- col_info_svd[,c(6,5)]
 colnames(col_info_svd)[c(5,6)] <- colnames(col_info_svd)[c(6,5)]
 col_info_svd
 plotting_order_svd <- c(2,3,1,4)
-cluster_center1 <- .compute_cluster_center(esvd_embedding$u_mat, .construct_cluster_matrix(cluster_labels))
+cluster_center1 <- .compute_cluster_center(zz1, .construct_cluster_matrix(cluster_labels))
 
 
 combn_mat <- combn(3,2)
@@ -45,7 +50,7 @@ combn_mat <- combn(3,2)
 par(mfrow = c(1,3))
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
-  plot(x = esvd_embedding$u_mat[,i], y = esvd_embedding$u_mat[,j],
+  plot(x = zz1[,i], y =zz1[,j],
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "SVD embedding and trajectories\n(Constant-variance Gaussian)",
        pch = 16, col = col_info_svd$col_code[cluster_labels])

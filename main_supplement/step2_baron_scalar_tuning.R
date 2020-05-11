@@ -28,7 +28,7 @@ fitting_func <- function(dat_impute, vec, missing_idx_list){
     tmp_list[[j]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                              family = fitting_distr, max_iter = vec["max_iter"],
                                              scalar = vec["scalar"],
-                                             max_val = vec["max_val"], return_path = F, cores = ncores, verbose = F)
+                                             max_val = vec["max_val"], return_path = F, cores = ncores, verbose = T)
   }
 
   tmp_list
