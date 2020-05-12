@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../../esvd/results/Writeup_revision10_main_comparison_new_old.RData")
+load("../../esvd/results/tmp.RData")
 
 esvd_angle_res
 k
