@@ -9,8 +9,9 @@ cell_type_vec <- as.factor(cell_type_vec)
 dim(dat)
 
 # remove genes with too many 0's
+set.seed(10)
 zz <- apply(dat, 2, function(x){length(which(x!=0))})
-idx <- which(zz > nrow(dat)/100)
+idx <- which(zz > 30)
 dat <- dat[,idx]
 dat_count <- dat_count[,idx]
 
