@@ -7,7 +7,7 @@ cluster_group_list <- lapply(order_vec, function(x){
 })
 
 upscale_factor <- 1
-reduction_percentage <- 0.25
+reduction_percentage <- 0.2
 
 p <- 3
 set.seed(10)

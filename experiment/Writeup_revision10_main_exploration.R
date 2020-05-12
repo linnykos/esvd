@@ -139,7 +139,7 @@ set.seed(10)
 esvd_curves <- eSVD::slingshot(zz1[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                cluster_group_list = cluster_group_list,
                                verbose = T, upscale_factor = upscale_factor,
-                               reduction_percentage = 0.25,
+                               reduction_percentage = 0.2,
                                squared = T)
 esvd_curves$lineages
 
