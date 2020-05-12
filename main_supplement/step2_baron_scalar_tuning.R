@@ -21,6 +21,7 @@ fitting_func <- function(dat_impute, vec, missing_idx_list){
 
   tmp_list <- vector("list", length(cv_trials))
   for(j in 1:cv_trials){
+    print(paste0("Starting trial ", j))
     dat_NA[missing_idx_list[[j]]] <- NA
 
     set.seed(10)
@@ -35,11 +36,11 @@ fitting_func <- function(dat_impute, vec, missing_idx_list){
   tmp_list
 }
 
-for(i in 3:length(preprocessing_list)){
+for(i in 3){
   print(paste0(Sys.time(), ": Starting dataset ", i))
   tmp <- vector("list", nrow(paramMat_esvd))
 
-  for(ii in 1:nrow(paramMat_esvd)){
+  for(ii in 6){
     print(paste0("Starting parameter row ", ii))
     tmp[[ii]] <- fitting_func(dat_impute = preprocessing_list[[i]]$dat_impute, vec = paramMat_esvd[ii,],
                               missing_idx_list = missing_idx_list_list[[i]])
