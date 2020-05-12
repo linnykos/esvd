@@ -27,6 +27,7 @@
 
   Dx_inv <- Dx; diag(Dx_inv) <- 1/diag(Dx)
   sym_prod <- Vx %*% sqrt(Dx_inv) %*% t(R) %*% sqrt(Dy) %*% t(Vy)
+  sym_prod[which(abs(sym_prod) <= tol)] <- 0
 
   if(check){
     stopifnot(sum(abs(sym_prod - t(sym_prod))) <= 1e-6)

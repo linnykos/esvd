@@ -1,5 +1,5 @@
 set.seed(10)
-load(paste0("../results/step1_baron_gaussian_fitting", suffix, ".RData"))
+# load(paste0("../results/step1_baron_gaussian_fitting", suffix, ".RData"))
 load(paste0("../results/step2_baron_scalar_tuning", suffix, ".RData"))
 
 # neg_binom_vec <- c(250, 1000, 1e4, 1e6)
@@ -17,12 +17,16 @@ fitting_func <- function(dat_impute, vec, missing_idx_list){
   fitting_distr <- c("gaussian", "neg_binom", "curved_gaussian")[vec["fitting_distr"]]
 
   dat_org <- dat_impute*1000/max(dat_impute)
-  dat_NA <- dat_org
 
   tmp_list <- vector("list", length(cv_trials))
-  for(j in 1:cv_trials){
+  for(j in 3){
+
+    # set missing value
+    dat_NA <- dat_org
     print(paste0("Starting trial ", j))
-    dat_NA[missing_idx_list[[j]]] <- NA
+    for(jj in 1:3){
+      dat_NA[missing_idx_list[[jj]]] <- NA
+    }
 
     set.seed(10)
     init <- eSVD::initialization(dat_NA, family = fitting_distr, k = vec["k"], max_val = vec["max_val"],

@@ -7,6 +7,13 @@ test_that(".identification works", {
   expect_true(all(dim(res) == 5))
 })
 
+test_that(".identification works on an instance where you need to worry about underflow", {
+  load("../assets/identification1.RData")
+
+  res <- .identification(cov_x, cov_y)
+  expect_true(sum(abs(Im(res))) == 0)
+})
+
 test_that(".identification is correct for a deterministic setting", {
   cov_x <- matrix(c(2,1,1,2),2,2)
   cov_y <- matrix(c(5,-1,-1,5),2,2)

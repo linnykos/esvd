@@ -1,57 +1,108 @@
-set.seed(10)
-n <- 20
-p <- 10
-size <- 500
-k <- 2
-u_mat <- abs(matrix(rnorm(n), nrow = n, ncol = k))
-v_mat <- -abs(matrix(rnorm(p), nrow = p, ncol = k))
-pred_mat <- u_mat %*% t(v_mat)
-dat <- pred_mat
-class(dat) <- c("neg_binom", class(dat)[length(class(dat))])
+rm(list=ls())
+load("../results/tmp2.RData")
 
-for(i in 1:n){
-  for(j in 1:p){
-    dat[i,j] <- stats::rnbinom(1, size = size, prob = 1-exp(pred_mat[i,j]))
+i <- 3
+ii <- 6
+dat_impute = preprocessing_list[[i]]$dat_impute
+vec = paramMat_esvd[ii,]
+missing_idx_list = missing_idx_list_list[[i]]
+
+fitting_distr <- c("gaussian", "neg_binom", "curved_gaussian")[vec["fitting_distr"]]
+
+dat_org <- dat_impute*1000/max(dat_impute)
+# set missing value
+dat_NA <- dat_org
+
+for(jj in 1:3){
+  dat_NA[missing_idx_list[[jj]]] <- NA
+}
+
+# set.seed(10)
+# init <- eSVD::initialization(dat_NA, family = fitting_distr, k = vec["k"], max_val = vec["max_val"],
+#                              scalar = vec["scalar"])
+# zz <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+#                                                 family = fitting_distr, max_iter = vec["max_iter"],
+#                                                 scalar = vec["scalar"],
+#                                                 max_val = vec["max_val"], return_path = F, cores = ncores, verbose = T)
+
+######################################
+set.seed(10)
+dat = dat_NA
+k = vec["k"]
+max_val = vec["max_val"]
+scalar = vec["scalar"]
+family = fitting_distr
+max_val = NA
+max_iter = 10
+tol = 1e-3
+verbose = F
+
+direction <- eSVD:::.dictate_direction(family)
+if(!is.na(max_val)){
+  if(!is.na(direction) && direction == "<=") max_val <- -max_val
+}
+
+# initialize
+dat <- eSVD:::.matrix_completion(dat, k = k)
+dat[1:5,1:5]
+if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
+
+# projected gradient descent
+nat_mat <- eSVD:::.projected_gradient_descent(dat, k = k, max_val = max_val,
+                                       direction = direction,
+                                       max_iter = max_iter,
+                                       tol = tol, scalar = scalar)
+nat_mat[1:5,1:5]
+
+res <- eSVD:::.svd_projection(nat_mat, k = k, factors = T)
+u_mat <- res$u_mat; v_mat <- res$v_mat
+head(u_mat)
+
+if(!is.na(direction)){
+  if(direction == "<=") {
+    stopifnot(all(nat_mat[which(!is.na(dat))] < 0))
+  } else {
+    stopifnot(all(nat_mat[which(!is.na(dat))] > 0))
   }
 }
 
-missing_idx <- construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 1)
-dat_NA <- dat
-dat_NA[missing_idx] <- NA
+tmp <- eSVD:::.fix_rank_defficiency_initialization(u_mat, v_mat, direction)
+u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
+head(u_mat)
 
-scalar_vec <- c(10, 500, 10000)
+# tmp <- eSVD:::.reparameterize(u_mat, v_mat)
+# u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
+# head(u_mat)
 
-fit_list <- lapply(scalar_vec, function(scalar){
-  init <- initialization(dat_NA, family = "neg_binom", max_val = 100, scalar = scalar, k = k)
-  fit <- fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                           max_iter = 10, max_val = 100, k = 1,
-                           family = "neg_binom", scalar = scalar)
-})
+#########################
+check = F
+tol = 1e-6
+cov_x <- t(u_mat) %*% u_mat
+cov_y <- t(v_mat) %*% v_mat
 
-for(i in 1:3){
-  plot_prediction_against_observed(dat, nat_mat_list = list(fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat)),
-                                   family = "neg_binom", missing_idx_list = list(missing_idx),
-                                   scalar = scalar_vec[i], plot = T, main = i)
+stopifnot(all(dim(cov_x) == dim(cov_y)), nrow(cov_x) == ncol(cov_x))
+if(nrow(cov_x) == 1){
+  return(matrix((as.numeric(cov_y)/as.numeric(cov_x))^(1/4), 1, 1))
 }
 
+eigen_x <- eigen(cov_x)
+eigen_y <- eigen(cov_y)
 
-#####
+Vx <- eigen_x$vectors
+Vy <- eigen_y$vectors
 
-family = "neg_binom"
-missing_idx_list = list(missing_idx)
-width = 0.8
+if(any(eigen_x$values <= tol) | any(eigen_y$values <= tol)) warning("Detecting rank defficiency in reparameterization step")
 
-stopifnot(length(nat_mat_list_list) == length(scalar_vec))
-stopifnot(length(unique(sapply(nat_mat_list_list, length))) == 1)
-stopifnot(length(nat_mat_list_list[[1]]) == length(missing_idx_list))
+Dx <- diag(eigen_x$values)
+Dy <- diag(eigen_y$values)
 
-nat_mat_list_list <- lapply(1:length(scalar_vec), function(i){
-  list(fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat))
-})
+tmp <- sqrt(Dy) %*% t(Vy) %*% Vx %*% sqrt(Dx)
+svd_tmp <- svd(tmp)
+R <- svd_tmp$u %*% t(svd_tmp$v)
 
-res_list <- lapply(1:length(nat_mat_list_list), function(i){
-  plot_prediction_against_observed(dat, nat_mat_list_list[[i]], family = family,
-                                   missing_idx_list = missing_idx_list,
-                                   width = width, scalar = scalar_vec[i], plot = F)
-})
+Dx_inv <- Dx; diag(Dx_inv) <- 1/diag(Dx)
+sym_prod <- Vx %*% sqrt(Dx_inv) %*% t(R) %*% sqrt(Dy) %*% t(Vy)
+sym_prod[which(abs(sym_prod) <= tol)] <- 0
 
+eigen_sym <- eigen(sym_prod)
+eigen_sym

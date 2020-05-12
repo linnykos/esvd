@@ -3,8 +3,6 @@ set.seed(10)
 library(eSVD)
 library(Seurat)
 
-sessionInfo()
-
 suffix <- "_spca_descend"
 ncores <- 10
 doMC::registerDoMC(cores = ncores)
