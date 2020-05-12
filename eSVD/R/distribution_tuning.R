@@ -10,6 +10,8 @@
 #' @param max_points maximum number of points to be shown in the scatterplot, purely for visualization purposes only
 #' @param tol parameter between \code{0} and \code{1} for how strict (\code{1} being the strictest) to measure
 #' if the principal angle falls within the prediction region
+#' @param xlim plotting parameter
+#' @param ylim plotting parameter
 #' @param ... additional plotting parameters
 #'
 #' @return either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or the principle angle otherwise

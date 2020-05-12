@@ -5,22 +5,32 @@ context("Test tuning the distribution")
 test_that("plot_prediction_against_observed works", {
   set.seed(10)
   dat <- matrix(rnbinom(40, size = 10, prob = 0.5), nrow = 5, ncol = 5)
-  missing_idx <- construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 1)
-  dat_NA <- dat
-  dat_NA[missing_idx] <- NA
+  cv_trials <- 3
+  missing_idx_list <- lapply(1:cv_trials, function(i){
+    construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 1)
+  })
 
-  init <- initialization(dat_NA, family = "neg_binom", max_val = 100, scalar = 10)
-  fit <- fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                           max_iter = 10, max_val = 100,
-                           family = "neg_binom", scalar = 10)
+  fit_list <- lapply(1:cv_trials, function(i){
+    dat_NA <- dat
+    dat_NA[missing_idx_list[[i]]] <- NA
 
-  res <- plot_prediction_against_observed(dat, nat_mat_list = list(fit$u_mat %*% t(fit$v_mat)),
-                                          family = "neg_binom", missing_idx_list = list(missing_idx),
+    init <- initialization(dat_NA, family = "neg_binom", max_val = 100, scalar = 10)
+    fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                      max_iter = 10, max_val = 100,
+                      family = "neg_binom", scalar = 10)
+  })
+
+  nat_mat_list <- lapply(1:cv_trials, function(i){
+    fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat)
+  })
+
+  res <- plot_prediction_against_observed(dat, nat_mat_list = nat_mat_list,
+                                          family = "neg_binom", missing_idx_list = missing_idx_list,
                                           scalar = 10, plot = F)
 
   expect_true(is.list(res))
-  expect_true(length(res) == 2)
-  expect_true(all(sort(names(res)) == sort(c("angle_val", "bool"))))
+  expect_true(length(res) == 3)
+  expect_true(all(sort(names(res)) == sort(c("angle_val", "angle_sd", "bool"))))
   expect_true(is.numeric(res$angle_val))
   expect_true(length(res$angle_val) == 1)
   expect_true(res$angle_val >= 0)

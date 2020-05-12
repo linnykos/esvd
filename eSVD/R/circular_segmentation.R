@@ -1,4 +1,31 @@
-circular_segmentation <- function(vec, resolution = 50){
+#' Find highly expressed regions in a vector
+#'
+#' The input vector \code{vec} should already be meaningfully ordered
+#'
+#' @param vec numeric vector
+#' @param resolution value less than \code{length(vec)}
+#'
+#' @return numeric vector
+#' @export
+find_highly_expressed_region <- function(vec, resolution = 50){
+  # first smooth the signal
+  vec_smooth <- .np_smoother(vec)
+
+  # then apply circular binary segmentation
+  res <- .circular_segmentation(vec_smooth, resolution = resolution)
+  res
+}
+
+.np_smoother <- function(vec){
+  n <- length(vec)
+  dat <- data.frame(y = vec, x = 1:n)
+  utils::capture.output(bw <- np::npregbw(y ~ x, data = dat, verbose = F))
+  res <- np::npreg(y ~ x, data = dat, bws = bw$bw)
+
+  res$mean
+}
+
+.circular_segmentation <- function(vec, resolution = 50){
   stopifnot(n > 5)
   n <- length(vec)
   lim <- round(n/resolution)
@@ -8,19 +35,6 @@ circular_segmentation <- function(vec, resolution = 50){
     candidate_idx2_vec <- round(seq(i+lim, n, length.out = resolution))
 
     obj_inner <- sapply(candidate_idx2_vec, function(j){
-      # mean_mid <- mean(vec[(i+1):j]); sd_mid <- stats::sd(vec[(i+1):j])
-      # mean_other <- mean(vec[-c((i+1):j)]); sd_other <- stats::sd(vec[-c((i+1):j)])
-      #
-      # mean_diff <- mean_mid - mean_other
-      # if(mean_diff < 0) return(0)
-      #
-      # mean_diff/(sd_mid + sd_other)
-
-      # quant_mid <- stats::quantile(vec[(i+1):j], probs = 0.25)
-      # quant_other <- stats::quantile(vec[-c((i+1):j)], probs = 0.75)
-      #
-      # quant_mid - quant_other
-
       mean_mid <- mean(vec[(i+1):j])
       mean_other <- mean(vec[-c((i+1):j)])
 

@@ -1,23 +1,23 @@
 rm(list=ls())
-load("../results/step5_trajectory.RData")
+load("../results/tmp.RData")
 
-# cluster_labels <- as.numeric(cell_type_vec)
-# order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
-# cluster_group_list <- lapply(order_vec, function(x){
-#   grep(paste0("^", x), levels(cell_type_vec))
-# })
-#
-# upscale_factor <- 1
-#
-# p <- 3
-# set.seed(10)
-# esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-#                                cluster_group_list = cluster_group_list,
-#                                verbose = T, upscale_factor = upscale_factor,
-#                                reduction_percentage = 0.25,
-#                                squared = T)
-#
-# esvd_curves$lineages
+cluster_labels <- as.numeric(cell_type_vec)
+order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
+cluster_group_list <- lapply(order_vec, function(x){
+  grep(paste0("^", x), levels(cell_type_vec))
+})
+
+upscale_factor <- 1
+
+p <- 3
+set.seed(10)
+esvd_curves <- eSVD::slingshot(zz1[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                               cluster_group_list = cluster_group_list,
+                               verbose = T, upscale_factor = upscale_factor,
+                               reduction_percentage = 0.2,
+                               squared = T)
+esvd_curves$lineages
+
 
 ################################################
 
@@ -103,12 +103,12 @@ zz = order(apply(pred_mat, 2, function(x){quantile(x, probs = 0.75)}), decreasin
 zz = order(apply(pred_mat, 2, function(x){mean(x[3000:4000])}), decreasing = T)
 zz = order(apply(dat_impute, 2, function(x){quantile(x, probs = 0.75)}), decreasing = T)
 zz[1:20]
-# kk <- 501; ylim <- c(0, 800)
+kk <- 855; ylim <- c(0, 800)
 
-for(kk in zz[1:5]){
-  png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision10_main_gene_continuum_", kk, ".png"),
-      height = 1200, width = 2400, res = 300,
-      units = "px")
+# for(kk in zz[1:5]){
+#   png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision10_main_gene_continuum_", kk, ".png"),
+#       height = 1200, width = 2400, res = 300,
+#       units = "px")
   par(mfrow = c(1,2))
   plot(pred_mat[idx_cell[order(order_vec)], kk], ylim = range(c(pred_mat[,kk], dat_impute[,kk])),
        col = rgb(0,0,0,0.1), pch = 16,
@@ -118,8 +118,8 @@ for(kk in zz[1:5]){
        col = rgb(0,0,0,0.1), pch = 16,
        xlab = "Cell ordering (via estimated trajectory)", ylab = "Expression",
        main = paste0("Observed gene expression\n(Gene ", colnames(dat_impute)[kk], ")"))
-  graphics.off()
-}
+#   graphics.off()
+# }
 
 
 #######

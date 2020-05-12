@@ -14,6 +14,8 @@ plot_prediction_against_observed(
   plot = T,
   max_points = 5e+05,
   tol = 0.95,
+  xlim = NA,
+  ylim = NA,
   ...
 )
 }
