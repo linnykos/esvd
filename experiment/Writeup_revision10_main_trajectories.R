@@ -5,14 +5,14 @@ p <- 3
 set.seed(10)
 esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                cluster_group_list = cluster_group_list, shrink = 2,
-                               verbose = T, upscale_factor = 1,
+                               verbose = T, upscale_factor = 1, stretch = 3, max_iter = 3,
                                squared = T)
 
 
 set.seed(10)
 svd_curves <- slingshot(svd_embedding[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                         cluster_group_list = cluster_group_list,
-                        verbose = T, upscale_factor = 1, shrink = 2, max_iter = 2,
+                        verbose = T, upscale_factor = 1, shrink = 2, stretch = 2, max_iter = 3,
                         squared = F)
 
 #############################3
@@ -75,7 +75,6 @@ cluster_center_esvd <- .compute_cluster_center(esvd_embedding$u_mat[,1:3], .cons
 ###############################################
 
 par(mfrow = c(1,3))
-
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
@@ -102,5 +101,36 @@ for(k in 1:ncol(combn_mat)){
     ord <- curves[[ll]]$ord
     lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
     lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
+  }
+}
+
+par(mfrow = c(1,3))
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = "eSVD embedding and trajectories\n(Curved Gaussian)")
+
+  for(ll in plotting_order_esvd) {
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+    idx <- which(cluster_labels %in% target_indices)
+    points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
+           col = col_info_esvd$col_code[target_indices[1]])
+  }
+
+  for(ll in 1:nrow(cluster_center_esvd)){
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
+  }
+
+
+  curves <- esvd_curves$curves
+  for(ll in 1:length(curves)) {
+    ord <- curves[[ll]]$ord
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 15)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = col_vec_short[ll], lwd = 7)
+    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
+          lty = 3, lwd = 3)
   }
 }

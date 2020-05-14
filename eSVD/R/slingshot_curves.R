@@ -25,8 +25,8 @@
 #' @export
 slingshot <- function(dat, cluster_labels, starting_cluster,
                       cluster_group_list = NA,
-                      squared = F,
-                      shrink = 1, thresh = 0.001, max_iter = 15,
+                      squared = F, shrink = 1, stretch = 9999,
+                      thresh = 0.001, max_iter = 15,
                       upscale_factor = NA, verbose = F){
   stopifnot(ncol(dat) >= 2)
 
@@ -41,7 +41,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   if(verbose) print("Starting to infer curves")
   res <- .get_curves(dat2, cluster_labels, lineages,
-                     shrink = shrink, thresh = thresh, max_iter = max_iter,
+                     shrink = shrink, stretch = stretch, thresh = thresh, max_iter = max_iter,
                      verbose = verbose)
   curves <- res$pcurve_list
 
@@ -64,7 +64,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #'
 #' @return a list of \code{principal_curve} objects
 .get_curves <- function(dat, cluster_labels, lineages,
-                        shrink = 1,
+                        shrink = 1, stretch = 9999,
                         thresh = 0.001, max_iter = 15,
                         verbose = F){
   ### setup
@@ -83,7 +83,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   ### initial curves are piecewise linear paths through the tree
   if(verbose) print("Starting to initialize curves")
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
-  res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+  res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat, stretch)
   pcurve_list <- res$pcurve_list; D <- res$D
 
   if(length(lineages) == 1) {
@@ -92,7 +92,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
       .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], verbose = verbose)
     })
 
-    res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+    res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat, stretch)
     pcurve_list <- res$pcurve_list; D <- res$D
 
     names(pcurve_list) <- paste('Curve', 1:length(pcurve_list), sep='')
@@ -120,7 +120,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
     })
 
     if(verbose) print("Refining curves")
-    res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
+    res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat, stretch)
     pcurve_list <- res$pcurve_list; D <- res$D
     dist_new <- sum(D[W>0], na.rm=TRUE)
 
@@ -381,7 +381,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @return a list that contains the \code{num_lineage} curves as \code{principal_curve}
 #' and a distance matrix (\code{D}) that contains the squared distance of each point
 #' to its repsective lineage curve
-.refine_curve_fit <- function(dat, curve_list, lineages, W, cluster_mat){
+.refine_curve_fit <- function(dat, curve_list, lineages, W, cluster_mat, stretch){
   stopifnot(nrow(dat) == nrow(W), ncol(W) == length(lineages))
 
   n <- nrow(dat); num_lineage <- length(lineages)
@@ -394,7 +394,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
     pcurve <- princurve::project_to_curve(dat[sample_idx, ,drop = FALSE],
                                           s = curve_list[[lin]],
-                                          stretch = 9999)
+                                          stretch = stretch)
       # note: princurve::project_to_curve changes the input s
     pcurve <- .clean_curve(pcurve, W[, lin], sample_idx)
     pcurve_list[[lin]] <- pcurve
