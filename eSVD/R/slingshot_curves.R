@@ -105,7 +105,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   if(length(lineages) == 1) {
     s_list <- lapply(1:num_lineage, function(lin){
       sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
-      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F])
+      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], verbose = verbose)
     })
 
     res <- .refine_curve_fit(dat, s_list, lineages, W, cluster_mat)
@@ -130,8 +130,9 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
     ### predict each dimension as a function of lambda (pseudotime)
     s_list <- lapply(1:num_lineage, function(lin){
+      if(verbose) print(paste0("Smoothing lineage ", lin))
       sample_idx <- .determine_idx_lineage(lineages[[lin]], cluster_mat)
-      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F])
+      .smoother_func(pcurve_list[[lin]]$lambda, dat[sample_idx,,drop = F], verbose = verbose)
     })
 
     if(verbose) print("Refining curves")
@@ -433,19 +434,28 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' original dataset
 #'
 #' @return a smoothed \code{n} by \code{d} matrix that is ordered by \code{lambda}
-.smoother_func <- function(lambda, dat){
+.smoother_func <- function(lambda, dat, verbose = F){
   stopifnot(length(lambda) == nrow(dat))
 
+  # order the data. This is useful for this smoothing, but downstream functions also
+  ## require the data to be ordered
   ord <- order(lambda, decreasing = F)
   lambda <- lambda[ord]
   dat <- dat[ord,]
 
-  kernel_func <- function(x, y){exp(-(x-y)^2)}
+  # kernel_func <- function(x, y){exp(-(x-y)^2)}
+  #
+  # t(sapply(1:length(lambda), function(i){
+  #   weights <- kernel_func(lambda[i], lambda)
+  #   as.numeric(colSums(weights * dat))/sum(weights)
+  # }))
 
-  t(sapply(1:length(lambda), function(i){
-    weights <- kernel_func(lambda[i], lambda)
-    as.numeric(colSums(weights * dat))/sum(weights)
-  }))
+  bw <- stats::bw.nrd(lambda)
+  sapply(1:ncol(dat), function(j){
+    if(verbose) print(paste0("On variable ", j, " out of ", ncol(dat)))
+    res <- stats::ksmooth(lambda, dat[,j], kernel = "normal", bandwidth = bw)
+    res$y
+  })
 }
 
 #' Construct average curve

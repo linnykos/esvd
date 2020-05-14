@@ -19,7 +19,7 @@ find_highly_expressed_region <- function(vec, resolution = 1/50){
 .np_smoother <- function(vec){
   n <- length(vec)
   dat <- data.frame(y = vec, x = 1:n)
-  utils::capture.output(bw_res <- np::npregbw(y ~ x, data = dat, verbose = F))
+  utils::capture.output(bw_res <- np::npregbw(y ~ x, data = dat))
   res <- np::npreg(bw_res)
 
   res$mean
