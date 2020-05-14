@@ -33,6 +33,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                       reduction_percentage = 0.25,
                       shrink = 1, thresh = 0.001, max_iter = 15,
                       upscale_factor = NA, verbose = F){
+  stopifnot(ncol(dat) >= 2)
 
   if(verbose) print("Starting to infer lineages")
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
@@ -58,7 +59,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
     curves[[k]]$s <- curves[[k]]$s*reduction_factor
   }
 
-  list(lineages = lineages, curves = curves, idx = idx_all)
+  structure(list(lineages = lineages, curves = curves, idx = idx_all), class = "slingshot")
 }
 
 #' Estimate the slingshot curves
@@ -112,7 +113,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
     names(pcurve_list) <- paste('Curve', 1:length(pcurve_list), sep='')
 
-    return(list(pcurve_list = pcurve_list, idx = idx_all))
+    return(list(pcurve_list = pcurve_list))
   }
 
   ### determine curve hierarchy
@@ -434,6 +435,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @return a smoothed \code{n} by \code{d} matrix that is ordered by \code{lambda}
 .smoother_func <- function(lambda, dat){
   stopifnot(length(lambda) == nrow(dat))
+
   ord <- order(lambda, decreasing = F)
   lambda <- lambda[ord]
   dat <- dat[ord,]

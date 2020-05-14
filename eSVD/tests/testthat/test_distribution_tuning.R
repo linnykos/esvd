@@ -97,67 +97,67 @@ test_that("tuning_select_scalar works", {
 
 #################################
 
-## .compute_principal_angle is correct
+## compute_principal_angle is correct
 
-test_that(".compute_principal_angle works", {
+test_that("compute_principal_angle works", {
   set.seed(10)
   tmp_mat <- cbind(1:10, 1:10+rnorm(10))
-  res <- .compute_principal_angle(tmp_mat)
+  res <- compute_principal_angle(tmp_mat)
 
   expect_true(res >= 0)
   expect_true(res <= 180)
 })
 
-test_that(".compute_principal_angle can handle when the angle is 45", {
+test_that("compute_principal_angle can handle when the angle is 45", {
   set.seed(10)
   tmp_mat <- cbind(1:10, 1:10)
-  res <- .compute_principal_angle(tmp_mat)
+  res <- compute_principal_angle(tmp_mat)
 
   expect_true(abs(res - 45) <= 1e-6)
 })
 
-test_that(".compute_principal_angle can handle when the angle is 45, even when data is reflected", {
+test_that("compute_principal_angle can handle when the angle is 45, even when data is reflected", {
   set.seed(10)
   tmp_mat <- cbind(-(1:10), -(1:10))
-  res <- .compute_principal_angle(tmp_mat)
+  res <- compute_principal_angle(tmp_mat)
 
   expect_true(abs(res - 45) <= 1e-6)
 })
 
-test_that(".compute_principal_angle can handle when the angle is slightly above 45", {
+test_that("compute_principal_angle can handle when the angle is slightly above 45", {
   set.seed(10)
   tmp_mat <- cbind((1:10)+0.1*(1:10), 1:10)
-  res <- .compute_principal_angle(tmp_mat)
+  res <- compute_principal_angle(tmp_mat)
 
   expect_true(res > 45)
 })
 
 
-test_that(".compute_principal_angle can handle when the angle is 0", {
+test_that("compute_principal_angle can handle when the angle is 0", {
   set.seed(10)
   tmp_mat <- cbind(rep(0, 10), 0:9)
-  res <- .compute_principal_angle(tmp_mat)
+  res <- compute_principal_angle(tmp_mat)
 
   expect_true(abs(res - 0) <= 1e-6 || abs(res - 180) <= 1e-6)
 })
 
-test_that(".compute_principal_angle can handle when the angle is 90", {
+test_that("compute_principal_angle can handle when the angle is 90", {
   set.seed(10)
   tmp_mat <- cbind(0:9, rep(0, 10))
-  res <- .compute_principal_angle(tmp_mat)
+  res <- compute_principal_angle(tmp_mat)
 
   expect_true(abs(res - 90) <= 1e-6)
 })
 
-test_that(".compute_principal_angle can handle negative angles", {
+test_that("compute_principal_angle can handle negative angles", {
   set.seed(10)
   tmp_mat <- cbind(-(0:10), 0:10)
-  res <- .compute_principal_angle(tmp_mat)
+  res <- compute_principal_angle(tmp_mat)
   expect_true(abs(res - 135) <= 1e-6)
 
   set.seed(10)
   tmp_mat <- cbind((0:10), -c(0:10))
-  res <- .compute_principal_angle(tmp_mat)
+  res <- compute_principal_angle(tmp_mat)
 
   expect_true(abs(res - 135) <= 1e-6)
 })
@@ -228,7 +228,7 @@ test_that(".within_prediction_region correctly works within the workflow", {
     cbind(dat[missing_idx_list[[i]]], pred_mat_list[[i]][missing_idx_list[[i]]])
   })
 
-  angle_vec <- sapply(tmp_list, .compute_principal_angle)
+  angle_vec <- sapply(tmp_list, compute_principal_angle)
   angle_val <- mean(angle_vec)
 
   tmp_mat <- do.call(rbind, tmp_list)

@@ -31,7 +31,7 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   })
 
   # compute the principal angle and
-  angle_vec <- sapply(tmp_list, .compute_principal_angle)
+  angle_vec <- sapply(tmp_list, compute_principal_angle)
   angle_val <- mean(angle_vec)
   angle_sd <- stats::sd(angle_vec)
 
@@ -125,15 +125,24 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   list(scalar = scalar_vec2[idx], quality = quality_vec[idx], idx = idx_vec[idx], all_results = all_results)
 }
 
-#########
-
-.compute_principal_angle <- function(tmp_mat){
+#' Compute principal angle
+#'
+#' @param tmp_mat a matrix with \code{n} rows (for \code{n} samples) and \code{2} columns,
+#' where the first column represents the observed data and the second column represents its
+#' corresponding predicted values
+#'
+#' @return numeric
+compute_principal_angle <- function(tmp_mat){
   pca_res <- stats::prcomp(tmp_mat, center = F, scale = F)
   vec <- pca_res$rotation[,1]; vec <- vec/.l2norm(vec)
   if(sign(vec[1]) < 0)  vec <- -1*vec
   angle_val <- as.numeric(acos(as.numeric(c(0,1) %*% vec)))
   angle_val * 180/pi
 }
+
+#########
+
+
 
 .within_prediction_region <- function(max_val, family, width, scalar, angle_val, tol = 0.95,
                                       effective_max = max_val){

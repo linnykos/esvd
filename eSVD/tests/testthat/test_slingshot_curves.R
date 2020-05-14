@@ -523,6 +523,20 @@ test_that("slingshot can give sensible lambdas", {
   expect_true(all(bool_vec))
 })
 
+test_that("slingshot does not crash when there is only one lineage, 2D data", {
+  set.seed(10)
+  dat <- matrix(rep(1:100, times = 2), ncol = 2)
+  cluster_labels <- rep(1:5, each = 20)
+  res <- slingshot(dat, cluster_labels, starting_cluster = 1)
+
+  expect_true(is.list(res))
+  expect_true(class(res) == "slingshot")
+  expect_true(all(res$lineages[[1]] == 1:5))
+  expect_true(length(res$lineages) == 1)
+  expect_true(length(res$curves) == 1)
+  expect_true(all(res$curves[[1]]$W == 1))
+})
+
 
 test_that("slingshot works with an artifical example", {
   set.seed(10)

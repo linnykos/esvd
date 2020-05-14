@@ -1,11 +1,26 @@
-construct_pseudotime_trajectory_matrix <- function(slingshot_res){
+construct_pseudotime_trajectory_matrix <- function(slingshot_res, cluster_labels){
   stopifnot(length(slingshot_res$curves) == 2) #only works currently for 2 branching lineages
+  len <- length(slingshot_res$curves)
 
   # first extract each trajectories set of pseudotimes
   pseudotime_df_list <- .extract_pseudotimes(slingshot_res)
 
   # next, focus on cells shared between both trajectories
   shared_df <- .compile_common_cells(pseudotime_df_list)
+
+  # deal with other cells
+  specific_df <- .compile_unique_cells(pseudotime_df_list)
+
+  # merge the data frames
+  tmp <- cbind(do.call(rbind, specific_df), NA)
+  colnames(tmp) <- colnames(shared_df)
+  all_df <- rbind(shared_df, tmp)
+
+  # all cluster labels
+  all_df$cluster_labels <- cluster_labels[all_df$cell_idx]
+  all_df <- all_df[order(all_df$cell_idx),]
+
+  all_df
 }
 
 ####################################
@@ -38,7 +53,7 @@ construct_pseudotime_trajectory_matrix <- function(slingshot_res){
 }
 
 .compile_common_cells <- function(df_list){
-  stopifnot(length(df_list) == 2)
+  stopifnot(length(df_list) == 2) # hard-coded
 
   idx <- intersect(df_list[[1]]$cell_idx, df_list[[2]]$cell_idx)
   tol_val <- max(c(df_list[[1]]$pseudotime, df_list[[2]]$pseudotime))/10
@@ -64,12 +79,14 @@ construct_pseudotime_trajectory_matrix <- function(slingshot_res){
   data.frame(cell_idx = idx, pseudotime = lambda_vec, consensus = bool_vec)
 }
 
-.append_trajectory_specific_cells <- function(pseudotime_mat, cell_mat, remaining_idx){
-  stopifnot(remaining_idx %in% pseudotime_mat[,1])
+.compile_unique_cells <- function(pseudotime_df_list){
+  stopifnot(length(pseudotime_df_list) == 2) # hard-coded
+  len <- length(pseudotime_df_list)
 
-  new_pseudotime_vec <- sapply(remaining_idx, function(i){
-    pseudotime_mat[which(pseudotime_mat[,1] == i),2]
+  lapply(1:len, function(i){
+    other_branch <- ifelse(i == 1, 2, 1)
+    specific_idx <- which(!pseudotime_df_list[[i]]$cell_idx %in%
+                                 pseudotime_df_list[[other_branch]]$cell_idx)
+    pseudotime_df_list[[i]][specific_idx, c(1:2)]
   })
-
-  rbind(cell_mat, cbind(remaining_idx, new_pseudotime_vec))
 }
