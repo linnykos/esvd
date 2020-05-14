@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../../esvd/results/tmp.RData")
+load("../../esvd/results/step5_trajectory_original.RData")
 
 esvd_angle_res
 k
@@ -7,8 +7,6 @@ scalar
 zz1 <- esvd_embedding$u_mat
 head(zz1)
 
-cell_type_vec <- as.character(marques$cell.info$cell.type)
-cell_type_vec <- as.factor(cell_type_vec)
 cluster_labels <- as.numeric(cell_type_vec)
 order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
 cluster_group_list <- lapply(order_vec, function(x){

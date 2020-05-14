@@ -13,7 +13,7 @@ print(paste0(Sys.time(), ": Finished ZINB-WaVE"))
 
 # include negative binomail fits
 fitting_distr2 <- "neg_binom"
-paramMat_esvd2 <- as.matrix(expand.grid(c(500, 1000, 5000, 10000, 50000), c(3, 5, 10, 20)))
+paramMat_esvd2 <- as.matrix(expand.grid(c(500, 2500, 10000), c(3, 5, 10)))
 esvd_missing_list2 <- vector("list", nrow(paramMat_esvd))
 
 for(i in 1:nrow(paramMat_esvd2)){
@@ -41,6 +41,7 @@ for(i in 1:nrow(paramMat_esvd2)){
   }
 
   esvd_missing_list2[[i]] <- tmp_list
+  save.image(paste0("../results/step7_additional_analyses", suffix, "_tmp.RData"))
 }
 
 rm(list = c("j", "i", "init", "tmp_list", "dat_impute_NA"))

@@ -43,11 +43,14 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
   dat2 <- dat/reduction_factor
 
+  # resample matrix
+  res <- .resample_all(dat, cluster_labels, cluster_group_list, lineages, upscale_factor)
+  dat2 <- res$dat; cluster_labels <- res$cluster_labels; idx_all <- res$idx_all
+
   if(verbose) print("Starting to infer curves")
   res <- .get_curves(dat2, cluster_labels, lineages,
-                     cluster_group_list = cluster_group_list,
                      shrink = shrink, thresh = thresh, max_iter = max_iter,
-                     upscale_factor = upscale_factor, verbose = verbose)
+                     verbose = verbose)
   curves <- res$pcurve_list
 
   # adjust up
@@ -55,7 +58,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
     curves[[k]]$s <- curves[[k]]$s*reduction_factor
   }
 
-  list(lineages = lineages, curves = curves, idx = res$idx)
+  list(lineages = lineages, curves = curves, idx = idx_all)
 }
 
 #' Estimate the slingshot curves
@@ -70,32 +73,14 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @param shrink shrinkage factor
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
-#' @param upscale_factor positive numeric (between 0 and 1) that controls how much to upweight the clusters,
-#' with 1 being (almost) equal cluster sizes and 0 being no upweighting
 #' @param verbose boolean
 #'
 #' @return a list of \code{principal_curve} objects
 .get_curves <- function(dat, cluster_labels, lineages,
-                        cluster_group_list = lapply(cluster_labels, function(x){x}),
                         shrink = 1,
                         thresh = 0.001, max_iter = 15,
-                        upscale_factor = NA, verbose = F){
+                        verbose = F){
   stopifnot(shrink >= 0 & shrink <= 1)
-
-  if(!any(is.na(upscale_factor))){
-    # intersect lineages with cluster_group_list to determine group sizes
-    cluster_intersection <- .intersect_lineages_cluster_group_list(lineages, cluster_group_list)
-    upscale_vec <- .compute_upscale_factor(cluster_labels, cluster_intersection, upscale_factor)
-
-    idx_all <- unlist(lapply(1:max(cluster_labels, na.rm = T), function(x){
-      idx <- which(cluster_labels == x)
-      c(idx, sample(idx, max(c(round((upscale_vec[x]-1)*length(idx)), 1)), replace = T))
-    }))
-    dat <- dat[idx_all,]
-    cluster_labels <- cluster_labels[idx_all]
-  } else {
-    idx_all <- 1:nrow(dat)
-  }
 
   ### setup
   num_lineage <- length(lineages)
@@ -215,7 +200,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
   names(pcurve_list) <- paste('Curve', 1:length(pcurve_list), sep='')
 
-  list(pcurve_list = pcurve_list, idx = idx_all)
+  list(pcurve_list = pcurve_list)
 }
 
 ##################
@@ -247,6 +232,9 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 
 # code from https://stackoverflow.com/questions/8139677/how-to-flatten-a-list-to-a-list-without-coercion/8139959#8139959
 .flatten_list <- function(x) {
+  stopifnot(is.list(x))
+  stopifnot(all(sapply(x, class) == "list"))
+
   len <- sum(rapply(x, function(x) 1L))
   y <- vector('list', len)
   i <- 0L
@@ -254,7 +242,38 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   y
 }
 
+.resample_all <- function(dat, cluster_labels, cluster_group_list, lineages, upscale_factor){
+  if(!any(is.na(upscale_factor))){
+    # intersect lineages with cluster_group_list to determine group sizes
+    cluster_intersection <- .intersect_lineages_cluster_group_list(lineages, cluster_group_list)
+    upscale_vec <- .compute_upscale_factor(cluster_labels, cluster_intersection, upscale_factor)
+
+    idx_all <- .construct_resample_idx(cluster_labels, upscale_vec)
+    dat <- dat[idx_all,]
+    cluster_labels <- cluster_labels[idx_all]
+  } else {
+    idx_all <- 1:nrow(dat)
+  }
+
+  list(dat = dat, cluster_labels = cluster_labels, idx_all = idx_all)
+}
+
+.construct_resample_idx <- function(cluster_labels, upscale_vec){
+  unlist(lapply(1:max(cluster_labels, na.rm = T), function(x){
+    idx <- which(cluster_labels == x)
+
+    if(upscale_vec[x] >= 1){
+      idx <-  c(idx, sample(idx, max(c(round((upscale_vec[x]-1)*length(idx)), 0)), replace = T))
+    }
+
+    idx
+  }))
+}
+
 .compute_upscale_factor <- function(cluster_labels, cluster_intersection, upscale_factor = 0.5){
+  stopifnot(all(unlist(cluster_intersection) %in% cluster_labels))
+  stopifnot(length(unlist(cluster_intersection)) == max(cluster_labels))
+
   size_vec <- sapply(cluster_intersection, function(x){length(which(cluster_labels %in% x))})
   upscale_vec <- rep(NA, length(unique(cluster_labels)))
 

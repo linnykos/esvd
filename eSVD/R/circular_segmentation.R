@@ -7,7 +7,7 @@
 #'
 #' @return numeric vector
 #' @export
-find_highly_expressed_region <- function(vec, resolution = 50){
+find_highly_expressed_region <- function(vec, resolution = 1/50){
   # first smooth the signal
   vec_smooth <- .np_smoother(vec)
 
@@ -25,16 +25,18 @@ find_highly_expressed_region <- function(vec, resolution = 50){
   res$mean
 }
 
-.circular_segmentation <- function(vec, resolution = 50){
-  stopifnot(n > 5)
+.circular_segmentation <- function(vec, resolution = 1/100, max_width_percentage = 0.1){
   n <- length(vec)
-  lim <- round(n/resolution)
+  stopifnot(n > 101)
+  lim <- round(n*resolution)
+  max_width <- round(n*max_width_percentage)
 
-  candidate_idx1_vec <- round(seq(2, n-2*lim, length.out = resolution))
+  candidate_idx1_vec <- round(seq(2, n-2*lim, length.out = lim))
   obj_outer <- sapply(candidate_idx1_vec, function(i){
-    candidate_idx2_vec <- round(seq(i+lim, n, length.out = resolution))
+    candidate_idx2_vec <- round(seq(i+lim, n, length.out = lim))
 
     obj_inner <- sapply(candidate_idx2_vec, function(j){
+      if(abs(i-j) >= max_width) return(-Inf)
       mean_mid <- mean(vec[(i+1):j])
       mean_other <- mean(vec[-c((i+1):j)])
 

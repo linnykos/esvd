@@ -61,7 +61,7 @@ for(j in 1:ncol(pred_mat)){
   }
 
   vec <- dat_impute[idx_cell[order(order_vec)], j]
-  circular_list[[j]] <- eSVD::find_highly_expressed_region(vec, resolution = 50)
+  circular_list2[[j]] <- eSVD::find_highly_expressed_region(vec, resolution = 50)
 }
 save.image("../results/tmp_continuum2.RData")
 

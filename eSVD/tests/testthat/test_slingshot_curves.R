@@ -1,5 +1,146 @@
 context("Test slingshot curves")
 
+## .intersect_lineages_cluster_group_list is correct
+
+test_that(".intersect_lineages_cluster_group_list works", {
+  lineages <- list(c(1:5), c(1:3,6:8))
+  cluster_group_list <- list(1, 2:4, 5:6, 7:8)
+
+  res <- .intersect_lineages_cluster_group_list(lineages, cluster_group_list)
+  expect_true(length(res) == 6)
+  expect_true(any(sapply(res, function(x){all(sort(x) == 1)})))
+  expect_true(any(sapply(res, function(x){all(sort(x) == c(2:3))})))
+  expect_true(any(sapply(res, function(x){all(sort(x) == c(4))})))
+  expect_true(any(sapply(res, function(x){all(sort(x) == c(5))})))
+  expect_true(any(sapply(res, function(x){all(sort(x) == c(6))})))
+  expect_true(any(sapply(res, function(x){all(sort(x) == c(7:8))})))
+})
+
+###########################################
+
+## .flatten_list is correct
+
+test_that(".flatten_list works", {
+  lis <- list(list(c(1:5), c(2:4)), list(c(1:2), c(3:6), c(1)), list(4))
+  res <- .flatten_list(lis)
+
+  expect_true(length(res) == 6)
+  expect_equal(res, list(c(1:5), c(2:4), c(1:2), c(3:6), c(1), 4))
+})
+
+test_that(".flatten_list must take in list of lists", {
+  lis <- list(list(c(1:5), c(2:4)), list(c(1:2), c(3:6), c(1)), "asdf")
+  expect_error(.flatten_list(lis))
+})
+
+###########################################
+
+## .resample_all is correct
+
+test_that(".resample_all works", {
+  set.seed(10)
+  dat <- matrix(1:500, nrow = 100, ncol = 5)
+  cluster_labels <- rep(1:10, each = 10)
+  cluster_group_list <- list(1, 2:4, 5:8, 9:10)
+  lineages <- list(1:6, c(1:4,7:10))
+
+  res <- .resample_all(dat, cluster_labels, cluster_group_list, lineages, upscale_factor = 1)
+
+  expect_true(length(res) == 3)
+  expect_true(all(sort(names(res)) == c("cluster_labels", "dat", "idx_all")))
+})
+
+###########################################
+
+## .construct_resample_idx is correct
+
+test_that(".construct_resample_idx works", {
+  set.seed(10)
+  cluster_labels <- rep(1:6, each = 20)
+  upscale_vec <- c(1,1,1.5,1.5,2,2)
+
+  res <- .construct_resample_idx(cluster_labels, upscale_vec)
+
+  expect_true(length(res) >= length(cluster_labels))
+  expect_true(all(res <= length(cluster_labels)))
+  expect_true(max(table(res)) > 1)
+})
+
+test_that(".construct_resample_idx actually respects the upscale_vec", {
+  set.seed(10)
+  cluster_labels <- rep(1:6, each = 20)
+  upscale_vec <- c(1,1,1.5,1.5,2,2)
+
+  res <- .construct_resample_idx(cluster_labels, upscale_vec)
+  res_tab <- table(cluster_labels[res])
+
+  expect_true(all(res_tab == c(20, 20, 30, 30, 40, 40)))
+})
+
+test_that(".construct_resample_idx retains all the indices", {
+  trials <- 10
+
+  bool_vec <- sapply(1:trials, function(i){
+    set.seed(i)
+    cluster_labels <- sample(1:6, 100, replace = T)
+    upscale_vec <- runif(6, min = 1, max = 2)
+
+    res <- .construct_resample_idx(cluster_labels, upscale_vec)
+
+    all(1:100 %in% res)
+  })
+
+  expect_true(all(bool_vec))
+})
+
+###########################################
+
+## .compute_upscale_factor is correct
+
+test_that(".compute_upscale_factor works", {
+  cluster_labels <- rep(1:6, each = 20)
+  cluster_intersection <- list(1, 2:4, 5:6)
+  res <- .compute_upscale_factor(cluster_labels, cluster_intersection, upscale_factor = 0.5)
+
+  expect_true(all(is.numeric(res)))
+  expect_true(length(res) == 6)
+  expect_true(all(res >= 0))
+})
+
+test_that(".compute_upscale_factor is 1 for the largest group size", {
+  set.seed(10)
+  cluster_labels <- sample(1:6, 100, replace = T)
+  cluster_intersection <- list(1, 2:4, 5:6)
+  res <- .compute_upscale_factor(cluster_labels, cluster_intersection, upscale_factor = 0.5)
+
+  len_vec <- sapply(cluster_intersection, function(x){length(which(cluster_labels %in% x))})
+  expect_true(all(res[cluster_intersection[[which.max(len_vec)]]] == 1))
+})
+
+test_that(".compute_upscale_factor yields the same value within a cluster", {
+  set.seed(10)
+  cluster_labels <- sample(1:6, 100, replace = T)
+  cluster_intersection <- list(c(1,6), c(2,5), c(3,4))
+  res <- .compute_upscale_factor(cluster_labels, cluster_intersection, upscale_factor = 0.5)
+
+  expect_true(abs(res[1] - res[6]) <= 1e-6)
+  expect_true(abs(res[2] - res[5]) <= 1e-6)
+  expect_true(abs(res[3] - res[4]) <= 1e-6)
+})
+
+test_that(".compute_upscale_factor with upscale factor of 1 yields equal group sizes", {
+  cluster_labels <- rep(1:6, each = 20)
+  cluster_intersection <- list(1, 2:4, 5:6)
+  res <- .compute_upscale_factor(cluster_labels, cluster_intersection, upscale_factor = 1)
+
+  effective_size <- rep(NA, length(cluster_intersection))
+  for(i in 1:length(cluster_intersection)){
+    effective_size[i] <- unique(res[cluster_intersection[[i]]])[1]*length(which(cluster_labels %in% cluster_intersection[[i]]))
+  }
+})
+
+###########################################
+
 ## .initialize_weight_matrix is correct
 
 test_that(".initialize_weight_matrix works", {
