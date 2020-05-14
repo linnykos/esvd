@@ -10,10 +10,6 @@
 #' from
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
 #' @param squared boolean on whether or not to square the distance matrix
-#' @param reduction_percentage numeric to multiplicatively expand or shrink the dataset,
-#' where 1 keeps the dataset unchanged.
-#' For larger values, the dataset is expanded so the estimated trajectories are wigglier,
-#' and for smalelr values, the dataset is shrunk so the estimated trajectories are smoother.
 #' @param shrink shrinkage factor
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
@@ -30,7 +26,6 @@
 slingshot <- function(dat, cluster_labels, starting_cluster,
                       cluster_group_list = NA,
                       squared = F,
-                      reduction_percentage = 0.25,
                       shrink = 1, thresh = 0.001, max_iter = 15,
                       upscale_factor = NA, verbose = F){
   stopifnot(ncol(dat) >= 2)
@@ -39,10 +34,6 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
                             cluster_group_list = cluster_group_list,
                             squared = squared)
-
-  # adjust down
-  reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
-  dat2 <- dat/reduction_factor
 
   # resample matrix
   res <- .resample_all(dat, cluster_labels, cluster_group_list, lineages, upscale_factor)
@@ -53,11 +44,6 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                      shrink = shrink, thresh = thresh, max_iter = max_iter,
                      verbose = verbose)
   curves <- res$pcurve_list
-
-  # adjust up
-  for(k in 1:length(curves)){
-    curves[[k]]$s <- curves[[k]]$s*reduction_factor
-  }
 
   structure(list(lineages = lineages, curves = curves, idx = idx_all), class = "slingshot")
 }
@@ -81,8 +67,6 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                         shrink = 1,
                         thresh = 0.001, max_iter = 15,
                         verbose = F){
-  stopifnot(shrink >= 0 & shrink <= 1)
-
   ### setup
   num_lineage <- length(lineages)
   if(any(is.na(cluster_labels))) {
@@ -183,7 +167,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
         shrunk_list <- lapply(1:length(to_shrink_list),function(j){
           pcurve <- to_shrink_list[[j]]
           .shrink_to_avg(pcurve, avg_curve,
-                         pct_shrink[[i]][[j]] * shrink, dat)
+                         pmin(pct_shrink[[i]][[j]] * shrink, 1), dat)
         })
 
         for(j in 1:length(avg_order[[i]])){
@@ -450,11 +434,10 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   #   as.numeric(colSums(weights * dat))/sum(weights)
   # }))
 
-  bw <- stats::bw.nrd(lambda)
   sapply(1:ncol(dat), function(j){
-    if(verbose) print(paste0("On variable ", j, " out of ", ncol(dat)))
-    res <- stats::ksmooth(lambda, dat[,j], kernel = "normal", bandwidth = bw)
-    res$y
+    tmp_df <- data.frame(y = dat[,j], x = lambda)
+    res <- stats::loess(y ~ x, data = tmp_df, span = 0.5)
+    res$fitted
   })
 }
 
@@ -558,6 +541,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #'
 #' @return a \code{principal_curve} object
 .shrink_to_avg <- function(pcurve, avg_curve, pct, dat){
+  stopifnot(all(pct >= 0), all(pct <= 1))
   n <- nrow(pcurve$s)
   p <- ncol(pcurve$s)
 
