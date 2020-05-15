@@ -1,5 +1,6 @@
 set.seed(10)
 load(paste0("../results/step0_baron_screening", suffix, ".RData"))
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 k_vec <- c(3,5,10)
 cv_trials <- 3

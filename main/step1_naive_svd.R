@@ -1,5 +1,6 @@
 set.seed(10)
 load(paste0("../results/step0_screening", suffix, ".RData"))
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 max_val <- 5000
 n <- nrow(dat); p <- ncol(dat)

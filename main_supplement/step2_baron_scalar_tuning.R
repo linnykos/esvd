@@ -1,5 +1,6 @@
 set.seed(10)
 load(paste0("../results/step1_baron_gaussian_fitting", suffix, ".RData"))
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 neg_binom_vec <- c(250, 1000, 1e4, 1e6)
 curved_gaussian_vec <- c(1, 2, 4, 100)

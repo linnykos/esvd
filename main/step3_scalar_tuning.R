@@ -1,5 +1,6 @@
 set.seed(10)
 load(paste0("../results/step2_rescaling", suffix, ".RData"))
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 paramMat_esvd <- as.matrix(expand.grid(c(0.5, 1, 2, 4), c(3, 5, 10, 20)))
 colnames(paramMat_esvd) <- c("scalar", "k")

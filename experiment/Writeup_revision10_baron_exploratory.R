@@ -1,6 +1,5 @@
 rm(list=ls())
-load("../results/step2_baron_scalar_tuning.RData")
-paramMat_esvd <- paramMat; colnames(paramMat_esvd)[3] <- "scalar"
+load("../results/step2_baron_scalar_tuning_spca_descend.RData")
 
 for(dat_i in 1:length(preprocessing_list)){
   print(dat_i)
@@ -40,12 +39,11 @@ for(dat_i in 1:length(preprocessing_list)){
                                    main = "SVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
   graphics.off()
 }
-
 ############################
 
 
 # for each latent dimension and distr, pick the appropriate scalar
-for(dat_i in 1:5){
+for(dat_i in 1:length(preprocessing_list)){
   print(paste0("Working on dataset ", dat_i))
   dat <- preprocessing_list[[dat_i]]$dat_impute
   dat <- dat * 1000/max(dat)
@@ -106,4 +104,15 @@ for(dat_i in 1:5){
   }
   graphics.off()
 }
+
+#######
+
+# dat_i <- 1
+# plot(esvd_missing_list_list[[dat_i]][[18]][[1]]$u_mat[,1],
+#      esvd_missing_list_list[[dat_i]][[18]][[1]]$u_mat[,2], asp = T,
+#      pch = 16, col = as.numeric(as.factor(preprocessing_list[[dat_i]]$label_vec)))
+#
+# plot(svd_embedding_list[[dat_i]]$u[,1],
+#      svd_embedding_list[[dat_i]]$u[,2], asp = T,
+#      pch = 16, col = as.numeric(as.factor(preprocessing_list[[dat_i]]$label_vec)))
 

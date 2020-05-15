@@ -7,9 +7,8 @@ suffix <- "_spca_descend"
 ncores <- 10
 doMC::registerDoMC(cores = ncores)
 
-session_info <- sessionInfo()
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 source_code_info <- ""
-date_of_run <- Sys.time()
 
 # source("../main_supplement/step0_baron_preprocessing.R")
 # source("../main_supplement/step1_baron_gaussian_fitting.R")

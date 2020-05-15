@@ -1,5 +1,6 @@
 set.seed(10)
 load(paste0("../results/step1_naive_svd", suffix, ".RData"))
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 # this step (rescaling values so the maximum value is 1000) is purely to prevent underflow downstream
 rescaling_factor <- 1000/max(dat)

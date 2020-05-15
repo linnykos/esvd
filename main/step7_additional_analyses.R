@@ -1,4 +1,5 @@
 load(paste0("../results/step5_trajectory", suffix, ".RData"))
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat_count)))
 zinbwave_res <- zinbwave::zinbwave(dat_se, K = 5, maxiter.optimize = 100, normalizedValues = T,

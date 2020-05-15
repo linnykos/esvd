@@ -1,5 +1,6 @@
 set.seed(10)
 load(paste0("../results/step3_scalar_tuning", suffix, ".RData"))
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 nat_mat_list_list <- lapply(1:nrow(paramMat_esvd), function(i){
   lapply(1:cv_trials, function(j){

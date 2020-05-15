@@ -1,3 +1,5 @@
+set.seed(10)
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 load("../../raw_data/marques.RData")
 
 dat <- marques$counts

@@ -1,3 +1,6 @@
+set.seed(10)
+session_info <- sessionInfo(); date_of_run <- Sys.time()
+
 labels_file_vec <- c("/raid6/Kevin/singlecell_data/Cleaned/Baron_human1/Baron_human1_label.csv",
                      "/raid6/Kevin/singlecell_data/Cleaned/Baron_human2/Baron_human2_label.csv",
                      "/raid6/Kevin/singlecell_data/Cleaned/Baron_human3/Baron_human3_label.csv",

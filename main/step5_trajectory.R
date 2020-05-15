@@ -1,4 +1,5 @@
 load(paste0("../results/step4_factorization", suffix, ".RData"))
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 cluster_labels <- as.numeric(cell_type_vec)
 order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
