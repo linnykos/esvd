@@ -1,7 +1,6 @@
 rm(list=ls())
 load("../results/step5_trajectory_original.RData")
 
-
 session_info2 <- sessionInfo()
 source_code_info2 <- ""
 date_of_run2 <- Sys.time()
