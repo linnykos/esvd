@@ -26,11 +26,11 @@ for(i in 1:length(preprocessing_list)){
                                            max_val = selected_paramMat[i, "max_val"],
                                            return_path = F, cores = ncores, verbose = T)
 
-  save.image(paste0("../results/step3_baron_factorization.RData"))
+  save.image(paste0("../results/step3_baron_factorization", suffix, ".RData"))
 }
 
 
 print(paste0(Sys.time(), ": Finished eSVD factorization"))
 source_code_info <- c(source_code_info, readLines("../main_supplement/step3_baron_factorization.R"))
-save.image(paste0("../results/step3_baron_factorization.RData"))
+save.image(paste0("../results/step3_baron_factorization", suffix, ".RData"))
 print(warnings())
