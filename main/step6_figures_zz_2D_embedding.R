@@ -8,8 +8,6 @@ load(paste0("../results/step6_figures", suffix, ".RData"))
 # 2D plots all combined in one plot (color)
 # 2D plots without curves (color)
 
-combn_mat <- combn(3,2)
-
 ######################
 
 # esvd plots
@@ -17,95 +15,117 @@ combn_mat <- combn(3,2)
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
-  png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots_", k, ".png"),
+  grDevices::png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots_", k, ".png"),
       height = 1500, width = 1500, res = 300,
       units = "px")
-  plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+  graphics::plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "eSVD embedding and trajectories\n(Curved Gaussian)")
 
   for(ll in plotting_order_esvd) {
     target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
     idx <- which(cluster_labels %in% target_indices)
-    points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
-           col = col_info_esvd$col_code[target_indices[1]])
+    graphics::points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
+           col = col_vec2_esvd[target_indices[1]])
   }
 
-  for(ll in 1:nrow(cluster_center_esvd)){
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
-  }
-
-
-  curves <- esvd_curves$curves
-  for(ll in 1:length(curves)) {
+  curves <- esvd_curves_short$curves
+  for(ll in rev(1:length(curves))) {
     ord <- curves[[ll]]$ord
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 15)
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = col_vec_short[ll], lwd = 7)
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 15)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = col_vec_short[ll], lwd = 7)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
           lty = 3, lwd = 3)
   }
 
-  graphics.off()
+  for(ll in 1:nrow(cluster_center_esvd)){
+    graphics::points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
+    graphics::points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
+  }
+
+  grDevices::graphics.off()
 }
 
-png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots.png"),
+grDevices::png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots.png"),
     height = 830, width = 2300, res = 300,
     units = "px")
-par(mfrow = c(1,3), mar = c(4,4,4,1))
+graphics::par(mfrow = c(1,3), mar = c(4,4,4,1))
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
-  plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+  graphics::plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = ifelse(k==2, "eSVD embedding and trajectories\n(Curved Gaussian)", ""))
 
   for(ll in plotting_order_esvd) {
     target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
     idx <- which(cluster_labels %in% target_indices)
-    points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
+    graphics::points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
            col = col_vec2_esvd[target_indices[1]])
   }
 
-  for(ll in 1:nrow(cluster_center_esvd)){
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2, col = "black")
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
+  curves <- esvd_curves_short$curves
+  for(ll in rev(1:length(curves))) {
+    ord <- curves[[ll]]$ord
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 15)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = col_vec_short[ll], lwd = 7)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
+          lty = 3, lwd = 3)
   }
 
-
-  curves <- esvd_curves$curves
-  for(ll in 1:length(curves)) {
-    ord <- curves[[ll]]$ord
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = col_vec_short[ll], lwd = 5)
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
-          lty = 3, lwd = 2)
+  for(ll in 1:nrow(cluster_center_esvd)){
+    graphics::points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
+    graphics::points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
   }
 }
-graphics.off()
+grDevices::graphics.off()
+
+grDevices::png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots_nocurve.png"),
+               height = 830, width = 2300, res = 300,
+               units = "px")
+graphics::par(mfrow = c(1,3), mar = c(4,4,4,1))
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+  graphics::plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+                 asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+                 main = ifelse(k==2, "eSVD embedding and trajectories\n(Curved Gaussian)", ""))
+
+  for(ll in plotting_order_esvd) {
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+    idx <- which(cluster_labels %in% target_indices)
+    graphics::points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
+                     col = col_vec2_esvd[target_indices[1]])
+  }
+
+  for(ll in 1:nrow(cluster_center_esvd)){
+    graphics::points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
+    graphics::points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
+  }
+}
+grDevices::graphics.off()
 
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
-  png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots_", k, "_nocurve.png"),
+  grDevices::png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots_", k, "_nocurve.png"),
       height = 1500, width = 1500, res = 300,
       units = "px")
-  plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+  graphics::plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "eSVD embedding and trajectories\n(Curved Gaussian)")
 
   for(ll in plotting_order_esvd) {
     target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
     idx <- which(cluster_labels %in% target_indices)
-    points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
-           col = col_info_esvd$col_code[target_indices[1]])
+    graphics::points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
+           col = col_vec2_esvd[target_indices[1]])
   }
 
   for(ll in 1:nrow(cluster_center_esvd)){
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
+    graphics::points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
+    graphics::points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
   }
 
-  graphics.off()
+  grDevices::graphics.off()
 }
 
 ########################################
@@ -113,95 +133,118 @@ for(k in 1:ncol(combn_mat)){
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
-  png(filename = paste0("../../esvd_results/figure/main/svd_2dplots_", k, ".png"),
+  grDevices::png(filename = paste0("../../esvd_results/figure/main/svd_2dplots_", k, ".png"),
       height = 1500, width = 1500, res = 300,
       units = "px")
-  plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
+  graphics::plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "SVD embedding and trajectories\n(Constant-variance Gaussian)")
 
   for(ll in plotting_order_svd) {
     target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
     idx <- which(cluster_labels %in% target_indices)
-    points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
-           col = col_info_svd$col_code[target_indices[1]])
+    graphics::points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
+           col = col_vec2_svd[target_indices[1]])
   }
 
-
-  for(ll in 1:nrow(cluster_center_svd)){
-    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
-    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
-  }
-
-
-  curves <- svd_curves$curves
+  curves <- svd_curves_short$curves
   for(ll in 1:length(curves)) {
     ord <- curves[[ll]]$ord
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
   }
 
-  graphics.off()
+  for(ll in 1:nrow(cluster_center_svd)){
+    graphics::points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
+    graphics::points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  }
+
+
+  grDevices::graphics.off()
 }
 
-png(filename = paste0("../../esvd_results/figure/main/svd_2dplots.png"),
+grDevices::png(filename = paste0("../../esvd_results/figure/main/svd_2dplots.png"),
     height = 830, width = 2300, res = 300,
     units = "px")
-par(mfrow = c(1,3), mar = c(4,4,4,1))
+graphics::par(mfrow = c(1,3), mar = c(4,4,4,1))
 
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
-  plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
+  graphics::plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = ifelse(k == 2, "SVD embedding and trajectories\n(Constant-variance Gaussian)", ""))
 
   for(ll in plotting_order_svd) {
     target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
     idx <- which(cluster_labels %in% target_indices)
-    points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
+    graphics::points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
            col = col_vec2_svd[target_indices[1]])
   }
 
-
-  for(ll in 1:nrow(cluster_center_svd)){
-    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
-    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
-  }
-
-
-  curves <- svd_curves$curves
+  curves <- svd_curves_short$curves
   for(ll in 1:length(curves)) {
     ord <- curves[[ll]]$ord
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 5)
-    lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 3)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 5)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 3)
+  }
+
+  for(ll in 1:nrow(cluster_center_svd)){
+    graphics::points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
+    graphics::points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
 }
-graphics.off()
+grDevices::graphics.off()
 
+
+
+grDevices::png(filename = paste0("../../esvd_results/figure/main/svd_2dplots_nocurve.png"),
+               height = 830, width = 2300, res = 300,
+               units = "px")
+graphics::par(mfrow = c(1,3), mar = c(4,4,4,1))
 
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
-  png(filename = paste0("../../esvd_results/figure/main/svd_2dplots_", k, "_nocurve.png"),
+  graphics::plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
+                 asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+                 main = ifelse(k == 2, "SVD embedding and trajectories\n(Constant-variance Gaussian)", ""))
+
+  for(ll in plotting_order_svd) {
+    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
+    idx <- which(cluster_labels %in% target_indices)
+    graphics::points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
+                     col = col_vec2_svd[target_indices[1]])
+  }
+
+  for(ll in 1:nrow(cluster_center_svd)){
+    graphics::points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
+    graphics::points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+  }
+}
+grDevices::graphics.off()
+
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  grDevices::png(filename = paste0("../../esvd_results/figure/main/svd_2dplots_", k, "_nocurve.png"),
       height = 1500, width = 1500, res = 300,
       units = "px")
-  plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
+  graphics::plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "SVD embedding and trajectories\n(Constant-variance Gaussian)")
 
   for(ll in plotting_order_svd) {
     target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
     idx <- which(cluster_labels %in% target_indices)
-    points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
-           col = col_info_svd$col_code[target_indices[1]])
+    graphics::points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
+           col = col_vec2_svd[target_indices[1]])
   }
-
 
   for(ll in 1:nrow(cluster_center_svd)){
-    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
-    points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
+    graphics::points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 2, col = "black")
+    graphics::points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
 
-  graphics.off()
+  grDevices::graphics.off()
 }

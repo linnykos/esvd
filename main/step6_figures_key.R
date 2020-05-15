@@ -27,10 +27,9 @@ col_info_svd$factor_idx <- as.numeric(as.factor(col_info_svd$col_name))
 col_info_svd[,c(5,6)] <- col_info_svd[,c(6,5)]
 colnames(col_info_svd)[c(5,6)] <- colnames(col_info_svd)[c(6,5)]
 col_info_svd
-plotting_order_svd <- c(2,3,1,4)
+plotting_order_svd <- c(3,1,2,4)
 
-cluster_center_svd <- .compute_cluster_center(svd_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
-
+cluster_center_svd <- eSVD:::.compute_cluster_center(svd_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
 
 # info for the upcoming esvd plots
 
@@ -49,9 +48,13 @@ col_info_esvd[,c(5,6)] <- col_info_esvd[,c(6,5)]
 colnames(col_info_esvd)[c(5,6)] <- colnames(col_info_esvd)[c(6,5)]
 col_info_esvd
 col_vec_short <- color_func(0.9)[c(1,4)]
-plotting_order_esvd <- c(3,4,5,2,6,1)
+plotting_order_esvd <- c(3,2,5,4,6,1)
 
-cluster_center_esvd <- .compute_cluster_center(esvd_embedding$u_mat[,1:3], .construct_cluster_matrix(cluster_labels))
+cluster_center_esvd <- eSVD:::.compute_cluster_center(esvd_embedding$u_mat[,1:3], .construct_cluster_matrix(cluster_labels))
+
+####
+
+combn_mat <- combn(3,2)
 
 print(paste0(Sys.time(), ": About to start producing all the figures"))
 save.image(paste0("../results/step6_figures", suffix, ".RData"))

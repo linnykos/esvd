@@ -8,7 +8,7 @@ load(paste0("../results/step6_figures", suffix, ".RData"))
 # make the plot displaying how evenly expressed cells are
 
 mean_vec <- log(apply(dat_impute, 2, mean))
-sd_vec <- apply(dat_impute, 2, sd)
+sd_vec <- log(apply(dat_impute, 2, sd))
 
 p_vec <- sapply(1:ncol(dat_impute), function(i){
   tmp_df <- data.frame(val = dat_impute[,i], type = cluster_labels)
@@ -27,9 +27,9 @@ idx_vec <- sapply(p_vec, function(x){
 
 # prepare things for vioplot plot
 
-zz <- prcomp(dat_impute, center = T, scale. = T)
+zz <- stats::prcomp(dat_impute, center = T, scale. = F)
 vec <- zz$rotation[,1]
-#vec[vec <= 0] <- 0
+vec[vec <= 0] <- 0
 vec <- (vec - min(vec))/(max(vec) - min(vec))
 vec <- vec/sum(vec)
 xx <- dat_impute %*% vec
@@ -39,24 +39,24 @@ tmp_df <- data.frame(val = xx, type = sapply(1:13, function(y){which(sapply(clus
 
 ##########################################
 
-png("../../esvd_results/figure/experiment/Revision_writeup6_svd_preview.png", height = 1200, width = 2200, res = 300, units = "px")
-par(mfrow = c(1,2), mar = c(5,6,4,2))
-plot(NA, asp = T,
+png("../../esvd_results/figure/main/data_overview.png", height = 1200, width = 2200, res = 300, units = "px")
+graphics::par(mfrow = c(1,2), mar = c(5,6,4,2))
+graphics::plot(NA, asp = T,
      xlim = range(mean_vec),
      ylim = range(sd_vec),
      xlab = "Mean of expression (Log)",
      ylab = "Standard deviation\nof expression (Log)", main = "Standard deviation verses\nmean per gene",
      cex.lab = 1.25)
-lines(c(-1e2,1e2), c(-1e2,1e2), col = "red", lwd = 2, lty = 2)
-lines(rep(0,2), c(-1e2,1e2), col = "red", lwd = 2)
-lines(c(-1e2,1e2), rep(0,2), col = "red", lwd = 2)
+graphics::lines(c(-1e2,1e2), c(-1e2,1e2), col = "red", lwd = 2, lty = 2)
+graphics::lines(rep(0,2), c(-1e2,1e2), col = "red", lwd = 2)
+graphics::lines(c(-1e2,1e2), rep(0,2), col = "red", lwd = 2)
 for(i in 1:len){
   idx <- which(idx_vec == i)
-  points(mean_vec[idx], sd_vec[idx], pch = 16, col = col_palette[i])
+  graphics::points(mean_vec[idx], sd_vec[idx], pch = 16, col = col_palette[i])
 }
 
 
-legend("topleft", c("Evenly expressed", "Unevenly expressed"),
+graphics::legend("topleft", c("Evenly expressed", "Unevenly expressed"),
        fill=c( rgb(240/255, 228/255, 66/255), "black"), cex = 0.9)
 
 vioplot::vioplot(tmp_df$val[tmp_df$type == 1],
@@ -69,9 +69,9 @@ vioplot::vioplot(tmp_df$val[tmp_df$type == 1],
                  pchMed = 21,
                  colMed = "black", colMed2 = "white",
                  xlab = "", names = rep("", 6))
-title(ylab = "Weighted expression based\non 1st principal component",
+graphics::title(ylab = "Weighted expression based\non 1st principal component",
       main = "Average gene expression\nper cell type", cex.lab = 1.25)
-text(1:6, par("usr")[3]-10,
+graphics::text(1:6, par("usr")[3]-10,
      srt = -45, xpd = TRUE,
      labels = c("Pdgfra+", "OPC", "COP", "NFOL", "MFOL", "MOL"), cex=1)
-graphics.off()
+grDevices::graphics.off()

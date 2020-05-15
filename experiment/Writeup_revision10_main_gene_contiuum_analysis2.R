@@ -162,16 +162,18 @@ for(k in 1:ncol(combn_mat)){
 
   points(x = esvd_embedding$u_mat[,i], y = esvd_embedding$u_mat[,j], pch = 16, col = col_vec)
 
-  for(ll in 1:nrow(cluster_center_esvd)){
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
-    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
-  }
-
   curves <- esvd_curves$curves
   for(ll in 1:length(curves)) {
     ord <- curves[[ll]]$ord
     lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 8)
     lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black", lwd = 5)
   }
+
+  for(ll in 1:nrow(cluster_center_esvd)){
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
+  }
+
+
 }
 

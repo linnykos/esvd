@@ -16,6 +16,7 @@ zz <- apply(dat, 2, function(x){length(which(x!=0))})
 idx <- which(zz > 30)
 dat <- dat[,idx]
 dat_count <- dat_count[,idx]
+library_size <- rowSums(dat_count)
 
 # try a series of sparse PCAs
 k <- 5

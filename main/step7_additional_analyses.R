@@ -11,6 +11,13 @@ save.image(paste0("../results/step7_additional_analyses", suffix, ".RData"))
 print(paste0(Sys.time(), ": Finished ZINB-WaVE"))
 
 # include UMAPs here
+set.seed(10)
+config <- umap::umap.defaults
+config$n_neighbors <- 30
+config$verbose <- T
+umap_all <- umap::umap(dat_impute, config = config)
+
+##############
 
 # include negative binomail fits
 fitting_distr2 <- "neg_binom"
@@ -46,7 +53,19 @@ for(i in 1:nrow(paramMat_esvd2)){
   save.image(paste0("../results/step7_additional_analyses", suffix, "_tmp.RData"))
 }
 
-rm(list = c("j", "i", "init", "tmp_list", "dat_impute_NA"))
+nat_mat_list_list <- lapply(1:nrow(paramMat_esvd2), function(i){
+  lapply(1:cv_trials, function(j){
+    u_mat <- esvd_missing_list2[[i]][[j]]$u_mat
+    v_mat <- esvd_missing_list2[[i]][[j]]$v_mat
+    u_mat %*% t(v_mat)
+  })
+})
+
+esvd_angle_res2 <- eSVD::tuning_select_scalar(dat = dat_impute, nat_mat_list_list = nat_mat_list_list,
+                                             family = fitting_distr2,  missing_idx_list = missing_idx_list,
+                                             scalar_vec = paramMat_esvd2[,"scalar"])
+
+rm(list = c("j", "i", "init", "tmp_list", "dat_impute_NA", "nat_mat_list_list"))
 print(paste0(Sys.time(), ": Alternative analyses"))
 source_code_info <- c(source_code_info, readLines("../main/step7_additional_analyses.R"))
 save.image(paste0("../results/step7_additional_analyses", suffix, ".RData"))
