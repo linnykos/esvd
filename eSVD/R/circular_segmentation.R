@@ -1,16 +1,23 @@
-.find_highly_expressed_region <- function(vec1, idx_trajectory1,
-                                          vec2, idx_trajectory2){
+.find_highly_expressed_region <- function(common_vec, specific_vec1, specific_vec2, standardize = T){
+  n <- length(common_vec)
+  n1 <- length(specific_vec1)
+  n2 <- length(specific_vec2)
 
-  vec1_smooth <- .np_smoother(vec1)
-  vec2_smooth <- .np_smoother(vec2)
+  vec1_smooth <- .np_smoother(c(common_vec, specific_vec1))
+  vec2_smooth <- .np_smoother(c(common_vec, specific_vec2))
 
-  total_vec1 <- c(vec1_smooth, vec2_smooth[idx_trajectory2])
-  res1 <- .circular_segmentation(total_vec1, hard_cut = length(vec1_smooth))
+  vec1_all <- c(vec1_smooth, vec2_smooth[(n+1):length(vec2_smooth)])
+  vec2_all <- c(vec2_smooth, vec1_smooth[(n+1):length(vec1_smooth)])
 
-  total_vec2 <- c(vec2_smooth, vec1_smooth[idx_trajectory1])
-  res2 <- .circular_segmentation(total_vec2, hard_cut = length(vec2_smooth))
+  if(standardize){
+    vec1_all <- scale(vec1_all)
+    vec2_all <- scale(vec2_all)
+  }
 
-  list(cut_1 = res1, cut_2 = res2)
+  res1 <- .circular_segmentation(vec1_all, hard_cut = n+n1)
+  res2 <- .circular_segmentation(vec2_all, hard_cut = n+n2)
+
+  list(cut_1 = res1, cut_2 = res2, vec1_smooth = vec1_smooth, vec2_smooth = vec2_smooth)
 }
 
 .np_smoother <- function(vec){
