@@ -4,13 +4,15 @@
 \alias{.smoother_func}
 \title{Smooth approximation based on lambdas}
 \usage{
-.smoother_func(lambda, dat)
+.smoother_func(lambda, dat, verbose = F)
 }
 \arguments{
 \item{lambda}{vector given by one component of the \code{principal_curve} object}
 
 \item{dat}{a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
 original dataset}
+
+\item{verbose}{boolean}
 }
 \value{
 a smoothed \code{n} by \code{d} matrix that is ordered by \code{lambda}

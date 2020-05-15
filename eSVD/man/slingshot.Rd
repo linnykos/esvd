@@ -10,8 +10,8 @@ slingshot(
   starting_cluster,
   cluster_group_list = NA,
   squared = F,
-  reduction_percentage = 0.25,
   shrink = 1,
+  stretch = 9999,
   thresh = 0.001,
   max_iter = 15,
   upscale_factor = NA,
@@ -32,12 +32,9 @@ from}
 
 \item{squared}{boolean on whether or not to square the distance matrix}
 
-\item{reduction_percentage}{numeric to multiplicatively expand or shrink the dataset,
-where 1 keeps the dataset unchanged.
-For larger values, the dataset is expanded so the estimated trajectories are wigglier,
-and for smalelr values, the dataset is shrunk so the estimated trajectories are smoother.}
-
 \item{shrink}{shrinkage factor}
+
+\item{stretch}{strecth factor}
 
 \item{thresh}{parameter to determine convergence}
 

@@ -39,6 +39,10 @@ plot_prediction_against_observed(
 \item{tol}{parameter between \code{0} and \code{1} for how strict (\code{1} being the strictest) to measure
 if the principal angle falls within the prediction region}
 
+\item{xlim}{plotting parameter}
+
+\item{ylim}{plotting parameter}
+
 \item{...}{additional plotting parameters}
 }
 \value{

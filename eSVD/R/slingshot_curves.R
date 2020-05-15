@@ -11,6 +11,7 @@
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
 #' @param squared boolean on whether or not to square the distance matrix
 #' @param shrink shrinkage factor
+#' @param stretch strecth factor
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
 #' @param upscale_factor positive numeric (between 0 and 1) that controls how much to upweight the clusters,
@@ -55,9 +56,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' the cluster labels are consecutive positive integers from 1 to
 #' \code{max(cluster_labels)}
 #' @param lineages output of \code{.get_lineage()}
-#' @param cluster_group_list  list denoting the hierarchy and order of the clusters.
-#' By default, assigns each cluster to its own list in the order provided in \code{cluster_labels}
 #' @param shrink shrinkage factor
+#' @param stretch stretch factor
 #' @param thresh parameter to determine convergence
 #' @param max_iter maximum number of iterations
 #' @param verbose boolean
@@ -377,11 +377,12 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @param W a weight matrix that is \code{n} by \code{num_lineage} (number of lineages)
 #' @param cluster_mat 0-1 matrix output of \code{.construct_cluster_matrix()} that
 #' has \code{n} rows and \code{k} column
+#' @param stretch stretch factor
 #'
 #' @return a list that contains the \code{num_lineage} curves as \code{principal_curve}
 #' and a distance matrix (\code{D}) that contains the squared distance of each point
 #' to its repsective lineage curve
-.refine_curve_fit <- function(dat, curve_list, lineages, W, cluster_mat, stretch){
+.refine_curve_fit <- function(dat, curve_list, lineages, W, cluster_mat, stretch = 9999){
   stopifnot(nrow(dat) == nrow(W), ncol(W) == length(lineages))
 
   n <- nrow(dat); num_lineage <- length(lineages)
@@ -416,6 +417,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 #' @param lambda vector given by one component of the \code{principal_curve} object
 #' @param dat a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
 #' original dataset
+#' @param verbose boolean
 #'
 #' @return a smoothed \code{n} by \code{d} matrix that is ordered by \code{lambda}
 .smoother_func <- function(lambda, dat, verbose = F){

@@ -1,19 +1,16 @@
-#' Find highly expressed regions in a vector
-#'
-#' The input vector \code{vec} should already be meaningfully ordered
-#'
-#' @param vec numeric vector
-#' @param resolution value less than \code{length(vec)}
-#'
-#' @return numeric vector
-#' @export
-find_highly_expressed_region <- function(vec, resolution = 1/50){
-  # first smooth the signal
-  vec_smooth <- .np_smoother(vec)
+.find_highly_expressed_region <- function(vec1, idx_trajectory1,
+                                          vec2, idx_trajectory2){
 
-  # then apply circular binary segmentation
-  res <- .circular_segmentation(vec_smooth, resolution = resolution)
-  res
+  vec1_smooth <- .np_smoother(vec1)
+  vec2_smooth <- .np_smoother(vec2)
+
+  total_vec1 <- c(vec1_smooth, vec2_smooth[idx_trajectory2])
+  res1 <- .circular_segmentation(total_vec1, hard_cut = length(vec1_smooth))
+
+  total_vec2 <- c(vec2_smooth, vec1_smooth[idx_trajectory1])
+  res2 <- .circular_segmentation(total_vec2, hard_cut = length(vec2_smooth))
+
+  list(cut_1 = res1, cut_2 = res2)
 }
 
 .np_smoother <- function(vec){
@@ -25,15 +22,18 @@ find_highly_expressed_region <- function(vec, resolution = 1/50){
   res$mean
 }
 
-.circular_segmentation <- function(vec, resolution = 1/100, max_width_percentage = 0.1){
+.circular_segmentation <- function(vec, resolution = 1/100, max_width_percentage = 0.1,
+                                   hard_cut = NA){
   n <- length(vec)
-  stopifnot(n > 101)
-  lim <- round(n*resolution)
+  lim <- ifelse(is.na(hard_cut), round(n*resolution), round(hard_cut*resolution))
   max_width <- round(n*max_width_percentage)
 
-  candidate_idx1_vec <- round(seq(2, n-2*lim, length.out = lim))
+  n2 <- ifelse(is.na(hard_cut), n, hard_cut)
+  stopifnot(n2 > 101)
+
+  candidate_idx1_vec <- round(seq(2, n2-2*lim, length.out = lim))
   obj_outer <- sapply(candidate_idx1_vec, function(i){
-    candidate_idx2_vec <- round(seq(i+lim, n, length.out = lim))
+    candidate_idx2_vec <- round(seq(i+lim, n2, length.out = lim))
 
     obj_inner <- sapply(candidate_idx2_vec, function(j){
       if(abs(i-j) >= max_width) return(-Inf)

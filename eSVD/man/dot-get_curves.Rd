@@ -8,11 +8,10 @@
   dat,
   cluster_labels,
   lineages,
-  cluster_group_list = lapply(cluster_labels, function(x) {     x }),
   shrink = 1,
+  stretch = 9999,
   thresh = 0.001,
   max_iter = 15,
-  upscale_factor = NA,
   verbose = F
 )
 }
@@ -25,17 +24,13 @@ the cluster labels are consecutive positive integers from 1 to
 
 \item{lineages}{output of \code{.get_lineage()}}
 
-\item{cluster_group_list}{list denoting the hierarchy and order of the clusters.
-By default, assigns each cluster to its own list in the order provided in \code{cluster_labels}}
-
 \item{shrink}{shrinkage factor}
+
+\item{stretch}{stretch factor}
 
 \item{thresh}{parameter to determine convergence}
 
 \item{max_iter}{maximum number of iterations}
-
-\item{upscale_factor}{positive numeric (between 0 and 1) that controls how much to upweight the clusters,
-with 1 being (almost) equal cluster sizes and 0 being no upweighting}
 
 \item{verbose}{boolean}
 }

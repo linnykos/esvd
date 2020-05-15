@@ -401,13 +401,12 @@ test_that(".get_curves works", {
 
   res <- .get_curves(dat, cluster_labels, lineages)
 
-  expect_true(length(res) == length(lineages))
+  expect_true(length(res$pcurve_list) == length(lineages))
   expect_true(all(sapply(res$pcurve_list, class) == "principal_curve"))
 
   #plot(dat[,1], dat[,2], asp = T)
   #lines(res$pcurve_list$Curve1, col = "red", lwd = 2); lines(res$pcurve_list$Curve2, col = "blue", lwd = 2)
 })
-
 
 test_that(".get_curves works for a harder example", {
   set.seed(20)
@@ -417,24 +416,11 @@ test_that(".get_curves works for a harder example", {
 
   res <- .get_curves(dat, cluster_labels, lineages)
 
-  expect_true(length(res) == length(lineages))
+  expect_true(length(res$pcurve_list) == length(lineages))
   expect_true(all(sapply(res$pcurve_list, class) == "principal_curve"))
 
   #plot(dat[,1], dat[,2], asp = T)
   #for(i in 1:length(res)){lines(res$pcurve_list[[i]], col = i, lwd = 2)}
-})
-
-test_that(".get_curves can handle cluster_group_list", {
-  set.seed(20)
-  cluster_labels <- rep(1:5, each = 20)
-  dat <- MASS::mvrnorm(100, rep(0, 2), diag(2))
-  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
-
-  res <- .get_curves(dat, cluster_labels, lineages,
-                     cluster_group_list = list(c(1,5), c(2,4), 3))
-
-  expect_true(length(res) == length(lineages))
-  expect_true(all(sapply(res$pcurve_list, class) == "principal_curve"))
 })
 
 test_that(".get_curves finds reasonable curves", {

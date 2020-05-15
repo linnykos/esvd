@@ -7,13 +7,17 @@ construct_pseudotime_trajectory_matrix <- function(slingshot_res, cluster_labels
 
   # next, focus on cells shared between both trajectories
   shared_df <- .compile_common_cells(pseudotime_df_list)
+  shared_df$status <- "both"
 
   # deal with other cells
   specific_df <- .compile_unique_cells(pseudotime_df_list)
+  for(i in 1:length(specific_df)){
+    specific_df[[i]]$consensus <- NA
+    specific_df[[i]]$status <- paste0(i)
+  }
 
   # merge the data frames
-  tmp <- cbind(do.call(rbind, specific_df), NA)
-  colnames(tmp) <- colnames(shared_df)
+  tmp <- do.call(rbind, specific_df)
   all_df <- rbind(shared_df, tmp)
 
   # all cluster labels
@@ -59,24 +63,30 @@ construct_pseudotime_trajectory_matrix <- function(slingshot_res, cluster_labels
   tol_val <- max(c(df_list[[1]]$pseudotime, df_list[[2]]$pseudotime))/10
   lambda_vec <- rep(NA, length(idx))
   bool_vec <- rep(NA, length(idx))
+  dist_vec <- rep(NA, length(idx))
 
   for(i in 1:length(idx)){
-    idx1 <- which(df_list[[1]]$cell_idx == idx[i])
-    idx2 <- which(df_list[[2]]$cell_idx == idx[i])
+    idx1 <- which(df_list[[1]]$cell_idx == idx[i])[1]
+    idx2 <- which(df_list[[2]]$cell_idx == idx[i])[1]
 
     lambda1 <- df_list[[1]]$pseudotime[idx1]
     lambda2 <- df_list[[2]]$pseudotime[idx2]
 
-    if(df_list[[1]]$dist_to_curve[idx1] < df_list[[2]]$dist_to_curve[idx2]){
+    dist1 <- df_list[[1]]$dist_to_curve[idx1]
+    dist2 <- df_list[[2]]$dist_to_curve[idx2]
+
+    if(dist1 < dist2){
       lambda_vec[i] <- lambda1
+      dist_vec[i] <- dist1
     } else {
       lambda_vec[i] <- lambda2
+      dist_vec[i] <- dist2
     }
 
     bool_vec[i] <- (abs(lambda1 - lambda2) <= tol_val)
   }
 
-  data.frame(cell_idx = idx, pseudotime = lambda_vec, consensus = bool_vec)
+  data.frame(cell_idx = idx, pseudotime = lambda_vec, dist_to_curve = dist_vec, consensus = bool_vec)
 }
 
 .compile_unique_cells <- function(pseudotime_df_list){
@@ -87,6 +97,6 @@ construct_pseudotime_trajectory_matrix <- function(slingshot_res, cluster_labels
     other_branch <- ifelse(i == 1, 2, 1)
     specific_idx <- which(!pseudotime_df_list[[i]]$cell_idx %in%
                                  pseudotime_df_list[[other_branch]]$cell_idx)
-    pseudotime_df_list[[i]][specific_idx, c(1:2)]
+    pseudotime_df_list[[i]][specific_idx, ]
   })
 }

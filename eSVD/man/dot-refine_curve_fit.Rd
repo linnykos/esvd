@@ -4,7 +4,7 @@
 \alias{.refine_curve_fit}
 \title{Initial fit of the curves}
 \usage{
-.refine_curve_fit(dat, curve_list, lineages, W, cluster_mat)
+.refine_curve_fit(dat, curve_list, lineages, W, cluster_mat, stretch = 9999)
 }
 \arguments{
 \item{dat}{a \code{n} by \code{d} matrix}
@@ -17,6 +17,8 @@
 
 \item{cluster_mat}{0-1 matrix output of \code{.construct_cluster_matrix()} that
 has \code{n} rows and \code{k} column}
+
+\item{stretch}{stretch factor}
 }
 \value{
 a list that contains the \code{num_lineage} curves as \code{principal_curve}
