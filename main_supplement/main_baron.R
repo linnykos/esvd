@@ -4,7 +4,7 @@ library(eSVD)
 library(Seurat)
 
 suffix <- "_spca_descend"
-ncores <- 10
+ncores <- 20
 doMC::registerDoMC(cores = ncores)
 
 session_info <- sessionInfo(); date_of_run <- Sys.time()
