@@ -1,5 +1,40 @@
 rm(list=ls())
-load("../results/step7_additional_analyses_original.RData")
+load("../../esvd/results/step7_additional_analyses_original.RData")
+
+nat_mat_list_list <- lapply(1:nrow(paramMat_esvd2), function(i){
+  lapply(1:cv_trials, function(j){
+    u_mat <- esvd_missing_list2[[i]][[j]]$u_mat
+    v_mat <- esvd_missing_list2[[i]][[j]]$v_mat
+    u_mat %*% t(v_mat)
+  })
+})
+
+esvd_angle_res <- eSVD::tuning_select_scalar(dat = dat_impute, nat_mat_list_list = nat_mat_list_list,
+                                             family = "neg_binom",  missing_idx_list = missing_idx_list,
+                                             scalar_vec = paramMat_esvd2[,"scalar"])
+
+training_idx_list <- lapply(1:length(missing_idx_list), function(i){
+  c(1:prod(dim(dat_impute)))[-missing_idx_list[[i]]]
+})
+
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list_list[[esvd_angle_res$idx]],
+                                 missing_idx_list = training_idx_list,
+                                 family = "neg_binom",
+                                 scalar = paramMat_esvd2[esvd_angle_res$idx, "scalar"],
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 max_points = 1e6)
+
+
+plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list_list[[esvd_angle_res$idx]],
+                                 missing_idx_list = missing_idx_list,
+                                 family = "neg_binom",
+                                 scalar = paramMat_esvd2[esvd_angle_res$idx, "scalar"],
+                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+
+
+############
+
+zz1 <- esvd_missing_list2[[6]][[1]]$u_mat
 
 cluster_labels <- as.numeric(cell_type_vec)
 order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
@@ -32,14 +67,14 @@ col_info_svd[,c(5,6)] <- col_info_svd[,c(6,5)]
 colnames(col_info_svd)[c(5,6)] <- colnames(col_info_svd)[c(6,5)]
 col_info_svd
 plotting_order_svd <- c(2,3,1,4)
-cluster_center1 <- .compute_cluster_center(zinbwave_embedding, .construct_cluster_matrix(cluster_labels))
+cluster_center1 <- .compute_cluster_center(zz1, .construct_cluster_matrix(cluster_labels))
 
 combn_mat <- combn(3,2)
 
 par(mfrow = c(1,3))
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
-  plot(x = zinbwave_embedding[,i], y = zinbwave_embedding[,j],
+  plot(x = zz1[,i], y = zz1[,j],
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
        main = "ZINB-WaVE embedding",
        pch = 16, col = col_info_svd$col_code[cluster_labels])
@@ -49,6 +84,4 @@ for(k in 1:ncol(combn_mat)){
     points(cluster_center1[ll,i], cluster_center1[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
 }
-
-dim(zinbwave_res@assays@data$normalizedValues)
 

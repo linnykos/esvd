@@ -14,7 +14,7 @@ esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, start
 
 ##########
 
-pseudotime_df <- construct_pseudotime_trajectory_matrix(esvd_curves, cluster_labels)
+pseudotime_df <- eSVD:::construct_pseudotime_trajectory_matrix(esvd_curves, cluster_labels)
 
 pseudotime_df2 <- pseudotime_df[-intersect(which(is.na(pseudotime_df$consensus)), which(pseudotime_df$pseudotime <= 3)),]
 pseudotime_df2 <- pseudotime_df2[-which(!pseudotime_df2$consensus),]
