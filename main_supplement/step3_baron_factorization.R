@@ -12,7 +12,7 @@ esvd_embedding_list <- vector("list", length(preprocessing_list))
 for(i in 1:length(preprocessing_list)){
   print(paste0(Sys.time(), ": Starting dataset ", i))
 
-  fitting_distr <- c("gaussian", "neg_binom", "curved_gaussian")[vec["fitting_distr"]]
+  fitting_distr <- c("gaussian", "neg_binom", "curved_gaussian")[selected_paramMat[i, "fitting_distr"]]
   dat_impute <- preprocessing_list[[i]]$dat_impute
   dat_impute <- dat_impute*1000/max(dat_impute)
 
