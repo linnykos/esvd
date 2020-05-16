@@ -3,9 +3,9 @@ load(paste0("../results/step2_baron_scalar_tuning", suffix, ".RData"))
 session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 # hand pick the winning factorizations
-selected_paramMat <- cbind(c(3,  3, 3, 3, 3, 3),
-                           c(10, 3, 3, 5, 5, 3),
-                           c(2,  2, 4, 4, 4, 4), 50, 3000)
+selected_paramMat <- cbind(c(2,  2, 2, 2, 2, 2),
+                           c(10, 10, 10,       5, 10, 5),
+                           c(1e4,  1e4, 1e4, 1e6, 1e4, 1e4), 50, 3000)
 colnames(selected_paramMat) <- c("fitting_distr", "k", "scalar", "max_iter", "max_val")
 
 esvd_embedding_list <- vector("list", length(preprocessing_list))

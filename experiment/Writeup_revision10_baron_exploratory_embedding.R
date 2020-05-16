@@ -27,3 +27,10 @@ plot(esvd_missing_list_list[[dat_i]][[8]][[1]]$u_mat[,1],
 #      svd_embedding_list[[dat_i]]$u[,2], asp = T,
 #      pch = 16, col = as.numeric(as.factor(preprocessing_list[[dat_i]]$label_vec)))
 
+
+i <- 6
+# u_mat <- esvd_embedding_list[[i]]$u_mat
+# u_mat <- svd_embedding_list[[i]]$u[,c(1:3)] %*% diag(sqrt(svd_embedding_list[[i]]$d[c(1:3)]))
+u_mat <-esvd_missing_list_list[[i]][[8]][[1]]$u_mat
+rgl::plot3d(u_mat[,1], u_mat[,2], u_mat[,3], asp = T, col = as.numeric(preprocessing_list[[i]]$label_vec),
+            main = "Dataset 4")
