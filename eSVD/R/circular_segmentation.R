@@ -10,8 +10,10 @@
   vec2_all <- c(vec2_smooth, vec1_smooth[(n+1):length(vec1_smooth)])
 
   if(standardize){
-    vec1_all <- scale(vec1_all)
-    vec2_all <- scale(vec2_all)
+    vec_all <- c(vec1_all, vec2_all)
+    vec_all <- scale(vec_all)
+    vec1_all <- vec_all[1:length(vec1_all)]
+    vec2_all <- vec_all[(length(vec1_all)+1):length(vec_all)]
   }
 
   res1 <- .circular_segmentation(vec1_all, hard_cut = n+n1)
