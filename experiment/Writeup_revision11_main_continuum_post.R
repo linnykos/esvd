@@ -15,10 +15,10 @@ for(k in 1:2){
                                    function(i){(start_vec_list[[k]][i] + end_vec_list[[k]][i])/2})
   obj_vec_list[[k]] <- sapply(1:length(segmentation_res), function(i){segmentation_res[[i]][[k]]$obj_val})
 
-  plot(NA, ylim = range(log(pmax(obj_vec_list[[k]],0)+1)), xlim = c(0, nrow_vec[k]),
+  plot(NA, ylim = range(obj_vec_list[[k]]), xlim = c(0, nrow_vec[k]),
        main = paste0(nrow_vec[k]))
   for(i in 1:length(start_vec_list[[k]])){
-    lines(x = c(start_vec_list[[k]][i], end_vec_list[[k]][i]), y = rep(log(max(obj_vec_list[[k]][i],0)+1), 2), lwd = 2)
+    lines(x = c(start_vec_list[[k]][i], end_vec_list[[k]][i]), y = rep(obj_vec_list[[k]][i], 2), lwd = 2)
   }
 }
 
@@ -27,12 +27,16 @@ for(k in 1:2){
 zz <- intersect(which(log(pmax(obj_vec_list[[1]],0)+1)>1.2), which(midpoint_vec_list[[1]] >= 2200))
 head(zz)
 
-j <- 184
+j <- zz[10]
 par(mfrow = c(1,2))
 vec1 <- c(dat_ordered1[1:max_common_idx,j], dat_ordered1[idx_trajectory1,j])
 col_vec <- rep("black", length(vec1)); col_vec[segmentation_res[[j]]$cut_1$i:segmentation_res[[j]]$cut_1$j] <- "red"
 vec2 <- c(dat_ordered1[1:max_common_idx,j], dat_ordered2[idx_trajectory2,j])
-plot(vec1, col = col_vec, pch = 16)
+plot(vec1, col = col_vec, pch = 16, cex = 0.5)
 lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
-plot(vec2, pch = 16)
+points(segmentation_res[[j]]$vec1_smooth, col = "white", cex = 0.75, pch = 16)
+points(segmentation_res[[j]]$vec1_smooth, col = "red", cex = 0.5, pch = 16)
+plot(vec2, pch = 16, cex = 0.5)
 lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
+points(segmentation_res[[j]]$vec2_smooth, col = "white", cex = 0.75, pch = 16)
+points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)

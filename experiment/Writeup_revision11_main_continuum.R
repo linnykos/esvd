@@ -39,17 +39,21 @@ max_common_idx <- min(c(idx_trajectory1, idx_trajectory2))-1
 
 ##############
 
-ncores <- 20
-doMC::registerDoMC(cores = ncores)
 
-func <- function(j){
-  print(j)
-  eSVD:::.find_highly_expressed_region(common_vec = dat_ordered1[1:max_common_idx,j],
-                                       specific_vec1 = dat_ordered1[idx_trajectory1,j],
-                                       specific_vec2 = dat_ordered1[idx_trajectory2,j],
-                                       standardize = T)
-}
+# func <- function(j){
+#   print(j)
+#   eSVD:::.find_highly_expressed_region(common_vec = dat_ordered1[1:max_common_idx,j],
+#                                        specific_vec1 = dat_ordered1[idx_trajectory1,j],
+#                                        specific_vec2 = dat_ordered2[idx_trajectory2,j],
+#                                        standardize = T)
+# }
+#
+# segmentation_res <- foreach::"%dopar%"(foreach::foreach(j = 1:ncol(dat_impute)), func(j))
 
-segmentation_res <- foreach::"%dopar%"(foreach::foreach(j = 1:ncol(dat_impute)), func(j))
+dat1 <- dat_ordered1[c(1:max_common_idx, idx_trajectory1),]
+dat2 <- dat_ordered2[c(1:max_common_idx, idx_trajectory2),]
+segmentation_res <- eSVD:::segment_genes_along_trajectories(dat1, dat2, common_n = max_common_idx,
+                                                            standardize = T, verbose = T, ncores = 20)
+
 save.image("../results/Writeup_revision11_continuum.RData")
 
