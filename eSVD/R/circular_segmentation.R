@@ -1,7 +1,7 @@
 segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize = T,
                                              ncores = NA, verbose = F){
   stopifnot(ncol(dat1) == ncol(dat2))
-  stopifnot(sum(abs(dat1[1:n,] - dat2[1:n,])) <= 1e-6)
+  stopifnot(sum(abs(dat1[1:common_n,] - dat2[1:common_n,])) <= 1e-6)
   n1 <- nrow(dat1) - common_n
   n2 <- nrow(dat2) - common_n
   p <- ncol(dat1)

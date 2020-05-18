@@ -29,9 +29,9 @@ head(zz)
 
 j <- zz[10]
 par(mfrow = c(1,2))
-vec1 <- c(dat_ordered1[1:max_common_idx,j], dat_ordered1[idx_trajectory1,j])
+vec1 <- dat1[,j]
 col_vec <- rep("black", length(vec1)); col_vec[segmentation_res[[j]]$cut_1$i:segmentation_res[[j]]$cut_1$j] <- "red"
-vec2 <- c(dat_ordered1[1:max_common_idx,j], dat_ordered2[idx_trajectory2,j])
+vec2 <- dat2[,j]
 plot(vec1, col = col_vec, pch = 16, cex = 0.5)
 lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
 points(segmentation_res[[j]]$vec1_smooth, col = "white", cex = 0.75, pch = 16)
