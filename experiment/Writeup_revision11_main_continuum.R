@@ -49,9 +49,12 @@ max_common_idx <- min(c(idx_trajectory1, idx_trajectory2))-1
 # }
 #
 # segmentation_res <- foreach::"%dopar%"(foreach::foreach(j = 1:ncol(dat_impute)), func(j))
+#
+# dat1 <- dat_ordered1[c(1:max_common_idx, idx_trajectory1),]
+# dat2 <- dat_ordered2[c(1:max_common_idx, idx_trajectory2),]
+dat1 <- dat_ordered1
+dat2 <- dat_ordered2
 
-dat1 <- dat_ordered1[c(1:max_common_idx, idx_trajectory1),]
-dat2 <- dat_ordered2[c(1:max_common_idx, idx_trajectory2),]
 segmentation_res <- eSVD:::segment_genes_along_trajectories(dat1, dat2, common_n = max_common_idx,
                                                             standardize = T, verbose = T, ncores = 20)
 

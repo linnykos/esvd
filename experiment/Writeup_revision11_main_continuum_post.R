@@ -24,10 +24,10 @@ for(k in 1:2){
 
 ########################
 
-zz <- intersect(which(log(pmax(obj_vec_list[[1]],0)+1)>1.2), which(midpoint_vec_list[[1]] >= 2200))
+zz <- intersect(which(obj_vec_list[[1]]>2), which(midpoint_vec_list[[1]] >= 2200))
 head(zz)
 
-j <- zz[10]
+j <- zz[1]
 par(mfrow = c(1,2))
 vec1 <- dat1[,j]
 col_vec <- rep("black", length(vec1)); col_vec[segmentation_res[[j]]$cut_1$i:segmentation_res[[j]]$cut_1$j] <- "red"
@@ -40,3 +40,24 @@ plot(vec2, pch = 16, cex = 0.5)
 lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
 points(segmentation_res[[j]]$vec2_smooth, col = "white", cex = 0.75, pch = 16)
 points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
+
+#######
+
+zz <- intersect(which(obj_vec_list[[2]]>2), which(midpoint_vec_list[[1]] >= 2200))
+head(zz)
+
+j <- zz[2]
+par(mfrow = c(1,2))
+vec1 <- dat1[,j]
+vec2 <- dat2[,j]
+col_vec <- rep("black", length(vec2)); col_vec[segmentation_res[[j]]$cut_2$i:segmentation_res[[j]]$cut_2$j] <- "red"
+plot(vec1, pch = 16, cex = 0.5)
+lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
+points(segmentation_res[[j]]$vec1_smooth, col = "white", cex = 0.75, pch = 16)
+points(segmentation_res[[j]]$vec1_smooth, col = "red", cex = 0.5, pch = 16)
+plot(vec2, col = col_vec, pch = 16, cex = 0.5)
+lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
+points(segmentation_res[[j]]$vec2_smooth, col = "white", cex = 0.75, pch = 16)
+points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
+
+
