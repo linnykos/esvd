@@ -50,6 +50,7 @@ for(ll in plotting_order_esvd){
 }
 
 quantile_vec <- rep(0.99, length(plotting_order_esvd))
+quantile_vec[3] <- 0.975
 
 for(ll in c(3,6,1)){
   target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]

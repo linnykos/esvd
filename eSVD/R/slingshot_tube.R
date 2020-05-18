@@ -4,23 +4,27 @@
 #' @param cluster_labels vector of cluster labels, where
 #' the cluster labels are consecutive positive integers from 1 to
 #' \code{max(cluster_labels)}
-#' @param starting_cluster the "origin" cluster that all the lineages will start
-#' from
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
+#' @param lineages list of lineages (for example, estimated by the \code{slingshot} function)
 #' @param trials numeric
-#' @param cores numeric
+#' @param ncores numeric
 #' @param verbose boolean
 #' @param ... additional parameters for \code{slingshot}
 #'
 #' @return a list
 #' @export
-bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
-                             cluster_group_list, trials = 100, cores = NA,
+bootstrap_curves <- function(dat, cluster_labels, cluster_group_list, lineages,
+                             trials = 100, ncores = NA,
                              verbose = F, ...){
   stopifnot(!any(is.na(cluster_group_list)))
 
-  if(!is.na(cores)) doMC::registerDoMC(cores = cores)
+  if(!is.na(ncores)) doMC::registerDoMC(cores = ncores)
 
+  # first do the resampling
+  res <- .resample_all(dat, cluster_labels, cluster_group_list, lineages, upscale_factor)
+  dat2 <- res$dat; cluster_labels <- res$cluster_labels; idx_all <- res$idx_all
+
+  # then estimate all the different curves
   func <- function(x){
     set.seed(10*x)
     if(verbose & x %% floor(trials/10) == 0) print('*')
@@ -31,11 +35,10 @@ bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
       dat2[idx,] <- dat[idx2,]
     }
 
-    slingshot(dat2, cluster_labels, starting_cluster = starting_cluster,
-              cluster_group_list = cluster_group_list, ...)
+    .get_curves(dat2, cluster_labels, lineages = lineages, verbose = verbose, ...)
   }
 
-  if(is.na(cores)){
+  if(is.na(ncores)){
     lapply(1:trials, func)
   } else {
     x <- 0 #bookkeeping purposes
@@ -45,74 +48,94 @@ bootstrap_curves <- function(dat, cluster_labels, starting_cluster,
 
 #' Compute the bootstrap uncertainty
 #'
-#' @param target_curve_list a list
+#' Try to compute the "radius" of uncertainty by conditioning on the same curves
+#'
+#' @param target_curve_list a list (for example, the \code{curves} output from the \code{slingshot} function)
 #' @param bootstrap_curve_list a list
-#' @param cores numeric
+#' (for example, the output from the \code{bootstrap_curves} function)
+#' @param ncores numeric
 #' @param verbose boolean
 #'
 #' @return a numeric
 #' @export
-compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, cores = NA, verbose = F){
-  num_curves <- length(target_curve_list$lineages)
+compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, ncores = NA, verbose = F){
+  stopifnot(length(target_curve_list) == length(bootstrap_curve_list[[1]]),
+            length(unique(sapply(bootstrap_curve_list, length))) == 1)
+  num_curves <- length(target_curve_list)
 
-  if(!is.na(cores)) doMC::registerDoMC(cores = cores)
+  if(!is.na(ncores)) doMC::registerDoMC(cores = ncores)
 
+  # discretize all the curves
+  target_curve_list <- sapply(target_curve_list, function(curve){
+    .discretize_curve_by_pseudotime(s_mat = curve$s, pseudotime_vec = curve$lambda)
+  })
+
+  for(i in 1:length(bootstrap_curve_list)){
+    bootstrap_curve_list[[i]] <- sapply(bootstrap_curve_list[[i]], function(curve){
+      .discretize_curve_by_pseudotime(s_mat = curve$s, pseudotime_vec = curve$lambda)
+    })
+  }
+
+  # for each curve in the target curve, find the minimum distance
   mat_list <- lapply(1:num_curves, function(i){
     if(verbose) print(paste0("Starting curve ", i))
-    curve_mat <- target_curve_list$curves[[i]]$s[target_curve_list$curves[[i]]$ord,]
-    curve_mat_collection <- .capture_curves(paste0(target_curve_list$lineages[[i]], collapse = "-"), bootstrap_curve_list)
+    curve_mat <- target_curve_list[[i]]$s
+    curve_mat_collection <- lapply(bootstrap_curve_list, function(curve){curve$s})
 
-    .compute_l2_curve(curve_mat, curve_mat_collection, cores = cores, verbose = verbose)
+    .compute_l2_curve(curve_mat, curve_mat_collection, ncores = ncores, verbose = verbose)
   })
 
-  print(paste0(Sys.time(), ": Finished mat_list"))
 
-  sd_vec <- sapply(mat_list, function(x){
-    stats::quantile(apply(x, 2, function(x){
-      stats::quantile(x, probs = 0.95)
-    }), probs = 0.95)
-  })
+  # output the matrix of minimum distances (position on curve x distance to bootstrap matrix)
 
-  list(sd_val = max(sd_vec), mat_list = mat_list)
+  list(target_curve_list = target_curve_list, mat_list = mat_list)
 }
 
 #####################
 
-# try to compute the "radius" of uncertainty by conditioning on the same curves
-# first store all the relevant curves
-.capture_curves <- function(string, curve_list){
-  res <- lapply(1:length(curve_list), function(i){
-    string_vec <- sapply(curve_list[[i]]$lineages, function(x){paste0(x, collapse="-")})
-    idx <- which(string_vec == string)
-    if(length(idx) == 0) return(NA)
-    curve_list[[i]]$curves[[idx]]$s[curve_list[[i]]$curves[[idx]]$ord,]
-  })
+.discretize_curve_by_pseudotime <- function(s_mat, pseudotime_vec, resolution = min(length(pseudotime_vec), 1000)){
+  stopifnot(nrow(s_mat) == length(pseudotime_vec), nrow(s_mat) > resolution, resolution > 1)
+  n <- length(pseudotime_vec)
+  ord_vec <- order(pseudotime_vec, decreasing = F)
+  s_mat <- s_mat[ord_vec,]
+  pseudotime_vec <- pseudotime_vec[ord_vec]
 
-  res[which(sapply(res, length) > 1)]
+  tmp_mat <- data.frame(pseudotime = pseudotime_vec, idx = 1:n)
+  tmp_mat <- tmp_mat[-duplicated(tmp$pseudotime),]
+  idx <- tmp_mat$idx[round(seq(1, nrow(tmp_mat), length.out = resolution))]
+
+  list(s = s_mat[idx,], lambda = tmp_mat$pseudotime)
 }
 
-# for every point in our_mat, find its l2 distance to its closest neighbor in all curves in our_mat_collection
-.compute_l2_curve <- function(mat, mat_collection, verbose = F, cores = NA){
-  n <- nrow(mat); k <- length(mat_collection)
+# for every point in our_mat, find its l2 distance to its closest neighbor in all curves in mat_collection
+.compute_l2_curve <- function(mat, mat_collection, verbose = F, ncores = NA){
+  len <- length(mat_collection)
 
-  func <- function(y, vec){
-    dist_vec <- apply(mat_collection[[y]], 1, function(z){
-      .l2norm(z - vec)
+  func <- function(mat1, mat2){
+    n <- nrow(mat1)
+
+    dist_vec <- apply(mat1, 1, function(vec1){
+      min(apply(mat2, 1, function(vec2){.l2norm(vec1 - vec2)}))
     })
 
-    min(dist_vec)
+    dist_vec
   }
 
-  sapply(1:n, function(x){
-    if(verbose & x %% floor(n/10) == 0) cat('*')
+  # helper function simply for verbose purposes
+  func2 <- function(mat1, i){
+    if(verbose & i %% floor(len/10) == 0) cat('*')
+    func(mat1, mat_collection[[i]])
+  }
 
-    vec <- mat[x,]
-
-    if(is.na(cores)){
-      sapply(1:k, func, vec = vec)
-    } else {
-      y <- 0 #bookkeeping purposes
-      unlist(foreach::"%dopar%"(foreach::foreach(y = 1:k), func(y, vec)))
+  if(is.na(ncores)){
+    dist_mat <- matrix(NA, nrow = nrow(mat), ncol = len)
+    for(i in 1:len){
+      dist_mat[,i] <- func2(mat,i)
     }
-  })
+  } else {
+    i <- 0 #bookkeeping purposes
+    dist_mat <- do.call(cbind, foreach::"%dopar%"(foreach::foreach(i = 1:len), func2(mat, i)))
+  }
+
+  dist_mat
 }

@@ -8,6 +8,7 @@ color_func <- function(alpha = 0.2){
     rgb(230/255, 159/255, 0/255,alpha), #orange
     rgb(100/255, 100/255, 100/255, alpha)) #gray
 }
+color_name_vec <- c("yellow", "skyblue", "bluish green", "blue", "orange", "gray")
 
 #####################
 
@@ -16,7 +17,7 @@ color_func <- function(alpha = 0.2){
 num_order_vec_svd <- c(5, rep(3,2), c(1,1,1,1,1,1), rep(2,2),  rep(5,2))
 col_vec_svd <- color_func(1)[num_order_vec_svd]
 col_vec2_svd <- color_func(0.5)[num_order_vec_svd]
-col_name_svd <- c("orange", rep("bluish green", 2), rep("yellow", 6), rep("skyblue", 2), rep("orange", 2))
+col_name_svd <- color_name_vec[num_order_vec_svd]
 order_vec_svd <- c(3, 5.1, 5.2, seq(6.1, 6.6, by = 0.1), 4.1, 4.2, 2, 1)
 col_info_svd <- data.frame(name = levels(cell_type_vec),
                            idx = sort(unique(cluster_labels)),
@@ -33,10 +34,10 @@ cluster_center_svd <- eSVD:::.compute_cluster_center(svd_embedding[,1:3], .const
 
 # info for the upcoming esvd plots
 
-num_order_vec_esvd <- c(5, rep(3,2), c(6,1,1,1,6,4), rep(2,2),  rep(5,2))
+num_order_vec_esvd <- c(5, rep(3,2), c(6,1,1,1,4,4), rep(2,2),  rep(5,2))
 col_vec_esvd <- color_func(1)[num_order_vec_esvd]
 col_vec2_esvd <- color_func(0.5)[num_order_vec_esvd]
-col_name_esvd <- c("orange", rep("bluish green", 2), c("gray", "yellow", "yellow", "yellow", "gray", "blue"), rep("skyblue", 2), rep("orange", 2))
+col_name_esvd <- color_name_vec[num_order_vec_esvd]
 order_vec_esvd <- c(3, 5.1, 5.2, seq(6.1, 6.6, by = 0.1), 4.1, 4.2, 2, 1)
 col_info_esvd <- data.frame(name = levels(cell_type_vec),
                             idx = sort(unique(cluster_labels)),
