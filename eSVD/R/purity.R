@@ -18,7 +18,7 @@ compute_purity <- function(mat, cluster_labels, neighborhood_size, num_samples =
     })
   })
 
-  list(avg_val = mean(unlist(value_list)), value_list = value_list)
+  list(avg_val = mean(sapply(value_list, mean)), value_list = value_list)
 }
 
 determine_minimium_neighborhood_size <- function(mat, max_iter = 20, verbose = T){
@@ -74,6 +74,7 @@ determine_minimium_neighborhood_size <- function(mat, max_iter = 20, verbose = T
 
   g <- igraph::graph.empty(n = n, directed = F)
   g <- igraph::add_edges(g, edges = edge_mat)
+  g <- igraph::simplify(g)
   g
 }
 
