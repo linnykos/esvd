@@ -1,5 +1,5 @@
 set.seed(10)
-load(paste0("../results/step0_baron_screening", suffix, ".RData"))
+load(paste0("../results/step0_baron_preprocessing", suffix, ".RData"))
 session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 k_vec <- c(3,5,10)
@@ -109,7 +109,9 @@ svd_embedding_list <- lapply(1:length(preprocessing_list), function(i){
   dat <- preprocessing_list[[i]]$dat_impute
   log_dat <- log2(dat+1)
 
-  svd(log_dat)
+  svd_res <- svd(log_dat)
+  n <- nrow(log_dat); p <- ncol(log_dat)
+  (n/p)^(1/4) * svd_res$u[,1:svd_tuning_list[[i]]$k] %*% diag(sqrt(svd_res$d[1:svd_tuning_list[[i]]$k]))
 })
 
 print(paste0(Sys.time(), ": Finished naive SVD"))

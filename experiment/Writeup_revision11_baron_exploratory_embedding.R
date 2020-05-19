@@ -46,7 +46,7 @@ set.seed(10)
 zz <- compute_purity(mat, cluster_labels, neigh_size)
 zz$avg_val
 
-mat <- svd_embedding_list[[i]]$u[,1:3]*sqrt(svd_embedding_list[[i]]$d[1:3])
+mat <- svd_embedding_list[[i]]$u[,1:3] %*% diag(sqrt(svd_embedding_list[[i]]$d[1:3]))
 neigh_size <- determine_minimium_neighborhood_size(mat)
 neigh_size
 set.seed(10)

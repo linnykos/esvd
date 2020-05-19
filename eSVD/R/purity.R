@@ -18,7 +18,8 @@ compute_purity <- function(mat, cluster_labels, neighborhood_size, num_samples =
     })
   })
 
-  list(avg_val = mean(sapply(value_list, mean)), value_list = value_list)
+  # list(avg_val = mean(sapply(value_list, mean)), value_list = value_list)
+  list(avg_val = mean(unlist(value_list)), value_list = value_list)
 }
 
 determine_minimium_neighborhood_size <- function(mat, max_iter = 20, verbose = T){
