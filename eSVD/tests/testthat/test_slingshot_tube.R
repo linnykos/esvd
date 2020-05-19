@@ -86,6 +86,28 @@ test_that("bootstrap_curves works", {
   # }
 })
 
+test_that("bootstrap_curves works with upscale_factor", {
+  set.seed(10)
+  cell_pop <- matrix(c(4,10, 25,100,
+                       60,80, 25,100,
+                       40,10, 60,80,
+                       60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
+  h <- nrow(cell_pop)
+  n_vec <- c(25, 35, 50, 70)
+  dat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_vec[x])
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_vec[x], sd = 0.1),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_vec[x], sd = 0.1))
+  }))
+  cluster_labels <- unlist(lapply(1:h, function(x){rep(x, n_vec[x])}))
+
+  lineages <- list(c(1,2,3), c(1,2,4))
+  res <- bootstrap_curves(dat, cluster_labels, lineages = lineages, trials = 10, upscale_factor = 0.5)
+
+  expect_true(length(res) == 10)
+  expect_true(all(sapply(res, length) == 2))
+})
+
 ############################
 
 ## .compute_l2_curve is correct

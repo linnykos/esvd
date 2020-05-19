@@ -22,7 +22,7 @@ bootstrap_curves <- function(dat, cluster_labels, lineages, cluster_group_list =
 
   # first do the resampling
   res <- .resample_all(dat, cluster_labels, cluster_group_list, lineages, upscale_factor)
-  dat2 <- res$dat; cluster_labels <- res$cluster_labels; idx_all <- res$idx_all
+  dat <- res$dat; cluster_labels <- res$cluster_labels; idx_all <- res$idx_all
 
   # then estimate all the different curves
   func <- function(x){

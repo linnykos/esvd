@@ -30,7 +30,8 @@ esvd_bootstrap_list <- eSVD::bootstrap_curves(esvd_embedding$u_mat, cluster_labe
 print(paste0(Sys.time(), ": Finished eSVD bootstrap"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
-esvd_sd_res <- eSVD::compute_curve_sd(esvd_curves_short$curves, esvd_bootstrap_list, cores = ncores, verbose = T)
+esvd_sd_res <- eSVD::compute_curve_sd(esvd_curves_short$curves, esvd_bootstrap_list,
+                                      ncores = ncores, verbose = T)
 
 print(paste0(Sys.time(), ": Finished eSVD standard val"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
@@ -56,7 +57,8 @@ svd_bootstrap_list <- eSVD::bootstrap_curves(svd_embedding, cluster_labels, line
 print(paste0(Sys.time(), ": Finished SVD bootstrap"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
-svd_sd_val <- eSVD::compute_curve_sd(svd_curves_short$curves, svd_bootstrap_list, cores = ncores, verbose = T)
+svd_sd_val <- eSVD::compute_curve_sd(svd_curves_short$curves, svd_bootstrap_list,
+                                     ncores = ncores, verbose = T)
 
 print(paste0(Sys.time(), ": Finished SVD standard val"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
