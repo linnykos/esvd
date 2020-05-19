@@ -7,10 +7,11 @@
 bootstrap_curves(
   dat,
   cluster_labels,
-  starting_cluster,
-  cluster_group_list,
+  lineages,
+  cluster_group_list = NA,
+  upscale_factor = NA,
   trials = 100,
-  cores = NA,
+  ncores = NA,
   verbose = F,
   ...
 )
@@ -22,14 +23,16 @@ bootstrap_curves(
 the cluster labels are consecutive positive integers from 1 to
 \code{max(cluster_labels)}}
 
-\item{starting_cluster}{the "origin" cluster that all the lineages will start
-from}
+\item{lineages}{list of lineages (for example, estimated by the \code{slingshot} function)}
 
 \item{cluster_group_list}{list denoting the hierarchy and order of the clusters}
 
+\item{upscale_factor}{positive numeric (between 0 and 1) that controls how much to upweight the clusters,
+with 1 being (almost) equal cluster sizes and 0 being no upweighting.}
+
 \item{trials}{numeric}
 
-\item{cores}{numeric}
+\item{ncores}{numeric}
 
 \item{verbose}{boolean}
 

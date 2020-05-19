@@ -7,16 +7,17 @@
 compute_curve_sd(
   target_curve_list,
   bootstrap_curve_list,
-  cores = NA,
+  ncores = NA,
   verbose = F
 )
 }
 \arguments{
-\item{target_curve_list}{a list}
+\item{target_curve_list}{a list (for example, the \code{curves} output from the \code{slingshot} function)}
 
-\item{bootstrap_curve_list}{a list}
+\item{bootstrap_curve_list}{a list
+(for example, the output from the \code{bootstrap_curves} function)}
 
-\item{cores}{numeric}
+\item{ncores}{numeric}
 
 \item{verbose}{boolean}
 }
@@ -24,5 +25,5 @@ compute_curve_sd(
 a numeric
 }
 \description{
-Compute the bootstrap uncertainty
+Try to compute the "radius" of uncertainty by conditioning on the same curves
 }

@@ -23,7 +23,7 @@ esvd_embedding <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat 
                                                  family = fitting_distr,
                                                  max_iter = 100, max_val = max_val,
                                                  scalar = scalar,
-                                                 return_path = F, cores = ncores,
+                                                 return_path = F, ncores = ncores,
                                                  verbose = T)
 
 rm(list = c("nat_mat_list_list", "idx"))

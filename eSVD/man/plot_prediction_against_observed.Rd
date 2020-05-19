@@ -16,6 +16,7 @@ plot_prediction_against_observed(
   tol = 0.95,
   xlim = NA,
   ylim = NA,
+  transparency = 0.2,
   ...
 )
 }
@@ -42,6 +43,8 @@ if the principal angle falls within the prediction region}
 \item{xlim}{plotting parameter}
 
 \item{ylim}{plotting parameter}
+
+\item{transparency}{plotting parameter}
 
 \item{...}{additional plotting parameters}
 }

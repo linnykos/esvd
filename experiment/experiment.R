@@ -1,33 +1,56 @@
 rm(list=ls())
-load("../results/step5_trajectory_original.RData")
-
-upscale_factor <- 1
-reduction_percentage <- 0.2
-
-p <- 3
 set.seed(10)
-esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                               cluster_group_list = cluster_group_list,
-                               verbose = T, upscale_factor = upscale_factor,
-                               reduction_percentage = reduction_percentage,
-                               squared = T)
+cell_pop <- matrix(c(4,10, 25,100,
+                     60,80, 25,100,
+                     40,10, 60,80,
+                     60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
+h <- nrow(cell_pop)
+n_each <- 25
+dat <- do.call(rbind, lapply(1:h, function(x){
+  pos <- stats::runif(n_each)
+  cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 0.1),
+        pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
+}))
+cluster_labels <- rep(1:4, each = n_each)
 
-# checking of all points are accounted for
-idx <- which(cluster_labels %in% esvd_curves$lineages[[1]])
-## first extract which indices are in the first lineage
-idx2 <- which(esvd_curves$curves[[1]]$W != 0)
-all(idx %in% esvd_curves$idx[idx2])
+set.seed(10)
+slingshot_res <- slingshot(dat, cluster_labels, starting_cluster = 1)
+lineages <- slingshot_res$lineages
+set.seed(10)
+trials <- 10
+bootstrap_res <- bootstrap_curves(dat, cluster_labels, lineages = lineages, trials = trials)
 
-## same thing for second lineage
-idx <- which(cluster_labels %in% esvd_curves$lineages[[2]])
-idx2 <- which(esvd_curves$curves[[2]]$W != 0)
-all(idx %in% esvd_curves$idx[idx2])
+# res <- compute_curve_sd(slingshot_res$curves, bootstrap_res)
 
-###################################
+target_curve_list = slingshot_res$curves
+bootstrap_curve_list = bootstrap_res
+ncores = NA
+verbose = F
 
-slingshot_res <- esvd_curves
-pseudotime_df_list <- .extract_pseudotimes(slingshot_res)
-shared_df <- .compile_common_cells(pseudotime_df_list)
+########
 
-table(shared_df$consensus, cluster_labels[shared_df$cell_idx])
+stopifnot(length(target_curve_list) == length(bootstrap_curve_list[[1]]),
+          length(unique(sapply(bootstrap_curve_list, length))) == 1)
+num_curves <- length(target_curve_list)
 
+if(!is.na(ncores)) doMC::registerDoMC(cores = ncores)
+
+# discretize all the curves
+target_curve_list <- lapply(target_curve_list, function(curve){
+  .discretize_curve_by_pseudotime(s_mat = curve$s, pseudotime_vec = curve$lambda)
+})
+
+for(i in 1:length(bootstrap_curve_list)){
+  bootstrap_curve_list[[i]] <- lapply(bootstrap_curve_list[[i]], function(curve){
+    .discretize_curve_by_pseudotime(s_mat = curve$s, pseudotime_vec = curve$lambda)
+  })
+}
+
+# for each curve in the target curve, find the minimum distance
+mat_list <- lapply(1:num_curves, function(i){
+  if(verbose) print(paste0("Starting curve ", i))
+  curve_mat <- target_curve_list[[i]]$s
+  curve_mat_collection <- lapply(bootstrap_curve_list, function(curve){curve[[i]]$s})
+
+  .compute_l2_curve(curve_mat, curve_mat_collection, ncores = ncores, verbose = verbose)
+})

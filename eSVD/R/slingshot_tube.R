@@ -6,6 +6,8 @@
 #' \code{max(cluster_labels)}
 #' @param cluster_group_list list denoting the hierarchy and order of the clusters
 #' @param lineages list of lineages (for example, estimated by the \code{slingshot} function)
+#' @param upscale_factor positive numeric (between 0 and 1) that controls how much to upweight the clusters,
+#' with 1 being (almost) equal cluster sizes and 0 being no upweighting.
 #' @param trials numeric
 #' @param ncores numeric
 #' @param verbose boolean
@@ -13,11 +15,9 @@
 #'
 #' @return a list
 #' @export
-bootstrap_curves <- function(dat, cluster_labels, cluster_group_list, lineages,
-                             trials = 100, ncores = NA,
+bootstrap_curves <- function(dat, cluster_labels, lineages, cluster_group_list = NA,
+                             upscale_factor = NA, trials = 100, ncores = NA,
                              verbose = F, ...){
-  stopifnot(!any(is.na(cluster_group_list)))
-
   if(!is.na(ncores)) doMC::registerDoMC(cores = ncores)
 
   # first do the resampling
@@ -35,7 +35,8 @@ bootstrap_curves <- function(dat, cluster_labels, cluster_group_list, lineages,
       dat2[idx,] <- dat[idx2,]
     }
 
-    .get_curves(dat2, cluster_labels, lineages = lineages, verbose = verbose, ...)
+    res <- .get_curves(dat2, cluster_labels, lineages = lineages, verbose = F, ...)
+    res$pcurve_list
   }
 
   if(is.na(ncores)){
@@ -66,12 +67,12 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, ncores = N
   if(!is.na(ncores)) doMC::registerDoMC(cores = ncores)
 
   # discretize all the curves
-  target_curve_list <- sapply(target_curve_list, function(curve){
+  target_curve_list <- lapply(target_curve_list, function(curve){
     .discretize_curve_by_pseudotime(s_mat = curve$s, pseudotime_vec = curve$lambda)
   })
 
   for(i in 1:length(bootstrap_curve_list)){
-    bootstrap_curve_list[[i]] <- sapply(bootstrap_curve_list[[i]], function(curve){
+    bootstrap_curve_list[[i]] <- lapply(bootstrap_curve_list[[i]], function(curve){
       .discretize_curve_by_pseudotime(s_mat = curve$s, pseudotime_vec = curve$lambda)
     })
   }
@@ -80,11 +81,10 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, ncores = N
   mat_list <- lapply(1:num_curves, function(i){
     if(verbose) print(paste0("Starting curve ", i))
     curve_mat <- target_curve_list[[i]]$s
-    curve_mat_collection <- lapply(bootstrap_curve_list, function(curve){curve$s})
+    curve_mat_collection <- lapply(bootstrap_curve_list, function(curve){curve[[i]]$s})
 
     .compute_l2_curve(curve_mat, curve_mat_collection, ncores = ncores, verbose = verbose)
   })
-
 
   # output the matrix of minimum distances (position on curve x distance to bootstrap matrix)
 
@@ -93,18 +93,26 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, ncores = N
 
 #####################
 
-.discretize_curve_by_pseudotime <- function(s_mat, pseudotime_vec, resolution = min(length(pseudotime_vec), 1000)){
-  stopifnot(nrow(s_mat) == length(pseudotime_vec), nrow(s_mat) > resolution, resolution > 1)
+.discretize_curve_by_pseudotime <- function(s_mat, pseudotime_vec,
+                                            resolution = min(length(pseudotime_vec), 1000)){
+  stopifnot(nrow(s_mat) == length(pseudotime_vec), nrow(s_mat) >= resolution, resolution > 1)
   n <- length(pseudotime_vec)
   ord_vec <- order(pseudotime_vec, decreasing = F)
   s_mat <- s_mat[ord_vec,]
   pseudotime_vec <- pseudotime_vec[ord_vec]
 
-  tmp_mat <- data.frame(pseudotime = pseudotime_vec, idx = 1:n)
-  tmp_mat <- tmp_mat[-duplicated(tmp$pseudotime),]
-  idx <- tmp_mat$idx[round(seq(1, nrow(tmp_mat), length.out = resolution))]
+  if(nrow(s_mat) == resolution){
+    list(s = s_mat, lambda = pseudotime_vec)
+  }
 
-  list(s = s_mat[idx,], lambda = tmp_mat$pseudotime)
+  tmp_mat <- data.frame(pseudotime = pseudotime_vec, idx = 1:n)
+  if(any(duplicated(tmp_mat$pseudotime))){
+    tmp_mat <- tmp_mat[-which(duplicated(tmp_mat$pseudotime)),]
+  }
+  idx <- round(seq(1, nrow(tmp_mat), length.out = resolution))
+  org_idx <- tmp_mat$idx[idx]
+
+  list(s = s_mat[org_idx,], lambda = tmp_mat$pseudotime[idx])
 }
 
 # for every point in our_mat, find its l2 distance to its closest neighbor in all curves in mat_collection

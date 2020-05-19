@@ -10,15 +10,16 @@ segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize =
 
   func <- function(j){
     if(verbose & j %% floor(ncol(dat1)/10) == 0) cat('*')
-    .find_highly_expressed_region(common_vec = dat_ordered1[1:common_n,j],
-                                  specific_vec1 = dat_ordered1[(common_n+1):(common_n+n1),j],
-                                  specific_vec2 = dat_ordered2[(common_n+1):(common_n+n2),j],
+    .find_highly_expressed_region(common_vec = dat1[1:common_n,j],
+                                  specific_vec1 = dat1[(common_n+1):(common_n+n1),j],
+                                  specific_vec2 = dat2[(common_n+1):(common_n+n2),j],
                                   standardize = standardize)
   }
 
   if(is.na(ncores)){
     segmentation_res <- lapply(1:p, func)
   } else {
+    j <- 0 #debugging purposes
     segmentation_res <- foreach::"%dopar%"(foreach::foreach(j = 1:p), func(j))
   }
 

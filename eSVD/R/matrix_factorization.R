@@ -9,7 +9,7 @@
 #' @param max_iter maximum number of iterations for the algorithm
 #' @param verbose boolean
 #' @param return_path boolean
-#' @param cores positive integer
+#' @param ncores positive integer
 #' @param ... additional parameters for the distribution
 #'
 #' @return list
@@ -18,8 +18,8 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
                                family,
                                tol = 1e-3, max_iter = 100,
                                verbose = F, return_path = F,
-                               cores = NA, ...){
-  if(!is.na(cores)) doMC::registerDoMC(cores = cores)
+                               ncores = NA, ...){
+  if(!is.na(ncores)) doMC::registerDoMC(cores = ncores)
   stopifnot(length(which(dat > 0)) > 0)
   stopifnot(length(which(dat < 0)) == 0)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
@@ -55,7 +55,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     tmp <- .reparameterize(u_mat, v_mat, equal_covariance = F)
     u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
-    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, parallelized = !is.na(cores), ...)
+    u_mat <- .optimize_mat(dat, u_mat, v_mat, left = T, max_val = max_val, parallelized = !is.na(ncores), ...)
 
     nat_mat <- u_mat%*%t(v_mat)
     if(!is.na(direction)){ if(direction == "<=") { stopifnot(all(nat_mat <= 0))
@@ -66,7 +66,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     tmp <- .reparameterize(u_mat, v_mat, equal_covariance = F)
     u_mat <- tmp$u_mat; v_mat <- tmp$v_mat
 
-    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, parallelized = !is.na(cores), ...)
+    v_mat <- .optimize_mat(dat, v_mat, u_mat, left = F, max_val = max_val, parallelized = !is.na(ncores), ...)
 
     next_obj <- .evaluate_objective(dat, u_mat, v_mat, ...)
 

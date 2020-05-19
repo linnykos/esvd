@@ -16,6 +16,17 @@ test_that(".intersect_lineages_cluster_group_list works", {
   expect_true(any(sapply(res, function(x){all(sort(x) == c(7:8))})))
 })
 
+test_that(".intersect_lineages_cluster_group_list with a trivial cluster_group_list", {
+  lineages <- list(c(1:5), c(1:3,6:8))
+  cluster_group_list <- list(1:8)
+
+  res <- .intersect_lineages_cluster_group_list(lineages, cluster_group_list)
+  expect_true(length(res) == 3)
+  expect_true(any(sapply(res, function(x){all(sort(x) == c(1:3))})))
+  expect_true(any(sapply(res, function(x){all(sort(x) == c(4:5))})))
+  expect_true(any(sapply(res, function(x){all(sort(x) == c(6:8))})))
+})
+
 ###########################################
 
 ## .flatten_list is correct
@@ -45,6 +56,19 @@ test_that(".resample_all works", {
   lineages <- list(1:6, c(1:4,7:10))
 
   res <- .resample_all(dat, cluster_labels, cluster_group_list, lineages, upscale_factor = 1)
+
+  expect_true(length(res) == 3)
+  expect_true(all(sort(names(res)) == c("cluster_labels", "dat", "idx_all")))
+})
+
+test_that(".resample_all works with cluster_group_list set to NA", {
+  set.seed(10)
+  dat <- matrix(1:500, nrow = 100, ncol = 5)
+  cluster_labels <- rep(1:10, each = 10)
+  cluster_group_list <- list(1, 2:4, 5:8, 9:10)
+  lineages <- list(1:6, c(1:4,7:10))
+
+  res <- .resample_all(dat, cluster_labels, cluster_group_list = NA, lineages, upscale_factor = 1)
 
   expect_true(length(res) == 3)
   expect_true(all(sort(names(res)) == c("cluster_labels", "dat", "idx_all")))

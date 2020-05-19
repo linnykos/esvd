@@ -24,7 +24,7 @@ for(i in 1:length(preprocessing_list)){
                                            family = fitting_distr, max_iter = selected_paramMat[i, "max_iter"],
                                            scalar = selected_paramMat[i, "scalar"],
                                            max_val = selected_paramMat[i, "max_val"],
-                                           return_path = F, cores = ncores, verbose = T)
+                                           return_path = F, ncores = ncores, verbose = T)
 
   save.image(paste0("../results/step3_baron_factorization", suffix, ".RData"))
 }

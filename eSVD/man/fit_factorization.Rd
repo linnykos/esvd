@@ -14,7 +14,7 @@ fit_factorization(
   max_iter = 100,
   verbose = F,
   return_path = F,
-  cores = NA,
+  ncores = NA,
   ...
 )
 }
@@ -37,7 +37,7 @@ fit_factorization(
 
 \item{return_path}{boolean}
 
-\item{cores}{positive integer}
+\item{ncores}{positive integer}
 
 \item{...}{additional parameters for the distribution}
 }

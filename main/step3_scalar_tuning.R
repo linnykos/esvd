@@ -26,7 +26,7 @@ for(i in 1:nrow(paramMat_esvd)){
                                    family = fitting_distr,
                                    max_iter = 50, max_val = max_val,
                                    scalar = paramMat_esvd[i,"scalar"],
-                                   return_path = F, cores = ncores,
+                                   return_path = F, ncores = ncores,
                                    verbose = T)
     save.image(paste0("../results/step3_scalar_tuning", suffix, "_tmp.RData"))
   }

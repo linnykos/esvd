@@ -69,6 +69,7 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
                         verbose = F){
   ### setup
   num_lineage <- length(lineages)
+  names(lineages) <- paste0("Lineage", 1:num_lineage)
   if(any(is.na(cluster_labels))) {
     idx <- which(is.na(cluster_labels))
     dat <- dat[-idx,]
@@ -229,6 +230,8 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
 }
 
 .resample_all <- function(dat, cluster_labels, cluster_group_list, lineages, upscale_factor){
+  if(all(is.na(cluster_group_list))) cluster_group_list <- list(sort(unique(cluster_labels)))
+
   if(!any(is.na(upscale_factor))){
     # intersect lineages with cluster_group_list to determine group sizes
     cluster_intersection <- .intersect_lineages_cluster_group_list(lineages, cluster_group_list)
