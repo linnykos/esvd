@@ -5,10 +5,9 @@ session_info2 <- sessionInfo()
 source_code_info2 <- ""
 date_of_run2 <- Sys.time()
 
-p <- 3
 set.seed(10)
-esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
-                               cluster_group_list = cluster_group_list, shrink = 2,
+esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+                               cluster_group_list = cluster_group_list, shrink = 3,
                                verbose = T, upscale_factor = 1, stretch = 9999, max_iter = 3,
                                squared = T)
 
@@ -16,12 +15,12 @@ esvd_curves <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, start
 
 pseudotime_df <- eSVD:::construct_pseudotime_trajectory_matrix(esvd_curves, cluster_labels)
 
-pseudotime_df2 <- pseudotime_df[-intersect(which(is.na(pseudotime_df$consensus)), which(pseudotime_df$pseudotime <= 3)),]
+pseudotime_df2 <- pseudotime_df[-intersect(which(is.na(pseudotime_df$consensus)), which(pseudotime_df$pseudotime <= 6)),]
 pseudotime_df2 <- pseudotime_df2[-which(!pseudotime_df2$consensus),]
 pseudotime_df2 <- pseudotime_df2[-intersect(which(pseudotime_df2$dist_to_curve >= 0.1),
                                             which(pseudotime_df2$status == "1")),]
-traj1_cluster <- c(4,7,6,5)
-traj2_cluster <- c(9)
+traj1_cluster <- c(6,5)
+traj2_cluster <- c(7,8,9)
 
 tmp <- pseudotime_df2[which(!pseudotime_df2$cluster_labels %in% traj2_cluster),]
 order_vec <- order(tmp$pseudotime, decreasing = F)
