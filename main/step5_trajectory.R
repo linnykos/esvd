@@ -49,9 +49,8 @@ save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 set.seed(10)
 svd_bootstrap_list <- eSVD::bootstrap_curves(svd_embedding, cluster_labels, lineages = svd_curves_short$lineages,
-                                             trials = 100,
-                                             upscale_factor = 1, shrink = 3, stretch = 2, max_iter = 3,
-                                             cores = ncores, verbose = T, squared = F)
+                                             trials = 100, upscale_factor = 1, shrink = 3, stretch = 2, max_iter = 3,
+                                             ncores = ncores, verbose = T)
 
 
 print(paste0(Sys.time(), ": Finished SVD bootstrap"))
