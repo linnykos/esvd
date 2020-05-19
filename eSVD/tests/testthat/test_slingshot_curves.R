@@ -137,6 +137,8 @@ test_that(".compute_upscale_factor with upscale factor of 1 yields equal group s
   for(i in 1:length(cluster_intersection)){
     effective_size[i] <- unique(res[cluster_intersection[[i]]])[1]*length(which(cluster_labels %in% cluster_intersection[[i]]))
   }
+
+  expect_true(length(unique(effective_size)) == 1)
 })
 
 ###########################################

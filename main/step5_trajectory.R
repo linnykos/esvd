@@ -7,15 +7,14 @@ cluster_group_list <- lapply(order_vec, function(x){
   grep(paste0("^", x), levels(cell_type_vec))
 })
 
-p <- 3
 set.seed(10)
-esvd_curves_long <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+esvd_curves_long <- eSVD::slingshot(esvd_embedding$u_mat, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                cluster_group_list = cluster_group_list, shrink = 2,
                                verbose = T, upscale_factor = 1, stretch = 9999, max_iter = 3,
                                squared = T)
 
 set.seed(10)
-esvd_curves_short <- eSVD::slingshot(esvd_embedding$u_mat[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+esvd_curves_short <- eSVD::slingshot(esvd_embedding$u_mat, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                                     cluster_group_list = cluster_group_list, shrink = 2,
                                     verbose = T, upscale_factor = 1, stretch = 2, max_iter = 3,
                                     squared = T)
@@ -40,10 +39,10 @@ save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 #########
 
 set.seed(10)
-svd_curves_short <- slingshot(svd_embedding[,1:p], cluster_labels, starting_cluster = cluster_group_list[[1]][1],
+svd_curves_short <- slingshot(svd_embedding, cluster_labels, starting_cluster = cluster_group_list[[1]][1],
                         cluster_group_list = cluster_group_list,
                         verbose = T, upscale_factor = 1, shrink = 2, stretch = 2, max_iter = 3,
-                        squared = F)
+                        squared = T)
 
 print(paste0(Sys.time(), ": Finished SVD trajectory"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))

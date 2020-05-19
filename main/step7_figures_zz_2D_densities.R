@@ -1,6 +1,6 @@
 var <- ls()
 rm(list = var[var != "suffix"])
-load(paste0("../results/step6_figures", suffix, ".RData"))
+load(paste0("../results/step7_figures", suffix, ".RData"))
 
 dim1 <- 2; dim2 <- 3
 
@@ -43,17 +43,17 @@ graphics::plot(NA,  asp = T, xlab = paste0("Latent dimension ", dim1), ylab = pa
      xlim = range(x), ylim = range(y))
 
 for(ll in plotting_order_esvd){
-  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
   idx <- which(cluster_labels %in% target_indices)
   graphics::points(x = x[idx], y = y[idx], pch = 16,
-         col = col_vec2_esvd[target_indices[1]])
+         col = col_vec2_esvd[cluster_labels[idx]])
 }
 
-quantile_vec <- rep(0.99, length(plotting_order_esvd))
+quantile_vec <- rep(0.99, 6)
 quantile_vec[3] <- 0.975
 
 for(ll in c(3,6,1)){
-  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
   idx <- which(cluster_labels %in% target_indices)
   kde_est <- MASS::kde2d(x[idx], y[idx], n = 500, lims = c(range(x), range(y)))
   col_val <- col_info_esvd[target_indices[1], "col_code"]

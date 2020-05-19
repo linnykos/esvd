@@ -31,14 +31,15 @@ load("../results/step5_trajectory_original.RData")
   lineages
 }
 
-.covariance_distance2 <- function(mean_vec1, cov_mat1, n1, mean_vec2, cov_mat2, n2, tol = 0.1){
+.covariance_distance2 <- function(mean_vec1, cov_mat1, n1, mean_vec2, cov_mat2, n2, tol = 1e-5){
   mat <- cov_mat1/n1 + cov_mat2/n2
 
-  eigen_res <- eigen(mat)
-  eigen_res$values[eigen_res$values < tol] <- tol
-  mat <- eigen_res$vectors %*% diag(1/eigen_res$values) %*% t(eigen_res$vectors)
+  # eigen_res <- eigen(mat)
+  # eigen_res$values[eigen_res$values < tol] <- tol
+  # mat <- eigen_res$vectors %*% diag(1/eigen_res$values) %*% t(eigen_res$vectors)
+  # mat <- eigen_res$vectors %*% solve(mat) %*% t(eigen_res$vectors)
 
-  as.numeric(t(mean_vec1 - mean_vec2) %*% mat %*% (mean_vec1 - mean_vec2))
+  as.numeric(t(mean_vec1 - mean_vec2) %*% solve(mat) %*% (mean_vec1 - mean_vec2))
 }
 
 .compute_cluster_distances2 <- function(dat, cluster_labels){
@@ -66,7 +67,7 @@ load("../results/step5_trajectory_original.RData")
   dist_mat
 }
 
-dat <- esvd_embedding$u_mat[,1:3]
+dat <- esvd_embedding$u_mat[,1:5]
 starting_cluster = cluster_group_list[[1]][1]
 .get_lineages2(dat, cluster_labels, starting_cluster, cluster_group_list, squared = T)
 

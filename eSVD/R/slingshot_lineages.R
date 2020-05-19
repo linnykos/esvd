@@ -46,14 +46,18 @@
 #############
 
 ## http://www.real-statistics.com/multivariate-statistics/hotellings-t-square-statistic/hotellings-t-square-unequal-covariance-matrices/
-.covariance_distance <- function(mean_vec1, cov_mat1, n1, mean_vec2, cov_mat2, n2, tol = 0.1){
+.covariance_distance <- function(mean_vec1, cov_mat1, n1, mean_vec2, cov_mat2, n2, tol = 1e-5){
   mat <- cov_mat1/n1 + cov_mat2/n2
 
-  eigen_res <- eigen(mat)
-  eigen_res$values[eigen_res$values < tol] <- tol
-  mat <- eigen_res$vectors %*% diag(1/eigen_res$values) %*% t(eigen_res$vectors)
+  if(Matrix::rankMatrix(mat) < ncol(mat)){
+    eigen_res <- eigen(mat)
+    eigen_res$values[eigen_res$values < tol] <- tol
+    inv_mat <- eigen_res$vectors %*% diag(1/eigen_res$values) %*% t(eigen_res$vectors)
+  } else {
+    inv_mat <- solve(mat)
+  }
 
-  as.numeric(t(mean_vec1 - mean_vec2) %*% mat %*% (mean_vec1 - mean_vec2))
+  as.numeric(t(mean_vec1 - mean_vec2) %*% inv_mat %*% (mean_vec1 - mean_vec2))
 }
 
 .compute_cluster_distances <- function(dat, cluster_labels){

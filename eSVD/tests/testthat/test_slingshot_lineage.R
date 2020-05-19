@@ -136,10 +136,12 @@ test_that(".construct_lineages finds the right lineage for a specific configurat
   n_each <- 50
   dat <- do.call(rbind, lapply(1:h, function(x){
     pos <- stats::runif(n_each)
-    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 0.1),
-          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.1))
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_each, sd = 0.5),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_each, sd = 0.5))
   }))
   cluster_labels <- rep(1:4, each = 50)
+
+  ## plot(dat[,1], dat[,2], asp = T, pch = 16, col = cluster_labels)
 
   ### construct the distance matrix
   dist_mat <- .compute_cluster_distances(dat, cluster_labels)
@@ -198,3 +200,4 @@ test_that(".get_lineages work for an artifical example", {
 
   expect_true(is.list(res))
 })
+

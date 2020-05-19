@@ -1,3 +1,7 @@
+var <- ls()
+rm(list = var[var != "suffix"])
+load(paste0("../results/step7_figures", suffix, ".RData"))
+
 nat_mat_list <- lapply(1:length(svd_missing_list), function(i){
   svd_missing_list[[i]]$u %*% diag(svd_missing_list[[i]]$d) %*% t(svd_missing_list[[i]]$v)
 })

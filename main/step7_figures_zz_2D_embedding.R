@@ -1,6 +1,6 @@
 var <- ls()
 rm(list = var[var != "suffix"])
-load(paste0("../results/step6_figures", suffix, ".RData"))
+load(paste0("../results/step7_figures", suffix, ".RData"))
 
 # make different variants of the 2D embedding plots
 # 2D plots with curves (color)
@@ -23,10 +23,10 @@ for(k in 1:ncol(combn_mat)){
        main = "eSVD embedding and trajectories\n(Curved Gaussian)")
 
   for(ll in plotting_order_esvd) {
-    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
     idx <- which(cluster_labels %in% target_indices)
     graphics::points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
-           col = col_vec2_esvd[target_indices[1]])
+           col = col_vec2_esvd[cluster_labels[idx]])
   }
 
   curves <- esvd_curves_short$curves
@@ -57,10 +57,10 @@ for(k in 1:ncol(combn_mat)){
        main = ifelse(k==2, "eSVD embedding and trajectories\n(Curved Gaussian)", ""))
 
   for(ll in plotting_order_esvd) {
-    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
     idx <- which(cluster_labels %in% target_indices)
     graphics::points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
-           col = col_vec2_esvd[target_indices[1]])
+           col = col_vec2_esvd[cluster_labels[idx]])
   }
 
   curves <- esvd_curves_short$curves
@@ -90,10 +90,10 @@ for(k in 1:ncol(combn_mat)){
                  main = ifelse(k==2, "eSVD embedding and trajectories\n(Curved Gaussian)", ""))
 
   for(ll in plotting_order_esvd) {
-    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
     idx <- which(cluster_labels %in% target_indices)
     graphics::points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
-                     col = col_vec2_esvd[target_indices[1]])
+                     col = col_vec2_esvd[cluster_labels[idx]])
   }
 
   for(ll in 1:nrow(cluster_center_esvd)){
@@ -114,10 +114,10 @@ for(k in 1:ncol(combn_mat)){
        main = "eSVD embedding and trajectories\n(Curved Gaussian)")
 
   for(ll in plotting_order_esvd) {
-    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
     idx <- which(cluster_labels %in% target_indices)
     graphics::points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
-           col = col_vec2_esvd[target_indices[1]])
+           col = col_vec2_esvd[cluster_labels[idx]])
   }
 
   for(ll in 1:nrow(cluster_center_esvd)){
@@ -141,10 +141,10 @@ for(k in 1:ncol(combn_mat)){
        main = "SVD embedding and trajectories\n(Constant-variance Gaussian)")
 
   for(ll in plotting_order_svd) {
-    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
+    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx %in% ll)]
     idx <- which(cluster_labels %in% target_indices)
     graphics::points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
-           col = col_vec2_svd[target_indices[1]])
+           col = col_vec2_svd[cluster_labels[idx]])
   }
 
   curves <- svd_curves_short$curves
@@ -176,10 +176,10 @@ for(k in 1:ncol(combn_mat)){
        main = ifelse(k == 2, "SVD embedding and trajectories\n(Constant-variance Gaussian)", ""))
 
   for(ll in plotting_order_svd) {
-    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
+    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx %in% ll)]
     idx <- which(cluster_labels %in% target_indices)
     graphics::points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
-           col = col_vec2_svd[target_indices[1]])
+           col = col_vec2_svd[cluster_labels[idx]])
   }
 
   curves <- svd_curves_short$curves
@@ -211,10 +211,10 @@ for(k in 1:ncol(combn_mat)){
                  main = ifelse(k == 2, "SVD embedding and trajectories\n(Constant-variance Gaussian)", ""))
 
   for(ll in plotting_order_svd) {
-    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
+    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx %in% ll)]
     idx <- which(cluster_labels %in% target_indices)
     graphics::points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
-                     col = col_vec2_svd[target_indices[1]])
+                     col = col_vec2_svd[cluster_labels[idx]])
   }
 
   for(ll in 1:nrow(cluster_center_svd)){
@@ -235,10 +235,10 @@ for(k in 1:ncol(combn_mat)){
        main = "SVD embedding and trajectories\n(Constant-variance Gaussian)")
 
   for(ll in plotting_order_svd) {
-    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx == ll)]
+    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx %in% ll)]
     idx <- which(cluster_labels %in% target_indices)
     graphics::points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
-           col = col_vec2_svd[target_indices[1]])
+           col = col_vec2_svd[cluster_labels[idx]])
   }
 
   for(ll in 1:nrow(cluster_center_svd)){
@@ -248,3 +248,4 @@ for(k in 1:ncol(combn_mat)){
 
   grDevices::graphics.off()
 }
+

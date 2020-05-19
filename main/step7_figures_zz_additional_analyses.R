@@ -1,6 +1,6 @@
 var <- ls()
 rm(list = var[var != "suffix"])
-load(paste0("../results/step6_figures", suffix, ".RData"))
+load(paste0("../results/step7_figures", suffix, ".RData"))
 cluster_center_zinbwave <- eSVD:::.compute_cluster_center(zinbwave_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
 
 ## zinbwave plots
@@ -17,10 +17,10 @@ for(k in 1:ncol(combn_mat)){
                  main = ifelse(k == 2, "ZINB-WaVE embedding", ""))
 
   for(ll in plotting_order_esvd) {
-    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
     idx <- which(cluster_labels %in% target_indices)
     graphics::points(x = zinbwave_embedding[idx,i], y = zinbwave_embedding[idx,j], pch = 16,
-                     col = col_vec2_esvd[target_indices[1]])
+                     col = col_vec2_esvd[cluster_labels[idx]])
   }
 
   for(ll in 1:nrow(cluster_center_zinbwave)){
@@ -42,10 +42,10 @@ graphics::par(mfrow = c(1,2))
 graphics::plot(NA, asp = T, pch = 16, xlim = range(umap_all$layout[,1]), ylim = range(umap_all$layout[,2]),
                xlab = "UMAP dimension 1", ylab = "UMAP dimension 2", main = "UMAP embedding and centers")
 for(ll in plotting_order_esvd){
-  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
   idx <- which(cluster_labels %in% target_indices)
   graphics::points(x = umap_all$layout[idx,1], y = umap_all$layout[idx,2], pch = 16,
-                   col = col_vec2_esvd[target_indices[1]])
+                   col = col_vec2_esvd[cluster_labels[idx]])
 }
 
 for(ll in 1:nrow(cluster_center_umap)){
@@ -56,17 +56,17 @@ for(ll in 1:nrow(cluster_center_umap)){
 graphics::plot(NA, asp = T, pch = 16, xlim = range(umap_all$layout[,1]), ylim = range(umap_all$layout[,2]),
                xlab = "UMAP dimension 1", ylab = "UMAP dimension 2", main = "UMAP embedding and densities")
 for(ll in plotting_order_esvd){
-  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
   idx <- which(cluster_labels %in% target_indices)
   graphics::points(x = umap_all$layout[idx,1], y = umap_all$layout[idx,2], pch = 16,
-                   col = col_vec2_esvd[target_indices[1]])
+                   col = col_vec2_esvd[cluster_labels[idx]])
 }
 
-quantile_vec <- rep(0.95, length(plotting_order_esvd))
+quantile_vec <- rep(0.95, 6)
 x <- umap_all$layout[,1]; y <- umap_all$layout[,2]
 
-for(ll in plotting_order_esvd){
-  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx == ll)]
+for(ll in 1:6){
+  target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
   idx <- which(cluster_labels %in% target_indices)
   kde_est <- MASS::kde2d(x[idx], y[idx], n = 500, lims = c(range(x), range(y)))
   col_val <- col_info_esvd[target_indices[1], "col_code"]

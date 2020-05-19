@@ -1,4 +1,4 @@
-load(paste0("../results/step5_trajectory", suffix, ".RData"))
+load(paste0("../results/step6_additional_analyses", suffix, ".RData"))
 
 color_func <- function(alpha = 0.2){
   c(rgb(240/255, 228/255, 66/255, alpha), #yellow
@@ -34,7 +34,7 @@ cluster_center_svd <- eSVD:::.compute_cluster_center(svd_embedding[,1:3], .const
 
 # info for the upcoming esvd plots
 
-num_order_vec_esvd <- c(5, rep(3,2), c(6,1,1,1,4,4), rep(2,2),  rep(5,2))
+num_order_vec_esvd <- c(5, rep(3,2), c(6,1,1,4,4,4), rep(2,2),  rep(5,2))
 col_vec_esvd <- color_func(1)[num_order_vec_esvd]
 col_vec2_esvd <- color_func(0.5)[num_order_vec_esvd]
 col_name_esvd <- color_name_vec[num_order_vec_esvd]
@@ -49,7 +49,7 @@ col_info_esvd[,c(5,6)] <- col_info_esvd[,c(6,5)]
 colnames(col_info_esvd)[c(5,6)] <- colnames(col_info_esvd)[c(6,5)]
 col_info_esvd
 col_vec_short <- color_func(0.9)[c(1,4)]
-plotting_order_esvd <- c(3,2,5,4,6,1)
+plotting_order_esvd <- list(3,2,5,4,c(6,1))
 
 cluster_center_esvd <- eSVD:::.compute_cluster_center(esvd_embedding$u_mat[,1:3], .construct_cluster_matrix(cluster_labels))
 
@@ -58,4 +58,4 @@ cluster_center_esvd <- eSVD:::.compute_cluster_center(esvd_embedding$u_mat[,1:3]
 combn_mat <- combn(3,2)
 
 print(paste0(Sys.time(), ": About to start producing all the figures"))
-save.image(paste0("../results/step6_figures", suffix, ".RData"))
+save.image(paste0("../results/step7_figures", suffix, ".RData"))
