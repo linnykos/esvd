@@ -24,10 +24,10 @@ for(k in 1:2){
 
 ########################
 
-zz <- intersect(which(obj_vec_list[[1]]>2), which(midpoint_vec_list[[1]] >= 2200))
+zz <- intersect(which(obj_vec_list[[1]]>2), which(midpoint_vec_list[[1]] >= 2000))
 head(zz)
 
-j <- zz[2]
+j <- zz[3]
 par(mfrow = c(1,2))
 vec1 <- dat1[,j]
 col_vec <- rep("black", length(vec1)); col_vec[segmentation_res[[j]]$cut_1$i:segmentation_res[[j]]$cut_1$j] <- "red"
@@ -43,10 +43,10 @@ points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
 
 #######
 
-zz <- intersect(which(obj_vec_list[[2]]>2), which(midpoint_vec_list[[1]] >= 2200))
+zz <- intersect(which(obj_vec_list[[2]]>2), which(midpoint_vec_list[[1]] >= 2000))
 head(zz)
 
-j <- zz[6]
+j <- zz[2]
 par(mfrow = c(1,2))
 vec1 <- dat1[,j]
 vec2 <- dat2[,j]

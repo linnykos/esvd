@@ -33,3 +33,23 @@ u_mat <- esvd_embedding_list[[i]]$u_mat
 # u_mat <- svd_embedding_list[[i]]$u[,c(1:3)] %*% diag(sqrt(svd_embedding_list[[i]]$d[c(1:3)]))
 rgl::plot3d(u_mat[,1], u_mat[,2], u_mat[,3], asp = T, col = as.numeric(preprocessing_list[[i]]$label_vec),
             main = "Dataset 4")
+
+########################
+
+i <- 1
+
+mat <- esvd_embedding_list[[i]]$u_mat
+cluster_labels = as.numeric(preprocessing_list[[i]]$label_vec)
+neigh_size <- determine_minimium_neighborhood_size(mat)
+neigh_size
+set.seed(10)
+zz <- compute_purity(mat, cluster_labels, neigh_size)
+zz$avg_val
+
+mat <- svd_embedding_list[[i]]$u[,1:3]*sqrt(svd_embedding_list[[i]]$d[1:3])
+neigh_size <- determine_minimium_neighborhood_size(mat)
+neigh_size
+set.seed(10)
+zz2 <- compute_purity(mat, cluster_labels, neigh_size)
+zz2$avg_val
+
