@@ -43,8 +43,8 @@ svd_angle_res <- sapply(1:nrow(paramMat_svd), function(j){
 
     tmp_mat <- cbind(as.numeric(log_dat), as.numeric(softImpute_pred))
 
-    training_val <- eSVD:::.compute_principal_angle(tmp_mat[training_idx_list[[ii]],])
-    testing_val <- eSVD:::.compute_principal_angle(tmp_mat[missing_idx_list[[ii]],])
+    training_val <- eSVD::compute_principal_angle(tmp_mat[training_idx_list[[ii]],])
+    testing_val <- eSVD::compute_principal_angle(tmp_mat[missing_idx_list[[ii]],])
 
     c(training = training_val, testing = testing_val)
   })

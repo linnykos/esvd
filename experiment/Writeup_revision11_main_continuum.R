@@ -38,7 +38,6 @@ max_common_idx <- min(c(idx_trajectory1, idx_trajectory2))-1
 
 ##############
 
-
 # func <- function(j){
 #   print(j)
 #   eSVD:::.find_highly_expressed_region(common_vec = dat_ordered1[1:max_common_idx,j],
