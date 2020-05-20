@@ -20,6 +20,7 @@ pseudotime_df2 <- pseudotime_df2[-which(!pseudotime_df2$consensus),]
 
 traj1_cluster <- c(6,5)
 traj2_cluster <- c(7,8,9)
+common_cluster <- setdiff(c(1:13), c(traj1_cluster, traj2_cluster))
 
 pseudotime_df2 <- pseudotime_df2[order(pseudotime_df2$pseudotime),]
 tmp1 <- pseudotime_df2[which(!pseudotime_df2$cluster_labels %in% traj2_cluster),]
@@ -28,9 +29,9 @@ pseudotime_max_common <- min(pseudotime_df2$pseudotime[pseudotime_df2$cluster_la
 cell_idx_common <- pseudotime_df2$cell_idx[which(pseudotime_df2$pseudotime <= pseudotime_max_common)]
 
 cell_idx_traj1 <- pseudotime_df2$cell_idx[intersect(which(pseudotime_df2$pseudotime >= pseudotime_max_common),
-                                                    which(pseudotime_df2$cluster_labels %in% traj1_cluster))]
+                                                    which(pseudotime_df2$cluster_labels %in% c(traj1_cluster,common_cluster)))]
 cell_idx_traj2 <- pseudotime_df2$cell_idx[intersect(which(pseudotime_df2$pseudotime >= pseudotime_max_common),
-                                                    which(pseudotime_df2$cluster_labels %in% traj2_cluster))]
+                                                    which(pseudotime_df2$cluster_labels %in% c(traj2_cluster,common_cluster)))]
 
 dat1 <- dat_impute[c(cell_idx_common,cell_idx_traj1),]
 dat2 <- dat_impute[c(cell_idx_common,cell_idx_traj2),]

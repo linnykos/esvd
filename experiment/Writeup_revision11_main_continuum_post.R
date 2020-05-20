@@ -24,7 +24,7 @@ for(k in 1:2){
 
 ########################
 
-zz <- intersect(which(obj_vec_list[[1]]>2), which(start_vec_list[[1]] >= max_common_idx))
+zz <- intersect(which(obj_vec_list[[1]]>2), which(start_vec_list[[1]] >= length(cell_idx_common)))
 head(zz)
 
 for(k in 1:10){
@@ -34,15 +34,14 @@ for(k in 1:10){
   col_vec <- rep("black", length(vec1)); col_vec[segmentation_res[[j]]$cut_1$i:segmentation_res[[j]]$cut_1$j] <- "red"
   vec2 <- dat2[,j]
   plot(vec1, col = col_vec, pch = 16, cex = 0.5, main = j)
-  lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
   points(segmentation_res[[j]]$vec1_smooth, col = "white", cex = 0.75, pch = 16)
   points(segmentation_res[[j]]$vec1_smooth, col = "red", cex = 0.5, pch = 16)
   plot(vec2, pch = 16, cex = 0.5, main = j)
-  lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
   points(segmentation_res[[j]]$vec2_smooth, col = "white", cex = 0.75, pch = 16)
   points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
 }
-
 
 #######
 
@@ -56,11 +55,11 @@ for(k in 1:10){
   vec2 <- dat2[,j]
   col_vec <- rep("black", length(vec2)); col_vec[segmentation_res[[j]]$cut_2$i:segmentation_res[[j]]$cut_2$j] <- "red"
   plot(vec1, pch = 16, cex = 0.5)
-  lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
   points(segmentation_res[[j]]$vec1_smooth, col = "white", cex = 0.75, pch = 16)
   points(segmentation_res[[j]]$vec1_smooth, col = "red", cex = 0.5, pch = 16)
   plot(vec2, col = col_vec, pch = 16, cex = 0.5)
-  lines(rep(max_common_idx, 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
   points(segmentation_res[[j]]$vec2_smooth, col = "white", cex = 0.75, pch = 16)
   points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
 }

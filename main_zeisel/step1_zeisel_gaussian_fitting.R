@@ -85,6 +85,6 @@ svd_embedding <- (n/p)^(1/4) * svd_res$u[,1:svd_k_val] %*% diag(sqrt(svd_res$d[1
 
 rm(list = c("svd_res", "idx", "starting_lambda", "training_idx_list"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
-source_code_info <- c(source_code_info, readLines("../main_zeisel/step1_zeisl_gaussian_fitting.R"))
+source_code_info <- c(source_code_info, readLines("../main_zeisel/step1_zeisel_gaussian_fitting.R"))
 save.image(paste0("../results/step1_zeisel_gaussian_fitting", suffix, ".RData"))
 warnings()
