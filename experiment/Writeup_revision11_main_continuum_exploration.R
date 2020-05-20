@@ -80,8 +80,7 @@ max(pseudotime_df$pseudotime)
 
 pseudotime_df2 <- pseudotime_df[-intersect(which(is.na(pseudotime_df$consensus)), which(pseudotime_df$pseudotime <= 6)),]
 pseudotime_df2 <- pseudotime_df2[-which(!pseudotime_df2$consensus),]
-pseudotime_df2 <- pseudotime_df2[-intersect(which(pseudotime_df2$dist_to_curve >= 0.1),
-                                            which(pseudotime_df2$status == "1")),]
+
 zz_idx <- pseudotime_df2$cell_idx
 
 # verify that cell type is roughly aligned with trajectory
