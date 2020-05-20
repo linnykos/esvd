@@ -81,7 +81,7 @@ save.image(paste0("../results/step1_zeisel_gaussian_fitting", suffix, ".RData"))
 # now fit the actual SVDs
 svd_res <- svd(log_dat)
 n <- nrow(log_dat); p <- ncol(log_dat)
-svd_embedding <- (n/p)^(1/4) * svd_res$u[,1:svd_tuning_list[[i]]$k] %*% diag(sqrt(svd_res$d[1:svd_tuning_list[[i]]$k]))
+svd_embedding <- (n/p)^(1/4) * svd_res$u[,1:svd_k_val] %*% diag(sqrt(svd_res$d[1:svd_k_val]))
 
 rm(list = c("svd_res", "idx", "starting_lambda", "training_idx_list"))
 print(paste0(Sys.time(), ": Finished naive SVD"))
