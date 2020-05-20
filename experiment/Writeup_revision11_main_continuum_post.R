@@ -25,6 +25,8 @@ for(k in 1:2){
 ########################
 
 zz <- intersect(which(obj_vec_list[[1]]>2), which(start_vec_list[[1]] >= length(cell_idx_common)))
+zz_obj <- sapply(zz, function(x){obj_vec_list[[1]][x]})
+zz <- zz[order(zz_obj, decreasing = T)]
 head(zz)
 
 for(k in 1:10){
@@ -45,8 +47,11 @@ for(k in 1:10){
 
 #######
 
-zz <- intersect(which(obj_vec_list[[2]]>2), which(start_vec_list[[2]] >= max_common_idx))
+zz <- intersect(which(obj_vec_list[[2]]>2), which(start_vec_list[[2]] >= length(cell_idx_common)))
+zz_obj <- sapply(zz, function(x){obj_vec_list[[2]][x]})
+zz <- zz[order(zz_obj, decreasing = T)]
 head(zz)
+
 
 for(k in 1:10){
   j <- zz[k]

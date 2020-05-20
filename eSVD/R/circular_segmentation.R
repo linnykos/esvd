@@ -112,10 +112,12 @@ segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize =
 
     obj_inner <- sapply(candidate_idx2_vec, function(j){
       if(abs(i-j) >= max_width) return(-Inf)
-      mean_mid <- mean(vec[(i+1):j])
-      mean_other <- mean(vec[-c((i+1):j)])
+      # val_mid <- mean(vec[(i+1):j])
+      # val_other <- mean(vec[-c((i+1):j)])
+      val_mid <- stats::quantile(vec[(i+1):j], probs = 0.25)
+      val_other <- stats::quantile(vec[-c((i+1):j)], probs = 0.75)
 
-      mean_mid - mean_other
+      val_mid - val_other
     })
 
     c(j = candidate_idx2_vec[which.max(obj_inner)], obj_val = max(obj_inner))
