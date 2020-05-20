@@ -133,6 +133,7 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
 #' corresponding predicted values
 #'
 #' @return numeric
+#' @export
 compute_principal_angle <- function(tmp_mat){
   pca_res <- stats::prcomp(tmp_mat, center = F, scale = F)
   vec <- pca_res$rotation[,1]; vec <- vec/.l2norm(vec)

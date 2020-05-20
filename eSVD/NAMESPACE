@@ -3,6 +3,7 @@
 export(bootstrap_curves)
 export(compute_curve_sd)
 export(compute_mean)
+export(compute_principal_angle)
 export(construct_3d_tube)
 export(construct_missing_values)
 export(fit_factorization)
