@@ -53,6 +53,6 @@ dat <- dat[,idx]
 save.image(paste0("../results/step0_zeisel_preprocessing", suffix, ".RData"))
 
 print(paste0(Sys.time(), ": Finished preprocessing"))
-source_code_info <- c(source_code_info, readLines("../main_supplement/step0_zeisel_preprocessing.R"))
+source_code_info <- c(source_code_info, readLines("../main_zeisel/step0_zeisel_preprocessing.R"))
 save.image(paste0("../results/step0_zeisel_preprocessing", suffix, ".RData"))
 print(warnings())
