@@ -9,8 +9,6 @@ paramMat_esvd <- rbind(as.matrix(expand.grid(2, k_vec, neg_binom_vec, 50, 3000))
                        as.matrix(expand.grid(3, k_vec, curved_gaussian_vec, 50, 3000)))
 colnames(paramMat_esvd) <- c("fitting_distr", "k", "scalar", "max_iter", "max_val")
 
-esvd_missing_list_list <- vector("list", length(preprocessing_list))
-
 ######################################
 
 fitting_func <- function(dat_impute, vec, missing_idx_list){
