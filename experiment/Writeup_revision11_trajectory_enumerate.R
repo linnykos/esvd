@@ -11,15 +11,6 @@ color_func <- function(alpha = 0.2){
 }
 color_name_vec <- c("yellow", "skyblue", "bluish green", "blue", "orange", "gray")
 
-
-cell_type_vec <- as.character(marques$cell.info$cell.type[cell_idx])
-cell_type_vec <- as.factor(cell_type_vec)
-cluster_labels <- as.numeric(cell_type_vec)
-order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
-cluster_group_list <- lapply(order_vec, function(x){
-  grep(paste0("^", x), levels(cell_type_vec))
-})
-
 num_order_vec_esvd <- c(5, rep(3,2), c(6,1,1,4,4,4), rep(2,2),  rep(5,2))
 col_vec_esvd <- color_func(1)[num_order_vec_esvd]
 col_vec2_esvd <- color_func(0.5)[num_order_vec_esvd]
@@ -35,7 +26,6 @@ col_info_esvd[,c(5,6)] <- col_info_esvd[,c(6,5)]
 colnames(col_info_esvd)[c(5,6)] <- colnames(col_info_esvd)[c(6,5)]
 col_vec_short <- color_func(0.9)[c(1,4)]
 cluster_center_esvd <- eSVD:::.compute_cluster_center(esvd_embedding$u_mat[,1:3], eSVD:::.construct_cluster_matrix(cluster_labels))
-
 
 num_order_vec_svd <- c(5, rep(3,2), c(1,1,1,1,1,1), rep(2,2),  rep(5,2))
 col_vec_svd <- color_func(1)[num_order_vec_svd]
