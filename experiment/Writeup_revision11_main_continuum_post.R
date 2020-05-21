@@ -1,13 +1,14 @@
 rm(list=ls())
 load("../results/Writeup_revision11_continuum.RData")
 
-par(mfrow = c(1,2))
+
 nrow_vec <- c(nrow(dat1), nrow(dat2))
 start_vec_list <- vector("list", 2)
 end_vec_list <- vector("list", 2)
 midpoint_vec_list <- vector("list", 2)
 obj_vec_list <- vector("list", 2)
 
+par(mfrow = c(1,2))
 for(k in 1:2){
   start_vec_list[[k]] <- sapply(1:length(segmentation_res), function(i){segmentation_res[[i]][[k]]$i})
   end_vec_list[[k]] <- sapply(1:length(segmentation_res), function(i){segmentation_res[[i]][[k]]$j})
@@ -17,6 +18,7 @@ for(k in 1:2){
 
   plot(NA, ylim = range(obj_vec_list[[k]]), xlim = c(0, nrow_vec[k]),
        main = paste0(nrow_vec[k]))
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
   for(i in 1:length(start_vec_list[[k]])){
     lines(x = c(start_vec_list[[k]][i], end_vec_list[[k]][i]), y = rep(obj_vec_list[[k]][i], 2), lwd = 2)
   }
@@ -24,12 +26,13 @@ for(k in 1:2){
 
 ########################
 
-zz <- intersect(which(obj_vec_list[[1]]>2), which(start_vec_list[[1]] >= length(cell_idx_common)))
+zz <- intersect(intersect(which(obj_vec_list[[1]]>1.5), which(start_vec_list[[1]] >= length(cell_idx_common))),
+                which(end_vec_list[[1]] <= 3000))
 zz_obj <- sapply(zz, function(x){obj_vec_list[[1]][x]})
 zz <- zz[order(zz_obj, decreasing = T)]
-head(zz)
+head(zz); length(zz)
 
-for(k in 1:10){
+for(k in 1:min(10, length(zz))){
   j <- zz[k]
   par(mfrow = c(1,2))
   vec1 <- dat1[,j]
@@ -47,13 +50,13 @@ for(k in 1:10){
 
 #######
 
-zz <- intersect(which(obj_vec_list[[2]]>2), which(start_vec_list[[2]] >= length(cell_idx_common)))
+zz <- intersect(intersect(which(obj_vec_list[[2]]>1.5), which(start_vec_list[[2]] >= length(cell_idx_common))),
+                which(end_vec_list[[2]] <= 3250))
 zz_obj <- sapply(zz, function(x){obj_vec_list[[2]][x]})
 zz <- zz[order(zz_obj, decreasing = T)]
-head(zz)
+head(zz); length(zz)
 
-
-for(k in 1:10){
+for(k in 1:min(10, length(zz))){
   j <- zz[k]
   par(mfrow = c(1,2))
   vec1 <- dat1[,j]
@@ -63,10 +66,62 @@ for(k in 1:10){
   lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
   points(segmentation_res[[j]]$vec1_smooth, col = "white", cex = 0.75, pch = 16)
   points(segmentation_res[[j]]$vec1_smooth, col = "red", cex = 0.5, pch = 16)
+
   plot(vec2, col = col_vec, pch = 16, cex = 0.5)
   lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
   points(segmentation_res[[j]]$vec2_smooth, col = "white", cex = 0.75, pch = 16)
   points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
 }
 
+##############################
 
+res_mat <- .extract_information(segmentation_res)
+zz <- order_highly_expressed_genes(res_mat, nrow(dat1), nrow(dat2), common_n = length(cell_idx_common),
+                                   threshold = 1.5)
+
+for(j in zz$common_genes){
+  par(mfrow = c(1,2))
+  vec1 <- dat1[,j]
+  vec2 <- dat2[,j]
+  col_vec <- rep("black", length(vec2)); col_vec[segmentation_res[[j]]$cut_2$i:segmentation_res[[j]]$cut_2$j] <- "red"
+  plot(vec1, pch = 16, cex = 0.5, main = j)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  points(segmentation_res[[j]]$vec1_smooth, col = "white", cex = 0.75, pch = 16)
+  points(segmentation_res[[j]]$vec1_smooth, col = "red", cex = 0.5, pch = 16)
+
+  plot(vec2, col = col_vec, pch = 16, cex = 0.5, main = j)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  points(segmentation_res[[j]]$vec2_smooth, col = "white", cex = 0.75, pch = 16)
+  points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
+}
+
+for(j in zz$traj1_genes){
+  par(mfrow = c(1,2))
+  vec1 <- dat1[,j]
+  col_vec <- rep("black", length(vec1)); col_vec[segmentation_res[[j]]$cut_1$i:segmentation_res[[j]]$cut_1$j] <- "red"
+  vec2 <- dat2[,j]
+  plot(vec1, col = col_vec, pch = 16, cex = 0.5, main = j)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  points(segmentation_res[[j]]$vec1_smooth, col = "white", cex = 0.75, pch = 16)
+  points(segmentation_res[[j]]$vec1_smooth, col = "red", cex = 0.5, pch = 16)
+  plot(vec2, pch = 16, cex = 0.5, main = j)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  points(segmentation_res[[j]]$vec2_smooth, col = "white", cex = 0.75, pch = 16)
+  points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
+}
+
+for(j in zz$traj2_genes){
+  par(mfrow = c(1,2))
+  vec1 <- dat1[,j]
+  vec2 <- dat2[,j]
+  col_vec <- rep("black", length(vec2)); col_vec[segmentation_res[[j]]$cut_2$i:segmentation_res[[j]]$cut_2$j] <- "red"
+  plot(vec1, pch = 16, cex = 0.5, main = j)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  points(segmentation_res[[j]]$vec1_smooth, col = "white", cex = 0.75, pch = 16)
+  points(segmentation_res[[j]]$vec1_smooth, col = "red", cex = 0.5, pch = 16)
+
+  plot(vec2, col = col_vec, pch = 16, cex = 0.5, main = j)
+  lines(rep(length(cell_idx_common), 2), c(-1e5, 1e5), col = "red", lwd = 2)
+  points(segmentation_res[[j]]$vec2_smooth, col = "white", cex = 0.75, pch = 16)
+  points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
+}

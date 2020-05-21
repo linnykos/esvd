@@ -23,44 +23,25 @@ segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize =
     segmentation_res <- foreach::"%dopar%"(foreach::foreach(j = 1:p), func(j))
   }
 
-  segmentation_res
+  .extract_information(segmentation_res)
 }
 
-# order_highly_expressed_genes <- function(segmentation_res){
-#   stopifnot(all(sapply(segmentation_res, length) == 4))
-#
-#   # collect all the necessary ingredients
-#   nrow_vec <- max_common_idx+c(length(idx_trajectory1), length(idx_trajectory2))
-#   start_vec_list <- vector("list", 2)
-#   end_vec_list <- vector("list", 2)
-#   midpoint_vec_list <- vector("list", 2)
-#   obj_vec_list <- vector("list", 2)
-#
-#   for(k in 1:2){
-#     start_vec_list[[k]] <- sapply(1:length(segmentation_res), function(i){segmentation_res[[i]][[k]]$i})
-#     end_vec_list[[k]] <- sapply(1:length(segmentation_res), function(i){segmentation_res[[i]][[k]]$j})
-#     midpoint_vec_list[[k]] <- sapply(1:length(start_vec_list[[k]]),
-#                                      function(i){(start_vec_list[[k]][i] + end_vec_list[[k]][i])/2})
-#     obj_vec_list[[k]] <- sapply(1:length(segmentation_res), function(i){segmentation_res[[i]][[k]]$obj_val})
-#
-#     plot(NA, ylim = range(obj_vec_list[[k]]), xlim = c(0, nrow_vec[k]),
-#          main = paste0(nrow_vec[k]))
-#     for(i in 1:length(start_vec_list[[k]])){
-#       lines(x = c(start_vec_list[[k]][i], end_vec_list[[k]][i]), y = rep(obj_vec_list[[k]][i], 2), lwd = 2)
-#     }
-#   }
-#
-#
-#   # first focus on the unique tails (starting with the shorter end)
-#
-#   ## find the unique genes in each tail, and then for each location along time, pick the top x genes in that set (if any)
-#
-#   # now deal with the common head
-#
-#   ## remove any genes that appeared in the tails
-#
-#   ## for each portion along the sequence, find the top x genes
-# }
+order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
+                                         threshold){
+  stopifnot(all(sapply(segmentation_res, length) == 4))
+
+  # find the unique genes in each tail, and then for each location along time, pick the top x genes in that set (if any)
+  traj1_genes <- .find_trajectory_genes(res_mat, traj = 1, common_n = common_n, n = nrow1, threshold = threshold)
+  traj2_genes <- .find_trajectory_genes(res_mat, traj = 2, common_n = common_n, n = nrow2, threshold = threshold)
+
+  ## now find the common genes
+  common_genes <- .find_common_genes(res_mat, c(traj1_genes, traj2_genes),
+                                     common_n = common_n, threshold = threshold)
+
+
+  list(common_genes = common_genes, traj1_genes = traj1_genes,
+       traj2_genes = traj2_genes)
+}
 
 ######################################
 
@@ -128,4 +109,80 @@ segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize =
   obj_val <- obj_outer[2, which.max(obj_outer[2,])]
 
   list(i = i, j = j, obj_val = obj_val)
+}
+
+.extract_information <- function(segmentation_res){
+  stopifnot(all(sapply(segmentation_res, length) == 4))
+
+  info_mat <- matrix(NA, nrow = length(segmentation_res), ncol = 8)
+
+  for(k in 1:2){
+    info_mat[,(k-1)*4+1] <- sapply(1:length(segmentation_res), function(i){
+      segmentation_res[[i]][[k]]$i
+      })
+
+    info_mat[,(k-1)*4+2] <- sapply(1:length(segmentation_res), function(i){
+      segmentation_res[[i]][[k]]$j
+    })
+
+    info_mat[,(k-1)*4+3] <- rowMeans(info_mat[,((k-1)*4)+c(1:2)])
+
+    info_mat[,(k-1)*4+4] <- sapply(1:length(segmentation_res), function(i){
+      segmentation_res[[i]][[k]]$obj_val
+    })
+  }
+
+  info_mat <- cbind(1:nrow(info_mat), info_mat)
+  colnames(info_mat) <- c("idx", "start_1", "end_1", "mid_1", "obj_1",
+                          "start_2", "end_2", "mid_2", "obj_2")
+
+  data.frame(info_mat)
+}
+
+.find_trajectory_genes <- function(res_mat, traj = 1, common_n, n, threshold){
+  stopifnot(ncol(res_mat) == 9, n > common_n)
+
+  start_idx <- ifelse(traj == 1, 2, 6)
+  mid_idx <- ifelse(traj == 1, 4, 8)
+  end_idx <- ifelse(traj == 1, 3, 7)
+  end_idx_other <- ifelse(traj == 1, 7, 3)
+  obj_idx <- ifelse(traj == 1, 5, 9)
+  obj_idx_other <- ifelse(traj == 1, 9, 5)
+
+  subset_mat <- res_mat[intersect(which(res_mat[,end_idx] >= common_n), which(res_mat[,obj_idx] >= threshold)),]
+  rm_idx <- intersect(which(subset_mat[,end_idx_other] >= common_n), which(subset_mat[,obj_idx_other] >= threshold))
+  if(length(rm_idx) > 0){
+    subset_mat <- subset_mat[-rm_idx,]
+  }
+
+  tmp_pos <- sapply((common_n+1):n, function(j){
+    tmp_mat <- subset_mat[intersect(which(subset_mat[,start_idx] <= j), which(subset_mat[,end_idx] >= j)),]
+    if(nrow(tmp_mat) == 0) return(rep(NA, 2))
+    if(nrow(tmp_mat) == 1) return(c(tmp_mat$idx, NA))
+    tmp_mat$idx[order(tmp_mat[,obj_idx], decreasing = T)[1:2]]
+  })
+
+  idx <- sort(unique(as.numeric(tmp_pos)))
+  idx[order(sapply(idx, function(x){res_mat[which(res_mat$idx == x), mid_idx]}), decreasing = F)]
+}
+
+.find_common_genes <- function(res_mat, traj_genes, common_n, threshold){
+  stopifnot(ncol(res_mat) == 9)
+
+  if(length(traj_genes) > 0 && any(res_mat$idx %in% traj_genes)){
+    res_mat <- res_mat[-which(res_mat$idx %in% traj_genes),]
+  }
+
+  rm_idx <- intersect(which(res_mat$start_1 >= common_n), which(res_mat$start_2 >= common_n))
+  if(length(rm_idx) > 0) res_mat <- res_mat[-rm_idx,]
+
+  tmp_pos <- sapply(1:common_n, function(j){
+    tmp_mat <- res_mat[intersect(which(res_mat$start_1 <= j), which(res_mat$end_1 >= j)),]
+    if(nrow(tmp_mat) == 0) return(rep(NA, 2))
+    if(nrow(tmp_mat) == 1) return(c(tmp_mat$idx, NA))
+    tmp_mat$idx[order(tmp_mat$obj_1, decreasing = T)[1:2]]
+  })
+
+  idx <- sort(unique(as.numeric(tmp_pos)))
+  idx[order(sapply(idx, function(x){res_mat$mid_1[which(res_mat$idx == x)]}), decreasing = F)]
 }
