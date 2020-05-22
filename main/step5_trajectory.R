@@ -32,6 +32,9 @@ save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 esvd_sd_res <- eSVD::compute_curve_sd(esvd_curves_short$curves, esvd_bootstrap_list,
                                       ncores = ncores, verbose = T)
+esvd_width <- max(sapply(1:2, function(i){
+  quantile(apply(esvd_sd_res$mat_list[[i]], 1, function(x){quantile(x, probs = 0.95)}), probs = 0.95)
+}))
 
 print(paste0(Sys.time(), ": Finished eSVD standard val"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
@@ -58,6 +61,10 @@ save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
 svd_sd_res <- eSVD::compute_curve_sd(svd_curves_short$curves, svd_bootstrap_list,
                                      ncores = ncores, verbose = T)
+
+svd_width <- max(sapply(1:2, function(i){
+  quantile(apply(svd_sd_res$mat_list[[i]], 1, function(x){quantile(x, probs = 0.95)})[200:900], probs = 0.95)
+}))
 
 print(paste0(Sys.time(), ": Finished SVD standard val"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))

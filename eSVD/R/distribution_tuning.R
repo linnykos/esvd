@@ -13,6 +13,7 @@
 #' @param xlim plotting parameter
 #' @param ylim plotting parameter
 #' @param transparency plotting parameter
+#' @param cex_text plotting parameter
 #' @param ... additional plotting parameters
 #'
 #' @return either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or the principle angle otherwise
@@ -20,7 +21,7 @@
 plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_idx_list = list(1:prod(dim(dat))),
                                              width = 0.8, scalar = NA, plot = T,
                                              max_points = 500000, tol = 0.95, xlim = NA,
-                                             ylim = NA, transparency = 0.2, ...){
+                                             ylim = NA, transparency = 0.2, cex_text = 1, ...){
   stopifnot(length(nat_mat_list) == length(missing_idx_list))
 
   nat_mat_list <- lapply(nat_mat_list, function(nat_mat){
@@ -50,7 +51,8 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   if(plot){
     .plot_pca_diagnostic(tmp_mat, seq_vec = res$seq_vec, interval_mat = res$interval_mat,
                          principal_line = res$principal_line, angle_val = angle_val,
-                         xlim = xlim, ylim = ylim, transparency = transparency, ...)
+                         xlim = xlim, ylim = ylim, transparency = transparency,
+                         cex_text = cex_text, ...)
   } else {
     list(angle_val = angle_val, angle_sd = angle_sd, bool = res$bool)
   }
@@ -165,7 +167,7 @@ compute_principal_angle <- function(tmp_mat){
 }
 
 .plot_pca_diagnostic <- function(tmp_mat, seq_vec, interval_mat, principal_line, angle_val,
-                                 xlim = NA, ylim = NA, transparency = 0.2, ...){
+                                 xlim = NA, ylim = NA, transparency = 0.2, cex_text = 1, ...){
   stopifnot(ncol(interval_mat) == length(principal_line))
 
   rad <- 2/5*max(tmp_mat)
@@ -192,8 +194,10 @@ compute_principal_angle <- function(tmp_mat){
   radian_seq <- seq(0, angle_val*pi/180, length.out = 100)
   x_circ <- rad * cos(radian_seq)
   y_circ <- rad * sin(radian_seq)
+  graphics::lines(x_circ, y_circ, lwd = 2, col = "white")
   graphics::lines(x_circ, y_circ, lty = 2)
-  graphics::text(x = rad , y = 2/5*rad, pos = 4, label = paste0(round(angle_val, 1), " degrees"))
+  graphics::text(x = rad , y = 2/5*rad, pos = 4, label = paste0(round(angle_val, 1), " degrees"),
+                 cex = cex_text)
 
   invisible()
 }

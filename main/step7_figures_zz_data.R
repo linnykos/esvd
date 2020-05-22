@@ -75,3 +75,26 @@ graphics::text(1:6, par("usr")[3]-10,
      srt = -45, xpd = TRUE,
      labels = c("Pdgfra+", "OPC", "COP", "NFOL", "MFOL", "MOL"), cex=1)
 grDevices::graphics.off()
+
+###########
+
+tmp_df <- data.frame(val = library_size, type = floor(col_info_svd$order)[cluster_labels])
+
+png("../../esvd_results/figure/main/depth.png", height = 1400, width = 1800, res = 300, units = "px")
+graphics::par(mar = c(5,6,4,2))
+vioplot::vioplot(tmp_df$val[tmp_df$type == 1],
+                 tmp_df$val[tmp_df$type == 2],
+                 tmp_df$val[tmp_df$type == 3],
+                 tmp_df$val[tmp_df$type == 4],
+                 tmp_df$val[tmp_df$type == 5],
+                 tmp_df$val[tmp_df$type == 6],
+                 col = sapply(1:6, function(x){unique(col_info_svd$col_code[which(round(col_info_svd$order) == x)])}),
+                 pchMed = 21,
+                 colMed = "black", colMed2 = "white",
+                 xlab = "", names = rep("", 6))
+graphics::title(ylab = "Counts per cell",
+                main = "Depth across different cell types", cex.lab = 1.25)
+graphics::text(1:6, par("usr")[3]-5e3,
+               srt = -45, xpd = TRUE,
+               labels = c("Pdgfra+", "OPC", "COP", "NFOL", "MFOL", "MOL"), cex=1)
+grDevices::graphics.off()
