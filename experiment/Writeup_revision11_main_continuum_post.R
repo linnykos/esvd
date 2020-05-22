@@ -162,3 +162,71 @@ graphics.off()
 #   points(segmentation_res[[j]]$vec2_smooth, col = "red", cex = 0.5, pch = 16)
 # }
 
+#################################
+
+col_palatte <- colorRampPalette(c("azure","darkviolet"))(100)
+max_val <- max(pseudotime_df2$pseudotime)
+min_val <- min(pseudotime_df2$pseudotime)
+col_vec <-  col_palatte[pmin(pmax(round((pseudotime_df2$pseudotime-min_val)/(max_val - min_val) * 100), 1), 100)]
+
+cluster_center_esvd <- .compute_cluster_center(esvd_embedding$u_mat[,1:3], .construct_cluster_matrix(cluster_labels))
+
+
+color_func <- function(alpha = 0.2){
+  c(rgb(240/255, 228/255, 66/255, alpha), #yellow
+    rgb(86/255, 180/255, 233/255, alpha), #skyblue
+    rgb(0/255, 158/255, 115/255, alpha), #bluish green
+    rgb(0/255, 114/255, 178/255,alpha), #blue
+    rgb(230/255, 159/255, 0/255,alpha), #orange
+    rgb(100/255, 100/255, 100/255, alpha)) #gray
+}
+color_name_vec <- c("yellow", "skyblue", "bluish green", "blue", "orange", "gray")
+
+num_order_vec_esvd <- c(5, rep(3,2), c(6,1,1,4,4,4), rep(2,2),  rep(5,2))
+col_vec_esvd <- color_func(1)[num_order_vec_esvd]
+col_vec2_esvd <- color_func(0.5)[num_order_vec_esvd]
+col_name_esvd <- color_name_vec[num_order_vec_esvd]
+order_vec_esvd <- c(3, 5.1, 5.2, seq(6.1, 6.6, by = 0.1), 4.1, 4.2, 2, 1)
+col_info_esvd <- data.frame(name = levels(cell_type_vec),
+                            idx = sort(unique(cluster_labels)),
+                            order = order_vec_esvd,
+                            col_name = col_name_esvd,
+                            col_code = col_vec_esvd)
+col_info_esvd$factor_idx <- as.numeric(as.factor(col_info_esvd$col_name))
+col_info_esvd[,c(5,6)] <- col_info_esvd[,c(6,5)]
+colnames(col_info_esvd)[c(5,6)] <- colnames(col_info_esvd)[c(6,5)]
+col_info_esvd
+col_vec_short <- color_func(0.9)[c(1,4)]
+plotting_order_esvd <- list(3,2,5,4,c(6,1))
+
+combn_mat <- combn(3,2)
+
+grDevices::png(filename = paste0("../../esvd_results/figure/experiment/Writeup_revision11_continuum_pseudotime.png"),
+               height = 830, width = 2300, res = 300,
+               units = "px")
+par(mfrow = c(1,3), mar = c(4,4,4,1))
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+       asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+       main = "eSVD embedding and trajectories\n(Curved Gaussian)")
+
+  points(x = esvd_embedding$u_mat[pseudotime_df2$cell_idx,i],
+         y = esvd_embedding$u_mat[pseudotime_df2$cell_idx,j], pch = 16,
+         col = col_vec)
+  curves <- esvd_curves_short$curves
+  for(ll in rev(1:length(curves))) {
+    ord <- curves[[ll]]$ord
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 15)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = col_vec_short[ll], lwd = 7)
+    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
+                    lty = 3, lwd = 3)
+  }
+
+  for(ll in 1:nrow(cluster_center_esvd)){
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 2.25, col = "black")
+    points(cluster_center_esvd[ll,i], cluster_center_esvd[ll,j], pch = 16, cex = 1.5, col = col_vec_esvd[ll])
+  }
+}
+graphics.off()

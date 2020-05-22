@@ -94,7 +94,7 @@ png(filename = paste0("../../esvd_results/figure/main/esvd_training_testing_nb.p
 par(mfrow = c(1,2))
 eSVD::plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                        missing_idx_list = training_idx_list,
-                                       family = "neg_binom",
+                                       family = "neg_binom", cex.lab = 1.25,
                                        scalar = paramMat_esvd2[esvd_angle_res2$idx, "scalar"],
                                        main = "eSVD embedding (Neg. binom.):\nMatrix-completion diagnostic\n(Training set)",
                                        max_points = 1e6)
@@ -102,7 +102,7 @@ eSVD::plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
 
 eSVD::plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                        missing_idx_list = missing_idx_list,
-                                       family = "neg_binom",
+                                       family = "neg_binom", cex.lab = 1.25,
                                        scalar = paramMat_esvd2[esvd_angle_res2$idx, "scalar"],
                                        main = "eSVD embedding (Neg. binom.):\nMatrix-completion diagnostic\n(Testing set)")
 graphics.off()
