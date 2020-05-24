@@ -5,8 +5,9 @@ session_info <- sessionInfo(); date_of_run <- Sys.time()
 neg_binom_vec <- c(250, 1000, 1e4, 1e6)
 curved_gaussian_vec <- c(1, 2, 4, 100)
 
-paramMat_esvd <- rbind(as.matrix(expand.grid(2, k_vec, neg_binom_vec, 50, 3000)),
-                       as.matrix(expand.grid(3, k_vec, curved_gaussian_vec, 50, 3000)))
+# paramMat_esvd <- rbind(as.matrix(expand.grid(2, k_vec, neg_binom_vec, 50, 3000)),
+#                        as.matrix(expand.grid(3, k_vec, curved_gaussian_vec, 50, 3000)))
+paramMat_esvd <- as.matrix(expand.grid(2, c(10, 20, 50), c(250, 500, 1000, 1e4, 5e4), 50, 3000))
 colnames(paramMat_esvd) <- c("fitting_distr", "k", "scalar", "max_iter", "max_val")
 
 ######################################
