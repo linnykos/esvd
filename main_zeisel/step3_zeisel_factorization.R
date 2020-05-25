@@ -16,7 +16,7 @@ training_idx_list <- lapply(1:length(missing_idx_list), function(i){
   c(1:prod(dim(dat)))[-missing_idx_list[[i]]]
 })
 
-selection_mat <- as.matrix(expand.grid(k_vec, c(2,3)))
+selection_mat <- as.matrix(expand.grid(unique(paramMat_esvd[,"k"]), unique(paramMat_esvd[,"fitting_distr"])))
 tuning_idx <- rep(NA, nrow(selection_mat))
 for(j in 1:nrow(selection_mat)){
   distr_num <- selection_mat[j,2]
@@ -30,8 +30,8 @@ for(j in 1:nrow(selection_mat)){
   tuning_idx[j] <- esvd_angle_res$idx
 }
 
-# now plot
-# par(mfrow = c(2,3))
+# # now plot
+# par(mfrow = c(1,3))
 # for(j in 1:nrow(selection_mat)){
 #   print(j)
 #
@@ -39,11 +39,8 @@ for(j in 1:nrow(selection_mat)){
 #   k <- selection_mat[j,1]
 #   param_idx <- intersect(which(paramMat_esvd[,"fitting_distr"] == distr_num), which(paramMat_esvd[,"k"] == k))
 #   fitting_distr <- c("gaussian", "neg_binom", "curved_gaussian")[distr_num]
-#   if(fitting_distr == "neg_binom"){
-#     scalar <- neg_binom_vec[tuning_idx[j]]
-#   } else {
-#     scalar <- curved_gaussian_vec[tuning_idx[j]]
-#   }
+#   scalar <- paramMat_esvd[param_idx,"scalar"][tuning_idx[j]]
+#
 #   main_str <- paste0(ifelse(fitting_distr == "neg_binom", "Negative binomial", "Curved Gaussian"),
 #                      "\n(k = ", k, ", scalar = ", scalar, ")")
 #
@@ -54,7 +51,7 @@ for(j in 1:nrow(selection_mat)){
 #                                    max_points = 1e6)
 # }
 
-fitting_vec <- paramMat_esvd[12,]
+fitting_vec <- paramMat_esvd[11,]
 fitting_distr <- c("gaussian", "neg_binom", "curved_gaussian")[fitting_vec["fitting_distr"]]
 dat <- dat*1000/max(dat)
 
