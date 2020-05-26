@@ -2,7 +2,7 @@ set.seed(10)
 load(paste0("../results/step0_zeisel_preprocessing", suffix, ".RData"))
 session_info <- sessionInfo(); date_of_run <- Sys.time()
 
-k_vec <- c(3,5,10)
+k_vec <- c(10, 20, 50)
 cv_trials <- 3
 n <- nrow(dat)
 p <- ncol(dat)

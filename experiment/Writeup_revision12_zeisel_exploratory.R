@@ -9,21 +9,23 @@ rgl::plot3d(u_mat[,1], u_mat[,2], u_mat[,3], asp = T, col = as.numeric(label_vec
 
 ######3
 
-mat <- esvd_missing_list[[15]][[1]]$u_mat
+mat <- esvd_embedding$u_mat
 cluster_labels <- as.numeric(label_vec)
 neigh_size <- determine_minimium_neighborhood_size(mat)
 print(neigh_size)
 set.seed(10)
-zz <- compute_purity(mat, cluster_labels, neigh_size, num_samples = 1000)
+zz <- compute_purity(mat, cluster_labels, neigh_size, num_samples = 5000)
 print(zz$avg_val)
+quantile(unlist(zz$value_list), probs = seq(0, 0.2, length.out = 11))
 
 mat <- svd_embedding
 cluster_labels <- as.numeric(label_vec)
 neigh_size <- determine_minimium_neighborhood_size(mat)
 print(neigh_size)
 set.seed(10)
-zz <- compute_purity(mat, cluster_labels, neigh_size, num_samples = 1000)
-print(zz$avg_val)
+zz2 <- compute_purity(mat, cluster_labels, neigh_size, num_samples = 5000)
+print(zz2$avg_val)
+quantile(unlist(zz2$value_list), probs = seq(0, 0.2, length.out = 11))
 
 
 ########
