@@ -2,8 +2,8 @@ rm(list=ls())
 load("../results/step3_zeisel_factorization.RData")
 
 # u_mat <- svd_embedding
-u_mat <- esvd_missing_list[[11]][[1]]$u_mat
-# u_mat <- esvd_embedding$u_mat
+# u_mat <- esvd_missing_list[[11]][[1]]$u_mat
+u_mat <- esvd_embedding$u_mat
 rgl::plot3d(u_mat[,1], u_mat[,2], u_mat[,3], asp = T, col = as.numeric(label_vec),
             main = "Zeisel")
 

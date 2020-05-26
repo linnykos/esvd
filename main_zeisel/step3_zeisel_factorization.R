@@ -56,7 +56,7 @@ fitting_distr <- c("gaussian", "neg_binom", "curved_gaussian")[fitting_vec["fitt
 dat <- dat*1000/max(dat)
 
 set.seed(10)
-init <- eSVD::initialization(dat, family = fitting_distr, k = k,
+init <- eSVD::initialization(dat, family = fitting_distr, k = fitting_vec["k"],
                              max_val = fitting_vec["max_val"],
                              scalar = fitting_vec["scalar"])
 esvd_embedding <- eSVD::fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
