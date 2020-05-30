@@ -12,6 +12,10 @@ load(paste0("../results/step7_figures", suffix, ".RData"))
 
 # esvd plots
 
+esvd_curves_prepared <- lapply(esvd_curves_short$curves, function(curve){
+  prepare_trajectory(curve, target_length = 11)
+})
+
 for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
 
@@ -29,12 +33,11 @@ for(k in 1:ncol(combn_mat)){
            col = col_vec2_esvd[cluster_labels[idx]])
   }
 
-  curves <- esvd_curves_short$curves
+  curves <- esvd_curves_prepared
   for(ll in rev(1:length(curves))) {
-    ord <- curves[[ll]]$ord
-    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 15)
-    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = col_vec_short[ll], lwd = 7)
-    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
+    graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = "white", lwd = 15)
+    graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = col_vec_short[ll], lwd = 7)
+    graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = "black",
           lty = 3, lwd = 3)
   }
 
@@ -63,12 +66,11 @@ for(k in 1:ncol(combn_mat)){
            col = col_vec2_esvd[cluster_labels[idx]])
   }
 
-  curves <- esvd_curves_short$curves
+  curves <- esvd_curves_prepared
   for(ll in rev(1:length(curves))) {
-    ord <- curves[[ll]]$ord
-    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "white", lwd = 15)
-    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = col_vec_short[ll], lwd = 7)
-    graphics::lines(x = curves[[ll]]$s[ord, i], y = curves[[ll]]$s[ord, j], col = "black",
+    graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = "white", lwd = 15)
+    graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = col_vec_short[ll], lwd = 7)
+    graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = "black",
           lty = 3, lwd = 3)
   }
 

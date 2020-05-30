@@ -49,6 +49,22 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   structure(list(lineages = lineages, curves = curves, idx = idx_all), class = "slingshot")
 }
 
+prepare_trajectory <- function(curve, target_length){
+  stopifnot(class(curve) == "principal_curve")
+
+  s_mat <- curve$s[curve$ord,]
+  len_cumulative <- cumsum(sapply(2:nrow(s_mat), function(i){.l2norm(s_mat[i-1,] - s_mat[i,])}))
+
+  if(max(len_cumulative) <= target_length){
+    return(s_mat)
+  }
+
+  keep_idx <- max(which(len_cumulative <= target_length))
+  s_mat[1:keep_idx,]
+}
+
+###################################################
+
 #' Estimate the slingshot curves
 #'
 #' @param dat a \code{n} by \code{d} matrix

@@ -2,8 +2,12 @@ var <- ls()
 rm(list = var[var != "suffix"])
 load(paste0("../results/step7_figures", suffix, ".RData"))
 
-esvd_tube_list <- lapply(1:length(esvd_curves_short$curves), function(x){
-  s_mat <- esvd_curves_short$curves[[x]]$s[esvd_curves_short$curves[[x]]$ord,][,1:3]
+esvd_curves_prepared <- lapply(esvd_curves_short$curves, function(curve){
+  prepare_trajectory(curve, target_length = 11)
+})
+
+esvd_tube_list <- lapply(1:length(esvd_curves_prepared), function(x){
+  s_mat <- esvd_curves_prepared[[x]][,1:3]
   eSVD::construct_3d_tube(s_mat, radius = esvd_width)
 })
 
@@ -43,18 +47,17 @@ for(kk in 1:nrow(angle_matrix)){
                           ylim = bound_matrix[[kk]]$ylim,
                           zlim = bound_matrix[[kk]]$zlim)
 
-  curves <- esvd_curves_short$curves
+  curves <- esvd_curves_prepared
   col_vec_short <- color_func(1)[c(1,4)]
 
   for(i in 1:length(curves)){
-    ord <- curves[[i]]$ord
-    plot3D::lines3D(x = curves[[i]]$s[ord, 1],
-                    y = curves[[i]]$s[ord, 2],
-                    z = curves[[i]]$s[ord, 3],
+    plot3D::lines3D(x = curves[[i]][, 1],
+                    y = curves[[i]][, 2],
+                    z = curves[[i]][, 3],
                     add = T, colkey = F, col = "black", lwd = 12)
-    plot3D::lines3D(x = curves[[i]]$s[ord, 1],
-                    y = curves[[i]]$s[ord, 2],
-                    z = curves[[i]]$s[ord, 3],
+    plot3D::lines3D(x = curves[[i]][, 1],
+                    y = curves[[i]][, 2],
+                    z = curves[[i]][, 3],
                     add = T, colkey = F, col = col_vec_short[i], lwd = 12)
   }
   graphics.off()
@@ -82,18 +85,17 @@ for(kk in 1:nrow(angle_matrix)){
                           ylim = bound_matrix[[kk]]$ylim,
                           zlim = bound_matrix[[kk]]$zlim)
 
-  curves <- esvd_curves_short$curves
+  curves <- esvd_curves_prepared
   col_vec_short <- color_func(0.9)[c(1,4)]
 
   for(i in 1:length(curves)){
-    ord <- curves[[i]]$ord
-    plot3D::lines3D(x = curves[[i]]$s[ord, 1],
-                    y = curves[[i]]$s[ord, 2],
-                    z = curves[[i]]$s[ord, 3],
+    plot3D::lines3D(x = curves[[i]][, 1],
+                    y = curves[[i]][, 2],
+                    z = curves[[i]][, 3],
                     add = T, colkey = F, col = "black", lwd = 6)
-    plot3D::lines3D(x = curves[[i]]$s[ord, 1],
-                    y = curves[[i]]$s[ord, 2],
-                    z = curves[[i]]$s[ord, 3],
+    plot3D::lines3D(x = curves[[i]][, 1],
+                    y = curves[[i]][, 2],
+                    z = curves[[i]][, 3],
                     add = T, colkey = F, col = col_vec_short[i], lwd = 6)
 
     col_mat <- esvd_tube_list[[i]]$z_mat
