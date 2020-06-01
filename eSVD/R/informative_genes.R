@@ -27,16 +27,20 @@ segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize =
 }
 
 order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
-                                         threshold){
+                                         threshold, manual_add_common = NA,
+                                         manual_add_traj1 = NA,
+                                         manual_add_traj2 = NA){
   stopifnot(all(sapply(segmentation_res, length) == 4))
 
   # find the unique genes in each tail, and then for each location along time, pick the top x genes in that set (if any)
-  traj1_genes <- .find_trajectory_genes(res_mat, traj = 1, common_n = common_n, n = nrow1, threshold = threshold)
-  traj2_genes <- .find_trajectory_genes(res_mat, traj = 2, common_n = common_n, n = nrow2, threshold = threshold)
+  traj1_genes <- .find_trajectory_genes(res_mat, traj = 1, common_n = common_n, n = nrow1, threshold = threshold,
+                                        manual_add = manual_add_traj1)
+  traj2_genes <- .find_trajectory_genes(res_mat, traj = 2, common_n = common_n, n = nrow2, threshold = threshold,
+                                        manual_add = manual_add_traj2)
 
   ## now find the common genes
   common_genes <- .find_common_genes(res_mat, c(traj1_genes, traj2_genes),
-                                     common_n = common_n, threshold = threshold)
+                                     common_n = common_n, threshold = threshold, manual_add = manual_add_common)
 
 
   list(common_genes = common_genes, traj1_genes = traj1_genes,
@@ -139,7 +143,7 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   data.frame(info_mat)
 }
 
-.find_trajectory_genes <- function(res_mat, traj = 1, common_n, n, threshold){
+.find_trajectory_genes <- function(res_mat, traj, common_n, n, threshold, manual_add = NA){
   stopifnot(ncol(res_mat) == 9, n > common_n)
 
   start_idx <- ifelse(traj == 1, 2, 6)
@@ -163,10 +167,12 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   })
 
   idx <- sort(unique(as.numeric(tmp_pos)))
-  idx[order(sapply(idx, function(x){res_mat[which(res_mat$idx == x), mid_idx]}), decreasing = F)]
+  if(!all(is.na(manual_add))) idx <- sort(unique(c(idx, manual_add)))
+
+  idx[order(sapply(idx, function(x){res_mat[which(res_mat$idx == x)[1], mid_idx]}), decreasing = F)]
 }
 
-.find_common_genes <- function(res_mat, traj_genes, common_n, threshold){
+.find_common_genes <- function(res_mat, traj_genes, common_n, threshold, manual_add = NA){
   stopifnot(ncol(res_mat) == 9)
 
   if(length(traj_genes) > 0 && any(res_mat$idx %in% traj_genes)){
@@ -184,5 +190,7 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   })
 
   idx <- sort(unique(as.numeric(tmp_pos)))
-  idx[order(sapply(idx, function(x){res_mat$mid_1[which(res_mat$idx == x)]}), decreasing = F)]
+  if(!all(is.na(manual_add))) idx <- sort(unique(c(idx, manual_add)))
+
+  idx[order(sapply(idx, function(x){res_mat$mid_1[which(res_mat$idx == x)[1]]}), decreasing = F)]
 }
