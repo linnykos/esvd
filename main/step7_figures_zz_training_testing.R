@@ -22,7 +22,7 @@ par(mfrow = c(1,2))
 eSVD::plot_prediction_against_observed(log2(dat_impute/rescaling_factor+1), nat_mat_list = nat_mat_list,
                                  missing_idx_list = training_idx_list,
                                  family = "gaussian", scalar = sd_val,
-                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 main = "SVD embedding's diagnostic:\nConstant-variance Gaussian,\ntraining set",
                                  transparency = 0.05, xlim = c(-2,15), ylim = c(-2,15),
                                  max_points = 1e6, cex.lab = 1.25)
 
@@ -30,7 +30,7 @@ eSVD::plot_prediction_against_observed(log2(dat_impute/rescaling_factor+1), nat_
                                  missing_idx_list = missing_idx_list,
                                  family = "gaussian", scalar = sd_val,  transparency = 0.05,
                                  xlim = c(-2,15), ylim = c(-2,15),
-                                 main = "SVD embedding:\nMatrix-completion diagnostic\n(Testing set)",
+                                 main = "SVD embedding's diagnostic:\nConstant-variance Gaussian,\ntesting set",
                                  cex.lab = 1.25)
 graphics.off()
 
@@ -53,7 +53,7 @@ eSVD::plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                  transparency = 0.2, cex.lab = 1.25,
                                  family = "curved_gaussian",
                                  scalar = paramMat_esvd[esvd_angle_res$idx, "scalar"],
-                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                 main = "eSVD embedding's diagnostic:\nCurved Gaussian,\ntraining set",
                                  max_points = 1e6)
 
 
@@ -62,7 +62,7 @@ eSVD::plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                  transparency = 0.2, cex.lab = 1.25,
                                  family = "curved_gaussian",
                                  scalar = paramMat_esvd[esvd_angle_res$idx, "scalar"],
-                                 main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+                                 main = "eSVD embedding's diagnostic:\nCurved Gaussian,\ntesting set")
 graphics.off()
 
 png(filename = paste0("../../esvd_results/figure/main/esvd_training_testing_zoomedin.png"),
@@ -74,7 +74,7 @@ eSVD::plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                        family = "curved_gaussian", xlim = c(0,50), ylim = c(0,50),
                                        transparency = 0.05, cex.lab = 1.25,
                                        scalar = paramMat_esvd[esvd_angle_res$idx, "scalar"],
-                                       main = "eSVD embedding:\nMatrix-completion diagnostic\n(Training set)",
+                                       main = "eSVD embedding's diagnostic:\nCurved Gaussian,\ntraining set",
                                        max_points = 1e6)
 
 
@@ -83,6 +83,6 @@ eSVD::plot_prediction_against_observed(dat_impute, nat_mat_list = nat_mat_list,
                                        family = "curved_gaussian", xlim = c(0,50), ylim = c(0,50),
                                        transparency = 0.05, cex.lab = 1.25,
                                        scalar = paramMat_esvd[esvd_angle_res$idx, "scalar"],
-                                       main = "eSVD embedding:\nMatrix-completion diagnostic\n(Testing set)")
+                                       main = "eSVD embedding's diagnostic:\nCurved Gaussian,\ntesting set")
 graphics.off()
 

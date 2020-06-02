@@ -9,7 +9,7 @@ png(paste0("../../esvd_results/figure/main/svd_density.png"),
 x <- svd_embedding[,dim1]
 y <- svd_embedding[,dim2]
 graphics::plot(NA,  asp = T, xlab = paste0("Latent dimension ", dim1), ylab = paste0("Latent dimension ", dim2),
-     main = "SVD embedding\n(Constant-variance Gaussian)",
+     main = "SVD embedding:\nConstant-variance Gaussian",
      xlim = range(x), ylim = range(y), axes = F)
 graphics::points(x = x, y = y, col = col_vec2_svd[cluster_labels], pch = 16)
 graphics::axis(1); graphics::axis(2)
@@ -39,7 +39,7 @@ png(paste0("../../esvd_results/figure/main/esvd_density.png"),
 x <- esvd_embedding$u_mat[,dim1]
 y <- esvd_embedding$u_mat[,dim2]
 graphics::plot(NA,  asp = T, xlab = paste0("Latent dimension ", dim1), ylab = paste0("Latent dimension ", dim2),
-     main = "eSVD embedding and density\n(Curved Gaussian)",
+     main = "eSVD embedding and density:\nCurved Gaussian",
      xlim = range(x), ylim = range(y))
 
 for(ll in plotting_order_esvd){

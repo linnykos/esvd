@@ -29,6 +29,10 @@ for(x in res_list){
   print(quantile(unlist(x$value_list), probs = seq(0, 0.2, length.out = 11)))
 }
 
+vec <- unlist(res_list[[1]]$value_list)
+mean(vec)
+mean(sort(vec)[1:round(length(vec)/4)])
+
 
 mat <- svd_embedding
 cluster_labels <- as.numeric(label_vec)
@@ -44,6 +48,10 @@ res_list2 <- lapply(neigh_size_vec, function(x){
 for(x in res_list2){
   print(quantile(unlist(x$value_list), probs = seq(0, 0.25, length.out = 11)))
 }
+
+vec <- unlist(res_list2[[1]]$value_list)
+mean(vec)
+mean(sort(vec)[1:round(length(vec)/4)])
 
 #######################################
 

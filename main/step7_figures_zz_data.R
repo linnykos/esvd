@@ -93,7 +93,7 @@ vioplot::vioplot(tmp_df$val[tmp_df$type == 1],
                  colMed = "black", colMed2 = "white",
                  xlab = "", names = rep("", 6))
 graphics::title(ylab = "Counts per cell",
-                main = "Depth across different cell types", cex.lab = 1.25)
+                main = "Library size across different cell types", cex.lab = 1.25)
 graphics::text(1:6, par("usr")[3]-5e3,
                srt = -45, xpd = TRUE,
                labels = c("Pdgfra+", "OPC", "COP", "NFOL", "MFOL", "MOL"), cex=1)

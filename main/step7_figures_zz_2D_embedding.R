@@ -2,14 +2,6 @@ var <- ls()
 rm(list = var[var != "suffix"])
 load(paste0("../results/step7_figures", suffix, ".RData"))
 
-# make different variants of the 2D embedding plots
-# 2D plots with curves (color)
-# 2D plots in black and white
-# 2D plots all combined in one plot (color)
-# 2D plots without curves (color)
-
-######################
-
 # esvd plots
 
 esvd_curves_prepared <- lapply(esvd_curves_short$curves, function(curve){
@@ -24,7 +16,7 @@ for(k in 1:ncol(combn_mat)){
       units = "px")
   graphics::plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "eSVD embedding and trajectories\n(Curved Gaussian)")
+       main = "eSVD embedding and trajectories:\nCurved Gaussian")
 
   for(ll in plotting_order_esvd) {
     target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
@@ -34,7 +26,7 @@ for(k in 1:ncol(combn_mat)){
   }
 
   curves <- esvd_curves_prepared
-  for(ll in rev(1:length(curves))) {
+  for(ll in 1:length(curves)) {
     graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = "white", lwd = 15)
     graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = col_vec_short[ll], lwd = 7)
     graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = "black",
@@ -57,7 +49,7 @@ for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
   graphics::plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = ifelse(k==2, "eSVD embedding and trajectories\n(Curved Gaussian)", ""))
+       main = ifelse(k==2, "eSVD embedding and trajectories:\nCurved Gaussian", ""))
 
   for(ll in plotting_order_esvd) {
     target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
@@ -67,7 +59,7 @@ for(k in 1:ncol(combn_mat)){
   }
 
   curves <- esvd_curves_prepared
-  for(ll in rev(1:length(curves))) {
+  for(ll in 1:length(curves)) {
     graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = "white", lwd = 15)
     graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = col_vec_short[ll], lwd = 7)
     graphics::lines(x = curves[[ll]][, i], y = curves[[ll]][, j], col = "black",
@@ -89,7 +81,7 @@ for(k in 1:ncol(combn_mat)){
   i <- combn_mat[1,k]; j <- combn_mat[2,k]
   graphics::plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
                  asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-                 main = ifelse(k==2, "eSVD embedding and trajectories\n(Curved Gaussian)", ""))
+                 main = ifelse(k==2, "eSVD embedding and trajectories:\nCurved Gaussian", ""))
 
   for(ll in plotting_order_esvd) {
     target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
@@ -113,7 +105,7 @@ for(k in 1:ncol(combn_mat)){
       units = "px")
   graphics::plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "eSVD embedding and trajectories\n(Curved Gaussian)")
+       main = "eSVD embedding and trajectories:\nCurved Gaussian")
 
   for(ll in plotting_order_esvd) {
     target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
@@ -140,7 +132,7 @@ for(k in 1:ncol(combn_mat)){
       units = "px")
   graphics::plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "SVD embedding and trajectories\n(Constant-variance Gaussian)")
+       main = "SVD embedding and trajectories:\nConstant-variance Gaussian")
 
   for(ll in plotting_order_svd) {
     target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx %in% ll)]
@@ -175,7 +167,7 @@ for(k in 1:ncol(combn_mat)){
 
   graphics::plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = ifelse(k == 2, "SVD embedding and trajectories\n(Constant-variance Gaussian)", ""))
+       main = ifelse(k == 2, "SVD embedding and trajectories:\nConstant-variance Gaussian", ""))
 
   for(ll in plotting_order_svd) {
     target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx %in% ll)]
@@ -210,7 +202,7 @@ for(k in 1:ncol(combn_mat)){
 
   graphics::plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
                  asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-                 main = ifelse(k == 2, "SVD embedding and trajectories\n(Constant-variance Gaussian)", ""))
+                 main = ifelse(k == 2, "SVD embedding and trajectories:\nConstant-variance Gaussian", ""))
 
   for(ll in plotting_order_svd) {
     target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx %in% ll)]
@@ -234,7 +226,7 @@ for(k in 1:ncol(combn_mat)){
       units = "px")
   graphics::plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
        asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
-       main = "SVD embedding and trajectories\n(Constant-variance Gaussian)")
+       main = "SVD embedding and trajectories:\nConstant-variance Gaussian")
 
   for(ll in plotting_order_svd) {
     target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx %in% ll)]
