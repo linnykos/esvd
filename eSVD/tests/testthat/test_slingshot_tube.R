@@ -171,7 +171,7 @@ test_that("compute_curve_sd works", {
   res <- compute_curve_sd(slingshot_res$curves, bootstrap_res)
 
   expect_true(is.list(res))
-  expect_true(all(sort(names(res)) == c("mat_list", "target_curve_list")))
+  expect_true(all(sort(names(res)) == sort(c("width", "mat_list", "target_curve_list"))))
   expect_true(length(res$target_curve_list) == 2)
   expect_true(length(res$mat_list) == 2)
   expect_true(all(dim(res$mat_list[[1]]) == c(75, trials)))

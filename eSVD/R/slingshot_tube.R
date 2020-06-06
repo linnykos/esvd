@@ -59,7 +59,9 @@ bootstrap_curves <- function(dat, cluster_labels, lineages, cluster_group_list =
 #'
 #' @return a numeric
 #' @export
-compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, ncores = NA, verbose = F){
+compute_curve_sd <- function(target_curve_list, bootstrap_curve_list,
+                             quantile_inner = 0.95, quantile_outer = 0.95,
+                             ncores = NA, verbose = F){
   stopifnot(length(target_curve_list) == length(bootstrap_curve_list[[1]]),
             length(unique(sapply(bootstrap_curve_list, length))) == 1)
   num_curves <- length(target_curve_list)
@@ -88,7 +90,12 @@ compute_curve_sd <- function(target_curve_list, bootstrap_curve_list, ncores = N
 
   # output the matrix of minimum distances (position on curve x distance to bootstrap matrix)
 
-  list(target_curve_list = target_curve_list, mat_list = mat_list)
+  width <- max(sapply(1:length(mat_list), function(i){
+    stats::quantile(apply(mat_list[[i]], 1, function(x){stats::quantile(x, probs = quantile_inner)}),
+                    probs = quantile_outer)
+  }))
+
+  list(width = width, target_curve_list = target_curve_list, mat_list = mat_list)
 }
 
 #####################

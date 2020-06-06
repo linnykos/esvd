@@ -22,9 +22,9 @@ test_that(".intersect_lineages_cluster_group_list with a trivial cluster_group_l
 
   res <- .intersect_lineages_cluster_group_list(lineages, cluster_group_list)
   expect_true(length(res) == 3)
-  expect_true(any(sapply(res, function(x){all(sort(x) == c(1:3))})))
-  expect_true(any(sapply(res, function(x){all(sort(x) == c(4:5))})))
-  expect_true(any(sapply(res, function(x){all(sort(x) == c(6:8))})))
+  expect_true(any(sapply(res, function(x){all(x %in% c(1:3)) & all(c(1:3) %in% x)})))
+  expect_true(any(sapply(res, function(x){all(x %in%c(4:5)) & all(c(4:5) %in% x)})))
+  expect_true(any(sapply(res, function(x){all(x %in% c(6:8)) & all(c(6:8) %in% x)})))
 })
 
 ###########################################
