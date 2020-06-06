@@ -54,6 +54,10 @@ bootstrap_curves <- function(dat, cluster_labels, lineages, cluster_group_list =
 #' @param target_curve_list a list (for example, the \code{curves} output from the \code{slingshot} function)
 #' @param bootstrap_curve_list a list
 #' (for example, the output from the \code{bootstrap_curves} function)
+#' @param quantile_inner quantile value representing, for each point on the estimated curve,
+#' how far do you want to encapsulate all the bootstrapped curves
+#' @param quantile_outer quantile value representing, among all the points on the estimated curve,
+#' how far do you want to encapuslate all their values dictated by quantile_inner
 #' @param ncores numeric
 #' @param verbose boolean
 #'

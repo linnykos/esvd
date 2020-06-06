@@ -1,3 +1,25 @@
+#' Segment the genes along the trajectory
+#'
+#' Given two datasets, \code{dat1} and \code{dat2}, whose first \code{common_n} rows
+#' are the same, use the \code{eSVD:::.find_highly_expressed_region} function to output
+#' statistics of each gene in both datasets.
+#'
+#' As suggested by the interface, this function can only segment genes when exactly two
+#' trajectories are estimated.
+#'
+#' @param dat1 \code{n1} by \code{p} dataset
+#' @param dat2 \code{n2} by \code{p} dataset
+#' @param common_n positive integer value denoting that the first \code{common_n} (smaller
+#' than \code{nrow(dat1)} or \code{nrow(dat2)}) rows of
+#' \code{dat1} and \code{dat2} are equivalent
+#' @param standardize boolean
+#' @param ncores number of cores
+#' @param verbose boolean
+#'
+#' @return a data frame with 9 columns and \code{ncol(dat1)} rows, where each row
+#' contains statistics
+#' for each gene across both \code{dat1} and \code{dat2}
+#' @export
 segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize = T,
                                              ncores = NA, verbose = F){
   stopifnot(ncol(dat1) == ncol(dat2))
@@ -26,22 +48,48 @@ segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize =
   .extract_information(segmentation_res)
 }
 
+#' Ordering the highly expressed genes
+#'
+#' This uses the output of \code{segment_genes_along_trajectories} to find \code{number_of_genes}
+#' highly informative genes along each position of the pseudotime (defined in terms of
+#' indices, as \code{1} through \code{common_n + (nrow(dat1) - commom_n) + (nrow(dat2) - common_n)},
+#' the arguments into \code{segment_genes_along_trajectories}). The function then order such
+#' genes by the midpoint of their significance (as defined in the output of \code{segment_genes_along_trajectories}).
+#'
+#' @param res_mat the 9-columned data frame that is the output of \code{segment_genes_along_trajectories}
+#' @param nrow1 the total number of rows in \code{dat1} when used in \code{segment_genes_along_trajectories}
+#' @param nrow2 the total number of rows in \code{dat2} when used in \code{segment_genes_along_trajectories}
+#' @param common_n the argument \code{common_n} as used in \code{segment_genes_along_trajectories}
+#' @param threshold the threshold on what qualifies as a gene worth considering. See
+#' \code{eSVD:::.find_common_genes} or \code{eSVD:::.find_trajectory_genes}
+#' @param number_of_genes maximum number of genes (who's significance exceeds the threshold) that are included
+#' at each position of pseudotime
+#' @param manual_add_common gene indices (from 1 through \code{max(res_mat$idx)}) (possibly \code{NA})
+#' that are manually included as highly expressed genes shared in common between the two trajectories
+#' @param manual_add_traj1 gene indices (from 1 through \code{max(res_mat$idx)}) (possibly \code{NA})
+#' that are manually included as highly expressed genes in trajectory 1
+#' @param manual_add_traj2 gene indices (from 1 through \code{max(res_mat$idx)}) (possibly \code{NA})
+#' that are manually included as highly expressed genes in trajectory 2
+#'
+#' @return
+#' @export
+#'
+#' @examples
 order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
-                                         threshold, manual_add_common = NA,
+                                         threshold, number_of_genes = 2,
+                                         manual_add_common = NA,
                                          manual_add_traj1 = NA,
                                          manual_add_traj2 = NA){
-  stopifnot(all(sapply(segmentation_res, length) == 4))
-
   # find the unique genes in each tail, and then for each location along time, pick the top x genes in that set (if any)
   traj1_genes <- .find_trajectory_genes(res_mat, traj = 1, common_n = common_n, n = nrow1, threshold = threshold,
-                                        manual_add = manual_add_traj1)
+                                        number_of_genes = number_of_genes, manual_add = manual_add_traj1)
   traj2_genes <- .find_trajectory_genes(res_mat, traj = 2, common_n = common_n, n = nrow2, threshold = threshold,
-                                        manual_add = manual_add_traj2)
+                                        number_of_genes = number_of_genes, manual_add = manual_add_traj2)
 
   ## now find the common genes
   common_genes <- .find_common_genes(res_mat, c(traj1_genes, traj2_genes),
-                                     common_n = common_n, threshold = threshold, manual_add = manual_add_common)
-
+                                     common_n = common_n, threshold = threshold,
+                                     number_of_genes = number_of_genes, manual_add = manual_add_common)
 
   list(common_genes = common_genes, traj1_genes = traj1_genes,
        traj2_genes = traj2_genes)
@@ -143,7 +191,8 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   data.frame(info_mat)
 }
 
-.find_trajectory_genes <- function(res_mat, traj, common_n, n, threshold, manual_add = NA){
+.find_trajectory_genes <- function(res_mat, traj, common_n, n, threshold,
+                                   number_of_genes = 2, manual_add = NA){
   stopifnot(ncol(res_mat) == 9, n > common_n)
 
   start_idx <- ifelse(traj == 1, 2, 6)
@@ -161,9 +210,9 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
 
   tmp_pos <- sapply((common_n+1):n, function(j){
     tmp_mat <- subset_mat[intersect(which(subset_mat[,start_idx] <= j), which(subset_mat[,end_idx] >= j)),]
-    if(nrow(tmp_mat) == 0) return(rep(NA, 2))
-    if(nrow(tmp_mat) == 1) return(c(tmp_mat$idx, NA))
-    tmp_mat$idx[order(tmp_mat[,obj_idx], decreasing = T)[1:2]]
+    if(nrow(tmp_mat) == 0) return(rep(NA, number_of_genes))
+    if(nrow(tmp_mat) < number_of_genes) return(c(tmp_mat$idx, rep(NA, number_of_genes - length(tmp_mat$idx))))
+    tmp_mat$idx[order(tmp_mat[,obj_idx], decreasing = T)[1:number_of_genes]]
   })
 
   idx <- sort(unique(as.numeric(tmp_pos)))
@@ -172,7 +221,8 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   idx[order(sapply(idx, function(x){res_mat[which(res_mat$idx == x)[1], mid_idx]}), decreasing = F)]
 }
 
-.find_common_genes <- function(res_mat, traj_genes, common_n, threshold, manual_add = NA){
+.find_common_genes <- function(res_mat, traj_genes, common_n, threshold,
+                               number_of_genes = 2, manual_add = NA){
   stopifnot(ncol(res_mat) == 9)
 
   if(length(traj_genes) > 0 && any(res_mat$idx %in% traj_genes)){
@@ -184,9 +234,9 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
 
   tmp_pos <- sapply(1:common_n, function(j){
     tmp_mat <- res_mat[intersect(which(res_mat$start_1 <= j), which(res_mat$end_1 >= j)),]
-    if(nrow(tmp_mat) == 0) return(rep(NA, 2))
-    if(nrow(tmp_mat) == 1) return(c(tmp_mat$idx, NA))
-    tmp_mat$idx[order(tmp_mat$obj_1, decreasing = T)[1:2]]
+    if(nrow(tmp_mat) == 0) return(rep(NA, number_of_genes))
+    if(nrow(tmp_mat) == 1) return(c(tmp_mat$idx, rep(NA, number_of_genes - length(tmp_mat$idx))))
+    tmp_mat$idx[order(tmp_mat$obj_1, decreasing = T)[1:number_of_genes]]
   })
 
   idx <- sort(unique(as.numeric(tmp_pos)))

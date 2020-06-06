@@ -17,6 +17,7 @@ plot_prediction_against_observed(
   xlim = NA,
   ylim = NA,
   transparency = 0.2,
+  cex_text = 1,
   ...
 )
 }
@@ -45,6 +46,8 @@ if the principal angle falls within the prediction region}
 \item{ylim}{plotting parameter}
 
 \item{transparency}{plotting parameter}
+
+\item{cex_text}{plotting parameter}
 
 \item{...}{additional plotting parameters}
 }

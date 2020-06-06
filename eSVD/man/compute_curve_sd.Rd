@@ -7,6 +7,8 @@
 compute_curve_sd(
   target_curve_list,
   bootstrap_curve_list,
+  quantile_inner = 0.95,
+  quantile_outer = 0.95,
   ncores = NA,
   verbose = F
 )
@@ -16,6 +18,12 @@ compute_curve_sd(
 
 \item{bootstrap_curve_list}{a list
 (for example, the output from the \code{bootstrap_curves} function)}
+
+\item{quantile_inner}{quantile value representing, for each point on the estimated curve,
+how far do you want to encapsulate all the bootstrapped curves}
+
+\item{quantile_outer}{quantile value representing, among all the points on the estimated curve,
+how far do you want to encapuslate all their values dictated by quantile_inner}
 
 \item{ncores}{numeric}
 
