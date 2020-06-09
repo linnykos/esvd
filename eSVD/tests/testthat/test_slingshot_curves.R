@@ -219,7 +219,7 @@ test_that(".initial_curve_fit works", {
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
-  centers <- .compute_cluster_center(dat, cluster_mat)
+  centers <- compute_cluster_center(dat, cluster_mat)
   W <- .initialize_weight_matrix(cluster_mat, lineages)
   cluster_vec <- 1:ncol(cluster_mat)
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
@@ -244,7 +244,7 @@ test_that(".smoother_func works", {
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
-  centers <- .compute_cluster_center(dat, cluster_mat)
+  centers <- compute_cluster_center(dat, cluster_mat)
   W <- .initialize_weight_matrix(cluster_mat, lineages)
   cluster_vec <- 1:ncol(cluster_mat)
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
@@ -268,7 +268,7 @@ test_that(".construct_average_curve works", {
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
-  centers <- .compute_cluster_center(dat, cluster_mat)
+  centers <- compute_cluster_center(dat, cluster_mat)
   W <- .initialize_weight_matrix(cluster_mat, lineages)
   cluster_vec <- 1:ncol(cluster_mat)
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
@@ -291,7 +291,7 @@ test_that(".refine_curve_fit works", {
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
-  centers <- .compute_cluster_center(dat, cluster_mat)
+  centers <- compute_cluster_center(dat, cluster_mat)
   W <- .initialize_weight_matrix(cluster_mat, lineages)
   cluster_vec <- 1:ncol(cluster_mat)
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
@@ -316,7 +316,7 @@ test_that(".percent_shrinkage works", {
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
-  centers <- .compute_cluster_center(dat, cluster_mat)
+  centers <- compute_cluster_center(dat, cluster_mat)
   W <- .initialize_weight_matrix(cluster_mat, lineages)
   cluster_vec <- 1:ncol(cluster_mat)
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
@@ -338,7 +338,7 @@ test_that(".percent_shrinkage computes a shrinkage for all indices, even outlier
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
-  centers <- .compute_cluster_center(dat, cluster_mat)
+  centers <- compute_cluster_center(dat, cluster_mat)
   W <- .initialize_weight_matrix(cluster_mat, lineages)
   cluster_vec <- 1:ncol(cluster_mat)
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
@@ -361,7 +361,7 @@ test_that(".percent_shrinkage respects the order of lambda", {
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
-  centers <- .compute_cluster_center(dat, cluster_mat)
+  centers <- compute_cluster_center(dat, cluster_mat)
   W <- .initialize_weight_matrix(cluster_mat, lineages)
   cluster_vec <- 1:ncol(cluster_mat)
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
@@ -386,7 +386,7 @@ test_that(".shrink_to_avg works", {
   lineages <- .get_lineages(dat, cluster_labels, starting_cluster = 1)
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   k <- ncol(cluster_mat)
-  centers <- .compute_cluster_center(dat, cluster_mat)
+  centers <- compute_cluster_center(dat, cluster_mat)
   W <- .initialize_weight_matrix(cluster_mat, lineages)
   cluster_vec <- 1:ncol(cluster_mat)
   s_list <- .initial_curve_fit(lineages, cluster_vec, centers)
@@ -576,14 +576,14 @@ test_that(".construct_cluster_matrix works", {
 
 ###########
 
-## .compute_cluster_center is correct
+## compute_cluster_center is correct
 
-test_that(".compute_cluster_center works", {
+test_that("compute_cluster_center works", {
   set.seed(10)
   cluster_mat <- .construct_cluster_matrix(sample(1:10, 200, replace = T))
   dat <- MASS::mvrnorm(200, rep(0, 5), diag(5))
 
-  res <- .compute_cluster_center(dat, cluster_mat)
+  res <- compute_cluster_center(dat, cluster_mat)
 
   expect_true(all(dim(res) == c(10,5)))
 })

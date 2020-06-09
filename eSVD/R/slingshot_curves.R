@@ -63,6 +63,24 @@ prepare_trajectory <- function(curve, target_length){
   s_mat[1:keep_idx,]
 }
 
+#' Compute the cluster centers
+#'
+#' @param dat a \code{n} by \code{d} matrix
+#' @param cluster_mat a 0-1 matrix that is \code{n} by \code{k}
+#'
+#' @return a \code{k} by \code{d} matrix
+#' @export
+compute_cluster_center <- function(dat, cluster_mat){
+  mat <- t(sapply(1:ncol(cluster_mat), function(x){
+    idx <- which(cluster_mat[,x] == 1)
+    colMeans(dat[idx,,drop=F])
+  }))
+  rownames(mat) <- colnames(cluster_mat)
+  mat
+}
+
+
+
 ###################################################
 
 #' Estimate the slingshot curves
@@ -93,7 +111,7 @@ prepare_trajectory <- function(curve, target_length){
   }
   cluster_mat <- .construct_cluster_matrix(cluster_labels)
   cluster_vec <- 1:ncol(cluster_mat)
-  centers <- .compute_cluster_center(dat, cluster_mat)
+  centers <- compute_cluster_center(dat, cluster_mat)
 
   W <- .initialize_weight_matrix(cluster_mat, lineages)
 
@@ -343,7 +361,7 @@ prepare_trajectory <- function(curve, target_length){
 #'
 #' @param lineages list output of \code{.get_lineages()}
 #' @param cluster_vec a vector from 1 to \code{k}
-#' @param centers matrix output of \code{.compute_cluster_center()} that's
+#' @param centers matrix output of \code{compute_cluster_center()} that's
 #' \code{k} by \code{d}
 #'
 #' @return a list of points
@@ -430,8 +448,13 @@ prepare_trajectory <- function(curve, target_length){
 
 #' Smooth approximation based on lambdas
 #'
-#' Does a kernel smoothing of \code{dat} based on the ordering given
+#' Does nonparametric regression (local polynomial regression)
+#' of \code{dat} column-by-column based on the ordering given
 #' by \code{lambda}.
+#'
+#' This function re-orders the rows of \code{dat} according to \code{lambda}. While it's
+#' not necessary for this function, other functions that depend on this function's output
+#' will require this.
 #'
 #' @param lambda vector given by one component of the \code{principal_curve} object
 #' @param dat a \code{n} by \code{d} matrix. Here, \code{n} could be a subset of the
@@ -442,18 +465,10 @@ prepare_trajectory <- function(curve, target_length){
 .smoother_func <- function(lambda, dat, verbose = F){
   stopifnot(length(lambda) == nrow(dat))
 
-  # order the data. This is useful for this smoothing, but downstream functions also
-  ## require the data to be ordered
+  # order the data
   ord <- order(lambda, decreasing = F)
   lambda <- lambda[ord]
   dat <- dat[ord,]
-
-  # kernel_func <- function(x, y){exp(-(x-y)^2)}
-  #
-  # t(sapply(1:length(lambda), function(i){
-  #   weights <- kernel_func(lambda[i], lambda)
-  #   as.numeric(colSums(weights * dat))/sum(weights)
-  # }))
 
   sapply(1:ncol(dat), function(j){
     tmp_df <- data.frame(y = dat[,j], x = lambda)
@@ -615,17 +630,3 @@ prepare_trajectory <- function(curve, target_length){
   mat
 }
 
-#' Compute the cluster centers
-#'
-#' @param dat a \code{n} by \code{d} matrix
-#' @param cluster_mat a 0-1 matrix that is \code{n} by \code{k}
-#'
-#' @return a \code{k} by \code{d} matrix
-.compute_cluster_center <- function(dat, cluster_mat){
-  mat <- t(sapply(1:ncol(cluster_mat), function(x){
-    idx <- which(cluster_mat[,x] == 1)
-    colMeans(dat[idx,,drop=F])
-  }))
-  rownames(mat) <- colnames(cluster_mat)
-  mat
-}

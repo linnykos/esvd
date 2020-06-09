@@ -18,17 +18,20 @@
 )
 }
 \arguments{
-\item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}
+\item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes.
+The class of \code{dat} needs to encode the \code{family} information, as this is how the function
+uses generics.}
 
 \item{nat_mat}{\code{n} by \code{d} matrix}
 
 \item{gradient_mat}{\code{n} by \code{d} matrix}
 
-\item{k}{numeric}
+\item{k}{boolean. If \code{TRUE}, then place the singular values on \code{v_mat}}
 
-\item{max_val}{numeric or \code{NA}}
+\item{max_val}{maximum magnitude of the inner product, or \code{NA}}
 
-\item{direction}{"<=" or ">=" or NA}
+\item{direction}{character either \code{"<="} or \code{">="} or \code{NA} that dictates the domain of the natural
+parameter for the family in \code{family}}
 
 \item{stepsize_init}{numeric}
 
@@ -36,7 +39,8 @@
 
 \item{max_iter}{numeric}
 
-\item{...}{other parameters}
+\item{...}{extra arguments, such as nuisance parameters for \code{"neg_binom"}
+or \code{"curved gaussian"} for \code{family}}
 }
 \value{
 \code{n} by \code{d} matrix
@@ -47,4 +51,9 @@ that it will find an appropriate step size to ensure that after projection,
 the objective value descreases. This is a heuristic to simply enable
 reasonable results, not necessarily theoretically justified or computationally
 efficient.
+}
+\details{
+Be aware of how \code{eSVD:::.project_rank_feasibility} works, as if it cannot
+successfully find a low-rank representation of the current estimate of the matrix, then
+it will use \code{eSVD:::.sbm_projection} to do the approximation instead.
 }

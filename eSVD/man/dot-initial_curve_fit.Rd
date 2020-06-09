@@ -11,7 +11,7 @@
 
 \item{cluster_vec}{a vector from 1 to \code{k}}
 
-\item{centers}{matrix output of \code{.compute_cluster_center()} that's
+\item{centers}{matrix output of \code{compute_cluster_center()} that's
 \code{k} by \code{d}}
 }
 \value{

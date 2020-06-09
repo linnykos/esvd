@@ -71,15 +71,16 @@ segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize =
 #' @param manual_add_traj2 gene indices (from 1 through \code{max(res_mat$idx)}) (possibly \code{NA})
 #' that are manually included as highly expressed genes in trajectory 2
 #'
-#' @return
+#' @return a list with entries \code{common_genes}, \code{traj1_genes} and \code{traj2_genes},
+#' each containing the index of genes (ranging from \code{1} to \code{max(res_mat$idx)}) in order of
+#' pseudotime
 #' @export
-#'
-#' @examples
 order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
                                          threshold, number_of_genes = 2,
                                          manual_add_common = NA,
                                          manual_add_traj1 = NA,
                                          manual_add_traj2 = NA){
+
   # find the unique genes in each tail, and then for each location along time, pick the top x genes in that set (if any)
   traj1_genes <- .find_trajectory_genes(res_mat, traj = 1, common_n = common_n, n = nrow1, threshold = threshold,
                                         number_of_genes = number_of_genes, manual_add = manual_add_traj1)
@@ -97,6 +98,30 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
 
 ######################################
 
+#' Find highly specific genes - Pipeline
+#'
+#' This function takes in three vectors, which is specialized in finding the
+#' highly informative (i.e., highly expressive) genes between two trajectories.
+#' It first uses \code{eSVD:::.np_smoother} to smooth the concatenation of \code{common_vec}
+#' and \code{specific_vec1}, as well as to smooth the concatenation of \code{common_vec}
+#' and \code{specific_vec2}, via \code{np::npreg} function (i.e., kernel regression).
+#' Then, it standardizes these smoothed outputs jointly (so the joint vector has
+#' mean 0 and standard deviation 1) if \code{standardize=T}. Finally, it separates
+#' the standardedized joint vector back into two vectors and
+#' \code{eSVD:::.circular_segmentation} to segment each of the vector. The only caveat is that
+#' this separation keeps the smooths counterparts of \code{common_vec} and \code{specific_vec1}
+#' and \code{specific_vec2} together, just in different orders. The reason for doing this
+#' is because \code{eSVD:::.circular_segmentation} will have an argument \code{hard_cut},
+#' which means to not search for a segmentation index past a certain index. This means
+#' even when we're segmenting the first trajectory, we can retain the values from the second
+#' trajectory for reference.
+#'
+#' @param common_vec a vector
+#' @param specific_vec1 a vector
+#' @param specific_vec2 a vector
+#' @param standardize boolean
+#'
+#' @return a list
 .find_highly_expressed_region <- function(common_vec, specific_vec1, specific_vec2, standardize = T){
   n <- length(common_vec)
   n1 <- length(specific_vec1)
@@ -121,6 +146,13 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   list(cut_1 = res1, cut_2 = res2, vec1_smooth = vec1_smooth, vec2_smooth = vec2_smooth)
 }
 
+#' Smoother function based on kernel regression
+#'
+#' The bandwidth selection is done automatically via \code{np::npregbw}.
+#'
+#' @param vec a vector that will be smoothed
+#'
+#' @return a vector of the same length as \code{vec}
 .np_smoother <- function(vec){
   n <- length(vec)
   dat <- data.frame(y = vec, x = 1:n)
@@ -130,8 +162,34 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   res$mean
 }
 
+#' Circular binary segmentation
+#'
+#' Inspired by Olshen et al., 2004, this method does binary segmentation with a few modifications:
+#' First, it only looks for changepoints, spaced out to be \code{resolution*length(vec)} apart. This
+#' means it does not consider every index of \code{vec} to be a potential changepoint location.
+#' Second, it only looks for starts and ends that are \code{max_width_percentage*length(vec)} apart.
+#' This means it does not consider extremely long segments. Third, it has a parameter \code{hard_cut},
+#' which is an index between \code{1} and \code{length(vec)}. Fourth, the metric used to segment
+#' is not based on the difference on means. Rather, it is based on the difference between
+#' the 25th quantile in the middle segment to the 75th quantile of the left and right shoulders.
+#' Fifth (related to the fourth change), the change must be in a positive direction (i.e.,
+#' the values in the middle segment must be higher than those in the shoulders, roughly speaking).
+#'
+#' @param vec the numeric vector to segment
+#' @param resolution numeric value between 0 and 1 (exclusive)
+#' @param max_width_percentage numeric value between 0 and 1 (exclusive), and must be larger than
+#' \code{resolution}
+#' @param hard_cut index between 1 and \code{length(vec)}, or \code{NA}
+#'
+#' @returna a list, where \code{i} and \code{j} denote the start and end of the middle segment and
+#' \code{obj_val} denotes the objective value achieved
 .circular_segmentation <- function(vec, resolution = 1/100, max_width_percentage = 0.1,
                                    hard_cut = NA){
+
+  stopifnot(is.na(hard_cut) || hard_cut <= length(vec))
+  stopifnot(resolution > 0, resolution < 1, max_width_percentage > 0, max_width_percentage < 1,
+            max_width_percentage > resolution)
+
   n <- length(vec)
   lim <- ifelse(is.na(hard_cut), round(n*resolution), round(hard_cut*resolution))
   max_width <- round(n*max_width_percentage)
@@ -145,8 +203,6 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
 
     obj_inner <- sapply(candidate_idx2_vec, function(j){
       if(abs(i-j) >= max_width) return(-Inf)
-      # val_mid <- mean(vec[(i+1):j])
-      # val_other <- mean(vec[-c((i+1):j)])
       val_mid <- stats::quantile(vec[(i+1):j], probs = 0.25)
       val_other <- stats::quantile(vec[-c((i+1):j)], probs = 0.75)
 
@@ -163,6 +219,14 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   list(i = i, j = j, obj_val = obj_val)
 }
 
+#' Extract segmentation information
+#'
+#' This is used in \code{segment_genes_along_trajectories} to format the results
+#' nicely.
+#'
+#' @param segmentation_res a list of outputs from \code{.find_highly_expressed_region}
+#'
+#' @return a data frame
 .extract_information <- function(segmentation_res){
   stopifnot(all(sapply(segmentation_res, length) == 4))
 
@@ -191,9 +255,34 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   data.frame(info_mat)
 }
 
+#' Find trajectory genes
+#'
+#' Find genes based on \code{res_mat}, for genes in trajectory \code{traj} that
+#' are above a pseudotime index of \code{common_n} and below a pseudotime index of \code{n}.
+#' These genes are first selected to be associated with an objective value larger than
+#' \code{threshold} (according to \code{res_mat}) in the desired trajectory \code{traj}
+#' as well as being lower than \code{threshold} in the other trajectory,
+#'  and if any exist, the first \code{number_of_genes}
+#' are considered at each pseudotime index.
+#'
+#' (Note: It's possible that this function could've coded without the need for the \code{n} argument...)
+#'
+#' @param res_mat the 9-columned data frame that is the output of \code{segment_genes_along_trajectories}
+#' @param traj the value \code{1} or \code{2}
+#' @param common_n positive integer
+#' @param n positive integer, larger than \code{common_n}
+#' @param threshold non-negative numeric
+#' @param number_of_genes positive integer
+#' @param manual_add vector of indices with values between \code{1} and \code{max(res_mat$idx)}
+#' that are manually included, regardless of whether or not the gene's associated objective value
+#' in \code{res_mat} exceeds \code{threshold}
+#'
+#' @return a vector of unique indices between \code{1} and \code{max(res_mat$idx)}, sorted
+#' by pseudotime
 .find_trajectory_genes <- function(res_mat, traj, common_n, n, threshold,
                                    number_of_genes = 2, manual_add = NA){
-  stopifnot(ncol(res_mat) == 9, n > common_n)
+  stopifnot(ncol(res_mat) == 9, n > common_n, traj %in% c(1,2), length(traj) == 1,
+            threshold >= 0)
 
   start_idx <- ifelse(traj == 1, 2, 6)
   mid_idx <- ifelse(traj == 1, 4, 8)
@@ -221,6 +310,27 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   idx[order(sapply(idx, function(x){res_mat[which(res_mat$idx == x)[1], mid_idx]}), decreasing = F)]
 }
 
+#' Find common genes
+#'
+#' Find genes based on \code{res_mat}, for genes in trajectory \code{traj} that
+#' are below a pseudotime index of \code{common_n}, according to both segmentations (i.e.,
+#' the \code{start_1} and \code{start_2} columns in \code{res_mat}), and then among
+#' such that the both \code{obj_1} and \code{obj_2} columns in \code{res_mat} are above
+#' threshold. These genes are then sorted according to \code{start_1} and \code{end_1}
+#' (i.e., based on trajectory 1, for an arbitrary choice), so that the first \code{number_of_genes}
+#' are selected at each pseudotime index based on their values in \code{obj_1}.
+#'
+#' @param res_mat the 9-columned data frame that is the output of \code{segment_genes_along_trajectories}
+#' @param traj_genes index of genes that are unique to either trajectories that should be removed, possibly left empty
+#' @param common_n positive integer
+#' @param threshold non-negative numeric
+#' @param number_of_genes positive integer
+#' @param manual_add vector of indices with values between \code{1} and \code{max(res_mat$idx)}
+#' that are manually included, regardless of whether or not the gene's associated objective value
+#' in \code{res_mat} exceeds \code{threshold}
+#'
+#' @return a vector of unique indices between \code{1} and \code{max(res_mat$idx)}, sorted
+#' by pseudotime
 .find_common_genes <- function(res_mat, traj_genes, common_n, threshold,
                                number_of_genes = 2, manual_add = NA){
   stopifnot(ncol(res_mat) == 9)
@@ -230,6 +340,8 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   }
 
   rm_idx <- intersect(which(res_mat$start_1 >= common_n), which(res_mat$start_2 >= common_n))
+  if(length(rm_idx) > 0) res_mat <- res_mat[-rm_idx,]
+  rm_idx <- unique(c(which(res_mat$obj_1 <= threshold), which(res_mat$obj_2 <= threshold)))
   if(length(rm_idx) > 0) res_mat <- res_mat[-rm_idx,]
 
   tmp_pos <- sapply(1:common_n, function(j){

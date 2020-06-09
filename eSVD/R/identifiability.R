@@ -53,12 +53,14 @@
 
 #' Function to reparameterize two matrices
 #'
+#' test
+#'
 #' Designed to output matrices of the same dimension as \code{u_mat}
-#' and \code{v_mat}, but linearly transformed so \code{u_mat %*% t(v_mat)}
-#' is preserved but either \code{u_mat %*% t(u_mat)} is diagonal and equal to
-#' \code{v_mat %*% t(v_mat)} (if \code{equal_covariance} is \code{FALSE})
-#' or  \code{u_mat % *% t(u_mat)/nrow(u_mat)} is diagonal and equal to
-#' \code{v_mat %*% t(v_mat)/nrow(v_mat)} (if \code{equal_covariance} is \code{TRUE})
+#' and \code{v_mat}, but linearly transformed so \code{u_mat \%*\% t(v_mat)}
+#' is preserved but either \code{u_mat \%*\% t(u_mat)} is diagonal and equal to
+#' \code{v_mat \%*\% t(v_mat)} (if \code{equal_covariance} is \code{FALSE})
+#' or \code{u_mat \%*\% t(u_mat)/nrow(u_mat)} is diagonal and equal to
+#' \code{v_mat \%*\% t(v_mat)/nrow(v_mat)} (if \code{equal_covariance} is \code{TRUE})
 #'
 #' @param u_mat matrix of dimension \code{n} by \code{k}
 #' @param v_mat matrix of dimension \code{p} by \code{k}

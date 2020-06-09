@@ -1,22 +1,32 @@
 #' Initialization for matrix factorization
 #'
+#' This function uses \code{eSVD:::.projected_gradient_descent} primarily, so see
+#' that function's documentation for more details.
+#'
 #' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
-#' @param k positive integer
-#' @param family either \code{"gaussian"} or \code{"exponential"}
-#' @param max_val maximum value of the inner product (with the correct sign)
+#' @param k positive integer less than \code{min(c(nrow(dat), ncol(dat)))}
+#' @param family character (\code{"gaussian"}, \code{"exponential"}, \code{"poisson"}, \code{"neg_binom"},
+#' or \code{"curved gaussian"})
+#' @param max_val maximum magnitude of the inner product
 #' @param max_iter numeric
 #' @param tol numeric
 #' @param verbose boolean
-#' @param ... extra arguments
+#' @param ... extra arguments, such as nuisance parameters for \code{"neg_binom"}
+#' or \code{"curved gaussian"} for \code{family}
 #'
-#' @return list
+#' @return list containing \code{u_mat} and \code{v_mat}
 #' @export
 initialization <- function(dat, k = 2, family,
                            max_val = NA,
                            max_iter = 10, tol = 1e-3,
                            verbose = F, ...){
+  stopifnot(is.matrix(dat), k <= min(dim(dat)), k %% 1 == 0, k > 0)
+
   direction <- .dictate_direction(family)
   if(!is.na(max_val)){
+    stopifnot(max_val > 0)
+
+    # flip max_val so it's the correct sign downstream
     if(!is.na(direction) && direction == "<=") max_val <- -max_val
   }
 
@@ -52,16 +62,20 @@ initialization <- function(dat, k = 2, family,
 
 ##################################
 
-# enforces all the resulting entries to be non-negative
+#' Fill in missing values
+#'
+#' Uses \code{softImpute::softImpute} to fill in all the possible missing values.
+#' This function enforces all the resulting entries to be non-negative.
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
+#' @param k positive integer less than \code{min(c(nrow(dat), ncol(dat)))}
+#'
+#' @return a \code{n} by \code{p} matrix
 .matrix_completion <- function(dat, k){
   if(any(is.na(dat))){
     lambda0_val <- softImpute::lambda0(dat)
     res <- softImpute::softImpute(dat, rank.max = k, lambda = min(30, lambda0_val/100))
-    if(k == 1){
-      diag_mat <- matrix(res$d[1], 1, 1)
-    } else {
-      diag_mat <- diag(res$d)
-    }
+    diag_mat <- .diag_matrix(res$d[1:k])
     pred_naive <- res$u %*% diag_mat %*% t(res$v)
     dat[which(is.na(dat))] <- pred_naive[which(is.na(dat))]
   }
@@ -69,6 +83,23 @@ initialization <- function(dat, k = 2, family,
   pmax(dat, 0)
 }
 
+#' Initialize the matrix of natural parameters
+#'
+#' This function first transforms each entry in \code{dat} according to the inverse function that maps
+#' natural parameters to their expectation (according to \code{eSVD:::.mean_transformation}) and then
+#' uses \code{eSVD:::.project_rank_feasibility} to get a rank-\code{k} approximation of this matrix
+#' that lies within the domain of \code{family}
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes.
+#' @param k  positive integer less than \code{min(c(nrow(dat), ncol(dat)))}
+#' @param family character (\code{"gaussian"}, \code{"exponential"}, \code{"poisson"}, \code{"neg_binom"},
+#' or \code{"curved gaussian"})
+#' @param max_val maximum magnitude of the inner product
+#' @param tol numeric
+#' @param ... extra arguments, such as nuisance parameters for \code{"neg_binom"}
+#' or \code{"curved gaussian"} for \code{family}
+#'
+#' @return \code{n} by \code{p} matrix
 .determine_initial_matrix <- function(dat, family, k, max_val = NA, tol = 1e-3, ...){
   dat[which(dat <= tol)] <- tol/2
   nat_mat <- .mean_transformation(dat, family, ...)
@@ -78,11 +109,33 @@ initialization <- function(dat, k = 2, family,
                                     max_val = max_val)$matrix
 }
 
+#' Projected gradient descent for initial matrix
+#'
+#' After using \code{eSVD:::.determine_initial_matrix} to determine the initial matrix,
+#' uses a projected gradient descent strategy to find a rank-\code{k} initial matrix that minimizes
+#' the negative log-likelihood according the distribution specified in \code{family}.
+#' See the documentation for \code{eSVD:::.adaptive_gradient_step} for more information.
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes.
+#' The class of \code{dat} needs to encode the \code{family} information, as this is how the function
+#' uses generics.
+#' @param k  positive integer less than \code{min(c(nrow(dat), ncol(dat)))}
+#' @param family character (\code{"gaussian"}, \code{"exponential"}, \code{"poisson"}, \code{"neg_binom"},
+#' or \code{"curved gaussian"})
+#' @param max_val maximum magnitude of the inner product
+#' @param direction character either \code{"<="} or \code{">="} or \code{NA} that dictates the domain of the natural
+#' parameter for the family in \code{family}
+#' @param max_iter maximum number of iterations
+#' @param tol numeric
+#' @param ... extra arguments, such as nuisance parameters for \code{"neg_binom"}
+#' or \code{"curved gaussian"} for \code{family}
+#'
+#' @return \code{n} by \code{p} matrix
 .projected_gradient_descent <- function(dat, k = 2,
                                         max_val = NA, direction = "<=",
                                         max_iter = 50, tol = 1e-3,
                                         ...){
-  nat_mat <- .determine_initial_matrix(dat, class(dat)[1], k = k, max_val = max_val, ...)
+  nat_mat <- .determine_initial_matrix(dat, k = k, family = class(dat)[1], max_val = max_val, ...)
   iter <- 1
   new_obj <- .evaluate_objective_mat(dat, nat_mat, ...)
   old_obj <- Inf
@@ -102,9 +155,23 @@ initialization <- function(dat, k = 2, family,
   nat_mat
 }
 
+#' Do an SVD projection
+#'
+#' Uses \code{RSpectra::svds} to compute the \code{k} leading singular vectors, but
+#' sometimes there are numerical instability issues. In case of crashes, the code
+#' then uses the default \code{svd} function.
+#'
+#' @param mat numeric matrix with \code{n} rows and \code{p} columns
+#' @param k positive integer less than \code{min(c(n,p))}.
+#' @param factors boolean. If \code{TRUE}, return the factors (i.e., a list containing
+#' \code{u_mat} and \code{v_mat}). If \code{FALSE}, return the rank-\code{k} matrix directly.
+#' @param u_alone boolean. If \code{TRUE}, then place the singular values on \code{v_mat}
+#' @param v_alone boolean. If \code{TRUE}, then place the singular values on \code{u_mat}
+#'
+#' @return a list or numeric matrix, depending on \code{factors}
 .svd_projection <- function(mat, k, factors = F,
                             u_alone = F, v_alone = F){
-  stopifnot(min(dim(mat)) >= k)
+  stopifnot(min(dim(mat)) >= k, any(!u_alone, !v_alone))
 
   if(min(dim(mat)) > k+2){
     res <- tryCatch({
@@ -117,12 +184,7 @@ initialization <- function(dat, k = 2, family,
     res <- svd(mat)
   }
 
-
-  if(k == 1){
-    diag_mat <- matrix(res$d[1], 1, 1)
-  } else {
-    diag_mat <- diag(res$d[1:k])
-  }
+  diag_mat <- .diag_matrix(res$d[1:k])
 
   if(factors){
     if(u_alone){
@@ -148,16 +210,24 @@ initialization <- function(dat, k = 2, family,
 #' reasonable results, not necessarily theoretically justified or computationally
 #' efficient.
 #'
-#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
+#' Be aware of how \code{eSVD:::.project_rank_feasibility} works, as if it cannot
+#' successfully find a low-rank representation of the current estimate of the matrix, then
+#' it will use \code{eSVD:::.sbm_projection} to do the approximation instead.
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes.
+#' The class of \code{dat} needs to encode the \code{family} information, as this is how the function
+#' uses generics.
 #' @param nat_mat \code{n} by \code{d} matrix
 #' @param gradient_mat \code{n} by \code{d} matrix
-#' @param k numeric
-#' @param max_val numeric or \code{NA}
-#' @param direction "<=" or ">=" or NA
+#' @param k boolean. If \code{TRUE}, then place the singular values on \code{v_mat}
+#' @param max_val  maximum magnitude of the inner product, or \code{NA}
+#' @param direction character either \code{"<="} or \code{">="} or \code{NA} that dictates the domain of the natural
+#' parameter for the family in \code{family}
 #' @param stepsize_init numeric
 #' @param stepdown_factor numeric
 #' @param max_iter numeric
-#' @param ... other parameters
+#' @param ... extra arguments, such as nuisance parameters for \code{"neg_binom"}
+#' or \code{"curved gaussian"} for \code{family}
 #'
 #' @return \code{n} by \code{d} matrix
 .adaptive_gradient_step <- function(dat, nat_mat, gradient_mat, k,
@@ -187,7 +257,25 @@ initialization <- function(dat, k = 2, family,
   nat_mat
 }
 
-# alternating projection heuristic to find intersection of two sets
+#' Find low-rank and half-space approximate of a matrix
+#'
+#' Alternating projection heuristic to find the approximate matrix of \code{mat}
+#' that both is rank-\code{k} and has all its entries in the halfspace dictated
+#' by \code{direction}. This function alternates
+#' between using \code{eSVD:::.svd_projection} and \code{eSVD:::.absolute_threshold}.
+#'
+#' However, if this function does not converge to a solution after \code{max_iter} iterations,
+#' it gives up and uses \code{eSVD:::.sbm_projection} instead, which approximates \code{mat}
+#' using a stochastic-block-model variant.
+#'
+#' @param mat numeric matrix with \code{n} rows and \code{p} columns
+#' @param k positive integer less than \code{min(c(n,p))}.
+#' @param direction character either \code{"<="} or \code{">="} or \code{NA}
+#' @param max_val maximum magnitude of each entry in the approximate
+#' @param max_iter numeric
+#' @param tol numeric
+#'
+#' @return \code{n} by \code{d} matrix
 .project_rank_feasibility <- function(mat, k, direction, max_val = NA,
                                       max_iter = 20, tol = 1e-6){
   stopifnot(!is.na(max_val) | !is.na(direction))
@@ -220,6 +308,17 @@ initialization <- function(dat, k = 2, family,
   list(matrix = res, iter = NA)
 }
 
+#' Hard threshold all the entries in a matrix
+#'
+#' While simple conceptually, this function is a bit janky-looking in its
+#' implementation due to numeric instabilities previously encountered.
+#'
+#' @param mat numeric matrix with \code{n} rows and \code{p} columns
+#' @param direction character either \code{"<="} or \code{">="} or \code{NA}
+#' @param max_val maximum magnitude of each entry in the approximate
+#' @param tol2 numeric
+#'
+#' @return \code{n} by \code{d} matrix
 .absolute_threshold <- function(mat, direction, max_val = NA, tol2 = 1e-3){
   if(is.na(direction)){
     max_val <- abs(max_val)
@@ -229,7 +328,6 @@ initialization <- function(dat, k = 2, family,
     mat[idx] <- sign(val)*(max_val-tol2)
 
   } else if (direction == "<=") {
-
     tol <- -tol2
     if(any(mat < 0)) tol <- min(max(mat[mat < 0]), tol)
     stopifnot(tol < 0)
@@ -237,7 +335,6 @@ initialization <- function(dat, k = 2, family,
     if(!is.na(max_val)) mat[mat < max_val] <- max_val+tol2
 
   } else {
-
     tol <- tol2
     if(any(mat > 0)) tol <- max(min(mat[mat > 0]), tol)
     stopifnot(tol > 0)
@@ -248,6 +345,19 @@ initialization <- function(dat, k = 2, family,
   mat
 }
 
+#' Fix rank defficiency among two matrices
+#'
+#' Given two matrices, \code{u_mat} and \code{v_mat} (both with the same number of columns),
+#' adjust these two matrices so the \code{u_mat \%*\% t(v_mat)} is actually of the desired
+#' rank. This function is needed since sometimes upstream, the matrices \code{u_mat} and \code{v_mat}
+#' do not actually have the rank equal to the number of columns (i.e., empirically we have
+#' observed that \code{u_mat} might have a column that is all constant).
+#'
+#' @param u_mat a numeric matrix
+#' @param v_mat a numeric matrix with the same number of columns as \code{u_mat}
+#' @param direction character either \code{"<="} or \code{">="} or \code{NA}
+#'
+#' @return a list of \code{u_mat} and \code{v_mat}
 .fix_rank_defficiency_initialization <- function(u_mat, v_mat, direction){
   k <- ncol(u_mat)
   nat_mat <- u_mat %*% t(v_mat)

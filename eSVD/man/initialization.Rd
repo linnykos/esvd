@@ -18,11 +18,12 @@ initialization(
 \arguments{
 \item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}
 
-\item{k}{positive integer}
+\item{k}{positive integer less than \code{min(c(nrow(dat), ncol(dat)))}}
 
-\item{family}{either \code{"gaussian"} or \code{"exponential"}}
+\item{family}{character (\code{"gaussian"}, \code{"exponential"}, \code{"poisson"}, \code{"neg_binom"},
+or \code{"curved gaussian"})}
 
-\item{max_val}{maximum value of the inner product (with the correct sign)}
+\item{max_val}{maximum magnitude of the inner product}
 
 \item{max_iter}{numeric}
 
@@ -30,11 +31,13 @@ initialization(
 
 \item{verbose}{boolean}
 
-\item{...}{extra arguments}
+\item{...}{extra arguments, such as nuisance parameters for \code{"neg_binom"}
+or \code{"curved gaussian"} for \code{family}}
 }
 \value{
-list
+list containing \code{u_mat} and \code{v_mat}
 }
 \description{
-Initialization for matrix factorization
+This function uses \code{eSVD:::.projected_gradient_descent} primarily, so see
+that function's documentation for more details.
 }

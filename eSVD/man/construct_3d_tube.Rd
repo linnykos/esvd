@@ -17,5 +17,13 @@ construct_3d_tube(dat, radius, len = 20)
 a list
 }
 \description{
-Construct the 3D tube for each curve
+This function creates a circle roughly locally perpendicular to each point along a
+curve, where the circle has radius \code{radius}. Here, \code{len} describes how many
+points describe this circle, where in most applications, \code{len=20} is more than enough.
+}
+\details{
+Importantly, \code{dat} needs to be in order, meaning the curve is represented by a discretization
+of \code{nrow(dat)} points in 3-dimensional space (i.e., we require \code{ncol(dat) = 3}), whereby
+the direct neighbors of any point (i.e., any row of \code{dat}) are the corresponding rows right before
+and after it.
 }

@@ -18,6 +18,12 @@ original dataset}
 a smoothed \code{n} by \code{d} matrix that is ordered by \code{lambda}
 }
 \description{
-Does a kernel smoothing of \code{dat} based on the ordering given
+Does nonparametric regression (local polynomial regression)
+of \code{dat} column-by-column based on the ordering given
 by \code{lambda}.
+}
+\details{
+This function re-orders the rows of \code{dat} according to \code{lambda}. While it's
+not necessary for this function, other functions that depend on this function's output
+will require this.
 }
