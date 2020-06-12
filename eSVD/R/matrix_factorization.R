@@ -1,16 +1,32 @@
 #' Fit the factorization
 #'
-#' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes
+#' Perform alternating minimization to estimate the low-rank matrix of natural
+#' parameters corresponding the observations in \code{dat}. This low-rank matrix
+#' is factorized by \code{u_mat} and \code{v_mat}, of which the user needs to input
+#' an initial estimate of such matrices. These initial estimates can come from
+#' \code{eSVD::initialization}, but can come from any other method as long
+#' as \code{ncol(u_mat)==ncol(v_mat)}, \code{nrow(u_mat)==nrow(dat)} and
+#' \code{nrow(v_mat)==ncol(dat)}, and the inner products between \code{u_mat} and
+#' \code{v_mat} respect the domain of the natural parameters for \code{family}.
+#'
+#' For more information on how the optimization works, see the documentation
+#' of \code{eSVD:::.optimize_mat}, which (if you look at the lower-level functions)
+#' uses Frank-Wolfe to do the inner optimizations via \code{eSVD:::.frank_wolfe}
+#' and choses step-sizes via \code{eSVD:::.binary_search}.
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{p} columns represent genes
 #' @param u_mat initial factorization, of size \code{n} by \code{k}
-#' @param v_mat initial factorization, of size \code{d} by \code{k}
-#' @param max_val maximum value of the inner product (with the correct sign)
-#' @param family character such as \code{"gaussian"} or \code{"exponential"}
+#' @param v_mat initial factorization, of size \code{p} by \code{k}
+#' @param max_val maximum magnitude of the inner product
+#' @param family character (\code{"gaussian"}, \code{"exponential"}, \code{"poisson"}, \code{"neg_binom"},
+#' or \code{"curved gaussian"})
 #' @param tol small positive number to dictate the convergence of the objective function
 #' @param max_iter maximum number of iterations for the algorithm
 #' @param verbose boolean
 #' @param return_path boolean
 #' @param ncores positive integer
-#' @param ... additional parameters for the distribution
+#' @param ... extra arguments, such as nuisance parameters for \code{"neg_binom"}
+#' or \code{"curved gaussian"} for \code{family}
 #'
 #' @return list
 #' @export
@@ -99,6 +115,37 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   }
 }
 
+#' Optimize a matrix, row-by-row
+#'
+#' Given a data matrix \code{dat} where the first element of \code{class(dat)}
+#' is the associated \code{family} (i.e., tells us which negative
+#' log-likelihood function we want to optimize over), optimize over each row of
+#' \code{current_mat} holding the values in \code{other_mat} fixed. This function
+#' determines which matrix is aligned with the rows or columns based on the setting of
+#' \code{left}. If \code{left=TRUE}, then the rows of \code{current_mat}
+#' correspond to the rows of \code{dat}, and if \code{left=FALSE}, then the
+#' rows of \code{current_mat} correspond to the columns of \code{dat}.
+#'
+#' This function does a gradient descent for every row in \code{current_mat}
+#' via the function \code{eSVD:::.optimize_row}. See the documentation for that function for
+#' more details.
+#'
+#' If \code{parallelized=TRUE}, it is assumed the cores is already registered
+#' via \code{doMC::registerDoMC}.
+#'
+#' @param dat dataset where the \code{n} rows represent cells and \code{p} columns represent genes
+#' @param current_mat a matrix with \code{k} columns, and number of rows equal to either
+#' \code{n} or \code{p}
+#' @param other_mat a matrix with \code{k} columns, and number of rows equal to either
+#' \code{n} or \code{p} (whichever one isn't what \code{current_mat} has)
+#' @param left boolean
+#' @param max_val maximum magnitude of the inner product
+#' @param parallelized boolean
+#' @param verbose boolean
+#' @param ... extra arguments, such as nuisance parameters for \code{"neg_binom"}
+#' or \code{"curved gaussian"} for \code{family}
+#'
+#' @return matrix of the same dimension as \code{current_mat}
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
                           parallelized = F, verbose = F, ...){
   stopifnot(length(class(dat)) == 2)
@@ -145,9 +192,35 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   current_mat
 }
 
+#' Optimize a vector
+#'
+#' Given a data vector \code{dat_vec} where the first element of \code{class(dat_vec)}
+#' is the associated \code{family} (i.e., tells us which negative
+#' log-likelihood function we want to optimize over), optimize the values in
+#' \code{current_vec} holding the values in \code{other_mat} fixed.
+#' This function does a gradient descent, so the values in \code{current_vec}
+#' are important since they determine the "initial values" of the optimization
+#' procedure as well as ensure that these initial values are feasible for the optimization
+#' problem.
+#'
+#' This function uses Frank-Wolfe, mainly using \code{eSVD:::.frank_wolfe}.
+#' This function is called by \code{eSVD:::.optimize_mat}.
+#'
+#' @param dat_vec a vector
+#' @param current_vec a vector
+#' @param other_mat a matrix with the number of rows equal to \code{length(dat_vec)} and the
+#' number of columns equal to \code{length(current_vec)}
+#' @param n the number of rows of \code{dat} when called on in \code{eSVD:::.optimize_mat}
+#' @param p the number of columns of \code{dat} when called on in \code{eSVD:::.optimize_mat}
+#' @param max_iter maximum number of iterations for the algorithm
+#' @param max_val maximum magnitude of the inner product
+#' @param ... extra arguments, such as nuisance parameters for \code{"neg_binom"}
+#' or \code{"curved gaussian"} for \code{family}
+#'
+#' @return a vector of length \code{current_vec}
 .optimize_row <- function(dat_vec, current_vec, other_mat, n, p, max_iter = 100,
                           max_val = NA, ...){
-  stopifnot(length(which(!is.na(dat_vec))) > 0)
+  stopifnot(length(which(!is.na(dat_vec))) > 0, length(dat_vec) == nrow(other_mat))
 
   direction <- .dictate_direction(class(dat_vec)[1])
   current_obj <- Inf
@@ -171,6 +244,29 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   current_vec
 }
 
+#' Binary search for the appropriate step size
+#'
+#' This is a variant of the line search variant of Frank-Wolfe, where we choose
+#' the step size that minimizes the decrease in the objective function.
+#' In this variant, we assume that the minimizing step size lies between 0 and 1,
+#' and we search for the optimal step size via binary search. We first run
+#' 5 iterations of binary search. Then, in the next stage,
+#' we keep running binary search if (within our search space strategy), we
+#' can still find a new possible value that decreases the objective function.
+#'
+#' @param dat_vec a vector
+#' @param current_vec a vector
+#' @param step_vec a vector of the same length of \code{current_vec} (typically
+#' the vector output by \code{eSVD:::.frank_wolfe})
+#' @param other_mat a matrix with the number of rows equal to \code{length(dat_vec)} and the
+#' number of columns equal to \code{length(current_vec)}
+#' @param n the number of rows of \code{dat} when called on in \code{eSVD:::.optimize_mat}
+#' @param p the number of columns of \code{dat} when called on in \code{eSVD:::.optimize_mat}
+#' @param max_iter maximum number of iterations for the algorithm
+#' @param ...  extra arguments, such as nuisance parameters for \code{"neg_binom"}
+#' or \code{"curved gaussian"} for \code{family}
+#'
+#' @return a scalar
 .binary_search <- function(dat_vec, current_vec, step_vec, other_mat,
                            n, p,
                            max_iter = 100, ...){
@@ -232,13 +328,21 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
 #' Frank wolfe linear program
 #'
-#' Solves the linear program:
+#' Solves the linear program (no formatting of text).
 #' Data: g_i (vector), i from 1 to k. V (matrix), with d rows and k columns.
 #' Variables: y_+1 to y_+k, y_-1 to y_-k
 #' Optimization problem: min g_1*(y_+1-y_-1) + ... + g_k(y_+k-y_-k)
 #' such that: V %*% (y_+(1:k) - y_-(1:k)) <= tol elementwise (for entire vector of length d)
 #'            V %*% (y_+(1:k) - y_-(1:k)) >= other_bound
 #'            y_+i, y_-i >= 0 for i from 1 to k
+#'
+#' The character \code{direction} should be related to \code{other_bound}.
+#' Specifically, if \code{direction="<="}, then \code{other_bound} should be a negative number,
+#' meaning all the inner products between the solution of the optimization problem and the
+#' rows of \code{other_mat} should be negative.
+#' Otherwise, if  \code{direction=">="}, then \code{other_bound} should be a positive number,
+#' meaning all the inner products between the solution of the optimization problem and the
+#' rows of \code{other_mat} should be positive.
 #'
 #' @param grad_vec vector
 #' @param other_mat matrix
@@ -300,6 +404,17 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   res$solution
 }
 
+#' Check the rank of the inner product between the rows of two matrices
+#'
+#' If the rank of \code{u_mat \%*\% t(v_mat)} is not equal to
+#' \code{ncol(u_mat)} (which is equal to \code{ncol(v_mat)}), then
+#' drop the last few columns of \code{u_mat} and \code{v_mat}.
+#' This function assumes the source of lack-of-rank is from these dropped columns.
+#'
+#' @param u_mat a matrix
+#' @param v_mat a matrix with the same number of columns as \code{u_mat}
+#'
+#' @return a list containing \code{u_mat} and \code{v_mat}
 .check_rank <- function(u_mat, v_mat){
   stopifnot(ncol(u_mat) == ncol(v_mat))
   k <- ncol(u_mat)

@@ -27,11 +27,20 @@
 vector
 }
 \description{
-Solves the linear program:
+Solves the linear program (no formatting of text).
 Data: g_i (vector), i from 1 to k. V (matrix), with d rows and k columns.
 Variables: y_+1 to y_+k, y_-1 to y_-k
 Optimization problem: min g_1*(y_+1-y_-1) + ... + g_k(y_+k-y_-k)
 such that: V %*% (y_+(1:k) - y_-(1:k)) <= tol elementwise (for entire vector of length d)
            V %*% (y_+(1:k) - y_-(1:k)) >= other_bound
            y_+i, y_-i >= 0 for i from 1 to k
+}
+\details{
+The character \code{direction} should be related to \code{other_bound}.
+Specifically, if \code{direction="<="}, then \code{other_bound} should be a negative number,
+meaning all the inner products between the solution of the optimization problem and the
+rows of \code{other_mat} should be negative.
+Otherwise, if  \code{direction=">="}, then \code{other_bound} should be a positive number,
+meaning all the inner products between the solution of the optimization problem and the
+rows of \code{other_mat} should be positive.
 }

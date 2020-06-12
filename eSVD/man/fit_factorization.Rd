@@ -19,15 +19,16 @@ fit_factorization(
 )
 }
 \arguments{
-\item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes}
+\item{dat}{dataset where the \code{n} rows represent cells and \code{p} columns represent genes}
 
 \item{u_mat}{initial factorization, of size \code{n} by \code{k}}
 
-\item{v_mat}{initial factorization, of size \code{d} by \code{k}}
+\item{v_mat}{initial factorization, of size \code{p} by \code{k}}
 
-\item{max_val}{maximum value of the inner product (with the correct sign)}
+\item{max_val}{maximum magnitude of the inner product}
 
-\item{family}{character such as \code{"gaussian"} or \code{"exponential"}}
+\item{family}{character (\code{"gaussian"}, \code{"exponential"}, \code{"poisson"}, \code{"neg_binom"},
+or \code{"curved gaussian"})}
 
 \item{tol}{small positive number to dictate the convergence of the objective function}
 
@@ -39,11 +40,25 @@ fit_factorization(
 
 \item{ncores}{positive integer}
 
-\item{...}{additional parameters for the distribution}
+\item{...}{extra arguments, such as nuisance parameters for \code{"neg_binom"}
+or \code{"curved gaussian"} for \code{family}}
 }
 \value{
 list
 }
 \description{
-Fit the factorization
+Perform alternating minimization to estimate the low-rank matrix of natural
+parameters corresponding the observations in \code{dat}. This low-rank matrix
+is factorized by \code{u_mat} and \code{v_mat}, of which the user needs to input
+an initial estimate of such matrices. These initial estimates can come from
+\code{eSVD::initialization}, but can come from any other method as long
+as \code{ncol(u_mat)==ncol(v_mat)}, \code{nrow(u_mat)==nrow(dat)} and
+\code{nrow(v_mat)==ncol(dat)}, and the inner products between \code{u_mat} and
+\code{v_mat} respect the domain of the natural parameters for \code{family}.
+}
+\details{
+For more information on how the optimization works, see the documentation
+of \code{eSVD:::.optimize_mat}, which (if you look at the lower-level functions)
+uses Frank-Wolfe to do the inner optimizations via \code{eSVD:::.frank_wolfe}
+and choses step-sizes via \code{eSVD:::.binary_search}.
 }
