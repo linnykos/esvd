@@ -120,8 +120,6 @@ initialization <- function(dat, k = 2, family,
 #' The class of \code{dat} needs to encode the \code{family} information, as this is how the function
 #' uses generics.
 #' @param k  positive integer less than \code{min(c(nrow(dat), ncol(dat)))}
-#' @param family character (\code{"gaussian"}, \code{"exponential"}, \code{"poisson"}, \code{"neg_binom"},
-#' or \code{"curved gaussian"})
 #' @param max_val maximum magnitude of the inner product
 #' @param direction character either \code{"<="} or \code{">="} or \code{NA} that dictates the domain of the natural
 #' parameter for the family in \code{family}

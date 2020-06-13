@@ -1,3 +1,17 @@
+#' Convert genes (in mouse) to a standardized set of synonyms
+#'
+#' This uses the database in \code{org.Mm.eg.db} package. At the time of running this
+#' designing this code, we are using the version 3.10.0 released on	October 30, 2019, but
+#' this code should work for even newer versions of \code{org.Mm.eg.db}.
+#'
+#' If genes in \code{vec} are found to be in the database in \code{org.Mm.eg.db}, they are converted
+#' to the their standardize symbol. If genes are not found in the database, they are left
+#' untouched. Gene names in \code{vec} are replaced in-place.
+#'
+#' @param vec a vector of gene names
+#'
+#' @return a vector of length \code{length(vec)}
+#' @export
 convert_synonyms <- function(vec){
   stopifnot(is.character(vec))
   len <- length(vec)

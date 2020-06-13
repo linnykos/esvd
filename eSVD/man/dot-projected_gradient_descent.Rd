@@ -32,9 +32,6 @@ parameter for the family in \code{family}}
 
 \item{...}{extra arguments, such as nuisance parameters for \code{"neg_binom"}
 or \code{"curved gaussian"} for \code{family}}
-
-\item{family}{character (\code{"gaussian"}, \code{"exponential"}, \code{"poisson"}, \code{"neg_binom"},
-or \code{"curved gaussian"})}
 }
 \value{
 \code{n} by \code{p} matrix
