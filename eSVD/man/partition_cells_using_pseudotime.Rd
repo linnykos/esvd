@@ -8,7 +8,7 @@ partition_cells_using_pseudotime(
   pseudotime_df,
   trajectory_1_clusters,
   trajectory_2_clusters,
-  threshold_common_time
+  threshold_common_time = NA
 )
 }
 \arguments{
@@ -19,7 +19,8 @@ partition_cells_using_pseudotime(
 \item{trajectory_2_clusters}{vector containing integers from 1 to \code{max(pseudotime_df$cluster_labels)}, and
 does not have an intersection with \code{trajectory_1_clusters}}
 
-\item{threshold_common_time}{numeric}
+\item{threshold_common_time}{numeric or can be \code{NA}, in which case it uses the maximum pseudotime
+for a cell not in either trajectory}
 }
 \value{
 a list of integers

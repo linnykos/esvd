@@ -61,6 +61,35 @@ test_that(".resample_all works", {
   expect_true(all(sort(names(res)) == c("cluster_labels", "dat", "idx_all")))
 })
 
+test_that(".resample_all sets cluster sizes intersections to be the same if upscale_factor = 1", {
+  set.seed(10)
+  cell_pop <- matrix(c(4,10, 25,100,
+                       60,80, 25,100,
+                       40,10, 60,80,
+                       60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
+  h <- nrow(cell_pop)
+  n_vec <- c(30,40,50,60)
+  dat <- do.call(rbind, lapply(1:h, function(x){
+    pos <- stats::runif(n_vec[x])
+    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_vec[x], sd = 0.1),
+          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_vec[x], sd = 0.1))
+  }))
+  cluster_labels <- unlist(lapply(1:length(n_vec), function(i){rep(i, n_vec[i])}))
+
+  cluster_group_list <- NA
+  starting_cluster <- 1
+  lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
+                            cluster_group_list = cluster_group_list,
+                            squared = F)
+
+  res <- .resample_all(dat, cluster_labels, cluster_group_list, lineages, upscale_factor = 1)
+
+  tab <- table(cluster_labels[res$idx_all])
+
+  expect_true(sum(tab[1]+tab[2]) == tab[3])
+  expect_true(sum(tab[1]+tab[2]) == tab[4])
+})
+
 test_that(".resample_all works with cluster_group_list set to NA", {
   set.seed(10)
   dat <- matrix(1:500, nrow = 100, ncol = 5)

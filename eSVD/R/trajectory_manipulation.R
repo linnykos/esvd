@@ -65,32 +65,39 @@ construct_pseudotime_trajectory_matrix <- function(slingshot_res, cluster_labels
 #' @param trajectory_1_clusters vector containing integers from 1 to \code{max(pseudotime_df$cluster_labels)}
 #' @param trajectory_2_clusters vector containing integers from 1 to \code{max(pseudotime_df$cluster_labels)}, and
 #' does not have an intersection with \code{trajectory_1_clusters}
-#' @param threshold_common_time numeric
+#' @param threshold_common_time numeric or can be \code{NA}, in which case it uses the maximum pseudotime
+#' for a cell not in either trajectory
 #'
 #' @return a list of integers
 #' @export
 partition_cells_using_pseudotime <- function(pseudotime_df, trajectory_1_clusters,
-                                             trajectory_2_clusters, threshold_common_time){
+                                             trajectory_2_clusters, threshold_common_time = NA){
   k <- max(pseudotime_df$cluster_labels)
   stopifnot(all(trajectory_1_clusters %in% c(1:k)), all(trajectory_2_clusters %in% c(1:k)),
             length(intersect(trajectory_1_clusters, trajectory_2_clusters)) == 0)
+
+  if(is.na(threshold_common_time)){
+    threshold_common_time <- max(pseudotime_df$pseudotime[!pseudotime_df$cluster_labels %in% c(trajectory_1_clusters, trajectory_2_clusters)])
+  }
 
   # remove trajectory-specific cells that are too young
   pseudotime_df2 <- pseudotime_df[-intersect(which(is.na(pseudotime_df$consensus)),
                                              which(pseudotime_df$pseudotime <= threshold_common_time)),]
   # remove common cells that do not have a consensus in the pseudo-time
-  pseudotime_df2 <- pseudotime_df2[-which(!pseudotime_df2$consensus),]
+  if(length(which(!pseudotime_df2$consensus)) > 0){
+    pseudotime_df2 <- pseudotime_df2[-which(!pseudotime_df2$consensus),]
+  }
 
   common_cluster <- setdiff(c(1:k), c(trajectory_1_clusters, trajectory_2_clusters))
 
   # construct two data frames, each with all the cells (common and specific) for each respecitive trajectory
   pseudotime_df2 <- pseudotime_df2[order(pseudotime_df2$pseudotime),]
-  tmp1 <- pseudotime_df2[which(!pseudotime_df2$cluster_labels %in% trajectory_2_clusters),]
-  tmp2 <- pseudotime_df2[which(!pseudotime_df2$cluster_labels %in% trajectory_1_clusters),]
+  pseudotime_max_common <- min(pseudotime_df2$pseudotime[pseudotime_df2$cluster_labels %in% c(trajectory_1_clusters, trajectory_2_clusters)])
 
   # define the relevant cell categories
-  pseudotime_max_common <- min(pseudotime_df2$pseudotime[pseudotime_df2$cluster_labels %in% c(trajectory_1_clusters, trajectory_2_clusters)])
-  cell_idx_common <- pseudotime_df2$cell_idx[which(pseudotime_df2$pseudotime <= pseudotime_max_common)]
+
+  cell_idx_common <- pseudotime_df2$cell_idx[intersect(which(pseudotime_df2$pseudotime <= pseudotime_max_common),
+                                                       which(!pseudotime_df2$cluster_labels %in% c(trajectory_1_clusters, trajectory_2_clusters)))]
 
   cell_idx_traj1 <- pseudotime_df2$cell_idx[intersect(which(pseudotime_df2$pseudotime >= pseudotime_max_common),
                                                       which(pseudotime_df2$cluster_labels %in% c(trajectory_1_clusters, common_cluster)))]
