@@ -72,7 +72,7 @@ slingshot_3dplot <- function(dat, cluster_labels, bg_col_vec, bg_cex = 0.4,
 #' @return a list
 #' @export
 construct_3d_tube <- function(dat, radius, len = 20){
-  stopifnot(nrow(dat) > 2, ncol(dat), is.matrix(dat))
+  stopifnot(nrow(dat) > 2, ncol(dat) == 3, is.matrix(dat))
 
   # remove duplicates
   dat <- .remove_duplicate_rows(dat)
@@ -142,7 +142,7 @@ construct_3d_tube <- function(dat, radius, len = 20){
 #'
 #' @return a unit vector
 .find_adjacent_directions <- function(dat, idx){
-  stopifnot(idx >= 1, idx <= nrow(dat))
+  stopifnot(length(idx) == 1, idx >= 1, idx <= nrow(dat))
 
   idx_vec <- sort(unique(pmax(pmin(idx + c(-1,0,1), nrow(dat)), 1)))
   stopifnot(length(idx_vec) %in% c(2,3))
@@ -218,9 +218,9 @@ construct_3d_tube <- function(dat, radius, len = 20){
             radius > 0)
 
   if(check){
-    basis_vec1 <- .l2norm(basis_vec1)
-    basis_vec2 <- basis_vec2 - (basis_vec2 %*% basis_vec1)*basis_vec1
-    basis_vec2 <- .l2norm(basis_vec2)
+    basis_vec1 <- basis_vec1/.l2norm(basis_vec1)
+    basis_vec2 <- basis_vec2 - as.numeric(basis_vec2 %*% basis_vec1)*basis_vec1
+    basis_vec2 <- basis_vec2/.l2norm(basis_vec2)
   }
 
   seq_vec <- seq(0, 2*pi, length.out = len)

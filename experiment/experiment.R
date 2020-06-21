@@ -1,26 +1,32 @@
-rm(list=ls())
 set.seed(10)
-cell_pop <- matrix(c(4,10, 25,100,
-                     60,80, 25,100,
-                     40,10, 60,80,
-                     60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
-h <- nrow(cell_pop)
-n_vec <- c(30,40,50,60)
-dat <- do.call(rbind, lapply(1:h, function(x){
-  pos <- stats::runif(n_vec[x])
-  cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_vec[x], sd = 0.1),
-        pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_vec[x], sd = 0.1))
-}))
-cluster_labels <- unlist(lapply(1:length(n_vec), function(i){rep(i, n_vec[i])}))
+vec <- c(stats::rnorm(100), stats::rnorm(100, mean = 5), stats::rnorm(100))
+# res <- .circular_segmentation(vec, max_width_percentage = 1)
 
-cluster_group_list <- NA
-starting_cluster <- 1
-lineages <- .get_lineages(dat, cluster_labels, starting_cluster = starting_cluster,
-                          cluster_group_list = cluster_group_list,
-                          squared = F)
-upscale_factor <- 1
-# res <- .resample_all(dat, cluster_labels, cluster_group_list, lineages, upscale_factor = 1)
+resolution = 1/100
+max_width_percentage = 1
+hard_cut = NA
 
-cluster_group_list <- list(sort(unique(cluster_labels)))
-cluster_intersection <- .intersect_lineages_cluster_group_list(lineages, cluster_group_list)
-upscale_vec <- .compute_upscale_factor(cluster_labels, cluster_intersection, upscale_factor)
+stopifnot(is.na(hard_cut) || hard_cut <= length(vec))
+stopifnot(resolution > 0, resolution < 1, max_width_percentage > 0, max_width_percentage <= 1,
+          max_width_percentage > resolution)
+
+n <- length(vec)
+lim <- ifelse(is.na(hard_cut), round(n*resolution), round(hard_cut*resolution))
+max_width <- round(n*max_width_percentage)
+
+n2 <- ifelse(is.na(hard_cut), n, hard_cut)
+
+candidate_idx1_vec <- round(seq(2, n2-2*lim, by = lim))
+obj_outer <- sapply(candidate_idx1_vec, function(i){
+  candidate_idx2_vec <- round(seq(i+lim, n2, by = lim))
+
+  obj_inner <- sapply(candidate_idx2_vec, function(j){
+    if(abs(i-j) >= max_width) return(-Inf)
+    val_mid <- stats::quantile(vec[(i+1):j], probs = 0.25)
+    val_other <- stats::quantile(vec[-c((i+1):j)], probs = 0.75)
+
+    val_mid - val_other
+  })
+
+  c(j = candidate_idx2_vec[which.max(obj_inner)], obj_val = max(obj_inner))
+})

@@ -15,13 +15,14 @@
 #' @param standardize boolean
 #' @param ncores number of cores
 #' @param verbose boolean
+#' @param ... additional arguments for \code{eSVD:::.circular_segmentation}
 #'
 #' @return a data frame with 9 columns and \code{ncol(dat1)} rows, where each row
 #' contains statistics
 #' for each gene across both \code{dat1} and \code{dat2}
 #' @export
 segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize = T,
-                                             ncores = NA, verbose = F){
+                                             ncores = NA, verbose = F, ...){
   stopifnot(ncol(dat1) == ncol(dat2))
   stopifnot(sum(abs(dat1[1:common_n,] - dat2[1:common_n,])) <= 1e-6)
   n1 <- nrow(dat1) - common_n
@@ -35,7 +36,7 @@ segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize =
     .find_highly_expressed_region(common_vec = dat1[1:common_n,j],
                                   specific_vec1 = dat1[(common_n+1):(common_n+n1),j],
                                   specific_vec2 = dat2[(common_n+1):(common_n+n2),j],
-                                  standardize = standardize)
+                                  standardize = standardize, ...)
   }
 
   if(is.na(ncores)){
@@ -122,7 +123,7 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
 #' @param standardize boolean
 #'
 #' @return a list
-.find_highly_expressed_region <- function(common_vec, specific_vec1, specific_vec2, standardize = T){
+.find_highly_expressed_region <- function(common_vec, specific_vec1, specific_vec2, standardize = T, ...){
   n <- length(common_vec)
   n1 <- length(specific_vec1)
   n2 <- length(specific_vec2)
@@ -140,8 +141,8 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
     vec2_all <- vec_all[(length(vec1_all)+1):length(vec_all)]
   }
 
-  res1 <- .circular_segmentation(vec1_all, hard_cut = n+n1)
-  res2 <- .circular_segmentation(vec2_all, hard_cut = n+n2)
+  res1 <- .circular_segmentation(vec1_all, hard_cut = n+n1, ...)
+  res2 <- .circular_segmentation(vec2_all, hard_cut = n+n2, ...)
 
   list(cut_1 = res1, cut_2 = res2, vec1_smooth = vec1_smooth, vec2_smooth = vec2_smooth)
 }
@@ -187,7 +188,7 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
                                    hard_cut = NA){
 
   stopifnot(is.na(hard_cut) || hard_cut <= length(vec))
-  stopifnot(resolution > 0, resolution < 1, max_width_percentage > 0, max_width_percentage < 1,
+  stopifnot(resolution > 0, resolution < 1, max_width_percentage > 0, max_width_percentage <= 1,
             max_width_percentage > resolution)
 
   n <- length(vec)
@@ -195,11 +196,10 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   max_width <- round(n*max_width_percentage)
 
   n2 <- ifelse(is.na(hard_cut), n, hard_cut)
-  stopifnot(n2 > 101)
 
-  candidate_idx1_vec <- round(seq(2, n2-2*lim, length.out = lim))
+  candidate_idx1_vec <- round(seq(2, n2-2*lim, by = lim))
   obj_outer <- sapply(candidate_idx1_vec, function(i){
-    candidate_idx2_vec <- round(seq(i+lim, n2, length.out = lim))
+    candidate_idx2_vec <- round(seq(i+lim, n2, by = lim))
 
     obj_inner <- sapply(candidate_idx2_vec, function(j){
       if(abs(i-j) >= max_width) return(-Inf)

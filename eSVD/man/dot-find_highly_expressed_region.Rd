@@ -8,7 +8,8 @@
   common_vec,
   specific_vec1,
   specific_vec2,
-  standardize = T
+  standardize = T,
+  ...
 )
 }
 \arguments{

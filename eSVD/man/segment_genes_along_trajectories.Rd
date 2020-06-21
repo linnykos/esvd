@@ -10,7 +10,8 @@ segment_genes_along_trajectories(
   common_n,
   standardize = T,
   ncores = NA,
-  verbose = F
+  verbose = F,
+  ...
 )
 }
 \arguments{

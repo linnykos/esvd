@@ -1,4 +1,16 @@
+#' Compute the purity of a set of labeled points based on nearest-neighbor graph
+#'
+#' @param mat matrix with points represented as different rows
+#' @param cluster_labels cluster labels equal to length to \code{nrow(mat)}
+#' @param neighborhood_size positive integer
+#' @param num_samples positive integer
+#'
+#' @return list
+#' @export
 compute_purity <- function(mat, cluster_labels, neighborhood_size, num_samples = 200){
+  stopifnot(length(cluster_labels) == nrow(mat), all(cluster_labels > 0), max(cluster_labels) == length(unique(cluster_labels)),
+            all(cluster_labels %% 1 == 0))
+
   g <- .construct_neighborhood_graph(mat, neighborhood_size = neighborhood_size)
   stopifnot(igraph::components(g)$no == 1)
 
@@ -22,6 +34,16 @@ compute_purity <- function(mat, cluster_labels, neighborhood_size, num_samples =
   list(avg_val = mean(unlist(value_list)), value_list = value_list)
 }
 
+#' Determine the minimum neighborhood size such that the neighborhood graph is connected
+#'
+#' Uses binary search
+#'
+#' @param mat matrix with points represented as different rows
+#' @param max_iter positive integer
+#' @param verbose boolean
+#'
+#' @return numeric
+#' @export
 determine_minimium_neighborhood_size <- function(mat, max_iter = 20, verbose = T){
   n <- nrow(mat)
 
@@ -61,6 +83,12 @@ determine_minimium_neighborhood_size <- function(mat, max_iter = 20, verbose = T
 
 #############
 
+#' Construct nearest-neighbor graph
+#'
+#' @param mat matrix with points represented as different rows
+#' @param neighborhood_size positive integer
+#'
+#' @return \code{igraph} object
 .construct_neighborhood_graph <- function(mat, neighborhood_size){
   n <- nrow(mat)
   dist_mat <- as.matrix(stats::dist(mat))
@@ -79,6 +107,24 @@ determine_minimium_neighborhood_size <- function(mat, max_iter = 20, verbose = T
   g
 }
 
+#' Compute pairwise purity
+#'
+#' For two indices \code{idx1} and \code{idx2} (two nodes in the \code{igraph}
+#' object \code{g}, so both \code{idx1} and \code{idx2} need to be less than
+#' \code{igraph::vcount(g)}), compute the shortest path from node \code{idx1}
+#' to node \code{idx2} and determine what percentage of nodes in that
+#' path also share the same cluster label as node \code{idx1}
+#' and node \code{idx2}.
+#'
+#' @param g
+#' @param idx1
+#' @param idx2
+#' @param cluster_labels
+#'
+#' @return
+#' @export
+#'
+#' @examples
 .compute_pairwise_purity <- function(g, idx1, idx2, cluster_labels){
   stopifnot(cluster_labels[idx1] == cluster_labels[idx2])
   k <- cluster_labels[idx1]
