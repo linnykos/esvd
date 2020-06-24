@@ -20,6 +20,8 @@
 \item{specific_vec2}{a vector}
 
 \item{standardize}{boolean}
+
+\item{...}{extra arguments for \code{eSVD:::.circular_segmentation}}
 }
 \value{
 a list

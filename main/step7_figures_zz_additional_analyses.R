@@ -1,7 +1,7 @@
 var <- ls()
 rm(list = var[var != "suffix"])
 load(paste0("../results/step7_figures", suffix, ".RData"))
-cluster_center_zinbwave <- eSVD:::.compute_cluster_center(zinbwave_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
+cluster_center_zinbwave <- eSVD::compute_cluster_center(zinbwave_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
 
 ## zinbwave plots
 grDevices::png(filename = paste0("../../esvd_results/figure/main/zinbwave_2dplots.png"),
@@ -33,7 +33,7 @@ grDevices::graphics.off()
 ################################
 
 ## UMAP plots
-cluster_center_umap <- eSVD:::.compute_cluster_center(umap_all$layout, .construct_cluster_matrix(cluster_labels))
+cluster_center_umap <- eSVD::compute_cluster_center(umap_all$layout, .construct_cluster_matrix(cluster_labels))
 
 grDevices::png(filename = paste0("../../esvd_results/figure/main/umap.png"),
                height = 1500, width = 2500, res = 300,

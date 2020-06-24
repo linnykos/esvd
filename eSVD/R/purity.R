@@ -116,15 +116,12 @@ determine_minimium_neighborhood_size <- function(mat, max_iter = 20, verbose = T
 #' path also share the same cluster label as node \code{idx1}
 #' and node \code{idx2}.
 #'
-#' @param g
-#' @param idx1
-#' @param idx2
-#' @param cluster_labels
+#' @param g \code{igraph} object
+#' @param idx1 index between 1 and \code{igraph::vcount(g)}
+#' @param idx2 index between 1 and \code{igraph::vcount(g)} not equal to \code{idx1}
+#' @param cluster_labels cluster labels of length \code{igraph::vcount(g)}
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return numeric
 .compute_pairwise_purity <- function(g, idx1, idx2, cluster_labels){
   stopifnot(cluster_labels[idx1] == cluster_labels[idx2])
   k <- cluster_labels[idx1]

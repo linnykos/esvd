@@ -49,6 +49,18 @@ slingshot <- function(dat, cluster_labels, starting_cluster,
   structure(list(lineages = lineages, curves = curves, idx = idx_all), class = "slingshot")
 }
 
+#' Prepare trajectories for usage
+#'
+#' This function only extracts the \code{s} component of the curve, where the curves
+#' are \code{principal_curve} objects, typically returned within the output of \code{eSVD::slingshot}.
+#' This function truncates the curve (starting from the pseudotime index of 0, according
+#' to the \code{ord} component of \code{curve}) so the total length is less that \code{target_length}
+#'
+#' @param curve \code{principal_curve} object
+#' @param target_length target length of the curve.
+#'
+#' @return numeric matrix
+#' @export
 prepare_trajectory <- function(curve, target_length){
   stopifnot(class(curve) == "principal_curve")
 
@@ -226,6 +238,17 @@ compute_cluster_center <- function(dat, cluster_mat){
 
 ##################
 
+#' Intersect lineages with cluster group list
+#'
+#' Recall: \code{lineages} is a list of vectors, where each vector represents an ordered
+#' set of indices. \code{cluster_group_list} is an ordered list of vectors, where each vector represent
+#' indices "of the same tier." This function intersects the two by finding a list of vectors where
+#' each of the output set of vectors is a self-contained vector in both \code{lineages} and \code{cluster_group_list}.
+#'
+#' @param lineages a list of vectors
+#' @param cluster_group_list a list of vectors
+#'
+#' @return a list of vectors
 .intersect_lineages_cluster_group_list <- function(lineages, cluster_group_list){
   len <- length(cluster_group_list)
   lineage_len <- length(lineages)
@@ -251,7 +274,13 @@ compute_cluster_center <- function(dat, cluster_mat){
   .flatten_list(tmp)
 }
 
-# code from https://stackoverflow.com/questions/8139677/how-to-flatten-a-list-to-a-list-without-coercion/8139959#8139959
+#' Flatten a list of lists
+#'
+#' Code from \url{https://stackoverflow.com/questions/8139677/how-to-flatten-a-list-to-a-list-without-coercion/8139959#8139959}
+#'
+#' @param x a list of lists
+#'
+#' @return a list
 .flatten_list <- function(x) {
   stopifnot(is.list(x))
   stopifnot(all(sapply(x, class) == "list"))
@@ -263,6 +292,22 @@ compute_cluster_center <- function(dat, cluster_mat){
   y
 }
 
+#' Resampling rows in a dattaset according to the amount of upscaling
+#'
+#' This is the primary function used in \code{eSVD::slingshot} to decide which
+#' rows in \code{dat} to resample (primarily useful for getting better-looking curves
+#' in \code{eSVD:::.get_curves})
+#'
+#' @param dat a \code{n} by \code{d} matrix
+#' @param cluster_labels vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels)}
+#' @param cluster_group_list list denoting the hierarchy and order of the clusters
+#' @param lineages list of vectors containing cluster labels
+#' @param upscale_factor numeric scalar
+#'
+#' @return a list containing a new version of \code{dat} and \code{cluster_labels} but also
+#' \code{idx_all} which stores the row-indices of the original \code{dat} used
 .resample_all <- function(dat, cluster_labels, cluster_group_list, lineages, upscale_factor){
   if(all(is.na(cluster_group_list))) cluster_group_list <- list(sort(unique(cluster_labels)))
 
@@ -281,8 +326,21 @@ compute_cluster_center <- function(dat, cluster_mat){
   list(dat = dat, cluster_labels = cluster_labels, idx_all = idx_all)
 }
 
+#' Construct resampled cluster labels
+#'
+#' This function is designed so all the indices in 1 through \code{length(cluster_labels)} is
+#' represented at least once. Typically, all the values in \code{upscale_vec} are 1 or larger.
+#'
+#' @param cluster_labels  vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels)}
+#' @param upscale_vec vector of positive values with length equal to \code{max(cluster_labels)}
+#'
+#' @return a vector of cluster labels (i.e. indices)
 .construct_resample_idx <- function(cluster_labels, upscale_vec){
-  unlist(lapply(1:max(cluster_labels, na.rm = T), function(x){
+  stopifnot(max(cluster_labels) == length(upscale_vec))
+
+  unlist(lapply(1:max(cluster_labels), function(x){
     idx <- which(cluster_labels == x)
 
     if(upscale_vec[x] >= 1){
@@ -293,6 +351,18 @@ compute_cluster_center <- function(dat, cluster_mat){
   }))
 }
 
+#' Compute the upscale factor
+#'
+#' The upscale factor is the fraction of "maximum size" over "size of cluster", raised to \code{upscale_factor}.
+#' Hence, if \code{upscale_factor=1}, all the resulting clusters in \code{cluster_intersection} are of the same size.
+#'
+#' @param cluster_labels vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels)}
+#' @param cluster_intersection list of vectors, where each vector contains entries in \code{cluster_labels}
+#' @param upscale_factor numeric
+#'
+#' @return a numeric vector equal in length to \code{length(unique(cluster_labels))}
 .compute_upscale_factor <- function(cluster_labels, cluster_intersection, upscale_factor = 0.5){
   stopifnot(all(unlist(cluster_intersection) %in% cluster_labels))
   stopifnot(length(unlist(cluster_intersection)) == max(cluster_labels))

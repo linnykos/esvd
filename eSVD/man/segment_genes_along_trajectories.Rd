@@ -28,6 +28,8 @@ than \code{nrow(dat1)} or \code{nrow(dat2)}) rows of
 \item{ncores}{number of cores}
 
 \item{verbose}{boolean}
+
+\item{...}{additional arguments for \code{eSVD:::.circular_segmentation}}
 }
 \value{
 a data frame with 9 columns and \code{ncol(dat1)} rows, where each row

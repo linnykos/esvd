@@ -30,7 +30,7 @@ colnames(col_info_svd)[c(5,6)] <- colnames(col_info_svd)[c(6,5)]
 col_info_svd
 plotting_order_svd <- c(3,1,2,4)
 
-cluster_center_svd <- eSVD:::.compute_cluster_center(svd_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
+cluster_center_svd <- eSVD::compute_cluster_center(svd_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
 
 # info for the upcoming esvd plots
 
@@ -51,7 +51,7 @@ col_info_esvd
 col_vec_short <- color_func(0.9)[c(1,4)]
 plotting_order_esvd <- list(3,2,5,4,c(6,1))
 
-cluster_center_esvd <- eSVD:::.compute_cluster_center(esvd_embedding$u_mat[,1:3], .construct_cluster_matrix(cluster_labels))
+cluster_center_esvd <- eSVD::compute_cluster_center(esvd_embedding$u_mat[,1:3], .construct_cluster_matrix(cluster_labels))
 
 ####
 

@@ -45,7 +45,19 @@
 
 #############
 
-## http://www.real-statistics.com/multivariate-statistics/hotellings-t-square-statistic/hotellings-t-square-unequal-covariance-matrices/
+#' Compute the Hotelling t test statistic for non-equal variances
+#'
+#' See \url{http://www.real-statistics.com/multivariate-statistics/hotellings-t-square-statistic/hotellings-t-square-unequal-covariance-matrices/}
+#'
+#' @param mean_vec1 vector
+#' @param cov_mat1 matrix
+#' @param n1 numeric
+#' @param mean_vec2 vector
+#' @param cov_mat2 matrix
+#' @param n2 numeric
+#' @param tol numeric
+#'
+#' @return numeric
 .covariance_distance <- function(mean_vec1, cov_mat1, n1, mean_vec2, cov_mat2, n2, tol = 1e-5){
   mat <- cov_mat1/n1 + cov_mat2/n2
 
@@ -60,6 +72,12 @@
   as.numeric(t(mean_vec1 - mean_vec2) %*% inv_mat %*% (mean_vec1 - mean_vec2))
 }
 
+#' Compute distances between all the clusters
+#'
+#' @param dat matrix
+#' @param cluster_labels vector with length equal to \code{nrow(dat)}
+#'
+#' @return matrix
 .compute_cluster_distances <- function(dat, cluster_labels){
   k <- max(cluster_labels)
   dist_mat <- matrix(0, k, k)
@@ -85,6 +103,24 @@
   dist_mat
 }
 
+#' Construct lineages from hiearchy
+#'
+#' Using the order of clusters in \code{cluster_group_list}, construct the
+#' lineage based on \code{dist_mat}. The function operates by appending clusters onto
+#' existing trees. This operates in rounds equal to \code{length(cluster_group_list)}.
+#' Specifically, within each round, the function first uses \code{eSVD:::.enumerate_dist_from_trees}
+#' to populate a distance matrix from the previous round's trees, and then uses
+#' \code{eSVD:::.enumerate_dist_between_levels} and \code{eSVD:::.enumerate_dist_within_levels} to
+#' populate the new edges connecting the previous round's clusters to this round's clusters, as well
+#' as this round's clusters to each other. Then, it constructs a list of trees via
+#' \code{igraph::shortest_paths} and uses \code{eSVD:::.find_all_unique_paths} to "prune" the list
+#' of trees by removing paths that are strictly contained in other paths. Then it proceeds to the next round.
+#'
+#' @param dist_mat (symmetric) distance matrix
+#' @param cluster_group_list list
+#' @param starting_cluster numeric
+#'
+#' @return list, enumerating the different lineages
 .construct_lineage_from_hierarchy <- function(dist_mat, cluster_group_list,
                starting_cluster = 1){
   n <- max(unlist(cluster_group_list))
@@ -111,10 +147,8 @@
     g <- igraph::graph.empty(n = n, directed = T)
 
     for(j in 1:nrow(edge_mat)){
-      idx1 <- edge_mat[j,1]; idx2 <- edge_mat[j,2]
-
-      g <- igraph::add_edges(g, edges = c(idx1, idx2),
-                             attr = list(weight = dist_mat[idx1, idx2]))
+      g <- igraph::add_edges(g, edges = c(edge_mat[j,1], edge_mat[j,2]),
+                             attr = list(weight = edge_mat[j,3]))
     }
 
     # find shortest path tree
@@ -130,6 +164,12 @@
   tree_list
 }
 
+#' Enumerate distances from paths stored in a list
+#'
+#' @param dist_mat (symmetric) distance matrix
+#' @param tree_list list of paths, corresponding to indices from 1 to \code{nrow(dist_mat)}
+#'
+#' @return a matrix with 3 columns, representing the two indicies and the value from \code{dist_mat}
 .enumerate_dist_from_trees <- function(dist_mat, tree_list){
   if(all(sapply(tree_list, length) == 1)) return(numeric(0))
 
@@ -148,6 +188,16 @@
   do.call(rbind, edge_list)
 }
 
+#' Enumerate distances between paths and a set of indices
+#'
+#' Enumerate edges corresponding to the last index in each element in \code{tree_list}
+#' and any index in \code{cluster_vec}
+#'
+#' @param dist_mat (symmetric) distance matrix
+#' @param tree_list list of paths, corresponding to indices from 1 to \code{nrow(dist_mat)}
+#' @param cluster_vec list of indices from 1 to \code{nrow(dist_mat)}
+#'
+#' @return a matrix with 3 columns, representing the two indicies and the value from \code{dist_mat}
 .enumerate_dist_between_levels <- function(dist_mat, tree_list, cluster_vec){
   # enumerate all the leaves, one for each tree
   leaf_vec <- sapply(tree_list, function(x){x[length(x)]})
@@ -165,6 +215,12 @@
   edge_mat
 }
 
+#' Enumerate distances within a vector of indices
+#'
+#' @param dist_mat (symmetric) distance matrix
+#' @param cluster_vec list of indices from 1 to \code{nrow(dist_mat)}
+#'
+#' @return a matrix with 3 columns, representing the two indicies and the value from \code{dist_mat}
 .enumerate_dist_within_levels <- function(dist_mat, cluster_vec){
   if(length(cluster_vec) < 2) return(numeric(0))
   combn_mat <- utils::combn(length(cluster_vec), 2)
@@ -180,6 +236,11 @@
   do.call(rbind, edge_mat)
 }
 
+#' Create an undirected graph from a distance matrix
+#'
+#' @param dist_mat (symmetric) distance matrix
+#'
+#' @return \code{igraph} object
 .construct_graph <- function(dist_mat){
   n <- nrow(dist_mat)
   combn_mat <- utils::combn(n, 2)
@@ -198,7 +259,7 @@
 #' Construct the lineages
 #'
 #' Enumerates the shortest paths from \code{starting_cluster} to
-#' each of the leaves in \code{spt_graph}
+#' each of the leaves in \code{g}
 #'
 #' @param g \code{igraph} object
 #' @param starting_cluster positive integer
@@ -219,6 +280,15 @@
   lineages
 }
 
+#' Remove duplicate paths
+#'
+#' We only keep paths in \code{path_list} that 1) start from \code{starting_cluster} and
+#' 2) are not strictly contained in any other path in our outputed list
+#'
+#' @param path_list list of vectors of indices
+#' @param starting_cluster index
+#'
+#' @return a pruned version of \code{path_list}
 .find_all_unique_paths <- function(path_list, starting_cluster){
   # remove all paths that do not have the correct starting_cluster
   path_list <- path_list[which(sapply(path_list, function(x){x[1] == starting_cluster}))]
@@ -239,33 +309,3 @@
     as.numeric(x)
   })
 }
-
-########
-
-.initial_edges <- function(dat, cluster_labels, multiplier = 5){
-  k <- max(cluster_labels)
-
-  curve_list <- lapply(1:k, function(i){
-    dat_subset <- dat[which(cluster_labels == i),]
-    princurve::principal_curve(dat_subset)
-  })
-
-
-  sd_vec <- sapply(1:k, function(i){
-    dat_subset <- dat[which(cluster_labels == i),]
-    stats::median(.compute_l2_curve(dat_subset, list(curve_list[[i]]$s)))
-  })
-  sd_val <- max(sd_vec)
-
-  dist_mat <- matrix(0, k, k)
-  for(i in 1:(k-1)){
-    for(j in (i+1):k){
-      dist_mat[i,j] <- min(.compute_l2_curve(curve_list[[i]]$s, list(curve_list[[j]]$s)))
-      dist_mat[j,i] <- dist_mat[i,j]
-    }
-  }
-
-  dist_mat <= multiplier*sd_val
-}
-
-

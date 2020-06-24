@@ -121,6 +121,7 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
 #' @param specific_vec1 a vector
 #' @param specific_vec2 a vector
 #' @param standardize boolean
+#' @param ... extra arguments for \code{eSVD:::.circular_segmentation}
 #'
 #' @return a list
 .find_highly_expressed_region <- function(common_vec, specific_vec1, specific_vec2, standardize = T, ...){

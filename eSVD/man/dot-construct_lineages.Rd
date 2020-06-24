@@ -16,5 +16,5 @@ a list
 }
 \description{
 Enumerates the shortest paths from \code{starting_cluster} to
-each of the leaves in \code{spt_graph}
+each of the leaves in \code{g}
 }
