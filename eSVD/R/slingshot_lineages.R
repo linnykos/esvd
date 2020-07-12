@@ -150,6 +150,7 @@
       g <- igraph::add_edges(g, edges = c(edge_mat[j,1], edge_mat[j,2]),
                              attr = list(weight = edge_mat[j,3]))
     }
+    g <- igraph::simplify(g)
 
     # find shortest path tree
     path_list <- suppressWarnings(igraph::shortest_paths(g, from = starting_cluster,
@@ -167,7 +168,7 @@
 #' Enumerate distances from paths stored in a list
 #'
 #' @param dist_mat (symmetric) distance matrix
-#' @param tree_list list of paths, corresponding to indices from 1 to \code{nrow(dist_mat)}
+#' @param tree_list list of paths, corresponding to indices with values between 1 and \code{nrow(dist_mat)}
 #'
 #' @return a matrix with 3 columns, representing the two indicies and the value from \code{dist_mat}
 .enumerate_dist_from_trees <- function(dist_mat, tree_list){

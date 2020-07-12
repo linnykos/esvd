@@ -9,7 +9,7 @@
 \arguments{
 \item{dist_mat}{(symmetric) distance matrix}
 
-\item{tree_list}{list of paths, corresponding to indices from 1 to \code{nrow(dist_mat)}}
+\item{tree_list}{list of paths, corresponding to indices with values between 1 and \code{nrow(dist_mat)}}
 }
 \value{
 a matrix with 3 columns, representing the two indicies and the value from \code{dist_mat}
