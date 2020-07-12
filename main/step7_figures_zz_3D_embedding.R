@@ -34,7 +34,6 @@ for(kk in 1:nrow(angle_matrix)){
   par(mar = c(0,0,4,0))
   eSVD::slingshot_3dplot(esvd_embedding$u_mat[,1:3], cluster_labels,
                           bg_col_vec = col_vec3_esvd, bg_cex = 0.8,
-                          breaks = seq(0.5, 13.5, by = 1),
                           cluster_center = cluster_center_esvd,
                           center_col_vec = col_vec_esvd,
                           center_labels = 1:13,
@@ -72,7 +71,6 @@ for(kk in 1:nrow(angle_matrix)){
   par(mar = c(0,0,4,0))
   eSVD::slingshot_3dplot(esvd_embedding$u_mat[,1:3], cluster_labels,
                           bg_col_vec = col_vec3_esvd, bg_cex = 0.8,
-                          breaks = seq(0.5, 13.5, by = 1),
                           cluster_center = cluster_center_esvd,
                           center_col_vec = col_vec_esvd,
                           center_labels = 1:13,
@@ -112,6 +110,53 @@ for(kk in 1:nrow(angle_matrix)){
 }
 
 
+for(i in 1:2){
+  for(kk in 1:nrow(angle_matrix)){
+    print(kk)
+    png(paste0("../../esvd_results/figure/main/eSVD_theta", angle_matrix[kk,1], "_phi", angle_matrix[kk,2], "_tube", i, ".png"),
+        height = 2000, width = 2000, res = 300, units = "px")
+    par(mar = c(0,0,4,0))
+    eSVD::slingshot_3dplot(esvd_embedding$u_mat[,1:3], cluster_labels,
+                           bg_col_vec = col_vec3_esvd, bg_cex = 0.8,
+                           cluster_center = cluster_center_esvd,
+                           center_col_vec = col_vec_esvd,
+                           center_labels = 1:13,
+                           curves = NA,
+                           pch = 16, main = "eSVD embedding and trajectories:\nCurved Gaussian",
+                           xlab = "Latent dimension 1", ylab = "Latent dimension 2",
+                           zlab = "Latent dimension 3",
+                           theta = angle_matrix[kk,1], phi = angle_matrix[kk,2],
+                           xlim = bound_matrix[[kk]]$xlim,
+                           ylim = bound_matrix[[kk]]$ylim,
+                           zlim = bound_matrix[[kk]]$zlim)
+
+    curves <- esvd_curves_prepared
+    col_vec_short <- color_func(0.9)[c(1,4)]
+
+    plot3D::lines3D(x = curves[[i]][, 1],
+                    y = curves[[i]][, 2],
+                    z = curves[[i]][, 3],
+                    add = T, colkey = F, col = "black", lwd = 6)
+    plot3D::lines3D(x = curves[[i]][, 1],
+                    y = curves[[i]][, 2],
+                    z = curves[[i]][, 3],
+                    add = T, colkey = F, col = col_vec_short[i], lwd = 6)
+
+    col_mat <- esvd_tube_list[[i]]$z_mat
+
+    plot3D::surf3D(esvd_tube_list[[i]]$x_mat,
+                   esvd_tube_list[[i]]$y_mat,
+                   esvd_tube_list[[i]]$z_mat, add = T,
+                   colvar = col_mat,
+                   col = colorRampPalette(c("white", col_vec_short[i]))(150)[51:150],
+                   breaks = seq(min(col_mat), max(col_mat), length.out = 101),
+                   colkey = F)
+    graphics.off()
+  }
+}
+
+
+
 ###############################
 
 #angle_matrix
@@ -129,7 +174,6 @@ for(kk in 1:nrow(angle_matrix)){
   par(mar = c(0,0,4,0))
   eSVD::slingshot_3dplot(svd_embedding[,1:3], cluster_labels,
                           bg_col_vec = col_vec3_svd, bg_cex = 0.8,
-                          breaks = seq(0.5, 13.5, by = 1),
                           cluster_center = cluster_center_svd,
                           center_col_vec = col_vec_svd,
                           center_labels = 1:13,
@@ -164,7 +208,6 @@ for(kk in 1:nrow(angle_matrix)){
   par(mar = c(0,0,4,0))
   eSVD::slingshot_3dplot(svd_embedding[,1:3], cluster_labels,
                           bg_col_vec = col_vec3_svd, bg_cex = 0.8,
-                          breaks = seq(0.5, 13.5, by = 1),
                           cluster_center = cluster_center_svd,
                           center_col_vec = col_vec_svd,
                           center_labels = 1:13,

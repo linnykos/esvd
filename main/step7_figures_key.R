@@ -1,12 +1,12 @@
 load(paste0("../results/step6_additional_analyses", suffix, ".RData"))
 
 color_func <- function(alpha = 0.2){
-  c(rgb(240/255, 228/255, 66/255, alpha), #yellow
-    rgb(86/255, 180/255, 233/255, alpha), #skyblue
-    rgb(0/255, 158/255, 115/255, alpha), #bluish green
-    rgb(0/255, 114/255, 178/255,alpha), #blue
-    rgb(230/255, 159/255, 0/255,alpha), #orange
-    rgb(100/255, 100/255, 100/255, alpha)) #gray
+  c(grDevices::rgb(240/255, 228/255, 66/255, alpha), #yellow
+    grDevices::rgb(86/255, 180/255, 233/255, alpha), #skyblue
+    grDevices::rgb(0/255, 158/255, 115/255, alpha), #bluish green
+    grDevices::rgb(0/255, 114/255, 178/255,alpha), #blue
+    grDevices::rgb(230/255, 159/255, 0/255,alpha), #orange
+    grDevices::rgb(100/255, 100/255, 100/255, alpha)) #gray
 }
 color_name_vec <- c("yellow", "skyblue", "bluish green", "blue", "orange", "gray")
 

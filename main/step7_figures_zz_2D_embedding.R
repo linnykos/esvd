@@ -41,6 +41,26 @@ for(k in 1:ncol(combn_mat)){
   grDevices::graphics.off()
 }
 
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  grDevices::png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots_", k, "_bw.png"),
+                 height = 1500, width = 1500, res = 300,
+                 units = "px")
+  graphics::plot(NA, xlim = range(esvd_embedding$u_mat[,i]), ylim = range(esvd_embedding$u_mat[,j]),
+                 asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+                 main = "eSVD embedding and trajectories:\nCurved Gaussian")
+
+  for(ll in plotting_order_esvd) {
+    target_indices <- col_info_esvd$idx[which(col_info_esvd$factor_idx %in% ll)]
+    idx <- which(cluster_labels %in% target_indices)
+    graphics::points(x = esvd_embedding$u_mat[idx,i], y = esvd_embedding$u_mat[idx,j], pch = 16,
+                     col = grDevices::rgb(0,0,0,0.3))
+  }
+
+  grDevices::graphics.off()
+}
+
 grDevices::png(filename = paste0("../../esvd_results/figure/main/esvd_2dplots.png"),
     height = 830, width = 2300, res = 300,
     units = "px")
@@ -153,6 +173,26 @@ for(k in 1:ncol(combn_mat)){
     graphics::points(cluster_center_svd[ll,i], cluster_center_svd[ll,j], pch = 16, cex = 1.5, col = col_vec_svd[ll])
   }
 
+
+  grDevices::graphics.off()
+}
+
+for(k in 1:ncol(combn_mat)){
+  i <- combn_mat[1,k]; j <- combn_mat[2,k]
+
+  grDevices::png(filename = paste0("../../esvd_results/figure/main/svd_2dplots_", k, "_bw.png"),
+                 height = 1500, width = 1500, res = 300,
+                 units = "px")
+  graphics::plot(NA, xlim = range(svd_embedding[,i]), ylim = range(svd_embedding[,j]),
+                 asp = T, xlab = paste0("Latent dimension ", i), ylab = paste0("Latent dimension ", j),
+                 main = "SVD embedding and trajectories:\nConstant-variance Gaussian")
+
+  for(ll in plotting_order_svd) {
+    target_indices <- col_info_svd$idx[which(col_info_svd$factor_idx %in% ll)]
+    idx <- which(cluster_labels %in% target_indices)
+    graphics::points(x = svd_embedding[idx,i], y = svd_embedding[idx,j], pch = 16,
+                     col = grDevices::rgb(0,0,0,0.3))
+  }
 
   grDevices::graphics.off()
 }
