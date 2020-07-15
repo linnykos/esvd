@@ -299,3 +299,44 @@ test_that("order_highly_expressed_genes works", {
   expect_true(length(res) == 3)
   expect_true(all(sort(names(res)) == sort(c("common_genes", "traj1_genes", "traj2_genes"))))
 })
+
+#####################################
+
+## prepare_data_for_segmentation is correct
+
+test_that("prepare_data_for_segmentation works", {
+  set.seed(10)
+
+  n_each <- 50
+  d_each <- 10
+  sigma <- 1
+  modifier <- 1/250
+  size <- 50
+  cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
+                       40,10, 60,80, 60,80, 100, 25),
+                     nrow = 4, ncol = 4, byrow = T)
+  gene_pop <- matrix(c(20,90, 25,100,
+                       90,20, 100,25)/20, nrow = 2, ncol = 4, byrow = T)
+
+  res <- generate_natural_mat(cell_pop, gene_pop, n_each, d_each, sigma, modifier)
+  nat_mat <- res$nat_mat
+
+  dat <- nat_mat
+  dat <- round(dat * 1000/max(dat))
+  cluster_labels <- rep(1:4, each = n_each)
+  slingshot_res <- slingshot(res$cell_mat, cluster_labels, starting_cluster = 1, upscale_factor = 1)
+
+  res <- prepare_data_for_segmentation(dat, cluster_labels, curve_list = slingshot_res)
+
+  expect_true(is.list(res))
+  expect_true(all(sort(names(res)) == sort(c("dat1", "dat2", "cell_idx_common", "cell_idx_traj1", "cell_idx_traj2"))))
+  expect_true(length(res$cell_idx_common) <= nrow(dat))
+  expect_true(length(res$cell_idx_traj1) <= nrow(dat))
+  expect_true(length(res$cell_idx_traj2) <= nrow(dat))
+  expect_true(ncol(res$dat1) == ncol(dat))
+  expect_true(ncol(res$dat2) == ncol(dat))
+  expect_true(nrow(res$dat1) == length(res$cell_idx_common) + length(res$cell_idx_traj1))
+  expect_true(nrow(res$dat2) == length(res$cell_idx_common) + length(res$cell_idx_traj2))
+  expect_true(length(intersect(res$cell_idx_common, res$cell_idx_traj1)) == 0)
+  expect_true(length(intersect(res$cell_idx_common, res$cell_idx_traj2)) == 0)
+})

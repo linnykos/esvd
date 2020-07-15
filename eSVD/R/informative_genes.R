@@ -1,3 +1,57 @@
+prepare_data_for_segmentation <- function(dat, cluster_labels, curve_list,
+                                          min_traj_pseudotime = NA,
+                                          cluster_removal_idx_vec = NA, cluster_removal_time_vec = NA){
+  stopifnot(class(curve_list) == "slingshot", length(curve_list$lineages) == 2,
+            length(cluster_removal_idx_vec) == length(cluster_removal_time_vec))
+
+  pseudotime_df <- construct_pseudotime_trajectory_matrix(curve_list, cluster_labels)
+
+  # remove some problematic cells
+  pseudotime_df2 <- pseudotime_df
+  idx <- which(!pseudotime_df2$consensus)
+  if(length(idx) > 0) pseudotime_df2 <- pseudotime_df2[-idx,]
+
+  if(!is.na(min_traj_pseudotime)){
+    idx <- intersect(which(is.na(pseudotime_df2$consensus)), which(pseudotime_df2$pseudotime <= min_traj_pseudotime))
+    if(length(idx) > 0) pseudotime_df2 <- pseudotime_df2[-idx,]
+  }
+
+  if(!is.na(cluster_removal_idx_vec) & !is.na(cluster_removal_time_vec)){
+    for(i in 1:length(cluster_removal_idx_vec)){
+      idx <- intersect(which(pseudotime_df2$pseudotime <= cluster_removal_time_vec[i]),
+                       which(pseudotime_df2$cluster_labels == cluster_removal_idx_vec[i]))
+      if(length(idx) > 0) pseudotime_df2 <- pseudotime_df2[-idx,]
+    }
+  }
+
+  # determine indices in each trajectory
+  traj1_cluster <- sort(setdiff(curve_list$lineages[[1]], curve_list$lineages[[2]]))
+  traj2_cluster <- sort(setdiff(curve_list$lineages[[2]], curve_list$lineages[[1]]))
+  common_cluster <- intersect(curve_list$lineages[[1]], curve_list$lineages[[2]])
+
+  # organize the pseudotime_df2
+  pseudotime_df2 <- pseudotime_df2[order(pseudotime_df2$pseudotime),]
+  tmp1 <- pseudotime_df2[which(!pseudotime_df2$cluster_labels %in% traj2_cluster),]
+  tmp2 <- pseudotime_df2[which(!pseudotime_df2$cluster_labels %in% traj1_cluster),]
+
+  # determine which cells are in which category
+  pseudotime_max_common <- min(pseudotime_df2$pseudotime[pseudotime_df2$cluster_labels %in% c(traj1_cluster, traj2_cluster)])
+  cell_idx_common <- pseudotime_df2$cell_idx[which(pseudotime_df2$pseudotime < pseudotime_max_common)]
+
+  cell_idx_traj1 <- pseudotime_df2$cell_idx[intersect(which(pseudotime_df2$pseudotime >= pseudotime_max_common),
+                                                      which(pseudotime_df2$cluster_labels %in% c(traj1_cluster, common_cluster)))]
+  cell_idx_traj2 <- pseudotime_df2$cell_idx[intersect(which(pseudotime_df2$pseudotime >= pseudotime_max_common),
+                                                      which(pseudotime_df2$cluster_labels %in% c(traj2_cluster, common_cluster)))]
+
+  # construct the datasets
+  dat1 <- dat[c(cell_idx_common,cell_idx_traj1),]
+  dat2 <- dat[c(cell_idx_common,cell_idx_traj2),]
+
+  list(dat1 = dat1, dat2 = dat2, cell_idx_common = cell_idx_common,
+       cell_idx_traj1 = cell_idx_traj1, cell_idx_traj2 = cell_idx_traj2)
+}
+
+
 #' Segment the genes along the trajectory
 #'
 #' Given two datasets, \code{dat1} and \code{dat2}, whose first \code{common_n} rows
