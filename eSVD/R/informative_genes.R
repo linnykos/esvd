@@ -1,3 +1,34 @@
+#' Prepare data from segmentation downstrem
+#'
+#' This function is meant to preprocess \code{dat} so
+#' \code{eSVD::segment_genes_along_trajectories} can be used afterwards.
+#' Here, \code{curve_list} is the \code{slingshot} object returned by
+#' \code{eSVD::slingshot}. This function requires that \code{curve_list} contains exactly two trajectories.
+#'
+#' Here, \code{min_traj_pseudotime} is a
+#' pseudotime (according to \code{curve_list}) of which cells that are specific to one of the trajectories
+#' (according to \code{eSVD::construct_pseudotime_trajectory_matrix}) with a smaller pseudotime
+#' \code{min_traj_pseudotime} are removed.
+#'
+#' Similarly, \code{cluster_removal_idx_vec} and \code{cluster_removal_time_vec} are vectors of the same
+#' length, of which the cells with a cluster label of the first element in \code{cluster_removal_idx_vec}
+#' with a pseudotime smaller than the first element in \code{cluster_removal_time_vec} are also
+#' removed. (And then second, and so on.)
+#'
+#' @param dat \code{n} by \code{p} dataset
+#' @param cluster_labels vector of cluster labels, where
+#' the cluster labels are consecutive positive integers from 1 to
+#' \code{max(cluster_labels)}
+#' @param curve_list output from \code{eSVD::slingshot}
+#' @param min_traj_pseudotime positive numeric or \code{NA}
+#' @param cluster_removal_idx_vec vector of positive integers or a single \code{NA}
+#' @param cluster_removal_time_vec vector of positive numerics or a single \code{NA}
+#'
+#' @return a list containing \code{dat1} and \code{dat2} (two datasets formed from a subset of rows from \code{dat})
+#' as well as three vectors of indicies, \code{cell_idx_common}, \code{cell_idx_traj1} and \code{cell_idx_traj2}.
+#' Here, \code{dat1} is formed from \code{dat[c(cell_idx_common,cell_idx_traj1),]}
+#' and \code{dat2} is formed from \code{dat[c(cell_idx_common,cell_idx_traj2),]}.
+#' @export
 prepare_data_for_segmentation <- function(dat, cluster_labels, curve_list,
                                           min_traj_pseudotime = NA,
                                           cluster_removal_idx_vec = NA, cluster_removal_time_vec = NA){
@@ -16,7 +47,7 @@ prepare_data_for_segmentation <- function(dat, cluster_labels, curve_list,
     if(length(idx) > 0) pseudotime_df2 <- pseudotime_df2[-idx,]
   }
 
-  if(!is.na(cluster_removal_idx_vec) & !is.na(cluster_removal_time_vec)){
+  if(!any(is.na(cluster_removal_idx_vec)) & !any(is.na(cluster_removal_time_vec))){
     for(i in 1:length(cluster_removal_idx_vec)){
       idx <- intersect(which(pseudotime_df2$pseudotime <= cluster_removal_time_vec[i]),
                        which(pseudotime_df2$cluster_labels == cluster_removal_idx_vec[i]))
