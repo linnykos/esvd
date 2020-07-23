@@ -346,19 +346,34 @@ test_that(".gradient_mat.curved_gaussiann is a proper gradient", {
 
 #######################
 
+test_that("fit_factorization works for curved gaussians", {
+  set.seed(10)
+  dat <- matrix(pmax(rnorm(25, 2, 1), 0), nrow = 5, ncol = 5)
+  init <- initialization(dat, family = "curved_gaussian", max_val = 100, k = 2)
+  fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
+                           max_iter = 5, max_val = 100,
+                           family = "curved_gaussian")
+
+
+  expect_true(is.list(fit))
+  expect_true(all(c("u_mat", "v_mat") %in% names(fit)))
+  expect_true(all(dim(fit$u_mat) == c(nrow(dat), 2)))
+  expect_true(all(dim(fit$u_mat) == c(ncol(dat), 2)))
+})
+
 test_that("fit_factorization is appropriate for curved gaussians", {
   trials <- 10
 
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
     dat <- matrix(pmax(rnorm(25, 2, 1), 0), nrow = 5, ncol = 5)
-    class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
     init <- initialization(dat, family = "curved_gaussian", max_val = 100)
 
     fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
                              max_iter = 5, max_val = 100,
                              family = "curved_gaussian")
 
+    class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
     res1 <- .evaluate_objective(dat, fit$u_mat, fit$v_mat)
     res2 <- .evaluate_objective(dat, matrix(1, ncol = 1, nrow = 5),
                                 matrix(1, ncol = 1, nrow = 5))
