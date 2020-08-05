@@ -138,9 +138,8 @@ test_that(".find_highly_expressed_region works", {
   }))
   cluster_labels <- unlist(lapply(1:length(n_vec), function(i){rep(i, n_vec[i])}))
   slingshot_res <- slingshot(dat, cluster_labels, starting_cluster = 1, upscale_factor = 1)
-  pseudotime_df <- construct_pseudotime_trajectory_matrix(slingshot_res, cluster_labels)
-  cell_partition <- partition_cells_using_pseudotime(pseudotime_df, trajectory_1_clusters = 3,
-                                          trajectory_2_clusters = 4)
+  cell_partition <- prepare_data_for_segmentation(dat, cluster_labels = cluster_labels,
+                                                  curve_list = slingshot_res)
 
   gene_idx <- 1
   res <- .find_highly_expressed_region(common_vec = dat[cell_partition$cell_idx_common, gene_idx],
@@ -179,15 +178,11 @@ test_that("segment_genes_along_trajectories works", {
 
   cluster_labels <- rep(1:4, each = n_each)
 
-  slingshot_res <- slingshot(res$cell_mat, cluster_labels, starting_cluster = 1, upscale_factor = 1)
-  pseudotime_df <- construct_pseudotime_trajectory_matrix(slingshot_res, cluster_labels)
-  cell_partition <- partition_cells_using_pseudotime(pseudotime_df, trajectory_1_clusters = 3,
-                                                     trajectory_2_clusters = 4)
+  slingshot_res <- slingshot(dat, cluster_labels, starting_cluster = 1, upscale_factor = 1)
+  cell_partition <- prepare_data_for_segmentation(dat, cluster_labels = cluster_labels,
+                                                  curve_list = slingshot_res)
 
-  dat1 <- dat[c(cell_partition$cell_idx_common, cell_partition$cell_idx_traj1),]
-  dat2 <- dat[c(cell_partition$cell_idx_common, cell_partition$cell_idx_traj2),]
-
-  res <- segment_genes_along_trajectories(dat1, dat2, common_n = length(cell_partition$cell_idx_common),
+  res <- segment_genes_along_trajectories(cell_partition$dat1, cell_partition$dat2, common_n = length(cell_partition$cell_idx_common),
                                           resolution = 1/10, max_width_percentage = 1/5)
 
   expect_true(is.data.frame(res))
@@ -224,11 +219,10 @@ test_that(".extract_information works", {
 
   slingshot_res <- slingshot(res$cell_mat, cluster_labels, starting_cluster = 1, upscale_factor = 1)
   pseudotime_df <- construct_pseudotime_trajectory_matrix(slingshot_res, cluster_labels)
-  cell_partition <- partition_cells_using_pseudotime(pseudotime_df, trajectory_1_clusters = 3,
-                                                     trajectory_2_clusters = 4)
+  cell_partition <- prepare_data_for_segmentation(dat, cluster_labels = cluster_labels,
+                                                  curve_list = slingshot_res)
 
-  dat1 <- dat[c(cell_partition$cell_idx_common, cell_partition$cell_idx_traj1),]
-  dat2 <- dat[c(cell_partition$cell_idx_common, cell_partition$cell_idx_traj2),]
+  dat1 <- cell_partition$dat1; dat2 <- cell_partition$dat2
 
   common_n = length(cell_partition$cell_idx_common)
   resolution = 1/10
@@ -283,11 +277,10 @@ test_that("order_highly_expressed_genes works", {
 
   slingshot_res <- slingshot(res$cell_mat, cluster_labels, starting_cluster = 1, upscale_factor = 1)
   pseudotime_df <- construct_pseudotime_trajectory_matrix(slingshot_res, cluster_labels)
-  cell_partition <- partition_cells_using_pseudotime(pseudotime_df, trajectory_1_clusters = 3,
-                                                     trajectory_2_clusters = 4)
+  cell_partition <- prepare_data_for_segmentation(dat, cluster_labels = cluster_labels,
+                                                  curve_list = slingshot_res)
 
-  dat1 <- dat[c(cell_partition$cell_idx_common, cell_partition$cell_idx_traj1),]
-  dat2 <- dat[c(cell_partition$cell_idx_common, cell_partition$cell_idx_traj2),]
+  dat1 <- cell_partition$dat1; dat2 <- cell_partition$dat2
 
   res_mat <- segment_genes_along_trajectories(dat1, dat2, common_n = length(cell_partition$cell_idx_common),
                                           resolution = 1/10, max_width_percentage = 1/5)

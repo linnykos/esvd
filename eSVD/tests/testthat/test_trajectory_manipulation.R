@@ -173,38 +173,3 @@ test_that("construct_pseudotime_trajectory_matrix works", {
   expect_true(all(res$cell_idx == c(1:nrow(dat))))
   expect_true(all(sort(colnames(res)) == sort(c("cell_idx", "pseudotime", "dist_to_curve", "consensus", "status", "cluster_labels"))))
 })
-
-#####################################
-
-## partition_cells_using_pseudotime is correct
-
-test_that("partition_cells_using_pseudotime works", {
-  set.seed(10)
-  cell_pop <- matrix(c(4,10, 25,100,
-                       60,80, 25,100,
-                       40,10, 60,80,
-                       60,80, 100,25)/10, nrow = 4, ncol = 4, byrow = T)
-  h <- nrow(cell_pop)
-  n_vec <- c(30,40,50,60)
-  dat <- do.call(rbind, lapply(1:h, function(x){
-    pos <- stats::runif(n_vec[x])
-    cbind(pos*cell_pop[x,1] + (1-pos)*cell_pop[x,3] + stats::rnorm(n_vec[x], sd = 0.1),
-          pos*cell_pop[x,2] + (1-pos)*cell_pop[x,4] + stats::rnorm(n_vec[x], sd = 0.1))
-  }))
-  cluster_labels <- unlist(lapply(1:length(n_vec), function(i){rep(i, n_vec[i])}))
-  slingshot_res <- slingshot(dat, cluster_labels, starting_cluster = 1, upscale_factor = 1)
-  pseudotime_df <- construct_pseudotime_trajectory_matrix(slingshot_res, cluster_labels)
-
-  res <- partition_cells_using_pseudotime(pseudotime_df, trajectory_1_clusters = 3,
-                                          trajectory_2_clusters = 4)
-
-  expect_true(is.list(res))
-  expect_true(all(sort(names(res)) == c("cell_idx_common", "cell_idx_traj1", "cell_idx_traj2")))
-  expect_true(all(sort(res$cell_idx_common) %in% c(1:(30+40))))
-  expect_true(all(sort(res$cell_idx_traj1) %in% c((30+40+1):(30+40+50))))
-  expect_true(all(sort(res$cell_idx_traj2) %in% c((30+40+50+1):(30+40+50+60))))
-})
-
-
-
-
