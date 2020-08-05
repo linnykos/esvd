@@ -1,5 +1,37 @@
 context("Test SBM")
 
+## .spectral_clustering is correct
+
+test_that(".spectral_clustering works", {
+  mat <- matrix(1:60, 10, 6)
+  res <- .spectral_clustering(mat, k = 3)
+
+  expect_true(is.list(res))
+  expect_true(length(res) == 2)
+  expect_true(all(sort(names(res)) == sort(c("row_clustering", "col_clustering"))))
+  expect_true(all(res$row_clustering %in% c(1:3)))
+  expect_true(all(res$col_clustering %in% c(1:3)))
+  expect_true(length(res$row_clustering) == nrow(mat))
+  expect_true(length(res$col_clustering) == ncol(mat))
+})
+
+################################
+
+## .form_prediction_sbm is correct
+
+test_that(".form_prediction_sbm works", {
+  mat <- matrix(1:60, 10, 6)
+  clustering_res <- .spectral_clustering(mat, k = 3)
+
+  res <- .form_prediction_sbm(mat, clustering_res$row_clustering, clustering_res$col_clustering)
+
+  expect_true(all(dim(res) == 3))
+  expect_true(min(res) >= min(mat))
+  expect_true(max(res) <= max(mat))
+})
+
+################################
+
 ## .sbm_projection is correct
 
 test_that(".sbm_projection works (symmetric case)", {
