@@ -1,5 +1,5 @@
 set.seed(10)
-load(paste0("../results/step3_scalar_tuning", suffix, ".RData"))
+load(paste0("../results/step4_factorization_original.RData"))
 session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 nat_mat_list_list <- lapply(1:nrow(paramMat_esvd), function(i){
@@ -29,5 +29,5 @@ esvd_embedding <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat 
 rm(list = c("nat_mat_list_list", "idx"))
 source_code_info <- c(source_code_info, readLines("../main/step4_factorization.R"))
 print(paste0(Sys.time(), ": Finished factorizing"))
-save.image(paste0("../results/step4_factorization", suffix, ".RData"))
+save.image(paste0("../results/step4_factorization_debugging2.RData"))
 print(warnings())
