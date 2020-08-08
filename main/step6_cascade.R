@@ -7,7 +7,7 @@ segmentation_prep <- eSVD::prepare_data_for_segmentation(dat_impute, cluster_lab
                                                          cluster_removal_idx_vec = c(2,3,4), cluster_removal_time_vec = rep(4,3))
 
 segmentation_res <- eSVD::segment_genes_along_trajectories(segmentation_prep$dat1, segmentation_prep$dat2,
-                                                           common_n = length(cell_idx_common$cell_idx_common),
+                                                           common_n = length(segmentation_prep$cell_idx_common),
                                                            standardize = T, verbose = T, ncores = 20)
 
 print(paste0(Sys.time(), ": Finished cascading results"))
