@@ -68,7 +68,7 @@ svd_width <- max(sapply(1:2, function(i){
 print(paste0(Sys.time(), ": Finished SVD standard val"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
 
-rm(list = c("tmp"))
+rm(list = c("tmp", "esvd_bootstrap_list", "esvd_sd_res", "svd_bootstrap_list", "svd_sd_res"))
 print(paste0(Sys.time(), ": Finished trajectory"))
 source_code_info <- c(source_code_info, readLines("../main/step5_trajectory.R"))
 save.image(paste0("../results/step5_trajectory", suffix, ".RData"))
