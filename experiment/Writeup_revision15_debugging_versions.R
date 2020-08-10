@@ -22,5 +22,5 @@ esvd_embedding <- eSVD::fit_factorization(dat_impute, u_mat = init$u_mat, v_mat 
 rm(list = c("nat_mat_list_list", "idx"))
 source_code_info <- c(source_code_info, readLines("../main/step4_factorization.R"))
 print(paste0(Sys.time(), ": Finished factorizing"))
-save.image(paste0("../experiment/Writeup_revision15_debugging_version.RDataa"))
+save.image(paste0("../experiment/Writeup_revision15_debugging_version.RData"))
 print(warnings())
