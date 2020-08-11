@@ -3,7 +3,7 @@ set.seed(10)
 library(eSVD)
 
 suffix <- ""
-ncores <- 20
+ncores <- 5
 doMC::registerDoMC(cores = ncores)
 
 session_info <- sessionInfo()

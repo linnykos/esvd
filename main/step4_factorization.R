@@ -13,11 +13,8 @@ nat_mat_list_list <- lapply(1:nrow(paramMat_esvd), function(i){
 esvd_angle_res <- eSVD::tuning_select_scalar(dat = dat_impute, nat_mat_list_list = nat_mat_list_list,
                                 family = fitting_distr,  missing_idx_list = missing_idx_list,
                                 scalar_vec = paramMat_esvd[,"scalar"])
-# scalar <- paramMat_esvd[esvd_angle_res$idx, "scalar"]
-# k <- paramMat_esvd[esvd_angle_res$idx, "k"]
-
-scalar <- 2
-k <- 5
+scalar <- paramMat_esvd[esvd_angle_res$idx, "scalar"]
+k <- paramMat_esvd[esvd_angle_res$idx, "k"]
 
 set.seed(10)
 init <- eSVD::initialization(dat_impute, family = fitting_distr, k = k, max_val = max_val,
