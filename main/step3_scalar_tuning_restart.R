@@ -1,5 +1,6 @@
 set.seed(10)
 load(paste0("../results/step3_scalar_tuning", suffix, "_tmp.RData"))
+ncores <- 5
 start_idx <- max(which(sapply(esvd_missing_list, length) > 0)) + 1
 
 for(i in start_idx:nrow(paramMat_esvd)){
