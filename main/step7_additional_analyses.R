@@ -1,13 +1,13 @@
-load(paste0("../results/step5_trajectory", suffix, ".RData"))
+load(paste0("../results/step6_cascade", suffix, ".RData"))
 session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat_count)))
 zinbwave_res <- zinbwave::zinbwave(dat_se, K = 5, maxiter.optimize = 100, normalizedValues = T,
                           commondispersion = F)
-save.image(paste0("../results/step6_additional_analyses", suffix, ".RData"))
+save.image(paste0("../results/step7_additional_analyses", suffix, ".RData"))
 
 zinbwave_embedding <- SingleCellExperiment::reducedDims(zinbwave_res)$zinbwave
-save.image(paste0("../results/step6_additional_analyses", suffix, ".RData"))
+save.image(paste0("../results/step7_additional_analyses", suffix, ".RData"))
 print(paste0(Sys.time(), ": Finished ZINB-WaVE"))
 
 # include UMAPs here
@@ -46,11 +46,11 @@ for(i in 1:nrow(paramMat_esvd2)){
                                              scalar = paramMat_esvd2[i,"scalar"],
                                              return_path = F, cores = ncores,
                                              verbose = T)
-    save.image(paste0("../results/step6_additional_analyses", suffix, "_tmp.RData"))
+    save.image(paste0("../results/step7_additional_analyses", suffix, "_tmp.RData"))
   }
 
   esvd_missing_list2[[i]] <- tmp_list
-  save.image(paste0("../results/step6_additional_analyses", suffix, "_tmp.RData"))
+  save.image(paste0("../results/step7_additional_analyses", suffix, "_tmp.RData"))
 }
 
 nat_mat_list_list <- lapply(1:nrow(paramMat_esvd2), function(i){
@@ -67,7 +67,7 @@ esvd_angle_res2 <- eSVD::tuning_select_scalar(dat = dat_impute, nat_mat_list_lis
 
 rm(list = c("j", "i", "init", "tmp_list", "dat_impute_NA", "nat_mat_list_list"))
 print(paste0(Sys.time(), ": Alternative analyses"))
-source_code_info <- c(source_code_info, readLines("../main/step6_additional_analyses.R"))
-save.image(paste0("../results/step6_additional_analyses", suffix, ".RData"))
+source_code_info <- c(source_code_info, readLines("../main/step7_additional_analyses.R"))
+save.image(paste0("../results/step7_additional_analyses", suffix, ".RData"))
 print(warnings())
 

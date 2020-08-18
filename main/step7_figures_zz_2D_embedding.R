@@ -5,7 +5,7 @@ load(paste0("../results/step7_figures", suffix, ".RData"))
 # esvd plots
 
 esvd_curves_prepared <- lapply(esvd_curves_short$curves, function(curve){
-  prepare_trajectory(curve, target_length = 11)
+  eSVD::prepare_trajectory(curve, target_length = 11)
 })
 
 for(k in 1:ncol(combn_mat)){
