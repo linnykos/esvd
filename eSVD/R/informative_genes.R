@@ -131,7 +131,7 @@ segment_genes_along_trajectories <- function(dat1, dat2, common_n, standardize =
     segmentation_res <- foreach::"%dopar%"(foreach::foreach(j = 1:p), func(j))
   }
 
-  .extract_information(segmentation_res)
+  list(df = .extract_information(segmentation_res), segmentation_fit = segmentation_res)
 }
 
 #' Ordering the highly expressed genes
