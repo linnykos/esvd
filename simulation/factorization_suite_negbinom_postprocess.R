@@ -80,7 +80,7 @@ col_vec <- color_func(1)[c(5,2,3,1,4,6)]
 text_vec <- c("eSVD", "SVD", "ZINB-WaVE", "pCMF", "(Oracle)\nUMAP", "(Oracle)\nt-SNE")
 max_height <- 3
 
-png(paste0("../../esvd_results/figure/experiment/factorization_negbinom_density.png"),
+png(paste0("../../esvd_results/figure/simulation/factorization_negbinom_density.png"),
     height = 1800, width = 1000, res = 300, units = "px")
 par(mar = c(4,0.5,4,0.5))
 plot(NA, xlim = c(-0.3, 1), ylim = c(0, 6.2), ylab = "",
@@ -115,7 +115,7 @@ col_func2 <- function(alpha){
 }
 col_vec <- col_func2(1)
 
-png(paste0("../../esvd_results/figure/experiment/factorization_negbinom_embedding.png"),
+png(paste0("../../esvd_results/figure/simulation/factorization_negbinom_embedding.png"),
     height = 1500, width = 1500, res = 300, units = "px")
 text_vec <- c("eSVD", "SVD", "ZINB-WaVE", "pCMF", "(Oracle) UMAP", "(Oracle) t-SNE")
 par(mfrow = c(2,3), mar = c(1, 1, 1.5, 1))

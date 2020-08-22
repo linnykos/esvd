@@ -5,7 +5,6 @@ source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
 session_info <- sessionInfo()
-source_code_info <- ""
 date_of_run <- Sys.time()
 source_code_info <- readLines("../simulation/factorization_generator.R")
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_methods.R"))

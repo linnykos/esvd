@@ -9,7 +9,7 @@ source_code_info <- ""
 date_of_run <- Sys.time()
 source_code_info <- readLines("../simulation/factorization_generator.R")
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_methods.R"))
-source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_negbinom_esvd.R"))
+source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_negbinom_rest.R"))
 
 paramMat <- cbind(50, 120, 5,
                   2, 50, 1/250, 1000,
