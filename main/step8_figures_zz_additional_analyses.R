@@ -1,6 +1,6 @@
 var <- ls()
 rm(list = var[var != "suffix"])
-load(paste0("../results/step7_figures", suffix, ".RData"))
+load(paste0("../results/step8_figures", suffix, ".RData"))
 cluster_center_zinbwave <- eSVD::compute_cluster_center(zinbwave_embedding[,1:3], .construct_cluster_matrix(cluster_labels))
 
 ## zinbwave plots

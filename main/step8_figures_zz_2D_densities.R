@@ -1,6 +1,6 @@
 var <- ls()
 rm(list = var[var != "suffix"])
-load(paste0("../results/step7_figures", suffix, ".RData"))
+load(paste0("../results/step8_figures", suffix, ".RData"))
 
 dim1 <- 2; dim2 <- 3
 

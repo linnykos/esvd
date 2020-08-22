@@ -1,6 +1,6 @@
 var <- ls()
 rm(list = var[var != "suffix"])
-load(paste0("../results/step7_figures", suffix, ".RData"))
+load(paste0("../results/step8_figures", suffix, ".RData"))
 
 esvd_curves_prepared <- lapply(esvd_curves_short$curves, function(curve){
   prepare_trajectory(curve, target_length = 11)

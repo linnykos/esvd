@@ -1,4 +1,21 @@
-load(paste0("../results/step6_additional_analyses", suffix, ".RData"))
+load(paste0("../results/step7_additional_analyses", suffix, ".RData"))
+
+# fix the orientation for reproducibility
+if(mean(esvd_embedding$u_mat[,1]) > 0) {
+  esvd_embedding$u_mat[,1] <- -esvd_embedding$u_mat[,1]
+  esvd_embedding$v_mat[,1] <- -esvd_embedding$v_mat[,1]
+}
+
+if(mean(esvd_embedding$u_mat[,2]) < 0) {
+  esvd_embedding$u_mat[,2] <- -esvd_embedding$u_mat[,2]
+  esvd_embedding$v_mat[,2] <- -esvd_embedding$v_mat[,2]
+}
+
+if(mean(esvd_embedding$u_mat[,3]) < 0) {
+  esvd_embedding$u_mat[,3] <- -esvd_embedding$u_mat[,3]
+  esvd_embedding$v_mat[,3] <- -esvd_embedding$v_mat[,3]
+}
+
 
 color_func <- function(alpha = 0.2){
   c(grDevices::rgb(240/255, 228/255, 66/255, alpha), #yellow
@@ -58,4 +75,4 @@ cluster_center_esvd <- eSVD::compute_cluster_center(esvd_embedding$u_mat[,1:3], 
 combn_mat <- combn(3,2)
 
 print(paste0(Sys.time(), ": About to start producing all the figures"))
-save.image(paste0("../results/step7_figures", suffix, ".RData"))
+save.image(paste0("../results/step8_figures", suffix, ".RData"))
