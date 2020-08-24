@@ -20,6 +20,7 @@ paramMat <- paramMat[2,,drop = F]
 
 trials <- 100
 ncores <- 20
+doMC::registerDoMC(cores = ncores)
 
 ################
 
