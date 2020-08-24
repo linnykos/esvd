@@ -23,7 +23,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
 paramMat <- paramMat[-2,,drop = F]
 
 trials <- 100
-ncores <- 15
+ncores <- 10
 doMC::registerDoMC(cores = ncores)
 
 ################
