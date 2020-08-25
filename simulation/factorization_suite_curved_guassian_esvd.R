@@ -57,7 +57,7 @@ criterion <- function(dat, vec, y){
     paramMat_esvd <- matrix(c(1,2,4), nrow = 3, ncol = 1)
     colnames(paramMat_esvd) <- c("scalar")
     tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, family = "curved_gaussian",
-                       ncores = ncores, k = 2)
+                       ncores = NA, k = 2)
 
     return(list(fit = tmp, truth = dat$truth))
 
@@ -103,7 +103,7 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = NA, as_list = T,
+                                        cores = ncores, as_list = T,
                                         filepath = "../results/factorization_results_curved_gaussian_esvd_tmp.RData",
                                         verbose = T)
 

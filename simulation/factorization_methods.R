@@ -87,10 +87,8 @@ method_esvd <- function(dat, paramMat, k = 3, family = "neg_binom", ncores = NA)
 
   fit_list <- lapply(1:nrow(paramMat), function(i){
     set.seed(10)
-    print(paste0("Init ", i))
     init <- eSVD::initialization(dat_NA, family = family, k = k, max_val = 2000,
                                  scalar = paramMat[i, "scalar"])
-    print(paste0("Fitting ", i))
     eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = family, scalar = paramMat[i, "scalar"],
                                    max_iter = 50, max_val = 2000,
