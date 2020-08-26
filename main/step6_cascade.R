@@ -1,4 +1,4 @@
-load(paste0("../results/step5_trajectory", suffix, ".RData"))
+load(paste0("../results/step7_additional_analyses", suffix, ".RData"))
 session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 min_traj_pseudotime <- 6
@@ -8,10 +8,10 @@ segmentation_prep <- eSVD::prepare_data_for_segmentation(dat_impute, cluster_lab
 
 segmentation_res <- eSVD::segment_genes_along_trajectories(segmentation_prep$dat1, segmentation_prep$dat2,
                                                            common_n = length(segmentation_prep$cell_idx_common),
-                                                           standardize = T, verbose = T, ncores = 20)
+                                                           standardize = T, verbose = T, ncores = ncores)
 
 print(paste0(Sys.time(), ": Finished cascading results"))
 source_code_info <- c(source_code_info, readLines("../main/step6_cascade.R"))
-save.image(paste0("../results/step6_cascade", suffix, ".RData"))
+save.image(paste0("../results/step7_additional_analyses", suffix, ".RData"))
 print(warnings())
 

@@ -17,4 +17,6 @@ date_of_run <- Sys.time()
 # source("../main/step4_factorization.R")
 # source("../main/step5_trajectory.R")
 # source("../main/step6_cascade.R")
-source("../main/step7_additional_analyses.R")
+# source("../main/step7_additional_analyses.R")
+
+source("../main/step6_cascade.R")
