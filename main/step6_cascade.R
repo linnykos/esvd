@@ -11,7 +11,7 @@ segmentation_res <- eSVD::segment_genes_along_trajectories(segmentation_prep$dat
                                                            standardize = T, verbose = T, ncores = ncores)
 
 print(paste0(Sys.time(), ": Finished cascading results"))
-source_code_info <- c(source_code_info, readLines("../main/step6_cascade.R"))
+# source_code_info <- c(source_code_info, readLines("../main/step6_cascade.R"))
 save.image(paste0("../results/step7_additional_analyses", suffix, ".RData"))
 print(warnings())
 
