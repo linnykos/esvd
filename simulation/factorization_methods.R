@@ -132,7 +132,6 @@ method_esvd <- function(dat, paramMat, k = 3, family = "neg_binom", ncores = NA)
   list(fit = fit, scalar = scalar)
 }
 
-
 method_isomap <- function(dat, k = 2){
   set.seed(10)
   dimRed_obj <- dimRed::dimRedData(dat)
@@ -141,7 +140,7 @@ method_isomap <- function(dat, k = 2){
   isomap_obj@stdpars$knn <- round(nrow(dat)/10)
   suppressMessages(emb <- isomap_obj@fun(dimRed_obj, pars = isomap_obj@stdpars))
 
-  fit <- emb@data@data
+  fit <- as.matrix(emb@data@data)
 
   list(fit = fit)
 }
@@ -150,7 +149,7 @@ method_isomap <- function(dat, k = 2){
 method_ica <- function(dat, k = 2){
   set.seed(10)
   dimRed_obj <- dimRed::dimRedData(dat)
-  fastica_obj <- dimRed::FastICA
+  fastica_obj <- dimRed::FastICA()
   fastica_obj@stdpars$ndim <- k
   suppressMessages(emb <- fastica_obj@fun(dimRed_obj, pars = fastica_obj@stdpars))
 
