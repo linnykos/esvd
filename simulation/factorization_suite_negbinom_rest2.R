@@ -17,7 +17,7 @@ paramMat <- cbind(50, 120, 5,
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "max_iter", "modifier", "max_val",
                         "size","method")
-paramMat <- paramMat[-2,,drop = F]
+paramMat <- paramMat[7:10,,drop = F]
 
 trials <- 100
 ncores <- 15
@@ -125,7 +125,7 @@ i <- 8; y <- 2; set.seed(y); tmp <- criterion(rule(paramMat[i,]), paramMat[i,], 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = ncores, as_list = T,
-                                        filepath = "../results/factorization_results_negbinom_rest_tmp.RData",
+                                        filepath = "../results/factorization_results_negbinom_rest_tmp2.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_negbinom_rest.RData")
+save.image("../results/factorization_results_negbinom_rest2.RData")

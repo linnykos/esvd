@@ -140,7 +140,7 @@ method_isomap <- function(dat, k = 2){
   isomap_obj@stdpars$knn <- round(nrow(dat)/10)
   suppressMessages(emb <- isomap_obj@fun(dimRed_obj, pars = isomap_obj@stdpars))
 
-  fit <- as.matrix(emb@data@data)
+  fit <- emb@data@data
 
   list(fit = fit)
 }
@@ -159,6 +159,9 @@ method_ica <- function(dat, k = 2){
 }
 
 # requires the "NMF" package -- be sure to explicitly load this package prior to usage
+# https://support.bioconductor.org/p/110844/ -- be sure to install the version from the below line
+## to avoid a conflict
+# BiocManager::install("renozao/NMF", ref = "devel")
 method_nmf <- function(dat, k = 2){
   set.seed(10)
   dimRed_obj <- dimRed::dimRedData(dat)
