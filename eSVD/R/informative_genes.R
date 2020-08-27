@@ -170,6 +170,7 @@ order_highly_expressed_genes <- function(res_mat, nrow1, nrow2, common_n,
   # find the unique genes in each tail, and then for each location along time, pick the top x genes in that set (if any)
   traj1_genes <- .find_trajectory_genes(res_mat, traj = 1, common_n = common_n, n = nrow1, threshold = threshold,
                                         number_of_genes = number_of_genes, manual_add = manual_add_traj1)
+
   traj2_genes <- .find_trajectory_genes(res_mat, traj = 2, common_n = common_n, n = nrow2, threshold = threshold,
                                         number_of_genes = number_of_genes, manual_add = manual_add_traj2)
 

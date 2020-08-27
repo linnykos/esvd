@@ -1,6 +1,7 @@
 rm(list=ls())
 library(simulation)
 library(eSVD)
+library(NMF)
 source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 

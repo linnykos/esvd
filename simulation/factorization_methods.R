@@ -1,3 +1,11 @@
+library(NMF)
+library(dimRed)
+library(destiny)
+library(umap)
+library(pCMF)
+library(SummarizedExperiment)
+library(zinbwave)
+
 method_svd <- function(dat, k = 2){
   stopifnot(k >= 2)
   tmp <- svd(dat)
@@ -123,3 +131,56 @@ method_esvd <- function(dat, paramMat, k = 3, family = "neg_binom", ncores = NA)
 
   list(fit = fit, scalar = scalar)
 }
+
+
+method_isomap <- function(dat, k = 2){
+  set.seed(10)
+  dimRed_obj <- dimRed::dimRedData(dat)
+  isomap_obj <- dimRed::Isomap()
+  isomap_obj@stdpars$ndim <- k
+  isomap_obj@stdpars$knn <- round(nrow(dat)/10)
+  suppressMessages(emb <- isomap_obj@fun(dimRed_obj, pars = isomap_obj@stdpars))
+
+  fit <- emb@data@data
+
+  list(fit = fit)
+}
+
+# requires the "fastICA" package
+method_ica <- function(dat, k = 2){
+  set.seed(10)
+  dimRed_obj <- dimRed::dimRedData(dat)
+  fastica_obj <- dimRed::FastICA
+  fastica_obj@stdpars$ndim <- k
+  suppressMessages(emb <- fastica_obj@fun(dimRed_obj, pars = fastica_obj@stdpars))
+
+  fit <- emb@data@data
+
+  list(fit = fit)
+}
+
+# requires the "NMF" package -- be sure to explicitly load this package prior to usage
+method_nmf <- function(dat, k = 2){
+  set.seed(10)
+  dimRed_obj <- dimRed::dimRedData(dat)
+  nnmf_obj <- dimRed::NNMF()
+  nnmf_obj@stdpars$ndim <- k
+  suppressMessages(emb <- nnmf_obj@fun(dimRed_obj, pars = nnmf_obj@stdpars))
+
+  fit <- emb@data@data
+
+  list(fit = fit)
+}
+
+# requires the "diffusionMap" function
+method_diffusion <- function(dat, k = 2){
+  set.seed(10)
+  tmp <- destiny::DiffusionMap(dat)
+
+  fit <- cbind(tmp$DC1, tmp$DC2)
+
+  list(fit = fit)
+}
+
+
+
