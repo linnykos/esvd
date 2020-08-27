@@ -1,7 +1,6 @@
 rm(list=ls())
 library(simulation)
 library(eSVD)
-library(NMF)
 source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
@@ -15,7 +14,7 @@ paramMat <- cbind(50, 120, 5,
                   2, 50, 1/250, 1000,
                   80, 120, 600,
                   1/4, 1/4, 1/2,
-                  1:6)
+                  1:10)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "max_iter", "modifier", "max_val",
                         "size_1", "size_2", "size_3",

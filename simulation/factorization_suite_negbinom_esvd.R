@@ -1,7 +1,6 @@
 rm(list=ls())
 library(simulation)
 library(eSVD)
-library(NMF)
 source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
@@ -13,7 +12,7 @@ source_code_info <- c(source_code_info, readLines("../simulation/factorization_s
 
 paramMat <- cbind(50, 120, 5,
                   2, 50, 1/250, 1000,
-                  50, 1:6)
+                  50, 1:10)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "max_iter", "modifier", "max_val",
                         "size","method")

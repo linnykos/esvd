@@ -1,7 +1,6 @@
 rm(list=ls())
 library(simulation)
 library(eSVD)
-library(NMF)
 source("../simulation/factorization_generator.R")
 source("../simulation/factorization_methods.R")
 
@@ -13,7 +12,7 @@ source_code_info <- c(source_code_info, readLines("../simulation/factorization_s
 
 paramMat <- cbind(50, 200, 5,
                   2, 50, 1/300, 1000,
-                  50, 1:6)
+                  50, 1:10)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "max_iter", "modifier", "max_val",
                         "size","method")
@@ -41,9 +40,8 @@ rule <- function(vec){
   nat_mat <- res$nat_mat
 
   dat <- generator_esvd_poisson(nat_mat, vec["size"])
-  obs_mat <- round(dat * 1000/max(dat))
 
-  list(dat = obs_mat, truth = res$cell_mat)
+  list(dat = dat, truth = res$cell_mat)
 }
 
 criterion <- function(dat, vec, y){
@@ -96,14 +94,13 @@ criterion <- function(dat, vec, y){
 ## i <- 2; y <- 1; set.seed(y); zz3 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz3$truth)
 ## i <- 2; y <- 2; set.seed(y); zz4 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz4$truth)
 
-## i <- 2; y <- 2; set.seed(y); tmp <- rule(paramMat[i,]);tmp$dat[1:5,1:5]
 
 ############
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = ncores, as_list = T,
-                                        filepath = "../results/factorization_results_negbinom_esvd_tmp.RData",
+                                        filepath = "../results/factorization_results_poisson_esvd_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_negbinom_esvd.RData")
+save.image("../results/factorization_results_poisson_esvd.RData")
