@@ -86,40 +86,45 @@ method_pcmf <- function(dat, k = 2){
   list(fit = fit)
 }
 
-method_esvd <- function(dat, paramMat, k = 3, family = "neg_binom", ncores = NA){
-  dat_NA <- dat # lazy evaluation requires us to grab the data first before setting the seed
+method_esvd <- function(dat, paramMat, family, k = 2, ncores = NA){
+  if(!is.na(paramMat)){
+    dat_NA <- dat # lazy evaluation requires us to grab the data first before setting the seed
 
-  set.seed(10)
-  missing_idx <- eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 2)
-  dat_NA[missing_idx] <- NA
-
-  fit_list <- lapply(1:nrow(paramMat), function(i){
     set.seed(10)
-    init <- eSVD::initialization(dat_NA, family = family, k = k, max_val = 2000,
-                                 scalar = paramMat[i, "scalar"])
-    eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                   family = family, scalar = paramMat[i, "scalar"],
-                                   max_iter = 50, max_val = 2000,
-                                   return_path = F, cores = ncores,
-                                   verbose = F)
-  })
+    missing_idx <- eSVD::construct_missing_values(n = nrow(dat), p = ncol(dat), num_val = 2)
+    dat_NA[missing_idx] <- NA
 
-  quality_list <- lapply(1:nrow(paramMat), function(i){
-    nat_mat <- fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat)
-    eSVD::plot_prediction_against_observed(dat = dat, nat_mat_list = list(nat_mat),
-                                           family = family, missing_idx_list = list(missing_idx),
-                                           scalar = paramMat[i, "scalar"], plot = F)
-  })
+    fit_list <- lapply(1:nrow(paramMat), function(i){
+      set.seed(10)
+      init <- eSVD::initialization(dat_NA, family = family, k = k, max_val = 2000,
+                                   scalar = paramMat[i, "scalar"])
+      eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                              family = family, scalar = paramMat[i, "scalar"],
+                              max_iter = 50, max_val = 2000,
+                              return_path = F, cores = ncores,
+                              verbose = F)
+    })
 
-  quality_mat <- do.call(rbind, lapply(quality_list, unlist))
-  if(any(quality_mat[,"bool"] == 1)){
-    qualified_idx <- c(1:nrow(paramMat))[which(quality_mat[,"bool"] == 1)]
-    idx <- qualified_idx[which.min(abs(quality_mat[qualified_idx, "angle_val"] - 45))]
+    quality_list <- lapply(1:nrow(paramMat), function(i){
+      nat_mat <- fit_list[[i]]$u_mat %*% t(fit_list[[i]]$v_mat)
+      eSVD::plot_prediction_against_observed(dat = dat, nat_mat_list = list(nat_mat),
+                                             family = family, missing_idx_list = list(missing_idx),
+                                             scalar = paramMat[i, "scalar"], plot = F)
+    })
+
+    quality_mat <- do.call(rbind, lapply(quality_list, unlist))
+    if(any(quality_mat[,"bool"] == 1)){
+      qualified_idx <- c(1:nrow(paramMat))[which(quality_mat[,"bool"] == 1)]
+      idx <- qualified_idx[which.min(abs(quality_mat[qualified_idx, "angle_val"] - 45))]
+    } else {
+      idx <- which.min(abs(quality_mat[, "angle_val"] - 45))
+    }
+
+    scalar <- paramMat[idx, "scalar"]
   } else {
-    idx <- which.min(abs(quality_mat[, "angle_val"] - 45))
+    scalar <- NA
   }
 
-  scalar <- paramMat[idx, "scalar"]
 
   set.seed(10)
   init <- eSVD::initialization(dat, family = family, k = k, max_val = 2000,

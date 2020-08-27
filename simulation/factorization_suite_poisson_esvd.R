@@ -11,7 +11,7 @@ source_code_info <- readLines("../simulation/factorization_generator.R")
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_methods.R"))
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_negbinom_esvd.R"))
 
-paramMat <- cbind(50, 120, 5,
+paramMat <- cbind(50, 200, 5,
                   2, 50, 1/300, 1000,
                   50, 1:6)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
@@ -20,7 +20,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
 paramMat <- paramMat[2,,drop = F]
 
 trials <- 100
-ncores <- 20
+ncores <- 15
 doMC::registerDoMC(cores = ncores)
 
 ################
@@ -55,9 +55,7 @@ criterion <- function(dat, vec, y){
 
   } else if(vec["method"] == 2){ #esvd
     dat_obs <- dat$dat
-    paramMat_esvd <- matrix(c(5, 50, 100), nrow = 3, ncol = 1)
-    colnames(paramMat_esvd) <- c("scalar")
-    tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, family = "poisson",
+    tmp <- method_esvd(dat_obs, paramMat = NA, family = "poisson",
                        ncores = NA, k = 2)
 
     return(list(fit = tmp, truth = dat$truth))
