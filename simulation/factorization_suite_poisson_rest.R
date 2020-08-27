@@ -77,12 +77,32 @@ criterion <- function(dat, vec, y){
     tmp <- method_umap_oracle(dat_obs, cell_truth = dat$truth, paramMat = paramMat_umap)
     return(list(fit = tmp, truth = dat$truth))
 
-  } else { #tsne
+  } else if(vec["method"] == 6) { #tsne
     dat_obs <- dat$dat
     paramMat_tsne <- matrix(round(seq(2, 50, length.out = 10)), ncol = 1, nrow = 1)
     colnames(paramMat_tsne) <- c("perplexity")
 
     tmp <- method_tsne_oracle(dat_obs, cell_truth = dat$truth, paramMat = paramMat_tsne)
+    return(list(fit = tmp, truth = dat$truth))
+
+  } else if(vec["method"] == 7) { #isomap
+    dat_obs <- dat$dat
+    tmp <- method_isomap(dat_obs)
+    return(list(fit = tmp, truth = dat$truth))
+
+  }  else if(vec["method"] == 8) { #ica
+    dat_obs <- dat$dat
+    tmp <- method_ica(dat_obs)
+    return(list(fit = tmp, truth = dat$truth))
+
+  } else if(vec["method"] == 9) { #nmf
+    dat_obs <- dat$dat
+    tmp <- method_nmf(dat_obs)
+    return(list(fit = tmp, truth = dat$truth))
+
+  } else { #diffusion map
+    dat_obs <- dat$dat
+    tmp <- method_diffusion(dat_obs)
     return(list(fit = tmp, truth = dat$truth))
   }
 }

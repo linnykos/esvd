@@ -10,7 +10,7 @@ source_code_info <- readLines("../simulation/factorization_generator.R")
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_methods.R"))
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_negbinom_rest.R"))
 
-paramMat <- cbind(50, 120, 5,
+paramMat <- cbind(50, 200, 5,
                   2, 50, 1/250, 1000,
                   50, 1:10)
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
