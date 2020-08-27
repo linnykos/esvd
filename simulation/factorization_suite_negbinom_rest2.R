@@ -118,7 +118,7 @@ criterion <- function(dat, vec, y){
 ## i <- 2; y <- 2; set.seed(y); zz4 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz4$truth)
 
 ## i <- 2; y <- 2; set.seed(y); tmp <- rule(paramMat[i,]); tmp$dat[1:5,1:5]
-i <- 8; y <- 2; set.seed(y); tmp <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(tmp$fit$fit)
+## i <- 8; y <- 2; set.seed(y); tmp <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(tmp$fit$fit)
 
 ############
 
