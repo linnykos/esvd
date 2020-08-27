@@ -56,7 +56,8 @@ criterion <- function(dat, vec, y){
     dat_obs <- dat$dat
     paramMat_esvd <- matrix(c(5, 50, 100), nrow = 3, ncol = 1)
     colnames(paramMat_esvd) <- c("scalar")
-    tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, ncores = ncores, k = 2)
+    tmp <- method_esvd(dat_obs, paramMat = paramMat_esvd, family = "neg_binom",
+                       ncores = NA, k = 2)
 
     return(list(fit = tmp, truth = dat$truth))
 
@@ -122,7 +123,7 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
-                                        cores = NA, as_list = T,
+                                        cores = ncores, as_list = T,
                                         filepath = "../results/factorization_results_negbinom_esvd_tmp.RData",
                                         verbose = T)
 
