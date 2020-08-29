@@ -7,14 +7,13 @@ session_info <- sessionInfo()
 date_of_run <- Sys.time()
 source_code_info <- c(readLines("../simulation/factorization_suite_exponential_families.R"))
 
-
 paramMat <- cbind(50, 200, 5,
-                  rep(rep(1:3, each = 4), times = 4), 50, 2, 50,
-                  rep(1:4, each = 12),
-                  rep(c(1/2, 1/300, 1/250, 1/5000), each = 12),
-                  rep(1:4, times = 12),
-                  rep(c(1, 1, NA, NA), times = 12),
-                  rep(c(3000, rep(100, 3)), times = 4))
+                  rep(rep(1:3, each = 3), times = 3), 50, 2, 50,
+                  rep(1:3, each = 9),
+                  rep(c(1/300, 1/250, 1/5000), each = 9),
+                  rep(1:3, times = 9),
+                  rep(c(1, NA, NA), times = 9),
+                  rep(c(50, 50, 5), times = 3))
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "true_r",  "true_alpha", "max_iter",
                         "true_distr",
@@ -46,10 +45,8 @@ rule <- function(vec){
   nat_mat <- res$nat_mat
 
   if(vec["true_distr"] == 1){
-    obs_mat <- round(generator_gaussian(nat_mat))
-  } else if(vec["true_distr"] == 2){
     obs_mat <- generator_esvd_poisson(nat_mat)
-  } else if(vec["true_distr"] == 3 ){
+  } else if(vec["true_distr"] == 2){
     obs_mat <- generator_esvd_nb(nat_mat, scalar = vec["true_r"])
   } else {
     obs_mat <- round(generator_curved_gaussian(nat_mat, scalar = vec["true_alpha"]))
@@ -69,18 +66,8 @@ criterion <- function(dat, vec, y){
   missing_val <- dat_obs[missing_idx]
 
   set.seed(10)
-  # fixed variance gaussian
+  # poisson
   if(vec["fitting_distr"] == 1){
-    init <- eSVD::initialization(dat_NA, family = "gaussian", k = vec["k"], max_val = vec["max_val"])
-    fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                                   family = "gaussian",
-                                   max_iter = vec["max_iter"], max_val = vec["max_val"],
-                                   return_path = F, cores = NA,
-                                   verbose = F)
-    fit <- list(fit)
-
-    # poisson
-  } else if(vec["fitting_distr"] == 2){
     init <- eSVD::initialization(dat_NA, family = "poisson", k = vec["k"], max_val = vec["max_val"])
     fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "poisson",
@@ -90,7 +77,7 @@ criterion <- function(dat, vec, y){
     fit <- list(fit)
 
     # negative binomial
-  } else if(vec["fitting_distr"] == 3){
+  } else if(vec["fitting_distr"] == 2){
     fit <- lapply(r_vec, function(r_val){
       init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
                                    scalar = r_val)
@@ -125,7 +112,7 @@ criterion <- function(dat, vec, y){
 ############
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
-                                        paramMat = paramMat[25:36,], trials = trials,
+                                        paramMat = paramMat[19:27,], trials = trials,
                                         cores = ncores, as_list = T,
                                         filepath = "../results/factorization_results_exponential_families_tmp.RData",
                                         verbose = T)
@@ -133,15 +120,7 @@ res <- simulation::simulation_generator(rule = rule, criterion = criterion,
 save.image("../results/factorization_results_exponential_families_3.RData")
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
-                                        paramMat = paramMat[37:48,], trials = trials,
-                                        cores = ncores, as_list = T,
-                                        filepath = "../results/factorization_results_exponential_families_tmp.RData",
-                                        verbose = T)
-
-save.image("../results/factorization_results_exponential_families_4.RData")
-
-res <- simulation::simulation_generator(rule = rule, criterion = criterion,
-                                        paramMat = paramMat[13:24,], trials = trials,
+                                        paramMat = paramMat[10:18,], trials = trials,
                                         cores = ncores, as_list = T,
                                         filepath = "../results/factorization_results_exponential_families_tmp.RData",
                                         verbose = T)
@@ -149,7 +128,7 @@ res <- simulation::simulation_generator(rule = rule, criterion = criterion,
 save.image("../results/factorization_results_exponential_families_2.RData")
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
-                                        paramMat = paramMat[1:12,], trials = trials,
+                                        paramMat = paramMat[1:9,], trials = trials,
                                         cores = ncores, as_list = T,
                                         filepath = "../results/factorization_results_exponential_families_tmp.RData",
                                         verbose = T)
