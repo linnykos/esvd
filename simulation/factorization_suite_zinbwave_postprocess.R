@@ -14,13 +14,20 @@ for(i in 1:length(res)){
   len_vec <- sapply(res[[i]], length)
   res[[i]] <- res[[i]][which(len_vec > 1)]
 }
-res[[6]] <- res[[5]]
-res[3:5] <- res[2:4]
-res[2] <- res_tmp[1]
+res[[length(res)+1]] <- res_tmp[[1]]
 
-res[c(1,2)] <- res[c(2,1)]
+current_ord <- c("SVD", "ZINB-WaVE", "pCMF", "(Oracle)\nUMAP", "(Oracle)\nt-SNE",
+                 "Isomap", "ICA", "NMF", "Diffusion\nmap", "eSVD (Neg.\nbinom.)")
+desired_ord <- c("eSVD (Neg.\nbinom.)",
+                 "ZINB-WaVE", "pCMF",
+                 "SVD", "NMF", "ICA",
+                 "(Oracle)\nUMAP", "(Oracle)\nt-SNE", "Isomap", "Diffusion\nmap")
 
-
+res_tmp <- res
+for(i in 1:length(desired_ord)){
+  idx <- which(current_ord == desired_ord[i])
+  res[[i]] <- res_tmp[[idx]]
+}
 ####################
 
 trials <- min(sapply(res, length))
@@ -28,7 +35,7 @@ res_mat <- matrix(NA, length(res), trials)
 for(i in 1:trials){
   if(i %% floor(trials/10) == 0) cat('*')
 
-  for(j in 1:6){
+  for(j in 1:length(res)){
     dist_mat_truth <- as.matrix(stats::dist(res[[j]][[i]]$truth))
     dist_mat_est <- as.matrix(stats::dist(res[[j]][[i]]$fit$fit[,1:2]))
 
@@ -39,12 +46,17 @@ for(i in 1:trials){
 }
 
 color_func <- function(alpha = 0.2){
-  c(rgb(240/255, 228/255, 66/255, alpha), #yellow
-    rgb(86/255, 180/255, 233/255, alpha), #skyblue
-    rgb(0/255, 158/255, 115/255, alpha), #bluish green
-    rgb(0/255, 114/255, 178/255, alpha), #blue
-    rgb(230/255, 159/255, 0/255, alpha), #orange
-    rgb(150/255, 150/255, 150/255, alpha))
+  c(rgb(240/255, 228/255, 66/255, alpha), #yellow 1
+    rgb(86/255, 180/255, 233/255, alpha), #skyblue 2
+    rgb(0/255, 158/255, 115/255, alpha), #bluish green 3
+    rgb(0/255, 114/255, 178/255, alpha), #blue 4
+    rgb(230/255, 159/255, 0/255, alpha), #orange 5
+    rgb(150/255, 150/255, 150/255, alpha), # gray 6
+    rgb(204/255, 121/255, 167/255, alpha), # pink 7
+    rgb(213/255, 94/255, 0/255, alpha), #dark orange 8
+    rgb(67/255, 24/255, 97/255, alpha), #dark purple 9
+    rgb(25/255, 67/255, 32/255, alpha) #dark green 10
+  )
 }
 
 # start of intensive plotting function
@@ -55,16 +67,16 @@ den_list <- lapply(1:nrow(res_mat), function(i){
 #max_val <- max(sapply(den_list, function(x){max(x$y)}))
 scaling_factor <- quantile(sapply(den_list, function(x){max(x$y)}), probs = 0.3)
 
-col_vec <- color_func(1)[c(5,2,3,1,4,6)]
-text_vec <- c("eSVD", "SVD", "ZINB-WaVE", "pCMF", "(Oracle)\nUMAP", "(Oracle)\nt-SNE")
-max_height <- 3
+col_vec <- color_func(1)[c(5,2,3,1,4,8,6,10,7,9)]
+text_vec <- desired_ord
+max_height <- 2.5
 
-png(paste0("../../esvd_results/figure/experiment/factorization_zinbwave_density.png"),
-    height = 1800, width = 1000, res = 300, units = "px")
+png(paste0("../../esvd_results/figure/simulation/factorization_zinbwave_density.png"),
+    height = 2500, width = 1000, res = 300, units = "px")
 par(mar = c(4,0.5,4,0.5))
-plot(NA, xlim = c(-0.3, 1), ylim = c(0, 6.2), ylab = "",
+plot(NA, xlim = c(-0.3, 1), ylim = c(0, nrow(res_mat)+0.2), ylab = "",
      yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau",
-     main = paste0("Relative embedding correlation"))
+     main = paste0("Relative embedding correlation\n(ZINB-WaVE generative model)"))
 axis(side = 1, at = seq(0,1,length.out = 6))
 for(i in 1:nrow(res_mat)){
   lines(c(0,1), rep(nrow(res_mat) - i, 2))
@@ -80,11 +92,11 @@ for(i in 1:nrow(res_mat)){
   points(med, y = nrow(res_mat) - i, col = "black", pch = 16, cex = 2)
   points(med, y = nrow(res_mat) - i, col = col_vec[i], pch = 16, cex = 1.5)
 }
-text(x = rep(-0.15,6), y = seq(5.35, 0.35, by=-1), labels = text_vec)
+text(x = rep(-0.15,nrow(res_mat)), y = seq(nrow(res_mat)-1+.35, 0.35, by=-1), labels = text_vec,
+     cex = 0.9)
 graphics.off()
 
-#########################
-
+##########################
 
 col_func2 <- function(alpha){
   c( rgb(86/255, 180/255, 233/255, alpha), #skyblue
@@ -94,11 +106,12 @@ col_func2 <- function(alpha){
 }
 col_vec <- col_func2(1)
 
-png(paste0("../../esvd_results/figure/experiment/factorization_zinbwave_embedding.png"),
-    height = 1500, width = 1500, res = 300, units = "px")
-text_vec <- c("eSVD", "SVD", "ZINB-WaVE", "pCMF", "(Oracle) UMAP", "(Oracle) t-SNE")
-par(mfrow = c(2,3), mar = c(1, 1, 1.5, 1))
-for(i in 1:6){
+png(paste0("../../esvd_results/figure/simulation/factorization_zinbwave_embedding.png"),
+    height = 1500, width = 2000, res = 300, units = "px")
+text_vec <- c("eSVD", "ZINB-WaVE", "pCMF", "SVD", "NMF", "ICA",
+              "UMAP", "t-SNE", "Isomap", "Diff. Map")
+par(mfrow = c(2,5), mar = c(1, 1, 1.5, 1))
+for(i in 1:nrow(res_mat)){
   idx <- which.min(abs(res_mat[i,] - median(res_mat[i,])))
 
   plot(res[[i]][[idx]]$fit$fit[,1], res[[i]][[idx]]$fit$fit[,2],
@@ -108,4 +121,3 @@ for(i in 1:6){
        xaxt = "n", yaxt = "n")
 }
 graphics.off()
-

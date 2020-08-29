@@ -3,10 +3,15 @@ library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
 
-paramMat <- cbind(50, 120, 5,
+session_info <- sessionInfo()
+date_of_run <- Sys.time()
+source_code_info <- c(readLines("../simulation/factorization_suite_exponential_families.R"))
+
+
+paramMat <- cbind(50, 200, 5,
                   rep(rep(1:3, each = 4), times = 4), 50, 2, 50,
                   rep(1:4, each = 12),
-                  rep(c(1/27, 1/800, 1/250, 1/1000), each = 12),
+                  rep(c(1/2, 1/300, 1/250, 1/5000), each = 12),
                   rep(1:4, times = 12),
                   rep(c(1, 1, NA, NA), times = 12),
                   rep(c(3000, rep(100, 3)), times = 4))
@@ -17,8 +22,8 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "fitting_distr",
                         "fitting_param",
                         "max_val")
-trials <- 100
-ncores <- 15
+trials <- 50
+ncores <- 10
 r_vec <- c(5, 50, 100)
 alpha_vec <- c(0.5, 2, 50)
 
@@ -50,8 +55,6 @@ rule <- function(vec){
     obs_mat <- round(generator_curved_gaussian(nat_mat, scalar = vec["true_alpha"]))
   }
 
-  obs_mat <- obs_mat * 1000/max(obs_mat)
-
   list(dat = obs_mat, u_mat = res$cell_mat, v_mat = res$gene_mat)
 }
 
@@ -72,7 +75,7 @@ criterion <- function(dat, vec, y){
     fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "gaussian",
                                    max_iter = vec["max_iter"], max_val = vec["max_val"],
-                                   return_path = F, cores = ncores,
+                                   return_path = F, cores = NA,
                                    verbose = F)
     fit <- list(fit)
 
@@ -82,7 +85,7 @@ criterion <- function(dat, vec, y){
     fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                                    family = "poisson",
                                    max_iter = vec["max_iter"], max_val = vec["max_val"],
-                                   return_path = F, cores = ncores,
+                                   return_path = F, cores = NA,
                                    verbose = F)
     fit <- list(fit)
 
@@ -94,7 +97,7 @@ criterion <- function(dat, vec, y){
       eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                               family = "neg_binom", scalar = r_val,
                               max_iter = vec["max_iter"], max_val = vec["max_val"],
-                              return_path = F, cores = ncores,
+                              return_path = F, cores = NA,
                               verbose = F)
     })
 
@@ -106,7 +109,7 @@ criterion <- function(dat, vec, y){
       eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                               family = "curved_gaussian", scalar = alpha_val,
                               max_iter = vec["max_iter"], max_val = vec["max_val"],
-                              return_path = F, cores = ncores,
+                              return_path = F, cores = NA,
                               verbose = F)
     })
   }
@@ -123,7 +126,7 @@ criterion <- function(dat, vec, y){
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat[25:36,], trials = trials,
-                                        cores = NA, as_list = T,
+                                        cores = ncores, as_list = T,
                                         filepath = "../results/factorization_results_exponential_families_tmp.RData",
                                         verbose = T)
 
@@ -131,7 +134,7 @@ save.image("../results/factorization_results_exponential_families_3.RData")
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat[37:48,], trials = trials,
-                                        cores = NA, as_list = T,
+                                        cores = ncores, as_list = T,
                                         filepath = "../results/factorization_results_exponential_families_tmp.RData",
                                         verbose = T)
 
@@ -139,7 +142,7 @@ save.image("../results/factorization_results_exponential_families_4.RData")
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat[13:24,], trials = trials,
-                                        cores = NA, as_list = T,
+                                        cores = ncores, as_list = T,
                                         filepath = "../results/factorization_results_exponential_families_tmp.RData",
                                         verbose = T)
 
@@ -147,7 +150,7 @@ save.image("../results/factorization_results_exponential_families_2.RData")
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat[1:12,], trials = trials,
-                                        cores = NA, as_list = T,
+                                        cores = ncores, as_list = T,
                                         filepath = "../results/factorization_results_exponential_families_tmp.RData",
                                         verbose = T)
 

@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/factorization_results_curved_gaussian_esvd.RData")
+load("../results/factorization_results_poisson_esvd.RData")
 for(i in 1:length(res)){
   len_vec <- sapply(res[[i]], length)
   res[[i]] <- res[[i]][which(len_vec > 1)]
@@ -9,7 +9,7 @@ for(i in 1:length(res[[1]])){
 }
 res_tmp <- res
 
-load("../results/factorization_results_curved_gaussian_rest.RData")
+load("../results/factorization_results_poisson_rest.RData")
 for(i in 1:length(res)){
   len_vec <- sapply(res[[i]], length)
   res[[i]] <- res[[i]][which(len_vec > 1)]
@@ -17,8 +17,8 @@ for(i in 1:length(res)){
 res[[length(res)+1]] <- res_tmp[[1]]
 
 current_ord <- c("SVD", "ZINB-WaVE", "pCMF", "(Oracle)\nUMAP", "(Oracle)\nt-SNE",
-                 "Isomap", "ICA", "NMF", "Diffusion\nmap", "eSVD (Curved\nGaussian)")
-desired_ord <- c("eSVD (Curved\nGaussian)",
+                 "Isomap", "ICA", "NMF", "Diffusion\nmap", "eSVD (Poisson)")
+desired_ord <- c("eSVD (Poisson)",
                  "ZINB-WaVE", "pCMF",
                  "SVD", "NMF", "ICA",
                  "(Oracle)\nUMAP", "(Oracle)\nt-SNE", "Isomap", "Diffusion\nmap")
@@ -28,29 +28,6 @@ for(i in 1:length(desired_ord)){
   idx <- which(current_ord == desired_ord[i])
   res[[i]] <- res_tmp[[idx]]
 }
-
-################
-
-# cluster_labels <- rep(1:4, each = 50)
-# j <- 3
-# i <- 1
-# par(mfrow = c(1,2))
-# plot(res[[j]][[i]]$fit$fit[,1], res[[j]][[i]]$fit$fit[,2], asp = T,
-#      col = cluster_labels, pch = 16, main = "Estimated")
-# plot(res[[j]][[i]]$truth[,1], res[[j]][[i]]$truth[,2], asp = T,
-#      col = cluster_labels, pch = 16, main = "Truth")
-#
-# j <- 2
-# quality_vec <- sapply(1:length(res[[j]]), function(i){
-#   dist_mat_truth <- as.matrix(stats::dist(res[[j]][[i]]$truth))
-#   dist_mat_est <- as.matrix(stats::dist(res[[j]][[i]]$fit$fit[,1:2]))
-#
-#   mean(sapply(1:nrow(dist_mat_est), function(i){
-#     cor(dist_mat_truth[i,], dist_mat_est[i,], method = "kendall")
-#   }))
-# })
-# quantile(quality_vec)
-
 ####################
 
 trials <- min(sapply(res, length))
@@ -88,18 +65,18 @@ den_list <- lapply(1:nrow(res_mat), function(i){
 })
 
 #max_val <- max(sapply(den_list, function(x){max(x$y)}))
-scaling_factor <- quantile(sapply(den_list, function(x){max(x$y)}), probs = 0.35)
+scaling_factor <- quantile(sapply(den_list, function(x){max(x$y)}), probs = 0.3)
 
 col_vec <- color_func(1)[c(5,2,3,1,4,8,6,10,7,9)]
 text_vec <- desired_ord
-max_height <- 3
+max_height <- 1.5
 
-png(paste0("../../esvd_results/figure/simulation/factorization_curved_gaussian_density.png"),
+png(paste0("../../esvd_results/figure/simulation/factorization_poisson_density.png"),
     height = 2500, width = 1000, res = 300, units = "px")
 par(mar = c(4,0.5,4,0.5))
 plot(NA, xlim = c(-0.3, 1), ylim = c(0, nrow(res_mat)+0.2), ylab = "",
      yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau",
-     main = paste0("Relative embedding correlation\n(Curved Gaussian generative model)"))
+     main = paste0("Relative embedding correlation\n(Poisson generative model)"))
 axis(side = 1, at = seq(0,1,length.out = 6))
 for(i in 1:nrow(res_mat)){
   lines(c(0,1), rep(nrow(res_mat) - i, 2))
@@ -115,12 +92,11 @@ for(i in 1:nrow(res_mat)){
   points(med, y = nrow(res_mat) - i, col = "black", pch = 16, cex = 2)
   points(med, y = nrow(res_mat) - i, col = col_vec[i], pch = 16, cex = 1.5)
 }
-text(x = rep(-0.1,nrow(res_mat)), y = seq(nrow(res_mat)-1+.35, 0.35, by=-1), labels = text_vec,
+text(x = rep(-0.15,nrow(res_mat)), y = seq(nrow(res_mat)-1+.35, 0.35, by=-1), labels = text_vec,
      cex = 0.9)
 graphics.off()
 
 ##########################
-
 
 col_func2 <- function(alpha){
   c( rgb(86/255, 180/255, 233/255, alpha), #skyblue
@@ -130,7 +106,7 @@ col_func2 <- function(alpha){
 }
 col_vec <- col_func2(1)
 
-png(paste0("../../esvd_results/figure/simulation/factorization_curved_gaussian_embedding.png"),
+png(paste0("../../esvd_results/figure/simulation/factorization_poisson_embedding.png"),
     height = 1500, width = 2000, res = 300, units = "px")
 text_vec <- c("eSVD", "ZINB-WaVE", "pCMF", "SVD", "NMF", "ICA",
               "UMAP", "t-SNE", "Isomap", "Diff. Map")

@@ -8,7 +8,7 @@ session_info <- sessionInfo()
 date_of_run <- Sys.time()
 source_code_info <- readLines("../simulation/factorization_generator.R")
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_methods.R"))
-source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_negbinom_esvd.R"))
+source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_curved_gaussian_rest.R"))
 
 paramMat <- cbind(50, 200, 5,
                   2, 50, 1/250, 1000,
