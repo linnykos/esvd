@@ -18,8 +18,10 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "max_iter", "modifier", "max_val",
                         "dropout_prob",
                         "method")
-trials <- 5
-ncores <- 5
+paramMat <- paramMat[2,,drop = F]
+
+trials <- 100
+ncores <- 15
 doMC::registerDoMC(cores = ncores)
 
 ################
