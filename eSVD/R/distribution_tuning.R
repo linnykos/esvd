@@ -4,9 +4,12 @@
 #' @param nat_mat_list list of natural parameter matrices, each of same dimension as \code{dat}
 #' @param family character such as \code{"gaussian"}, \code{"exponential"}, \code{"neg_binom"} or \code{"curved_gaussian"}
 #' @param missing_idx_list list of missing indices, same length as \code{nat_mat_list}
-#' @param width parameter, controlling quantile of prediction region
+#' @param width parameter, controlling quantile of prediction region. The default is \code{0.8}, meaning
+#' that the prediction region is by default from the 10th to 90th quantile.
 #' @param scalar additional parameter needed to compute distribution corresponding to \code{family}
 #' @param plot boolean
+#' @param compute_percentage boolean to whether or not compute the percentage of points that fall within the \code{width}-sized
+#' prediction region. It is suggested to keep this as \code{FALSE} since this might be slow to compute.
 #' @param max_points maximum number of points to be shown in the scatterplot, purely for visualization purposes only
 #' @param tol parameter between \code{0} and \code{1} for how strict (\code{1} being the strictest) to measure
 #' if the principal angle falls within the prediction region
@@ -16,10 +19,16 @@
 #' @param cex_text plotting parameter
 #' @param ... additional plotting parameters
 #'
-#' @return either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or the principle angle otherwise
+#' @return either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or a
+#' list of elements include \code{angle_val} (the average principal angle among the \code{length(nat_mat_list)} estimates),
+#' \code{angle_sd} (the standard deviation of the principal angle among the \code{length(nat_mat_list)} estimates),
+#' \code{bool} (whether or not the average principal angle in \code{angle_val} falls within the
+#' \code{width}-sized prediction region) and \code{percentage} (the averge percentage of values
+#' that fall within the \code{width}-sized prediction region)
 #' @export
 plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_idx_list = list(1:prod(dim(dat))),
                                              width = 0.8, scalar = NA, plot = T,
+                                             compute_percentage = F,
                                              max_points = 500000, tol = 0.95, xlim = NA,
                                              ylim = NA, transparency = 0.2, cex_text = 1, ...){
   stopifnot(length(nat_mat_list) == length(missing_idx_list))
@@ -31,6 +40,18 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
   tmp_list <- lapply(1:length(nat_mat_list), function(i){
     cbind(dat[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]])
   })
+
+  # compute percentage of points that fall within the region
+  if(compute_percentage){
+    percentage_vec <- sapply(1:length(nat_mat_list), function(i){
+      .compute_overlap_percentage(dat[missing_idx_list[[i]]], nat_mat_list[[i]][missing_idx_list[[i]]],
+                                  family = family, width = width, scalar = scalar)
+    })
+    percentage <- mean(percentage_vec)
+  } else{
+    percentage <- NA
+  }
+
 
   # compute the principal angle and
   angle_vec <- sapply(tmp_list, compute_principal_angle)
@@ -54,7 +75,7 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
                          xlim = xlim, ylim = ylim, transparency = transparency,
                          cex_text = cex_text, ...)
   } else {
-    list(angle_val = angle_val, angle_sd = angle_sd, bool = res$bool)
+    list(angle_val = angle_val, angle_sd = angle_sd, bool = res$bool, percentage = percentage)
   }
 }
 
@@ -72,11 +93,14 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
 #' @param width parameter, controlling quantile of prediction region
 #' @param scalar_vec vector of additional parameters needed to compute distribution corresponding to \code{family},
 #' of length equal to \code{length(nat_mat_list_list)}
+#' @param compute_percentage boolean to whether or not compute the percentage of points that fall within the \code{width}-sized
+#' prediction region. It is suggested to keep this as \code{FALSE} since this might be slow to compute.
 #'
 #' @return a list
 #' @export
 tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_list = list(1:prod(dim(dat))),
-                          width = 0.8, scalar_vec = rep(NA, length(nat_mat_list_list))){
+                          width = 0.8, scalar_vec = rep(NA, length(nat_mat_list_list)),
+                          compute_percentage = F){
   stopifnot(length(nat_mat_list_list) == length(scalar_vec))
   stopifnot(length(unique(sapply(nat_mat_list_list, length))) == 1)
   stopifnot(length(nat_mat_list_list[[1]]) == length(missing_idx_list))
@@ -89,24 +113,30 @@ tuning_select_scalar <- function(dat, nat_mat_list_list, family, missing_idx_lis
   res_test_list <- lapply(1:length(nat_mat_list_list), function(i){
     plot_prediction_against_observed(dat, nat_mat_list_list[[i]], family = family,
                                      missing_idx_list = missing_idx_list,
-                                     width = width, scalar = scalar_vec[i], plot = F)
+                                     width = width, scalar = scalar_vec[i],
+                                     compute_percentage = compute_percentage, plot = F)
   })
 
   # angles for training
   res_train_list <- lapply(1:length(nat_mat_list_list), function(i){
     plot_prediction_against_observed(dat, nat_mat_list_list[[i]], family = family,
                                      missing_idx_list = training_idx_list,
-                                     width = width, scalar = scalar_vec[i], plot = F)
+                                     width = width, scalar = scalar_vec[i],
+                                     compute_percentage = compute_percentage, plot = F)
   })
 
   # compile all the results
   all_results <- cbind(sapply(res_train_list, function(x){x$angle_val}),
                        sapply(res_train_list, function(x){x$bool}),
+                       sapply(res_train_list, function(x){x$percentage}),
                        sapply(res_test_list, function(x){x$angle_val}),
                        sapply(res_test_list, function(x){x$bool}),
+                       sapply(res_test_list, function(x){x$percentage}),
                        scalar_vec)
   colnames(all_results) <- c("training_angle", "training_bool",
+                             "training_percentage",
                              "testing_angle", "testing_bool",
+                             "testing_percentage",
                              "scalar")
 
   # determine the best parameter
@@ -145,6 +175,16 @@ compute_principal_angle <- function(tmp_mat){
 }
 
 #########
+
+.compute_overlap_percentage <- function(dat_vec, nat_vec, family, width, scalar){
+  interval_mat <- sapply(nat_vec, function(x){
+    .compute_prediction_interval_from_mean(x, family = family, width = width, scalar = scalar)
+  })
+
+  sum(sapply(1:ncol(interval_mat), function(i){
+    dat_vec[i] >= interval_mat[1,i] & dat_vec[i] <= interval_mat[2,i]
+  }))/ncol(interval_mat)
+}
 
 .within_prediction_region <- function(max_val, family, width, scalar, angle_val, tol = 0.95,
                                       effective_max = max_val){

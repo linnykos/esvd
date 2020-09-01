@@ -1,5 +1,5 @@
 rm(list=ls())
-load("../results/factorization_results_poisson_esvd.RData")
+load("../results/factorization_results_pcmf_esvd.RData")
 for(i in 1:length(res)){
   len_vec <- sapply(res[[i]], length)
   res[[i]] <- res[[i]][which(len_vec > 1)]
@@ -9,7 +9,7 @@ for(i in 1:length(res[[1]])){
 }
 res_tmp <- res
 
-load("../results/factorization_results_poisson_rest.RData")
+load("../results/factorization_results_pcmf_rest.RData")
 for(i in 1:length(res)){
   len_vec <- sapply(res[[i]], length)
   res[[i]] <- res[[i]][which(len_vec > 1)]
@@ -69,14 +69,14 @@ scaling_factor <- quantile(sapply(den_list, function(x){max(x$y)}), probs = 0.3)
 
 col_vec <- color_func(1)[c(5,2,3,1,4,8,6,10,7,9)]
 text_vec <- desired_ord
-max_height <- 1.5
+max_height <- 2.5
 
-png(paste0("../../esvd_results/figure/simulation/factorization_poisson_density.png"),
+png(paste0("../../esvd_results/figure/simulation/factorization_pcmf_density.png"),
     height = 2500, width = 1000, res = 300, units = "px")
 par(mar = c(4,0.5,4,0.5))
 plot(NA, xlim = c(-0.3, 1), ylim = c(0, nrow(res_mat)+0.2), ylab = "",
      yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau",
-     main = paste0("Relative embedding correlation\n(Poisson generative model)"))
+     main = paste0("Relative embedding correlation\n(ZINB-WaVE generative model)"))
 axis(side = 1, at = seq(0,1,length.out = 6))
 for(i in 1:nrow(res_mat)){
   lines(c(0,1), rep(nrow(res_mat) - i, 2))
@@ -106,7 +106,7 @@ col_func2 <- function(alpha){
 }
 col_vec <- col_func2(1)
 
-png(paste0("../../esvd_results/figure/simulation/factorization_poisson_embedding.png"),
+png(paste0("../../esvd_results/figure/simulation/factorization_pcmf_embedding.png"),
     height = 1500, width = 2000, res = 300, units = "px")
 text_vec <- c("eSVD", "ZINB-WaVE", "pCMF", "SVD", "NMF", "ICA",
               "UMAP", "t-SNE", "Isomap", "Diff. Map")
