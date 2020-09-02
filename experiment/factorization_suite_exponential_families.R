@@ -12,7 +12,7 @@ paramMat <- cbind(50, 200, 5,
                   rep(1:3, each = 6),
                   rep(c(1/300, 1/250, 1/5000), each = 6),
                   rep(1:3, times = 6),
-                  rep(c(50, 50, 5), times = 6))
+                  rep(c(50, 50, 50), times = 6))
 colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "k", "true_r",  "true_alpha", "max_iter",
                         "true_distr",
