@@ -2,7 +2,6 @@ rm(list=ls())
 library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
-source("../simulation/factorization_methods.R")
 
 session_info <- sessionInfo()
 date_of_run <- Sys.time()
@@ -65,7 +64,7 @@ criterion <- function(dat, vec, y){
 
   missing_val <- dat_obs[missing_idx]
   init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
-                               scalar = r_val)
+                               scalar = vec["r_val"])
   fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
                           family = "neg_binom", scalar = vec["r_val"],
                           max_iter = vec["max_iter"], max_val = vec["max_val"],
