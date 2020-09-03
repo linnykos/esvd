@@ -21,9 +21,8 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "max_iter", "modifier", "max_val",
                         "size_1", "size_2", "size_3",
                         "prop_1", "prop_2", "prop_3")
-paramMat <- paramMat[7:9,]
 
-trials <- 10
+trials <- 100
 ncores <- 15
 doMC::registerDoMC(cores = ncores)
 
@@ -100,4 +99,4 @@ res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         filepath = "../results/factorization_results_tuning_zinbwave_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_tuning_zinbwave2.RData")
+save.image("../results/factorization_results_tuning_zinbwave.RData")

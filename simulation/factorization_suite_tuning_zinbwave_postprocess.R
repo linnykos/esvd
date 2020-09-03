@@ -24,7 +24,7 @@ angle_fit <- lapply(1:trials, function(x){
                              scalar_vec = rep(c(50, 100, 500), times = 3))$all_results
 })
 
-loglik <- lapply(1:trials, function(x){
+loglik2 <- lapply(1:trials, function(x){
   print(x)
   nat_mat_list_list <- lapply(1:nrow(paramMat), function(i){
     lapply(1:3, function(j){
