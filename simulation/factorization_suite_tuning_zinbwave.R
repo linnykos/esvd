@@ -10,7 +10,7 @@ source_code_info <- c(source_code_info, readLines("../simulation/factorization_m
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_tuning_zinbwave.R"))
 
 paramMat <- cbind(50, 200, 5,
-                  rep(c(2,3,4), each = 3),
+                  rep(c(2,3,10), each = 3),
                   rep(c(50, 100, 500), times = 3),
                   50, 1/250, 1000,
                   80, 120, 600,
@@ -21,6 +21,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "max_iter", "modifier", "max_val",
                         "size_1", "size_2", "size_3",
                         "prop_1", "prop_2", "prop_3")
+paramMat <- paramMat[7:9,]
 
 trials <- 10
 ncores <- 15
@@ -99,4 +100,4 @@ res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         filepath = "../results/factorization_results_tuning_zinbwave_tmp.RData",
                                         verbose = T)
 
-save.image("../results/factorization_results_tuning_zinbwave.RData")
+save.image("../results/factorization_results_tuning_zinbwave2.RData")
