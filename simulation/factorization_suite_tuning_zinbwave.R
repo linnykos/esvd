@@ -10,8 +10,8 @@ source_code_info <- c(source_code_info, readLines("../simulation/factorization_m
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_tuning_zinbwave.R"))
 
 paramMat <- cbind(50, 200, 5,
-                  rep(c(2,3,10), each = 3),
-                  rep(c(50, 100, 500), times = 3),
+                  rep(c(2,3,10), times = 3),
+                  rep(c(50, 100, 500), each = 3),
                   50, 1/250, 1000,
                   80, 120, 600,
                   1/4, 1/4, 1/2)
@@ -22,8 +22,8 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "size_1", "size_2", "size_3",
                         "prop_1", "prop_2", "prop_3")
 
-trials <- 100
-ncores <- 15
+trials <- 50
+ncores <- 20
 doMC::registerDoMC(cores = ncores)
 
 ################
@@ -51,7 +51,7 @@ rule <- function(vec){
   dat <- generator_zinb_nb(nat_mat, r_vec)
   obs_mat <- round(dat$dat * 1000/max(dat$dat))
 
-  list(dat = obs_mat, truth = res$cell_mat)
+  list(dat = obs_mat, u_mat = res$cell_mat, v_mat = res$gene_mat)
 }
 
 criterion <- function(dat, vec, y){

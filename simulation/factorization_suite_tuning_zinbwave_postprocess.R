@@ -2,11 +2,11 @@ rm(list=ls())
 load("../results/factorization_results_tuning_zinbwave.RData")
 
 # see if there's an empirical difference
-x <- 1; i <- 8
+x <- 1; i <- 5
 plot(res[[i]][[x]]$fit[[1]]$u_mat[,1], res[[i]][[x]]$fit[[1]]$u_mat[,2], asp = T, pch = 16, col = rep(1:4, each = 50))
 
 # evaluate the quality of each fit
-angle_fit <- lapply(1:trials, function(x){
+angle_list <- lapply(1:trials, function(x){
   print(x)
   nat_mat_list_list <- lapply(1:nrow(paramMat), function(i){
     lapply(1:3, function(j){
@@ -24,7 +24,7 @@ angle_fit <- lapply(1:trials, function(x){
                              scalar_vec = rep(c(50, 100, 500), times = 3))$all_results
 })
 
-loglik2 <- lapply(1:trials, function(x){
+loglik_list <- lapply(1:trials, function(x){
   print(x)
   nat_mat_list_list <- lapply(1:nrow(paramMat), function(i){
     lapply(1:3, function(j){
@@ -48,8 +48,24 @@ loglik2 <- lapply(1:trials, function(x){
   })
 })
 
-
 # evaluate the accuracy of the fits
+accuracy_mat <- matrix(NA, length(res), trials)
+
+for(i in 1:trials){
+  if(i %% floor(trials/10) == 0) cat('*')
+
+  for(j in 1:length(res)){
+    sapply(1:3, function(k){
+      dist_mat_truth <- as.matrix(stats::dist(res[[j]][[i]]$true_u_mat))
+      dist_mat_est <- as.matrix(stats::dist(res[[j]][[i]]$fit$fit[[k]][,1:2]))
+
+      mean(sapply(1:nrow(dist_mat_est), function(x){
+        cor(dist_mat_truth[x,], dist_mat_est[x,], method = "kendall")
+      }))
+    })
+
+  }
+}
 
 
 
