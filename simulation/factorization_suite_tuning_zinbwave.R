@@ -10,8 +10,8 @@ source_code_info <- c(source_code_info, readLines("../simulation/factorization_m
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_tuning_zinbwave.R"))
 
 paramMat <- cbind(50, 200, 5,
-                  rep(c(2,3,10), each = 4),
-                  rep(c(50, 100, 500, 1000), times = 3),
+                  rep(c(2,3,4), each = 3),
+                  rep(c(50, 100, 500), times = 3),
                   50, 1/250, 1000,
                   80, 120, 600,
                   1/4, 1/4, 1/2)
@@ -22,7 +22,7 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "size_1", "size_2", "size_3",
                         "prop_1", "prop_2", "prop_3")
 
-trials <- 50
+trials <- 10
 ncores <- 15
 doMC::registerDoMC(cores = ncores)
 
@@ -58,21 +58,28 @@ criterion <- function(dat, vec, y){
   dat_obs <- dat$dat
 
   set.seed(10*y)
-  missing_idx <- eSVD::construct_missing_values(n = nrow(dat_obs), p = ncol(dat_obs), num_val = 2)
-  dat_NA <- dat_obs
-  dat_NA[missing_idx] <- NA
+  missing_idx_list <- lapply(1:3, function(i){
+    eSVD::construct_missing_values(n = nrow(dat_obs), p = ncol(dat_obs), num_val = 20)
+  })
 
-  missing_val <- dat_obs[missing_idx]
-  init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
-                               scalar = vec["r_val"])
-  fit <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
-                          family = "neg_binom", scalar = vec["r_val"],
-                          max_iter = vec["max_iter"], max_val = vec["max_val"],
-                          return_path = F, cores = NA,
-                          verbose = F)
+  fit_list <- vector("list", length = length(missing_idx_list))
 
-  list(fit = fit, true_u_mat = dat$u_mat, true_v_mat = dat$v_mat,
-       dat = dat_obs, missing_idx = missing_idx)
+  for(i in 1:length(missing_idx_list)){
+    dat_NA <- dat_obs
+    dat_NA[missing_idx_list[[i]]] <- NA
+
+    init <- eSVD::initialization(dat_NA, family = "neg_binom", k = vec["k"], max_val = vec["max_val"],
+                                 scalar = vec["r_val"])
+    fit_list[[i]] <- eSVD::fit_factorization(dat_NA, u_mat = init$u_mat, v_mat = init$v_mat,
+                                   family = "neg_binom", scalar = vec["r_val"],
+                                   max_iter = vec["max_iter"], max_val = vec["max_val"],
+                                   return_path = F, cores = NA,
+                                   verbose = F)
+  }
+
+
+  list(fit = fit_list, true_u_mat = dat$u_mat, true_v_mat = dat$v_mat,
+       dat = dat_obs, missing_idx = missing_idx_list)
 }
 
 ## i <- 1; y <- 1; set.seed(y); zz1 <- criterion(rule(paramMat[i,]), paramMat[i,], y); head(zz1$fit$fit$u_mat); head(zz1$truth)
