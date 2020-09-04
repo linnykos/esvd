@@ -1,28 +1,9 @@
 rm(list=ls())
 load("../results/factorization_results_tuning_zinbwave.RData")
 
-# see if there's an empirical difference
-x <- 1; i <- 3
-plot(res[[i]][[x]]$fit[[1]]$u_mat[,1], res[[i]][[x]]$fit[[1]]$u_mat[,2], asp = T, pch = 16, col = rep(1:4, each = 50))
-
-# evaluate the quality of each fit
-angle_list <- lapply(1:trials, function(x){
-  if(x %% floor(trials/10) == 0) cat('*')
-
-  nat_mat_list_list <- lapply(1:nrow(paramMat), function(i){
-    lapply(1:3, function(j){
-      u_mat <- res[[i]][[x]]$fit[[j]]$u_mat
-      v_mat <- res[[i]][[x]]$fit[[j]]$v_mat
-      u_mat %*% t(v_mat)
-    })
-  })
-
-  eSVD::tuning_select_scalar(dat = res[[1]][[x]]$dat,
-                             nat_mat_list_list = nat_mat_list_list,
-                             family = "neg_binom", compute_percentage = F,
-                             missing_idx_list = res[[1]][[x]]$missing_idx,
-                             scalar_vec = paramMat[,"r_val"])$all_results
-})
+# # see if there's an empirical difference
+# x <- 1; i <- 3
+# plot(res[[i]][[x]]$fit[[1]]$u_mat[,1], res[[i]][[x]]$fit[[1]]$u_mat[,2], asp = T, pch = 16, col = rep(1:4, each = 50))
 
 loglik_list <- lapply(1:trials, function(x){
   if(x %% floor(trials/10) == 0) cat('*')
@@ -87,7 +68,7 @@ for(i in 1:length(idx)){
   points(loglik_mat[idx[i],i], accuracy_mat[idx[i],i], pch = 16, col = col, cex = 1.2)
 }
 
-legend("bottomright", c("Selected, k=2", "Selected, k=1", "Others"),
+legend("bottomright", c("Selected, k=3", "Selected, k=2", "Others"),
        fill = c(rgb(86/255, 180/255, 233/255), rgb(230/255, 159/255, 0/255), "black"),
        cex = 0.8)
 
