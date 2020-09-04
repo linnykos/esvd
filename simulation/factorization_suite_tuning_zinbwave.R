@@ -10,8 +10,8 @@ source_code_info <- c(source_code_info, readLines("../simulation/factorization_m
 source_code_info <- c(source_code_info, readLines("../simulation/factorization_suite_tuning_zinbwave.R"))
 
 paramMat <- cbind(50, 200, 5,
-                  rep(c(2,3,10), times = 3),
-                  rep(c(50, 100, 500), each = 3),
+                  rep(c(2,3,10), times = 4),
+                  rep(c(50, 100, 500, 1000), each = 3),
                   50, 1/250, 1000,
                   80, 120, 600,
                   1/4, 1/4, 1/2)
@@ -22,8 +22,8 @@ colnames(paramMat) <- c("n_each", "d_each", "sigma",
                         "size_1", "size_2", "size_3",
                         "prop_1", "prop_2", "prop_3")
 
-trials <- 50
-ncores <- 20
+trials <- 100
+ncores <- 10
 doMC::registerDoMC(cores = ncores)
 
 ################
