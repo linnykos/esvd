@@ -2,7 +2,6 @@ rm(list=ls())
 library(simulation)
 library(eSVD)
 source("../simulation/factorization_generator.R")
-source("../simulation/factorization_methods.R")
 
 paramMat <- cbind(c(10, 50, 200), 120, 5,
                   2, 50, 1/250, 1000,
@@ -135,8 +134,8 @@ dat <- pop_res$cell_mat
 reduction_factor <- max(apply(dat, 2, function(x){diff(range(x))}))*reduction_percentage
 dat2 <- dat/reduction_factor
 
-curve_res <- .get_curves(dat2, cluster_labels, cluster_group_list, lineages, shrink = shrink,
-                   thresh = thresh, max_iter = max_iter, upscale_factor = upscale_factor,
+curve_res <- .get_curves(dat2, cluster_labels, lineages, shrink = shrink,
+                   thresh = thresh, max_iter = max_iter,
                    verbose = verbose)
 curves <- curve_res$pcurve_list
 
@@ -147,7 +146,7 @@ for(k in 1:length(curves)){
 
 pop_lineage <- list(lineages = lineages, curves = curves, idx = res$idx)
 
-png("../../esvd_results/figure/experiment/example_trajectories.png", height = 960, width = 2500, res = 300, units = "px")
+png("../../esvd_results/figure/simulation/example_trajectories.png", height = 960, width = 2500, res = 300, units = "px")
 par(mfrow = c(1,4), mar = c(4,4,4,0.1))
 
 image(as.numeric(colnames(mat)),
@@ -189,11 +188,15 @@ for(i in 1:length(res)){
 
   # sig <- ifelse(mean(tmp[1:n_seq[i],2]) > mean(tmp[(3*n_seq[i]+1):(4*n_seq[i]),2]), -1, 1)
   # tmp[,2] <- sig*tmp[,2]
-  plot(tmp[,1], tmp[,2],
-       pch = 16, col = col_vec[rep(1:4, each = n)],
-       asp = T,
+  plot(NA, xlim = range(tmp[,1]), ylim = range(tmp[,2]), asp = T,
        xlab = "Latent dimension 1", ylab = "Latent dimension 2", axes = F, cex.lab = 1.25,
        main = paste0("Estimated embedding\n(n = ", 4*n, ")"))
+
+  for(i in 1:nrow(tmp)){
+    points(tmp[i,1], tmp[i,2], cex = 1.2, pch = 16)
+    points(tmp[i,1], tmp[i,2], col = col_vec[rep(1:4, each = n)][i], pch = 16)
+  }
+
 
   axis(1)
   axis(2)

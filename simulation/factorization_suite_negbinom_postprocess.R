@@ -78,7 +78,7 @@ png(paste0("../../esvd_results/figure/simulation/factorization_negbinom_density.
 par(mar = c(4,0.5,4,0.5))
 plot(NA, xlim = c(-0.3, 1), ylim = c(0, y_spacing*nrow(res_mat)+0.2), ylab = "",
      yaxt = "n", bty = "n", xaxt = "n", xlab = "Kendall's tau",
-     main = paste0("Relative embedding correlation\n(Neg. binom. generative model)"),
+     main = paste0("Relative embedding correlation:\nNeg. binom. generative model"),
      cex.main = 1.1)
 axis(side = 1, at = seq(0,1,length.out = 6))
 for(i in 1:nrow(res_mat)){
@@ -158,7 +158,12 @@ for(i in 1:nrow(res_mat)){
     lines(c(-1e5,1e5), rep(y_seq[i], 2), lwd = 0.5, lty = 3, col = "gray")
   }
 
-  points(tmp_mat[shuff_idx,1], tmp_mat[shuff_idx,2],
-         pch = 16, col = col_vec[rep(1:4, each = paramMat[1,"n_each"])][shuff_idx])
+  for(i in 1:nrow(tmp_mat)){
+    points(tmp_mat[shuff_idx[i],1], tmp_mat[shuff_idx[i],2],
+           pch = 16, cex = 1.2)
+    points(tmp_mat[shuff_idx[i],1], tmp_mat[shuff_idx[i],2],
+           pch = 16, col = col_vec[rep(1:4, each = paramMat[1,"n_each"])][shuff_idx[i]])
+  }
+
 }
 graphics.off()

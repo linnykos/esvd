@@ -52,7 +52,6 @@ plot_prediction_against_observed <- function(dat, nat_mat_list, family, missing_
     percentage <- NA
   }
 
-
   # compute the principal angle and
   angle_vec <- sapply(tmp_list, compute_principal_angle)
   angle_val <- mean(angle_vec)
