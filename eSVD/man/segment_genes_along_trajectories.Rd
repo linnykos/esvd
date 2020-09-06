@@ -32,9 +32,16 @@ than \code{nrow(dat1)} or \code{nrow(dat2)}) rows of
 \item{...}{additional arguments for \code{eSVD:::.circular_segmentation}}
 }
 \value{
-a data frame with 9 columns and \code{ncol(dat1)} rows, where each row
+a list with two elements. The first, called \code{df}
+is a data frame with 9 columns and \code{ncol(dat1)} rows, where each row
 contains statistics
-for each gene across both \code{dat1} and \code{dat2}
+for each gene across both \code{dat1} and \code{dat2}. The second, called \code{segmentation_fit}
+is a list of \code{p} elements, of which is each contains 4 elements:
+two elements called \code{cut_1} and \code{cut_2} (containing elements \code{i}, \code{j} and
+\code{obj_val}) which describe where the "highly expressed segment" from cell index \code{i} to \code{j}
+for either \code{dat1} or \code{dat2} respectively as well as the circular binary segmentation objective
+value, and \code{vec1_smooth} and \code{vec2_smooth} (containing the smoothed signal based on
+\code{eSVD:::.np_smoother}).
 }
 \description{
 Given two datasets, \code{dat1} and \code{dat2}, whose first \code{common_n} rows
