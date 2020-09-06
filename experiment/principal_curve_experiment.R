@@ -1,6 +1,0 @@
-library(princurve)
-x <- runif(100,-1,1)
-x <- cbind(x, x ^ 2 + rnorm(100, sd = 0.1))
-fit <- principal_curve(x, stretch = 9999)
-plot(x[,1], x[,2], asp = T)
-lines(fit)
