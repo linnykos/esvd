@@ -26,15 +26,17 @@ test_that("plot_prediction_against_observed works", {
 
   res <- plot_prediction_against_observed(dat, nat_mat_list = nat_mat_list,
                                           family = "neg_binom", missing_idx_list = missing_idx_list,
-                                          scalar = 10, plot = F)
+                                          scalar = 10, plot = F, compute_percentage = T)
 
   expect_true(is.list(res))
-  expect_true(length(res) == 3)
-  expect_true(all(sort(names(res)) == sort(c("angle_val", "angle_sd", "bool"))))
+  expect_true(length(res) == 4)
+  expect_true(all(sort(names(res)) == sort(c("angle_val", "angle_sd", "bool", "percentage"))))
   expect_true(is.numeric(res$angle_val))
   expect_true(length(res$angle_val) == 1)
   expect_true(res$angle_val >= 0)
   expect_true(res$angle_val <= 180)
+  expect_true(res$percentage >= 0)
+  expect_true(res$percentage <= 1)
   expect_true(length(res$bool) == 1)
   expect_true(is.logical(res$bool))
 })

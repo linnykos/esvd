@@ -10,7 +10,8 @@ tuning_select_scalar(
   family,
   missing_idx_list = list(1:prod(dim(dat))),
   width = 0.8,
-  scalar_vec = rep(NA, length(nat_mat_list_list))
+  scalar_vec = rep(NA, length(nat_mat_list_list)),
+  compute_percentage = F
 )
 }
 \arguments{
@@ -31,6 +32,9 @@ number of different trials for each parameter setting}
 
 \item{scalar_vec}{vector of additional parameters needed to compute distribution corresponding to \code{family},
 of length equal to \code{length(nat_mat_list_list)}}
+
+\item{compute_percentage}{boolean to whether or not compute the percentage of points that fall within the \code{width}-sized
+prediction region. It is suggested to keep this as \code{FALSE} since this might be slow to compute.}
 }
 \value{
 a list

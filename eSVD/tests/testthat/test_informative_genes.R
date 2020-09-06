@@ -185,10 +185,34 @@ test_that("segment_genes_along_trajectories works", {
   res <- segment_genes_along_trajectories(cell_partition$dat1, cell_partition$dat2, common_n = length(cell_partition$cell_idx_common),
                                           resolution = 1/10, max_width_percentage = 1/5)
 
-  expect_true(is.data.frame(res))
-  expect_true(nrow(res) == ncol(dat))
-  expect_true(all(sort(colnames(res)) == sort(c("idx", "start_1", "end_1", "mid_1", "obj_1", "start_2",
+  expect_true(is.list(res))
+  expect_true(all(sort(names(res)) == sort(c("df", "segmentation_fit"))))
+
+  expect_true(is.data.frame(res$df))
+  expect_true(nrow(res$df) == ncol(dat))
+  expect_true(all(sort(colnames(res$df)) == sort(c("idx", "start_1", "end_1", "mid_1", "obj_1", "start_2",
                                                 "end_2", "mid_2", "obj_2"))))
+
+  expect_true(is.list(res$segmentation_fit))
+  expect_true(length(res$segmentation_fit) == ncol(dat))
+  expect_true(length(unique(sapply(res$segmentation_fit, length))) == 1)
+  expect_true(all(sort(names(res$segmentation_fit[[1]])) == sort(c("cut_1", "cut_2", "vec1_smooth", "vec2_smooth"))))
+  expect_true(all(sort(names(res$segmentation_fit[[1]]$cut_1)) == sort(c("i", "j", "obj_val"))))
+  expect_true(all(sort(names(res$segmentation_fit[[1]]$cut_2)) == sort(c("i", "j", "obj_val"))))
+  expect_true(res$segmentation_fit[[1]]$cut_1$i %% 1 == 0)
+  expect_true(res$segmentation_fit[[1]]$cut_2$i %% 1 == 0)
+  expect_true(min(sapply(res$segmentation_fit, function(x){x$cut_1$i})) > 0)
+  expect_true(min(sapply(res$segmentation_fit, function(x){x$cut_2$i})) > 0)
+  expect_true(max(sapply(res$segmentation_fit, function(x){x$cut_1$i})) <= nrow(cell_partition$dat1))
+  expect_true(max(sapply(res$segmentation_fit, function(x){x$cut_2$i})) <= nrow(cell_partition$dat2))
+  expect_true(min(sapply(res$segmentation_fit, function(x){x$cut_1$j})) > 0)
+  expect_true(min(sapply(res$segmentation_fit, function(x){x$cut_2$j})) > 0)
+  expect_true(max(sapply(res$segmentation_fit, function(x){x$cut_1$j})) <= nrow(cell_partition$dat1))
+  expect_true(max(sapply(res$segmentation_fit, function(x){x$cut_2$j})) <= nrow(cell_partition$dat2))
+  expect_true(all(sapply(res$segmentation_fit, function(x){x$cut_1$j - x$cut_1$i > 0})))
+  expect_true(all(sapply(res$segmentation_fit, function(x){x$cut_2$j - x$cut_2$i > 0})))
+  expect_true(all(sapply(res$segmentation_fit, function(x){length(x$vec1_smooth) == nrow(cell_partition$dat1)})))
+  expect_true(all(sapply(res$segmentation_fit, function(x){length(x$vec2_smooth) == nrow(cell_partition$dat2)})))
 })
 
 #################################
@@ -285,7 +309,7 @@ test_that("order_highly_expressed_genes works", {
   res_mat <- segment_genes_along_trajectories(dat1, dat2, common_n = length(cell_partition$cell_idx_common),
                                           resolution = 1/10, max_width_percentage = 1/5)
 
-  res <- order_highly_expressed_genes(res_mat, nrow1 = nrow(dat1), nrow2 = nrow(dat2),
+  res <- order_highly_expressed_genes(res_mat$df, nrow1 = nrow(dat1), nrow2 = nrow(dat2),
                                       common_n = length(cell_partition$cell_idx_common), threshold = 0.1)
 
   expect_true(is.list(res))

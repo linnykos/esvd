@@ -12,6 +12,7 @@ plot_prediction_against_observed(
   width = 0.8,
   scalar = NA,
   plot = T,
+  compute_percentage = F,
   max_points = 5e+05,
   tol = 0.95,
   xlim = NA,
@@ -30,11 +31,15 @@ plot_prediction_against_observed(
 
 \item{missing_idx_list}{list of missing indices, same length as \code{nat_mat_list}}
 
-\item{width}{parameter, controlling quantile of prediction region}
+\item{width}{parameter, controlling quantile of prediction region. The default is \code{0.8}, meaning
+that the prediction region is by default from the 10th to 90th quantile.}
 
 \item{scalar}{additional parameter needed to compute distribution corresponding to \code{family}}
 
 \item{plot}{boolean}
+
+\item{compute_percentage}{boolean to whether or not compute the percentage of points that fall within the \code{width}-sized
+prediction region. It is suggested to keep this as \code{FALSE} since this might be slow to compute.}
 
 \item{max_points}{maximum number of points to be shown in the scatterplot, purely for visualization purposes only}
 
@@ -52,7 +57,12 @@ if the principal angle falls within the prediction region}
 \item{...}{additional plotting parameters}
 }
 \value{
-either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or the principle angle otherwise
+either nothing if \code{plot} is \code{TRUE} (and a plot is shown) or a
+list of elements include \code{angle_val} (the average principal angle among the \code{length(nat_mat_list)} estimates),
+\code{angle_sd} (the standard deviation of the principal angle among the \code{length(nat_mat_list)} estimates),
+\code{bool} (whether or not the average principal angle in \code{angle_val} falls within the
+\code{width}-sized prediction region) and \code{percentage} (the averge percentage of values
+that fall within the \code{width}-sized prediction region)
 }
 \description{
 Plotting diagnostic to determine goodness of fit
