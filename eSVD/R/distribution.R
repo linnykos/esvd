@@ -7,11 +7,8 @@
 #' @return matrix
 #' @export
 compute_mean <- function(nat_mat, family, ...){
-  if(family == "gaussian") {
+  if(family == "gaussian" || family == "poisson") {
     return(nat_mat)
-  } else if(family == "poisson"){
-    stopifnot(all(nat_mat > 0))
-    exp(nat_mat)
   } else if(family == "neg_binom"){
     stopifnot(all(nat_mat < 0))
     .compute_mean_neg_binom(nat_mat, ...)
@@ -40,9 +37,9 @@ compute_mean <- function(nat_mat, family, ...){
 
   if(family %in% c("exponential", "neg_binom")) {
     direction <- "<="
-  } else if(family %in% c("poisson", "curved_gaussian")) {
+  } else if(family %in% c("curved_gaussian")) {
     direction <- ">="
-  } else if(family != "gaussian") {
+  } else if(!family %in% c("gaussian", "poisson")) {
     stop("family not found")
   }
 
