@@ -8,7 +8,6 @@
 
   n <- nrow(dat); p <- ncol(dat)
   nat_mat <- u_mat %*% t(v_mat)
-  stopifnot(all(nat_mat > 0))
 
   idx <- which(!is.na(dat))
 
@@ -19,7 +18,6 @@
   stopifnot(length(current_vec) == ncol(other_mat), nrow(other_mat) == length(dat_vec))
 
   pred_vec <- other_mat %*% current_vec
-  stopifnot(all(pred_vec > 0))
 
   idx <- which(!is.na(dat_vec))
 
@@ -30,7 +28,6 @@
   stopifnot(length(current_vec) == ncol(other_mat), nrow(other_mat) == length(dat_vec))
 
   pred_vec <- other_mat %*% current_vec
-  stopifnot(all(pred_vec > 0))
 
   idx <- which(!is.na(dat_vec))
 
@@ -42,7 +39,7 @@
 }
 
 .evaluate_objective_mat.poisson <- function(dat, nat_mat, ...){
-  stopifnot(all(dim(dat) == dim(nat_mat)), all(nat_mat > 0))
+  stopifnot(all(dim(dat) == dim(nat_mat)))
 
   n <- nrow(dat); p <- ncol(dat)
   idx <- which(!is.na(dat))
@@ -51,7 +48,7 @@
 }
 
 .gradient_mat.poisson <- function(dat, nat_mat, ...){
-  stopifnot(all(dim(dat) == dim(nat_mat)), all(nat_mat > 0))
+  stopifnot(all(dim(dat) == dim(nat_mat)))
 
   n <- nrow(dat); p <- ncol(dat)
 
