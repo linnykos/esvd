@@ -12,7 +12,7 @@ This package can be installed through `devtools` in R.
 library("devtools")
 devtools::install_github("linnykos/esvd", subdir = "eSVD")
 ```
-The package itself depends on several packages. These include `MASS', `foreach`, `doMC`, `princurve`, `igraph`, `clplite`, `softImpute`, `RSpectra`, `plot3D`, `np`, `org.Mm.eg.db`, and `DBI.`
+The package itself depends on several packages. These include `MASS`, `foreach`, `doMC`, `princurve`, `igraph`, `clplite`, `softImpute`, `RSpectra`, `plot3D`, `np`, `org.Mm.eg.db`, and `DBI.`
 Warning: On Windows, to install the `doMC` package, use the following code in R.
 ```{r}
 install.packages("doMC", repos="http://R-Forge.R-project.org")
@@ -26,14 +26,14 @@ You will need to install the Git Large File Storage system to do this (see below
 
 The dataset used in this article is also included in the repository.
 This is the Marques single-cell dataset collected by Marques et al. (2016). While the original dataset 
-is publicly available on GEO (\url{https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75330}),
+is publicly available on GEO (https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75330),
 we provide a locally preprocessed dataset, which was created to be amendable for our analysis in R.
 This dataset is a 21 MB `.RData` file, and is synced onto GitHub using the Git Large File Storage system (https://git-lfs.github.com/). Please
 install this system before proceeding.
 
 In the appendix, we investigate the Zeisel single-cell data collected by Zeisel et al. (2015). Similarly, 
 while the original dataset 
-is publicly available on GEO (\url{https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60361}),
+is publicly available on GEO (https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60361),
 we provide a locally preprocessed dataset, which was created to be amendable for our analysis in R.
 This dataset is a 13 MB `.RData` file, and is synced onto GitHub using the Git Large File Storage system 
 
