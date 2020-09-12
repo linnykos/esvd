@@ -12,7 +12,7 @@ This package can be installed through `devtools` in R.
 library("devtools")
 devtools::install_github("linnykos/esvd", subdir = "eSVD")
 ```
-The package itself depends on several packages. These include `MASS`, `foreach`, `doMC`, `princurve`, `igraph`, `clplite`, `softImpute`, `RSpectra`, `plot3D`, `np`, `org.Mm.eg.db`, and `DBI.`
+The package itself depends on several packages. These include `MASS`, `foreach`, `doMC`, `princurve`, `igraph`, `clplite`, `softImpute`, `RSpectra`, `plot3D`, `np`, `org.Mm.eg.db`, and `DBI`.
 Warning: On Windows, to install the `doMC` package, use the following code in R.
 ```{r}
 install.packages("doMC", repos="http://R-Forge.R-project.org")
@@ -47,8 +47,21 @@ All the code below were run on a server with 15 cores.
 
 To reproduce the Marques (i.e., oligodendrocyte) analysis (Section 2, Section 7, and Appendix H of our paper, including Figures 1-3, 6-8, S.1, S.8-S.17), navigate to the `main` folder. From this location, run the R scripts command window. All the results and figures in these sections are reproduced by running `main.R`, which calls 16 different R scripts in succession, each producing `.RData` files that the next uses as input. The figures are produced in the last 8 script, `step8_figures_zz_data.R` through `step8_figures_zz_additional_analyses.R`.
 
-Specifically, `step8_figures_zz_data.R` produces Figures 3 and S.1.  `step8_figures_zz_training_testing.R` produces Figures 2, 7 and S.13. `step8_figures_zz_2D_densities.R` produces Figures 1 and S.11. `step8_figures_zz_2D_embedding.R` produces Figures S.8 and S.10.
-`step8_figures_zz_3D_embedding.R` produces Figures 6, 8, S.9 and S.12. `step8_figures_zz_cascade.R` produces Figure S.14. `step8_figures_zz_additional_analyses.R` produces Figures S.15-S.17.
+Specifically: 
+
+* `step8_figures_zz_data.R` produces Figures 3 and S.1.  
+
+* `step8_figures_zz_training_testing.R` produces Figures 2, 7 and S.13. 
+
+* `step8_figures_zz_2D_densities.R` produces Figures 1 and S.11. 
+
+* `step8_figures_zz_2D_embedding.R` produces Figures S.8 and S.10.
+
+* `step8_figures_zz_3D_embedding.R` produces Figures 6, 8, S.9 and S.12. 
+
+* `step8_figures_zz_cascade.R` produces Figure S.14. 
+
+* `step8_figures_zz_additional_analyses.R` produces Figures S.15-S.17.
 
 To reproduce the Zeisel analysis (Appendix H.5), navigate to the `main_zeisel` folder. From this location, run the R scripts command window. All the results and figures in these sections are reproduced by running `main_zeisel.R`, which calls 5 different R scripts in succession, each producing `.RData` files that the next uses as input. Figure S.18 is produced in the last script, `step4_zeisel_analysis.R`.
 
