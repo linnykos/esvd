@@ -10,8 +10,6 @@ paramMat <- cbind(round(exp(seq(log(10), log(200), length.out = 10))),
 colnames(paramMat) <- c("n_each", "d_each", "sigma", "total", "k", "scalar", "max_val")
 trials <- 200
 
-save.image("/raid6/Kevin/singlecell_results/simulation/wasserstein_simulation.RData")
-
 ################
 
 cell_pop <- matrix(c(4,10, 25,100, 60,80, 25,100,
@@ -50,33 +48,20 @@ criterion <- function(dat, vec, y){
   vec1 <- res_our[,1]; vec2 <- res_our[,2]
 
   l2_loss1 <- sum((cbind(vec1, vec2) - dat$truth)^2)/nrow(res_our)
-  wasserstein_loss1 <- transport::wasserstein(transport::pp(cbind(vec1, vec2)),
-                                             transport::pp(dat$truth), p = 1)
   l2_loss2 <- sum((cbind(-vec1, vec2) - dat$truth)^2)/nrow(res_our)
-  wasserstein_loss2 <- transport::wasserstein(transport::pp(cbind(-vec1, vec2)),
-                                              transport::pp(dat$truth), p = 1)
   l2_loss3 <- sum((cbind(vec1, -vec2) - dat$truth)^2)/nrow(res_our)
-  wasserstein_loss3 <- transport::wasserstein(transport::pp(cbind(vec1, -vec2)),
-                                              transport::pp(dat$truth), p = 1)
   l2_loss4 <- sum((cbind(-vec1, -vec2) - dat$truth)^2)/nrow(res_our)
-  wasserstein_loss4 <- transport::wasserstein(transport::pp(cbind(-vec1, -vec2)),
-                                              transport::pp(dat$truth), p = 1)
 
   list(res_our = res_our,
-       l2_loss = min(l2_loss1, l2_loss2, l2_loss3, l2_loss4),
-       wasserstein_loss = min(wasserstein_loss1, wasserstein_loss2, wasserstein_loss3, wasserstein_loss4))
+       l2_loss = min(l2_loss1, l2_loss2, l2_loss3, l2_loss4))
 }
-
-# set.seed(1); zz1 <- criterion(rule(paramMat[1,]), paramMat[1,], 1)
-# set.seed(2); zz2 <- criterion(rule(paramMat[1,]), paramMat[1,], 2)
 
 #################
 
 res <- simulation::simulation_generator(rule = rule, criterion = criterion,
                                         paramMat = paramMat, trials = trials,
                                         cores = 15, as_list = T,
-                                        filepath = "/raid6/Kevin/singlecell_results/simulation/wasserstein_tmp.RData",
+                                        filepath = "../results/consistency_tmp.RData",
                                         verbose = T)
 
-save.image("wasserstein_simulation.RData")
-save.image("/raid6/Kevin/singlecell_results/simulation/wasserstein_simulation.RData")
+save.image("../results/consistency_simulation.RData")

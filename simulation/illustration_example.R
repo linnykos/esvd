@@ -186,8 +186,6 @@ for(i in 1:length(res)){
     colMeans(tmp[which(samp_cluster_identifier == i),])
   }))
 
-  # sig <- ifelse(mean(tmp[1:n_seq[i],2]) > mean(tmp[(3*n_seq[i]+1):(4*n_seq[i]),2]), -1, 1)
-  # tmp[,2] <- sig*tmp[,2]
   plot(NA, xlim = range(tmp[,1]), ylim = range(tmp[,2]), asp = T,
        xlab = "Latent dimension 1", ylab = "Latent dimension 2", axes = F, cex.lab = 1.25,
        main = paste0("Estimated embedding\n(n = ", 4*n, ")"))
@@ -197,14 +195,7 @@ for(i in 1:length(res)){
     points(tmp[i,1], tmp[i,2], col = col_vec[rep(1:4, each = n)][i], pch = 16)
   }
 
-
   axis(1)
   axis(2)
-
-  # for(j in 1:length(res[[i]][[1]]$curves_our$curves)){
-  #   ord <- res[[i]][[1]]$curves_our$curves[[j]]$ord
-  #   lines(-res[[i]][[1]]$curves_our$curves[[j]]$s[ord,1]*rescale_factor,
-  #         res[[i]][[1]]$curves_our$curves[[j]]$s[ord,2]*rescale_factor, lwd = 2)
-  # }
 }
 graphics.off()
