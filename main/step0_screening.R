@@ -49,8 +49,8 @@ library_size <- rowSums(dat_count)
 # # combine both set of filtered genes
 # idx <- which(colnames(dat) %in% c(descend_hvg, spca_hvg))
 
-gene_names <- read.csv("../../raw_data/screened_genes.csv")
-idx <- which(colnames(dat) %in% gene_names[,1])
+gene_names <- eSVD::screened_genes$genes
+idx <- which(colnames(dat) %in% gene_names)
 dat <- dat[,idx]
 dat_count <- dat_count[,idx]
 
