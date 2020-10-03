@@ -1,22 +1,5 @@
 load(paste0("../results/step7_additional_analyses", suffix, ".RData"))
 
-# fix the orientation for reproducibility
-if(mean(esvd_embedding$u_mat[,1]) > 0) {
-  esvd_embedding$u_mat[,1] <- -esvd_embedding$u_mat[,1]
-  esvd_embedding$v_mat[,1] <- -esvd_embedding$v_mat[,1]
-}
-
-if(mean(esvd_embedding$u_mat[,2]) < 0) {
-  esvd_embedding$u_mat[,2] <- -esvd_embedding$u_mat[,2]
-  esvd_embedding$v_mat[,2] <- -esvd_embedding$v_mat[,2]
-}
-
-if(mean(esvd_embedding$u_mat[,3]) < 0) {
-  esvd_embedding$u_mat[,3] <- -esvd_embedding$u_mat[,3]
-  esvd_embedding$v_mat[,3] <- -esvd_embedding$v_mat[,3]
-}
-
-
 color_func <- function(alpha = 0.2){
   c(grDevices::rgb(240/255, 228/255, 66/255, alpha), #yellow
     grDevices::rgb(86/255, 180/255, 233/255, alpha), #skyblue

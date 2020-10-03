@@ -1,6 +1,22 @@
 load(paste0("../results/step4_factorization", suffix, ".RData"))
 session_info <- sessionInfo(); date_of_run <- Sys.time()
 
+# fix the orientation for reproducibility
+if(mean(esvd_embedding$u_mat[,1]) > 0) {
+  esvd_embedding$u_mat[,1] <- -esvd_embedding$u_mat[,1]
+  esvd_embedding$v_mat[,1] <- -esvd_embedding$v_mat[,1]
+}
+
+if(mean(esvd_embedding$u_mat[,2]) < 0) {
+  esvd_embedding$u_mat[,2] <- -esvd_embedding$u_mat[,2]
+  esvd_embedding$v_mat[,2] <- -esvd_embedding$v_mat[,2]
+}
+
+if(mean(esvd_embedding$u_mat[,3]) < 0) {
+  esvd_embedding$u_mat[,3] <- -esvd_embedding$u_mat[,3]
+  esvd_embedding$v_mat[,3] <- -esvd_embedding$v_mat[,3]
+}
+
 cluster_labels <- as.numeric(cell_type_vec)
 order_vec <- c("PP", "OP", "CO", "NF", "MF", "MO")
 cluster_group_list <- lapply(order_vec, function(x){
