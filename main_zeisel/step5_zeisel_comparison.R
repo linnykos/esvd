@@ -1,84 +1,88 @@
 rm(list=ls())
 load("../results/step3_zeisel_factorization.RData")
-cluster_labels <- as.numeric(label_vec)
+session_info <- sessionInfo(); date_of_run <- Sys.time()
 
 library(NMF)
+library(dimRed)
+library(destiny)
+library(umap)
+library(pCMF)
+library(SummarizedExperiment)
+library(zinbwave)
+library(fastICA)
 
 ################################################
 
-neigh_size <- determine_minimium_neighborhood_size(esvd_embedding$u_mat)
-set.seed(10)
-res <- compute_purity(esvd_embedding$u_mat, cluster_labels,
-               neighborhood_size = neigh_size, num_samples = 5000)
-
-vec <- unlist(res_list[[1]]$value_list)
-mean(vec)
-mean(sort(vec)[1:round(length(vec)/4)])
-quantile(sort(vec)[1:round(length(vec)/4)], probs = c(0, 0.25, 0.5, 0.75, 1))
-
-# try it our embedding
-set.seed(10)
-zz <- Seurat::RunUMAP(esvd_embedding$u_mat)@cell.embeddings
-plot(zz[,1], zz[,2], col = cluster_labels, pch = 16, asp = T)
-
-########
-
-# SVD
-zz <- RSpectra::svds(dat, k = 20)
-tmp <- zz$u %*% diag(sqrt(zz$d))
-set.seed(10)
-zz <- Seurat::RunUMAP(tmp)@cell.embeddings
-plot(zz[,1], zz[,2], col = cluster_labels, pch = 16, asp = T)
-
-#####
-
 # ICA
+print("Starting ICA")
 set.seed(10)
 dimRed_obj <- dimRed::dimRedData(dat)
 fastica_obj <- dimRed::FastICA()
 fastica_obj@stdpars$ndim <- 20
 suppressMessages(emb <- fastica_obj@fun(dimRed_obj, pars = fastica_obj@stdpars))
-fit <- emb@data@data
+ica_fit <- emb@data@data
 
-set.seed(10)
-zz <- Seurat::RunUMAP(fit)@cell.embeddings
-plot(zz[,1], zz[,2], col = cluster_labels, pch = 16, asp = T)
-
-neigh_size <- determine_minimium_neighborhood_size(fit)
-set.seed(10)
-res <- compute_purity(fit, cluster_labels,
-                      neighborhood_size = neigh_size, num_samples = 5000)
-vec <- res$value_list[[1]]
-mean(vec)
-mean(sort(vec)[1:round(length(vec)/4)])
-quantile(sort(vec)[1:round(length(vec)/4)], probs = c(0, 0.25, 0.5, 0.75, 1))
-
-####
+save.image("../results/step5_zeisel_comparison.RData")
 
 # diffusion
+print("Starting diffusion map")
 set.seed(10)
 tmp <- destiny::DiffusionMap(dat, n_pcs = 20)
-fit <- tmp@eigenvectors[,1:20] %*% diag(tmp@eigenvalues[1:20])
+diffusion_fit <- tmp@eigenvectors[,1:20] %*% diag(tmp@eigenvalues[1:20])
 
-set.seed(10)
-zz <- Seurat::RunUMAP(fit)@cell.embeddings
-plot(zz[,1], zz[,2], col = cluster_labels, pch = 16, asp = T)
+save.image("../results/step5_zeisel_comparison.RData")
 
-neigh_size <- determine_minimium_neighborhood_size(fit)
-set.seed(10)
-res <- compute_purity(fit, cluster_labels,
-                      neighborhood_size = neigh_size, num_samples = 5000)
-vec <- res$value_list[[1]]
-mean(vec)
-mean(sort(vec)[1:round(length(vec)/4)])
-quantile(sort(vec)[1:round(length(vec)/4)], probs = c(0, 0.25, 0.5, 0.75, 1))
-
-########
-
+# nnmf
+print("Starting NNMF")
 set.seed(10)
 dimRed_obj <- dimRed::dimRedData(dat)
 nnmf_obj <- dimRed::NNMF()
 nnmf_obj@stdpars$ndim <- 20
-suppressMessages(emb <- nnmf_obj@fun(dimRed_obj, pars = nnmf_obj@stdpars))
-fit <- emb@data@data
+suppressMessages(emb <- nnmf_obj@fun(dimRed_obj, pars = nnmf_obj@stdpars)) # takes around 30 min
+nnmf_fit <- emb@data@data
+
+save.image("../results/step5_zeisel_comparison.RData")
+
+# isomap
+print("Starting Isomap")
+set.seed(10)
+dimRed_obj <- dimRed::dimRedData(dat)
+isomap_obj <- dimRed::Isomap()
+isomap_obj@stdpars$ndim <- 20
+isomap_obj@stdpars$knn <- round(nrow(dat)/10)
+suppressMessages(emb <- isomap_obj@fun(dimRed_obj, pars = isomap_obj@stdpars))
+isomap_fit <- emb@data@data
+
+save.image("../results/step5_zeisel_comparison.RData")
+
+# zinbwave
+print("Starting Zinbwave")
+load("../results/step0_zeisel_preprocessing.RData")
+var_idx <- idx
+load("../results/step3_zeisel_factorization.RData")
+
+set.seed(10)
+dat_se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts = t(dat_count[,var_idx])))
+tmp <- zinbwave::zinbwave(dat_se, K = 20, maxiter.optimize = 100, normalizedValues = F,
+                          commondispersion = F)
+zinbwave_fit <- SingleCellExperiment::reducedDims(tmp)$zinbwave
+
+save.image("../results/step5_zeisel_comparison.RData")
+
+# pcmf
+print("Starting PCMF")
+set.seed(10)
+tmp <- pCMF::pCMF(dat_count[,var_idx], K = 20, sparsity = F, verbose = F)
+pcmf_fit <- tmp$factor$U
+
+save.image("../results/step5_zeisel_comparison.RData")
+
+
+
+
+
+
+
+
+
 
