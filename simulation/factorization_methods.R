@@ -5,6 +5,7 @@ library(umap)
 library(pCMF)
 library(SummarizedExperiment)
 library(zinbwave)
+library(fastICA)
 
 method_svd <- function(dat, k = 2){
   stopifnot(k >= 2)

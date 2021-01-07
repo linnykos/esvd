@@ -4,10 +4,11 @@
 #' @param cluster_labels cluster labels equal to length to \code{nrow(mat)}
 #' @param neighborhood_size positive integer
 #' @param num_samples positive integer
+#' @param verbose boolean
 #'
 #' @return list
 #' @export
-compute_purity <- function(mat, cluster_labels, neighborhood_size, num_samples = 200){
+compute_purity <- function(mat, cluster_labels, neighborhood_size, num_samples = 200, verbose = T){
   stopifnot(length(cluster_labels) == nrow(mat), all(cluster_labels > 0), max(cluster_labels) == length(unique(cluster_labels)),
             all(cluster_labels %% 1 == 0))
 
@@ -18,6 +19,7 @@ compute_purity <- function(mat, cluster_labels, neighborhood_size, num_samples =
   idx_list <- lapply(1:k, function(i){which(cluster_labels == i)})
 
   value_list <- lapply(1:k, function(i){
+    if(verbose) print(paste0("Starting cluster ", i))
     ni <- length(idx_list[[i]])
     combn_mat <- utils::combn(ni, 2)
     if(ncol(combn_mat) > num_samples){
@@ -26,6 +28,7 @@ compute_purity <- function(mat, cluster_labels, neighborhood_size, num_samples =
 
     for(j in 1:2){combn_mat[j,] <- idx_list[[i]][combn_mat[j,]]}
     sapply(1:ncol(combn_mat), function(j){
+      if(verbose && j %% floor(ncol(combn_mat)/10) == 0) cat('*')
       .compute_pairwise_purity(g, idx1 = combn_mat[1,j], idx2 = combn_mat[2,j], cluster_labels = cluster_labels)
     })
   })
