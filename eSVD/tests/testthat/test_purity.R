@@ -94,7 +94,6 @@ test_that(".compute_pairwise_purity can get 0", {
 ######################################3
 
 ## compute_purity is correct
-i
 test_that("compute_purity works", {
   mat <- cbind(1:10, 1:10)
   neighborhood_size <- 3
