@@ -357,3 +357,4 @@ test_that("prepare_data_for_segmentation works", {
   expect_true(length(intersect(res$cell_idx_common, res$cell_idx_traj1)) == 0)
   expect_true(length(intersect(res$cell_idx_common, res$cell_idx_traj2)) == 0)
 })
+

@@ -12,7 +12,7 @@ test_that(".optimize_row works", {
   i <- 1
 
   dat_vec <- dat[i,]
-  class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+  attr(dat_vec, "family") <- "exponential"
   res <- .optimize_row(dat_vec, u_mat[i,], v_mat, max_val = -100, n = nrow(dat), p = ncol(dat))
 
   expect_true(is.numeric(res))
@@ -33,7 +33,7 @@ test_that(".optimize_row actually lowers the objective", {
 
     if(any(!is.na(dat[i,]))){
       dat_vec <- dat[i,]
-      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+      attr(dat_vec, "family") <- "exponential"
       u_new <- .optimize_row(dat_vec, u_mat[i,], v_mat, max_val = -100, n = nrow(dat), p = ncol(dat))
       obj1 <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat, n = nrow(dat), p = ncol(dat))
       obj2 <- .evaluate_objective_single(dat_vec, u_new, v_mat, n = nrow(dat), p = ncol(dat))
@@ -59,7 +59,7 @@ test_that(".optimize_row works the other way", {
 
     if(any(!is.na(dat[,j]))){
       dat_vec <- dat[,j]
-      class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+      attr(dat_vec, "family") <- "exponential"
       v_new <- .optimize_row(dat_vec, v_mat[j,], u_mat, max_val = -100, n = nrow(dat), p = ncol(dat))
       obj1 <- .evaluate_objective_single(dat_vec, v_mat[j,], u_mat, n = nrow(dat), p = ncol(dat))
       obj2 <- .evaluate_objective_single(dat_vec, v_new, u_mat, n = nrow(dat), p = ncol(dat))
@@ -82,7 +82,7 @@ test_that(".optimize_row respects an upper bound", {
   i <- 1
 
   dat_vec <- dat[i,]
-  class(dat_vec) <- c("exponential", class(dat_vec)[length(class(dat_vec))])
+  attr(dat_vec, "family") <- "exponential"
   res1 <- .optimize_row(dat_vec, u_mat[i,], v_mat, max_val = -100, n = nrow(dat), p = ncol(dat))
   res2 <- .optimize_row(dat_vec, u_mat[i,], v_mat, max_val = -5, n = nrow(dat), p = ncol(dat))
 
@@ -97,7 +97,7 @@ test_that(".optimize_row respects an upper bound", {
 test_that(".optimize_mat works", {
   set.seed(20)
   dat <- matrix(rexp(40), nrow = 10, ncol = 4)
-  class(dat) <- c("exponential", class(dat))
+  attr(dat, "family") <- "exponential"
 
   res <- initialization(dat, max_val = 100, family = "exponential")
   u_mat <- res$u_mat
@@ -113,7 +113,7 @@ test_that(".optimize_mat works", {
 test_that(".optimize_mat works with parallelization", {
   set.seed(20)
   dat <- matrix(rexp(40), nrow = 10, ncol = 4)
-  class(dat) <- c("exponential", class(dat))
+  attr(dat, "family") <- "exponential"
 
   res <- initialization(dat, max_val = 100, family = "exponential")
   u_mat <- res$u_mat
@@ -133,7 +133,7 @@ test_that(".optimize_mat keeps the negative constraint", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- matrix(rexp(40), nrow = 10, ncol = 4)
-    class(dat) <- c("exponential", class(dat))
+    attr(dat, "family") <- "exponential"
     bool <- sample(c(T, F), 1)
 
     res <- initialization(dat, max_val = 100, family = "exponential")
@@ -161,7 +161,7 @@ test_that(".optimize_mat keeps the positive constraint for curved Gaussians", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- matrix(rexp(40), nrow = 10, ncol = 4)
-    class(dat) <- c("curved_gaussian", class(dat))
+    attr(dat, "family") <- "curved_gaussian"
     bool <- sample(c(T, F), 1)
 
     res <- initialization(dat, family = "curved_gaussian", max_val = 100)
@@ -190,7 +190,7 @@ test_that(".optimize_mat lowers the objective value", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x*10)
     dat <- matrix(rexp(40), nrow = 10, ncol = 4)
-    class(dat) <- c("exponential", class(dat))
+    attr(dat, "family") <- "exponential"
     bool <- sample(c(T, F), 1)
 
     res <- initialization(dat, max_val = 100, family = "exponential")
@@ -420,6 +420,7 @@ test_that("fit_factorization can roughly recover the all 1's matrix", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
     dat <- matrix(rexp(100), nrow = 10, ncol = 10)
+    attr(dat, "family") <- "exponential"
     init <- initialization(dat, max_val = 100, family = "exponential")
 
     fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,

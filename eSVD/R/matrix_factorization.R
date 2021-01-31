@@ -40,7 +40,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   stopifnot(length(which(dat < 0)) == 0)
   stopifnot(is.matrix(dat), nrow(dat) == nrow(u_mat), ncol(dat) == nrow(v_mat),
             ncol(u_mat) == ncol(v_mat))
-  if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
+  attr(dat, "family") <- family
   if(!is.na(max_val)) stopifnot(max_val >= 0)
 
   tmp <- .check_rank(u_mat, v_mat)
@@ -50,7 +50,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
   idx <- which(!is.na(dat))
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat == 0)] <- min_val/2
-  direction <- .dictate_direction(class(dat)[1])
+  direction <- .dictate_direction(attr(dat, "family"))
   if(!is.na(direction) && direction == "<=" && !is.na(max_val)) max_val <- -max_val
 
   current_obj <- Inf
@@ -117,8 +117,8 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
 #' Optimize a matrix, row-by-row
 #'
-#' Given a data matrix \code{dat} where the first element of \code{class(dat)}
-#' is the associated \code{family} (i.e., tells us which negative
+#' Given a data matrix \code{dat} where \code{attr(dat, "family")} is
+#' \code{family} (i.e., tells us which negative
 #' log-likelihood function we want to optimize over), optimize over each row of
 #' \code{current_mat} holding the values in \code{other_mat} fixed. This function
 #' determines which matrix is aligned with the rows or columns based on the setting of
@@ -148,7 +148,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 #' @return matrix of the same dimension as \code{current_mat}
 .optimize_mat <- function(dat, current_mat, other_mat, left = T, max_val = NA,
                           parallelized = F, verbose = F, ...){
-  stopifnot(length(class(dat)) == 2)
+  stopifnot(attr(dat, "family") %in% c("gaussian", "poisson", "neg_binom", "exponential", "curved_gaussian"))
   n <- nrow(dat); p <- ncol(dat)
 
   stopifnot(ncol(current_mat) == ncol(other_mat))
@@ -165,7 +165,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
       } else {
         dat_vec <- dat[,i]
       }
-      class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
+      attr(dat_vec, "family") <- attr(dat, "family")
       .optimize_row(dat_vec, current_mat[i,], other_mat, max_val = max_val,
                     n = n, p = p, ...)
     }
@@ -182,7 +182,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
       } else {
         dat_vec <- dat[,i]
       }
-      class(dat_vec) <- c(class(dat)[1], class(dat_vec)[length(class(dat_vec))])
+      attr(dat_vec, "family") <- attr(dat, "family")
       if(any(!is.na(dat_vec))) current_mat[i,] <- .optimize_row(dat_vec, current_mat[i,],
                                                                 other_mat, max_val = max_val,
                                                                 n = n, p = p, ...)
@@ -194,8 +194,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
 
 #' Optimize a vector
 #'
-#' Given a data vector \code{dat_vec} where the first element of \code{class(dat_vec)}
-#' is the associated \code{family} (i.e., tells us which negative
+#' Given a data vector \code{dat_vec} where \code{attr(dat, "family")} is \code{family} (i.e., tells us which negative
 #' log-likelihood function we want to optimize over), optimize the values in
 #' \code{current_vec} holding the values in \code{other_mat} fixed.
 #' This function does a gradient descent, so the values in \code{current_vec}
@@ -222,7 +221,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
                           max_val = NA, ...){
   stopifnot(length(which(!is.na(dat_vec))) > 0, length(dat_vec) == nrow(other_mat))
 
-  direction <- .dictate_direction(class(dat_vec)[1])
+  direction <- .dictate_direction(attr(dat_vec, "family"))
   current_obj <- Inf
   next_obj <- .evaluate_objective_single(dat_vec, current_vec, other_mat, n = n, p = p, ...)
   iter <- 1
@@ -388,7 +387,7 @@ fit_factorization <- function(dat, u_mat, v_mat, max_val = NA,
     var_ub <- rep(abs(other_bound), k); var_lb <- rep(-abs(other_bound), k)
   }
 
-  res <- clplite::clp_solve(objective_in, constr_mat, constr_lb, constr_ub, var_lb, var_ub, max = F)
+  res <- suppressWarnings(clplite::clp_solve(objective_in, constr_mat, constr_lb, constr_ub, var_lb, var_ub, max = F))
 
   stopifnot(res$status == 0)
 

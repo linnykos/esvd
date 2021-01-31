@@ -11,7 +11,7 @@ test_that(".gradient_vec works", {
 
   i <- 5
   dat_vec <- dat[i,]
-  class(dat_vec) <- c("gaussian", class(dat_vec)[length(class(dat_vec))])
+  attr(dat_vec, "family") <- "gaussian"
   res <- .gradient_vec(dat_vec, u_mat[i,], v_mat, n = nrow(dat), p = ncol(dat))
 
   expect_true(is.numeric(res))
@@ -28,7 +28,7 @@ test_that(".gradient_vec works for the other direction", {
 
   j <- 2
   dat_vec <- dat[,j]
-  class(dat_vec) <- c("gaussian", class(dat_vec)[length(class(dat_vec))])
+  attr(dat_vec, "family") <- "gaussian"
   res <- .gradient_vec(dat_vec, v_mat[j,], u_mat, n = nrow(dat), p = ncol(dat))
 
   expect_true(is.numeric(res))
@@ -47,7 +47,7 @@ test_that(".gradient_vec satisfies the gradient definition", {
 
     i <- sample(1:10, 1)
     dat_vec <- dat[i,]
-    class(dat_vec) <- c("gaussian", class(dat_vec)[length(class(dat_vec))])
+    attr(dat_vec, "family") <- "gaussian"
     grad <- .gradient_vec(dat_vec, u_vec, v_mat, n = nrow(dat), p = ncol(dat))
 
     res <- .evaluate_objective_single(dat_vec, u_vec, v_mat, n = nrow(dat), p = ncol(dat))
@@ -70,7 +70,7 @@ test_that(".evaluate_objective works", {
   dat[sample(1:prod(dim(dat)), 10)] <- NA
   u_mat <- matrix(rnorm(20), nrow = 10, ncol = 2)
   v_mat <- matrix(rnorm(8), nrow = 4, ncol = 2)
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+  attr(dat, "family") <- "gaussian"
 
   res <- .evaluate_objective(dat, u_mat, v_mat)
 
@@ -89,7 +89,7 @@ test_that(".evaluate_objective yields a smaller value under truth", {
     v_mat <- matrix(rnorm(8), nrow = 4, ncol = 2)
     pred_mat <- u_mat %*% t(v_mat)
     dat <- pred_mat
-    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    attr(dat, "family") <- "gaussian"
 
     for(i in 1:10){
       for(j in 1:4){
@@ -116,7 +116,7 @@ test_that(".evaluate_objective is correct for rank 1", {
   v_mat <- matrix(true_val, nrow = 100, ncol = 1)
   pred_mat <- u_mat %*% t(v_mat)
   dat <- pred_mat
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+  attr(dat, "family") <- "gaussian"
 
   for(i in 1:nrow(u_mat)){
     for(j in 1:nrow(v_mat)){
@@ -144,13 +144,13 @@ test_that(".evaluate_objective is equal to many .evaluate_objective_single", {
   dat[sample(1:prod(dim(dat)), 10)] <- NA
   u_mat <- matrix(rnorm(20), nrow = 10, ncol = 2)
   v_mat <- matrix(rnorm(8), nrow = 4, ncol = 2)
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+  attr(dat, "family") <- "gaussian"
 
   res <- .evaluate_objective(dat, u_mat, v_mat)
 
   res2 <- sum(sapply(1:nrow(u_mat), function(x){
     dat_vec <- dat[x,]
-    class(dat_vec) <- c("gaussian", class(dat_vec)[length(class(dat_vec))])
+    attr(dat_vec, "family") <- "gaussian"
     .evaluate_objective_single(dat_vec, u_mat[x,], v_mat, n = nrow(dat), p = ncol(dat))
   }))
 
@@ -162,7 +162,7 @@ test_that(".evaluate_objective gives sensible optimal", {
   dat <- matrix(rnorm(100, mean = 1/10), nrow = 10, ncol = 10)
   u_mat <- matrix(1/2, nrow = 10, ncol = 1)
   v_mat <- matrix(1/5, nrow = 10, ncol = 1)
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+  attr(dat, "family") <- "gaussian"
 
   res <- .evaluate_objective(dat, u_mat, v_mat)
 
@@ -202,7 +202,7 @@ test_that(".evaluate_objective_single works", {
 
   i <- 5
   dat_vec <- dat[i,]
-  class(dat_vec) <- c("gaussian", class(dat_vec)[length(class(dat_vec))])
+  attr(dat_vec, "family") <- "gaussian"
   res <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat, n = nrow(dat), p = ncol(dat))
 
   expect_true(is.numeric(res))
@@ -229,7 +229,7 @@ test_that(".evaluate_objective_single yields a smaller value under truth", {
 
     i <- sample(1:10, 1)
     dat_vec <- dat[i,]
-    class(dat_vec) <- c("gaussian", class(dat_vec)[length(class(dat_vec))])
+    attr(dat_vec, "family") <- "gaussian"
     res <- .evaluate_objective_single(dat_vec, u_mat[i,], v_mat, n = nrow(dat), p = ncol(dat))
 
     u_mat2 <- matrix(rnorm(20), nrow = 10, ncol = 2)
@@ -253,7 +253,7 @@ test_that(".evaluate_objective_mat.gaussian works", {
   u_mat <- matrix(rnorm(20), nrow = 10, ncol = 2)
   v_mat <- matrix(rnorm(8), nrow = 4, ncol = 2)
   pred_mat <- u_mat %*% t(v_mat)
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+  attr(dat, "family") <- "gaussian"
 
   res <- .evaluate_objective_mat(dat, pred_mat)
 
@@ -270,7 +270,7 @@ test_that(".evaluate_objective_mat is the same as .evaluate_objective", {
   u_mat <- matrix(rnorm(20), nrow = 10, ncol = 2)
   v_mat <- matrix(rnorm(8), nrow = 4, ncol = 2)
   pred_mat <- u_mat %*% t(v_mat)
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+  attr(dat, "family") <- "gaussian"
 
   res <- .evaluate_objective_mat(dat, pred_mat)
   res2 <- .evaluate_objective(dat, u_mat, v_mat)
@@ -289,7 +289,7 @@ test_that(".gradient_mat.gaussian works", {
   u_mat <- matrix(rnorm(20), nrow = 10, ncol = 2)
   v_mat <- matrix(rnorm(8), nrow = 4, ncol = 2)
   pred_mat <- u_mat %*% t(v_mat)
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+  attr(dat, "family") <- "gaussian"
 
   res <- .gradient_mat(dat, pred_mat)
 
@@ -307,7 +307,7 @@ test_that(".gradient_mat.gaussiann is a proper gradient", {
     pred_mat <- matrix(rnorm(40), nrow = 10, ncol = 4)
     pred_mat2 <- matrix(rnorm(40), nrow = 10, ncol = 4)
 
-    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    attr(dat, "family") <- "gaussian"
     grad <-  .gradient_mat(dat, pred_mat)
 
     res <- .evaluate_objective_mat(dat, pred_mat)
@@ -331,7 +331,7 @@ test_that("fit_factorization is about the (roughly) same as SVD", {
   diff_val <- sapply(1:trials, function(x){
     set.seed(13*x)
     dat <- matrix(abs(rnorm(25, 2, 1)), nrow = 5, ncol = 5)
-    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    attr(dat, "family") <- "gaussian"
     init <- initialization(dat, family = "gaussian", max_val = 100)
 
     pred_mat1 <- init$u_mat %*% t(init$v_mat)
@@ -359,7 +359,7 @@ test_that("fit_factorization is appropriate for gaussians", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(10*x)
     dat <- matrix(abs(rnorm(25, 2, 1)), nrow = 5, ncol = 5)
-    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    attr(dat, "family") <- "gaussian"
     init <- initialization(dat, family = "gaussian", max_val = 100)
 
     fit <- fit_factorization(dat, u_mat = init$u_mat, v_mat = init$v_mat,
@@ -399,7 +399,7 @@ test_that("fit_factorization is appropriately minimized among rank 1 matrices", 
       }
     }
 
-    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    attr(dat, "family") <- "gaussian"
 
     dat
   })
@@ -430,7 +430,7 @@ test_that("fit_factorization is about the (roughly) same as SVD", {
   diff_val <- sapply(1:trials, function(x){
     set.seed(11*x)
     dat <- matrix(abs(rnorm(25, 2, 1)), nrow = 5, ncol = 5)
-    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
+    attr(dat, "family") <- "gaussian"
     init <- initialization(dat, family = "gaussian", max_val = 100)
 
     fit <- fit_factorization(dat, k=2, u_mat = init$u_mat, v_mat = init$v_mat,

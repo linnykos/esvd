@@ -28,7 +28,7 @@ compute_purity <- function(mat, cluster_labels, neighborhood_size, num_samples =
 
     for(j in 1:2){combn_mat[j,] <- idx_list[[i]][combn_mat[j,]]}
     sapply(1:ncol(combn_mat), function(j){
-      if(verbose && j %% floor(ncol(combn_mat)/10) == 0) cat('*')
+      if(verbose && ncol(combn_mat) > 10 && j %% floor(ncol(combn_mat)/10) == 0) cat('*')
       .compute_pairwise_purity(g, idx1 = combn_mat[1,j], idx2 = combn_mat[2,j], cluster_labels = cluster_labels)
     })
   })

@@ -32,7 +32,7 @@ initialization <- function(dat, k = 2, family,
 
   # initialize
   dat <- .matrix_completion(dat, k = k)
-  if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
+  attr(dat, "family") <- family
 
   # projected gradient descent
   nat_mat <- .projected_gradient_descent(dat, k = k, max_val = max_val,
@@ -117,7 +117,7 @@ initialization <- function(dat, k = 2, family,
 #' See the documentation for \code{eSVD:::.adaptive_gradient_step} for more information.
 #'
 #' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes.
-#' The class of \code{dat} needs to encode the \code{family} information, as this is how the function
+#' \code{attr(dat, "family")} needs to encode the \code{family} information, as this is how the function
 #' uses generics.
 #' @param k  positive integer less than \code{min(c(nrow(dat), ncol(dat)))}
 #' @param max_val maximum magnitude of the inner product
@@ -133,7 +133,7 @@ initialization <- function(dat, k = 2, family,
                                         max_val = NA, direction = "<=",
                                         max_iter = 50, tol = 1e-3,
                                         ...){
-  nat_mat <- .determine_initial_matrix(dat, k = k, family = class(dat)[1], max_val = max_val, ...)
+  nat_mat <- .determine_initial_matrix(dat, k = k, family = attr(dat, "family"), max_val = max_val, ...)
   iter <- 1
   new_obj <- .evaluate_objective_mat(dat, nat_mat, ...)
   old_obj <- Inf
@@ -213,7 +213,7 @@ initialization <- function(dat, k = 2, family,
 #' it will use \code{eSVD:::.sbm_projection} to do the approximation instead.
 #'
 #' @param dat dataset where the \code{n} rows represent cells and \code{d} columns represent genes.
-#' The class of \code{dat} needs to encode the \code{family} information, as this is how the function
+#' \code{attr(dat, "family")} needs to encode the \code{family} information, as this is how the function
 #' uses generics.
 #' @param nat_mat \code{n} by \code{d} matrix
 #' @param gradient_mat \code{n} by \code{d} matrix

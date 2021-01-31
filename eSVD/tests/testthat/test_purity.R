@@ -100,7 +100,7 @@ test_that("compute_purity works", {
   neighborhood_size <- 3
   cluster_labels <- c(1,1,1,1,2, 2,2,1,1,1)
 
-  res <- compute_purity(mat, cluster_labels, neighborhood_size)
+  res <- compute_purity(mat, cluster_labels, neighborhood_size, verbose = F)
 
   expect_true(is.list(res))
   expect_true(is.list(res$value_list))

@@ -76,8 +76,8 @@ test_that(".svd_projection works on another difficult example", {
 test_that(".adaptive_gradient_step works", {
   set.seed(10)
   dat <- abs(matrix(rnorm(100), 10, 10))
-  class(dat) <- c("gaussian", class(dat)[length(class(dat))])
-  direction <- .dictate_direction(class(dat)[1])
+  attr(dat, "family") <- "gaussian"
+  direction <- .dictate_direction(attr(dat, "family"))
 
   pred_mat <- -abs(matrix(rnorm(100), 10, 10))
   gradient_mat <-  .gradient_mat(dat, pred_mat)
@@ -96,8 +96,8 @@ test_that(".adaptive_gradient_step always decreases the objective", {
     set.seed(x)
 
     dat <- abs(matrix(rnorm(100), 10, 10))
-    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
-    direction <- .dictate_direction(class(dat)[1])
+    attr(dat, "family") <- "gaussian"
+    direction <- .dictate_direction(attr(dat, "family"))
 
     pred_mat <- -abs(matrix(rnorm(100), 10, 10))
     gradient_mat <-  .gradient_mat(dat, pred_mat)
@@ -122,8 +122,8 @@ test_that(".adaptive_gradient_step always gives solutions within the constraint"
     set.seed(10*x)
 
     dat <- abs(matrix(rnorm(100), 10, 10))
-    class(dat) <- c("gaussian", class(dat)[length(class(dat))])
-    direction <- .dictate_direction(class(dat)[1])
+    attr(dat, "family") <- "gaussian"
+    direction <- .dictate_direction(attr(dat, "family"))
 
     pred_mat <- -abs(matrix(rnorm(20), 10, 2)) %*% t(abs(matrix(rnorm(20), 10, 2)))
     gradient_mat <-  .gradient_mat(dat, pred_mat)
@@ -145,8 +145,8 @@ test_that(".adaptive_gradient_step always gives solutions within the constraint"
 test_that(".projected_gradient_descent works", {
   set.seed(10)
   dat <- abs(matrix(rnorm(100), 10, 10))
-  class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
-  direction <- .dictate_direction(class(dat)[1])
+  attr(dat, "family") <- "curved_gaussian"
+  direction <- .dictate_direction(attr(dat, "family"))
 
   res <- .projected_gradient_descent(dat, k = 2, max_iter = 5,
                                      direction = direction)
@@ -161,10 +161,10 @@ test_that(".projected_gradient_descent decreases the value", {
   bool_vec <- sapply(1:trials, function(x){
     set.seed(x)
     dat <- abs(matrix(rnorm(100), 10, 10))
-    class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
-    direction <- .dictate_direction(class(dat)[1])
+    attr(dat, "family") <- "curved_gaussian"
+    direction <- .dictate_direction(attr(dat, "family"))
 
-    original_res <- .determine_initial_matrix(dat, class(dat)[1], k = 2)
+    original_res <- .determine_initial_matrix(dat, attr(dat, "family"), k = 2)
     res <- .projected_gradient_descent(dat, k = 2, max_iter = 5,
                                        direction = direction)
 
@@ -188,7 +188,7 @@ test_that("initialization works", {
   v_mat <- matrix(true_val, nrow = 100, ncol = 1)
   pred_mat <- u_mat %*% t(v_mat)
   dat <- pred_mat
-  class(dat) <- c("curved_gaussian", class(dat)[length(class(dat))])
+  attr(dat, "family") <- "curved_gaussian"
 
   for(i in 1:nrow(u_mat)){
     for(j in 1:nrow(v_mat)){
@@ -343,7 +343,7 @@ test_that(".project_rank_feasibility handles non-convergence settings gracefully
 
   # initialize
   dat <- .matrix_completion(dat, k = k)
-  if(length(class(dat)) == 1) class(dat) <- c(family, class(dat)[length(class(dat))])
+  attr(dat, "family") <- family
 
   min_val <- min(dat[which(dat > 0)])
   dat[which(dat <= 0)] <- min_val/2
