@@ -17,8 +17,8 @@
 \code{n} by \code{d} matrix
 }
 \description{
-Computes the gradient for a particular model (based on the
-class of \code{dat}) of the \code{.evaluate_objective_mat} function.
+Computes the gradient for a particular model (based on
+\code{attr(dat, "family")}) of the \code{.evaluate_objective_mat} function.
 }
 \details{
 Note, \code{dat} is NOT allowed to have any \code{NA} values for this

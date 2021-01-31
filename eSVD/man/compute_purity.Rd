@@ -4,7 +4,13 @@
 \alias{compute_purity}
 \title{Compute the purity of a set of labeled points based on nearest-neighbor graph}
 \usage{
-compute_purity(mat, cluster_labels, neighborhood_size, num_samples = 200)
+compute_purity(
+  mat,
+  cluster_labels,
+  neighborhood_size,
+  num_samples = 200,
+  verbose = T
+)
 }
 \arguments{
 \item{mat}{matrix with points represented as different rows}
@@ -14,6 +20,8 @@ compute_purity(mat, cluster_labels, neighborhood_size, num_samples = 200)
 \item{neighborhood_size}{positive integer}
 
 \item{num_samples}{positive integer}
+
+\item{verbose}{boolean}
 }
 \value{
 list

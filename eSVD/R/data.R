@@ -25,7 +25,7 @@ NULL
 #' @docType data
 #' @format A data frame with 983 rows and one column
 #' \describe{
-#'   \item{gene}{Name of each of the 983 genes}
+#'   \item{genes}{Name of each of the 983 genes}
 #' }
 #' @author Kevin Lin \email{kevinl1@andrew.cmu.edu}
 #' @source The gene names come from the oligodendrocyte dataset (Marques et al., see

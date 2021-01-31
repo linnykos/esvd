@@ -39,8 +39,8 @@ or \code{"curved gaussian"} for \code{family}}
 matrix of the same dimension as \code{current_mat}
 }
 \description{
-Given a data matrix \code{dat} where the first element of \code{class(dat)}
-is the associated \code{family} (i.e., tells us which negative
+Given a data matrix \code{dat} where \code{attr(dat, "family")} is
+\code{family} (i.e., tells us which negative
 log-likelihood function we want to optimize over), optimize over each row of
 \code{current_mat} holding the values in \code{other_mat} fixed. This function
 determines which matrix is aligned with the rows or columns based on the setting of

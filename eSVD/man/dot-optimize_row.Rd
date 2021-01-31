@@ -38,8 +38,7 @@ or \code{"curved gaussian"} for \code{family}}
 a vector of length \code{current_vec}
 }
 \description{
-Given a data vector \code{dat_vec} where the first element of \code{class(dat_vec)}
-is the associated \code{family} (i.e., tells us which negative
+Given a data vector \code{dat_vec} where \code{attr(dat, "family")} is \code{family} (i.e., tells us which negative
 log-likelihood function we want to optimize over), optimize the values in
 \code{current_vec} holding the values in \code{other_mat} fixed.
 This function does a gradient descent, so the values in \code{current_vec}

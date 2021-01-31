@@ -7,7 +7,7 @@
 \format{
 A data frame with 983 rows and one column
 \describe{
-  \item{gene}{Name of each of the 983 genes}
+  \item{genes}{Name of each of the 983 genes}
 }
 }
 \source{

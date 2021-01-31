@@ -4,6 +4,8 @@ This repository contains all the data, functions, scripts to run simulations and
 "Exponential-family embedding with application to cell developmental trajectories 
   for single-cell RNA-seq data".
 
+This code was developed and tested primarily on R 4.0.3 on a Macbook (macOS 11.1 Big Sur) equipped with an i5 processor.
+
 # Installation
 
 This package can be installed through `devtools` in R.
@@ -63,7 +65,7 @@ Specifically:
 
 * `step8_figures_zz_additional_analyses.R` produces Figures S.15-S.17.
 
-To reproduce the Zeisel analysis (Appendix H.5), navigate to the `main_zeisel` folder. From this location, run the R scripts command window. All the results and figures in these sections are reproduced by running `main_zeisel.R`, which calls 5 different R scripts in succession, each producing `.RData` files that the next uses as input. Figure S.18 is produced in the last script, `step4_zeisel_analysis.R`.
+To reproduce the Zeisel analysis (Appendix H.5), navigate to the `main_zeisel` folder. From this location, run the R scripts command window. All the results and figures in these sections are reproduced by running `main_zeisel.R`, which calls 5 different R scripts in succession, each producing `.RData` files that the next uses as input. Figure S.18 and Table S.1 are produced in the last script `step6_zeisel_metrics.R` and Figure S.19 is produced in the script, `step4_zeisel_analysis.R`.
 
 ## Running the simulations
 

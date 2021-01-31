@@ -16,7 +16,7 @@
 }
 \arguments{
 \item{dat}{dataset where the \code{n} rows represent cells and \code{d} columns represent genes.
-The class of \code{dat} needs to encode the \code{family} information, as this is how the function
+\code{attr(dat, "family")} needs to encode the \code{family} information, as this is how the function
 uses generics.}
 
 \item{k}{positive integer less than \code{min(c(nrow(dat), ncol(dat)))}}
