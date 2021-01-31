@@ -1,5 +1,7 @@
 rm(list=ls())
 load("../results/step5_zeisel_comparison.RData")
+library(Seurat)
+
 cluster_labels <- as.numeric(label_vec);
 levels(label_vec)
 color_func <- function(alpha = 0.2){
